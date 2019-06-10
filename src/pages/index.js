@@ -1,21 +1,56 @@
 import React from "react"
-import { Link } from "gatsby"
+import PropTypes from 'prop-types'
+import { Link, graphql } from "gatsby"
 
 import Layout from "../components/layout"
-import Image from "../components/image"
 import SEO from "../components/seo"
 
-const IndexPage = () => (
-  <Layout>
-    <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link>
-  </Layout>
-)
-
-export default IndexPage
+const IndexPage = ({data}) => {
+  const siteTitle = data.site.siteMetadata.title
+  const concerts = data.allContentfulConcert
+  
+  return (
+    <Layout>
+    <SEO title={siteTitle} />
+    {concerts.totalCount}
+    <ul>
+    {concerts.edges.map(({ node }) => {
+      return (
+        <li key={node.id}>
+        <h2><Link to={`/band/${node.band.slug}`}>{node.band.name}</Link></h2>
+        <span>{node.date}</span> im <span>{node.club}</span> in <span>{node.city.lon}</span>
+        </li>
+        )
+      })}
+      </ul>
+      </Layout>
+      )
+    }
+    
+    IndexPage.propTypes = {
+      data: PropTypes.shape({
+        allContentfulConcert: PropTypes.object.isRequired
+      }).isRequired
+    }
+    
+    export default IndexPage
+    
+    export const pageQuery = graphql`
+    query ConcertsIndexQuery {
+      site {
+        siteMetadata {
+          title
+        }
+      }
+      allContentfulConcert(sort: {order: DESC, fields: [date]}) {
+        edges {
+          node {
+            ...ContentfulConcertFields
+          }
+        }
+        totalCount
+      }
+    }
+    `
+    
+    
