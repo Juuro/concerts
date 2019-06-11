@@ -18,7 +18,7 @@ const IndexPage = ({data}) => {
       return (
         <li key={node.id}>
         <h2><Link to={`/band/${node.band.slug}`}>{node.band.name}</Link></h2>
-        <span>{node.date}</span> im <span>{node.club}</span> in <span>{node.city.lon}</span>
+        <span>{node.date}</span> im <span>{node.club}</span> in <span>lon={node.city.lon}, lat={node.city.lat}</span>
         </li>
         )
       })}
@@ -53,4 +53,4 @@ const IndexPage = ({data}) => {
     }
     `
     
-    
+    // https://nominatim.openstreetmap.org/reverse?lon=8.54677330000004&lat=47.3663756&format=json
