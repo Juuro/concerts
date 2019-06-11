@@ -12,18 +12,22 @@ class ConcertCard extends React.Component {
     if (this.concert.isFestival) {
       return this.concert.festival.name
     }
-    return <Link to={`/band/${this.concert.bands[0].slug}`}>{this.concert.bands[0].name}</Link>
+    return (
+      <Link to={`/band/${this.concert.bands[0].slug}`}>
+        {this.concert.bands[0].name}
+      </Link>
+    )
   }
 
   bands = () => {
     if (this.concert.isFestival) {
-      return (
-        this.concert.bands.map(band => {
-          return (
-            <Link to={`/band/${band.slug}`} key={band.id}>{band.name}</Link>
-          )
-        })
-      )
+      return this.concert.bands.map(band => {
+        return (
+          <Link to={`/band/${band.slug}`} key={band.id}>
+            {band.name}
+          </Link>
+        )
+      })
     }
     return null
   }
@@ -32,10 +36,13 @@ class ConcertCard extends React.Component {
     return (
       <li className="concert-card">
         <h2>{this.heading()}</h2>
-        <span>{this.concert.date}</span> <span>{this.concert.city.lon}, {this.concert.city.lat}</span> <span>{this.concert.club}</span>
+        <span>{this.concert.date}</span>{" "}
+        <span>
+          {this.concert.city.lon}, {this.concert.city.lat}
+        </span>{" "}
+        <span>{this.concert.club}</span>
         <div className="bands">{this.bands()}</div>
       </li>
-      
     )
   }
 }

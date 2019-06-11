@@ -1,15 +1,15 @@
 import React from "react"
-import PropTypes from 'prop-types'
+import PropTypes from "prop-types"
 import { graphql } from "gatsby"
 
 import Layout from "../components/layout"
 import ConcertCard from "../components/concertCard"
 import SEO from "../components/seo"
 
-const IndexPage = ({data}) => {
+const IndexPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
   const concerts = data.allContentfulConcert
-  
+
   return (
     <Layout>
       <SEO title={siteTitle} />
@@ -25,8 +25,8 @@ const IndexPage = ({data}) => {
 
 IndexPage.propTypes = {
   data: PropTypes.shape({
-    allContentfulConcert: PropTypes.object.isRequired
-  }).isRequired
+    allContentfulConcert: PropTypes.object.isRequired,
+  }).isRequired,
 }
 
 export default IndexPage
@@ -38,7 +38,7 @@ export const pageQuery = graphql`
         title
       }
     }
-    allContentfulConcert(sort: {order: DESC, fields: [date]}) {
+    allContentfulConcert(sort: { order: DESC, fields: [date] }) {
       edges {
         node {
           ...ContentfulConcertFields
