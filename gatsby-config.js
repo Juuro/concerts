@@ -50,7 +50,6 @@ module.exports = {
       resolve: `gatsby-source-contentful`,
       options: contentfulConfig,
     },
-    //`gatsby-transformer-opencage-geocoder`,
     // {
     //   resolve: `gatsby-transformer-opencage-geocoder`,
     //   options: {
@@ -71,9 +70,10 @@ module.exports = {
         
     //     ]
     //   }
-    // }
+    // },
     // this (optional) plugin enables Progressive Web App + Offline functionality
     // To learn more, visit: https://gatsby.dev/offline
-    // `gatsby-plugin-offline`,
+    `gatsby-plugin-offline`,
+    `gatsby-plugin-sass`,
   ],
 }
