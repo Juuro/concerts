@@ -5,31 +5,46 @@ import { graphql } from "gatsby"
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
-const Band = ({ data, location, pageContext }) => {
-  const concerts = data.allContentfulConcert
+class Band extends React.Component {
+  constructor(props) {
+    super(props)
+    this.data = this.props.data
+    this.location = this.props.location
+    this.pageContext = this.props.pageContext
+    this.concerts = this.data.allContentfulConcert
+  }
 
-  return (
-    <Layout>
-      <SEO title="hi!" />
-      <h1>
-        {pageContext.name}{" "}
-        <span className="badge bg-primary rounded-pill">
-          {concerts.totalCount}
-        </span>
-      </h1>
+  cityOrTown = concert => {
+    if (concert.fields.geocoderAddressFields.town) {
+      return concert.fields.geocoderAddressFields.town
+    }
+    return concert.fields.geocoderAddressFields.city
+  }
 
-      <ul className="list-group">
-        {concerts.edges.map(({ node }) => {
-          return (
-            <li key={node.id} className="list-group-item">
-              <span>{node.date}</span> im <span>{node.club}</span> in{" "}
-              <span>{node.city.lon}</span>
-            </li>
-          )
-        })}
-      </ul>
-    </Layout>
-  )
+  render() {
+    return (
+      <Layout>
+        <SEO title="hi!" />
+        <h1>
+          {this.pageContext.name}{" "}
+          <span className="badge bg-primary rounded-pill">
+            {this.concerts.totalCount}
+          </span>
+        </h1>
+
+        <ul className="list-group">
+          {this.concerts.edges.map(({ node: concert }) => {
+            return (
+              <li key={concert.id} className="list-group-item">
+                <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
+                <span>{this.cityOrTown(concert)}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </Layout>
+    )
+  }
 }
 
 Band.propTypes = {

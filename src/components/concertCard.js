@@ -36,11 +36,18 @@ class ConcertCard extends React.Component {
     return null
   }
 
+  cityOrTown = () => {
+    if (this.concert.fields.geocoderAddressFields.town) {
+      return this.concert.fields.geocoderAddressFields.town
+    }
+    return this.concert.fields.geocoderAddressFields.city
+  }
+
   render() {
     return (
       <li className="concert-card card mb-4 shadow-sm">
         <div className="card-header">
-          <span>{this.concert.club}</span> in <span>{this.concert.city.lon}, {this.concert.city.lat}</span>
+          <span>{this.concert.club}</span> in <span>{this.cityOrTown()}</span>
         </div>
         <div className="card-body">
           <h2 className="card-title">{this.heading()}</h2>

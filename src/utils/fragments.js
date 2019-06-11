@@ -32,5 +32,11 @@ export const ghostTagFields = graphql`
       name
       url
     }
+    fields {
+      geocoderAddressFields {
+        city
+        town
+      }
+    }
   }
 `
