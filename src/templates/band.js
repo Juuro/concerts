@@ -43,20 +43,11 @@ Band.propTypes = {
 export default Band
 
 export const pageQuery = graphql`
-  query BandQuery($slug: String!) { 
-    allContentfulConcert(sort: {order: DESC, fields: [date]}, filter: {band: {slug: {eq: $slug}}}) {
+  query BandQuery($slug: String!) {
+    allContentfulConcert(sort: {order: DESC, fields: [date]}, filter: {bands: {elemMatch: {slug: {eq: $slug}}}}) {
       edges {
         node {
-          id
-          city {
-            lat
-            lon
-          }
-          club
-          date(formatString: "DD.MM.YYYY")
-          festival {
-            name
-          }
+          ...ContentfulConcertFields
         }
       }
       totalCount

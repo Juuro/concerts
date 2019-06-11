@@ -3539,6 +3539,11 @@ dotenv@^4.0.0:
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-4.0.0.tgz#864ef1379aced55ce6f95debecdce179f7a0cd1d"
   integrity sha1-hk7xN5rO1Vzm+V3r7NzhefegzR0=
 
+dotenv@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.2.0.tgz#941c0410535d942c8becf28d3f357dbd9d476064"
+  integrity sha512-HygQCKUBSFl8wKQZBSemMywRWcEDNidvNbjGVyZu3nbZ8qq9ubiPoGLMdRDpfSrpkkm9BXYFkpKxxFX38o/76w==
+
 download@^6.2.2:
   version "6.2.5"
   resolved "https://registry.yarnpkg.com/download/-/download-6.2.5.tgz#acd6a542e4cd0bb42ca70cfc98c9e43b07039714"
@@ -3782,6 +3787,11 @@ es6-promise@^3.0.2:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-3.3.1.tgz#a08cdde84ccdbf34d027a1451bc91d4bcd28a613"
   integrity sha1-oIzd6EzNvzTQJ6FFG8kdS80ophM=
+
+es6-promise@^4.2.5:
+  version "4.2.8"
+  resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.8.tgz#4eb21594c972bc40553d276e510539143db53e0a"
+  integrity sha512-HJDGx5daxeIvxdBxvG2cb9g4tEvwIk3i8+nhX0yGrYmZUzbkdg8QbDevheDB8gd0//uPj4c1EQua8Q+MViT0/w==
 
 es6-promisify@^6.0.0:
   version "6.0.1"
@@ -4372,6 +4382,14 @@ fd-slicer@~1.1.0:
   dependencies:
     pend "~1.2.0"
 
+fetch-everywhere@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/fetch-everywhere/-/fetch-everywhere-1.0.5.tgz#b2497f47a57d9026b3907c09756acf5f4bd34e8b"
+  integrity sha1-skl/R6V9kCazkHwJdWrPX0vTTos=
+  dependencies:
+    node-fetch "^1.0.1"
+    whatwg-fetch ">=0.10.0"
+
 figgy-pudding@^3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/figgy-pudding/-/figgy-pudding-3.5.1.tgz#862470112901c727a0e495a80744bd5baa1d6790"
@@ -4940,6 +4958,13 @@ gatsby-telemetry@^1.0.11:
     stack-trace "^0.0.10"
     stack-utils "1.0.2"
     uuid "3.3.2"
+
+gatsby-transformer-opencage-geocoder@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-opencage-geocoder/-/gatsby-transformer-opencage-geocoder-1.0.0.tgz#7d0e49cebe076d310da4efb196bc9f09e243b05d"
+  integrity sha512-RL0rGJzhwlSJGBnjEQdlqKu5ugIDSP//n7VDXzNCGaXffyMz25NFMoHlurwyR1pox4xAQI+oCpHC+RLrkgL2pQ==
+  dependencies:
+    opencage-api-client "^0.4.0"
 
 gatsby-transformer-sharp@^2.1.21:
   version "2.1.21"
@@ -7806,6 +7831,15 @@ onetime@^2.0.0:
   integrity sha1-BnQoIw/WdEOyeUsiu6UotoZ5YtQ=
   dependencies:
     mimic-fn "^1.0.0"
+
+opencage-api-client@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/opencage-api-client/-/opencage-api-client-0.4.0.tgz#bff3f1b976677cb9fd144bff43b336b8d08aec02"
+  integrity sha512-lQkgFRnSRRqzRo8QJ0U+x4w7TcjT0EbCwxV4s4zrkKB1lKYGD7ftyWJ415Q5p32ENSZ+7cQctoaoyqT0k0Ez7Q==
+  dependencies:
+    dotenv "^6.2.0"
+    es6-promise "^4.2.5"
+    fetch-everywhere "^1.0.5"
 
 opentracing@^0.14.3:
   version "0.14.3"

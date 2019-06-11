@@ -16,15 +16,20 @@ export const ghostTagFields = graphql`
     fragment ContentfulConcertFields on ContentfulConcert {
       id
       date(formatString: "DD.MM.YYYY")
-      band {
-        name
-        url
-        slug
-      }
       city {
         lat
         lon
       }
       club
+      bands {
+        name
+        url
+        slug
+      }
+      isFestival
+      festival {
+        name
+        url
+      }
     }
 `
