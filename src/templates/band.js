@@ -12,13 +12,16 @@ const Band = ({ data, location, pageContext }) => {
     <Layout>
       <SEO title="hi!" />
       <h1>
-        {pageContext.name} ({concerts.totalCount})
+        {pageContext.name}{" "}
+        <span className="badge bg-primary rounded-pill">
+          {concerts.totalCount}
+        </span>
       </h1>
 
-      <ul>
+      <ul className="list-group">
         {concerts.edges.map(({ node }) => {
           return (
-            <li key={node.id}>
+            <li key={node.id} className="list-group-item">
               <span>{node.date}</span> im <span>{node.club}</span> in{" "}
               <span>{node.city.lon}</span>
             </li>

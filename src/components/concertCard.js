@@ -23,7 +23,11 @@ class ConcertCard extends React.Component {
     if (this.concert.isFestival) {
       return this.concert.bands.map(band => {
         return (
-          <Link to={`/band/${band.slug}`} key={band.id}>
+          <Link
+            to={`/band/${band.slug}`}
+            key={band.id}
+            className="badge bg-primary mr-2"
+          >
             {band.name}
           </Link>
         )
@@ -34,14 +38,15 @@ class ConcertCard extends React.Component {
 
   render() {
     return (
-      <li className="concert-card">
-        <h2>{this.heading()}</h2>
-        <span>{this.concert.date}</span>{" "}
-        <span>
-          {this.concert.city.lon}, {this.concert.city.lat}
-        </span>{" "}
-        <span>{this.concert.club}</span>
-        <div className="bands">{this.bands()}</div>
+      <li className="concert-card card mb-4 shadow-sm">
+        <div className="card-header">
+          <span>{this.concert.club}</span> in <span>{this.concert.city.lon}, {this.concert.city.lat}</span>
+        </div>
+        <div className="card-body">
+          <h2 className="card-title">{this.heading()}</h2>
+          <span>{this.concert.date}</span>
+          <div className="bands">{this.bands()}</div>
+        </div>
       </li>
     )
   }

@@ -14,7 +14,7 @@ const IndexPage = ({ data }) => {
     <Layout>
       <SEO title={siteTitle} />
       {concerts.totalCount}
-      <ul>
+      <ul className="list-unstyled">
         {concerts.edges.map(({ node }) => (
           <ConcertCard key={node.id} concert={node} />
         ))}
