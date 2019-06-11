@@ -22,6 +22,7 @@ export const ghostTagFields = graphql`
       }
       club
       bands {
+        id
         name
         url
         slug
