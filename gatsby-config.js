@@ -66,7 +66,7 @@ module.exports = {
               lat: `lat`,
               lon: `lon`,
             },
-            addFullResult: true,
+            addFullResult: false,
           },
         ],
       },
