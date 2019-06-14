@@ -1,0 +1,55 @@
+@import "../variables.scss";
+
+.concert-card {
+  display: grid;
+  grid-template-columns: 8rem auto 10rem;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "image image image"
+    "body body body"
+    "map map map";
+  overflow: hidden;
+
+  &.future {
+    opacity: .6;
+
+    &:last-of-type {
+      margin-bottom: 10rem;
+    }
+  }
+
+  &:not(.future) {
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 2rem 0;
+  }
+
+  .concert-card-image {
+    background-image: radial-gradient(
+      transparentize($color-primary, 0.5),
+      transparentize($color-red, 0.5)
+    );
+    display: block;
+    grid-area: image;
+    object-fit: cover;
+
+    img {
+      object-fit: cover;
+      height: 10rem;
+      width: 10rem;
+    }
+  }
+
+  .concert-card-body {
+    grid-area: body;
+    padding: 2rem 1rem;
+  }
+
+  .concert-card-map {
+    grid-area: map;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .concert-card {
+    grid-template-areas: "image body map";
+  }
+}

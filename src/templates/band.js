@@ -14,11 +14,16 @@ class Band extends React.Component {
     this.concerts = this.data.allContentfulConcert
   }
 
-  cityOrTown = concert => {
-    if (concert.fields.geocoderAddressFields.town) {
-      return concert.fields.geocoderAddressFields.town
+  cityTownVillage = concert => {
+    switch (true) {
+      case !!concert.fields.geocoderAddressFields.village:
+        return concert.fields.geocoderAddressFields.village
+      case !!concert.fields.geocoderAddressFields.town:
+        return concert.fields.geocoderAddressFields.town
+      case !!concert.fields.geocoderAddressFields.city:
+      default:
+        return concert.fields.geocoderAddressFields.city
     }
-    return concert.fields.geocoderAddressFields.city
   }
 
   render() {
@@ -37,7 +42,7 @@ class Band extends React.Component {
             return (
               <li key={concert.id} className="list-group-item">
                 <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
-                <span>{this.cityOrTown(concert)}</span>
+                <span>{this.cityTownVillage(concert)}</span>
               </li>
             )
           })}

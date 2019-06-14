@@ -15,7 +15,7 @@ import { graphql } from "gatsby"
 export const ghostTagFields = graphql`
   fragment ContentfulConcertFields on ContentfulConcert {
     id
-    date(formatString: "DD.MM.YYYY")
+    date
     city {
       lat
       lon
@@ -36,6 +36,7 @@ export const ghostTagFields = graphql`
       geocoderAddressFields {
         city
         town
+        village
       }
     }
   }

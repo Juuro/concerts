@@ -3,7 +3,7 @@ import PropTypes from "prop-types"
 import { graphql } from "gatsby"
 
 import Layout from "../components/layout"
-import ConcertCard from "../components/concertCard"
+import ConcertCard from "../components/ConcertCard/concertCard"
 import SEO from "../components/seo"
 
 const IndexPage = ({ data }) => {

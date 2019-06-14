@@ -1,3 +1,101 @@
-$primary: #ff0666;
+@import "./variables.scss";
 
-@import "bootstrap/bootstrap";
+html {
+  color: $color-black;
+  font-family: $font-family;
+  font-size: 16px;
+}
+
+body {
+  background-color: transparentize($color-black, 0.94);
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 4rem;
+  margin-top: .5em;
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+h3 {
+  font-size: 2rem;
+}
+
+h4 {
+  font-size: 1.5rem;
+}
+
+h5,
+h6 {
+  font-size: 1rem;
+}
+
+a {
+  text-decoration: none;
+  background-image: linear-gradient(90deg, $color-red, $color-primary);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  box-decoration-break: clone;
+  text-shadow: none;
+
+  &:hover {
+    color: $color-red;
+    background-clip: unset;
+    background-image: none;
+    -webkit-text-fill-color: $color-red;
+  }
+}
+
+header {
+  background-color: $color-white;
+
+  h1 {
+    margin: .5em 0;
+  }
+}
+
+main {
+  width: 100%;
+}
+
+.card {
+  background-color: $color-white;
+  border-radius: 1rem;
+
+  h2 {
+    margin-top: 0;
+  }
+}
+
+.list-unstyled {
+  list-style: none;
+  padding: 0;
+}
+
+.container {
+  display: grid;
+  justify-items: center;
+}
+
+.mb-4 {
+  margin-bottom: 2rem;
+}
+
+@media screen and (min-width: 768px) {
+  main {
+    width: 64rem;
+  }
+}

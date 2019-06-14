@@ -20,8 +20,8 @@ if (!spaceId || !accessToken) {
 
 module.exports = {
   siteMetadata: {
-    title: `Concerts I visited`,
-    description: `List of all concerts and festivals I visited. Including pages for every band I ever saw.`,
+    title: `Concerts I've visited`,
+    description: `List of all concerts and festivals I've visited. Including pages for every band I ever saw.`,
     author: `@juuro`,
   },
   plugins: [
