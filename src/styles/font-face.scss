@@ -1,0 +1,39 @@
+@font-face {
+  font-family: OpenSans;
+  src: url(/fonts/OpenSans-Regular.woff2) format("woff2"), url(/fonts/OpenSans-Regular.woff) format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap
+}
+
+@font-face {
+  font-family: OpenSans;
+  src: url(/fonts/OpenSans-Bold.woff2) format("woff2"), url(/fonts/OpenSans-Bold.woff) format("woff");
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal
+}
+
+@font-face {
+  font-family: Rubik;
+  src: url(/fonts/Rubik-Light.woff2) format("woff2"), url(/fonts/Rubik-Light.woff) format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap
+}
+
+@font-face {
+  font-family: Rubik;
+  src: url(/fonts/Rubik-Regular.woff2) format("woff2"), url(/fonts/Rubik-Regular.woff) format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap
+}
+
+@font-face {
+  font-family: Rubik;
+  src: url(/fonts/Rubik-Bold.woff2) format("woff2"), url(/fonts/Rubik-Bold.woff) format("woff");
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal
+}
