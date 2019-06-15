@@ -26,7 +26,7 @@ class Band extends React.Component {
     }
   }
 
-  render() {
+  render = () => {
     return (
       <Layout>
         <SEO title="hi!" />

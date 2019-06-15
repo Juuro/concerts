@@ -66,7 +66,7 @@ class ConcertCard extends React.Component {
     })
   }
 
-  render() {
+  render = () => {
     return (
       <li className={`concert-card card mb-4 ${this.isInTheFuture()}`}>
         <div className="concert-card-image">
