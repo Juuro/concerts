@@ -68,9 +68,9 @@ class ConcertCard extends React.Component {
 
   render = () => {
     return (
-      <li className={`concert-card card mb-4 ${this.isInTheFuture()}`}>
+      <li className={`concert-card card ${this.isInTheFuture()}`}>
         <div className="concert-card-image">
-          {/* <img src="https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg" /> */}
+          <img src="https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg" />
         </div>
         <div className="concert-card-body">
           <h2 className="card-title">{this.heading()}</h2>

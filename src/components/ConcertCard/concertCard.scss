@@ -2,19 +2,25 @@
 
 .concert-card {
   display: grid;
-  grid-template-columns: 8rem auto 10rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
   grid-template-areas:
-    "image image image"
-    "body body body"
-    "map map map";
+    "image image map map"
+    "body body body body";
   overflow: hidden;
+  margin-bottom: 1rem;
 
   &.future {
-    opacity: .6;
+    background-image: repeating-linear-gradient(
+      120deg,
+      $color-white,
+      $color-white 1rem,
+      transparentize($color-black, 0.95) 1rem,
+      transparentize($color-black, 0.95) 2rem
+    );
 
-    &:last-of-type {
-      margin-bottom: 10rem;
+    .concert-card-image {
+      opacity: 0.7;
     }
   }
 
@@ -29,18 +35,22 @@
     );
     display: block;
     grid-area: image;
-    object-fit: cover;
 
     img {
       object-fit: cover;
-      height: 10rem;
-      width: 10rem;
+      height: 100%;
+      width: 100%;
     }
   }
 
   .concert-card-body {
     grid-area: body;
     padding: 2rem 1rem;
+
+    .card-title {
+      text-shadow: -1px 0 $color-white, 0 1px $color-white, 1px 0 $color-white,
+        0 -1px $color-white;
+    }
   }
 
   .concert-card-map {
@@ -50,6 +60,6 @@
 
 @media screen and (min-width: 768px) {
   .concert-card {
-    grid-template-areas: "image body map";
+    grid-template-areas: "image body body map";
   }
 }
