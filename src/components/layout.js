@@ -5,13 +5,13 @@
  * See: https://www.gatsbyjs.org/docs/static-query/
  */
 
-import React from "react"
-import PropTypes from "prop-types"
-import { StaticQuery, graphql } from "gatsby"
+import React from 'react'
+import PropTypes from 'prop-types'
+import { StaticQuery, graphql } from 'gatsby'
 
-import Header from "./header"
+import Header from './header'
 
-import "../styles/layout.scss"
+import '../styles/layout.scss'
 
 const Layout = ({ children }) => (
   <StaticQuery
@@ -22,11 +22,17 @@ const Layout = ({ children }) => (
             title
           }
         }
+        allContentfulConcert {
+          totalCount
+        }
       }
     `}
     render={data => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} />
+        <Header
+          siteTitle={data.site.siteMetadata.title}
+          totalConcerts={data.allContentfulConcert.totalCount}
+        />
         <div className="container">
           <main>{children}</main>
           <footer>

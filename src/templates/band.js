@@ -1,9 +1,9 @@
-import React from "react"
-import PropTypes from "prop-types"
-import { graphql } from "gatsby"
+import React from 'react'
+import PropTypes from 'prop-types'
+import { graphql } from 'gatsby'
 
-import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Layout from '../components/layout'
+import SEO from '../components/seo'
 
 class Band extends React.Component {
   constructor(props) {
@@ -31,17 +31,16 @@ class Band extends React.Component {
       <Layout>
         <SEO title="hi!" />
         <h1>
-          {this.pageContext.name}{" "}
-          <span className="badge bg-primary rounded-pill">
-            {this.concerts.totalCount}
-          </span>
+          {console.log(this.pageContext)}
+          {this.pageContext.name}{' '}
+          <span className="badge">{this.concerts.totalCount}</span>
         </h1>
 
         <ul className="list-group">
           {this.concerts.edges.map(({ node: concert }) => {
             return (
               <li key={concert.id} className="list-group-item">
-                <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
+                <span>{concert.date}</span> im <span>{concert.club}</span> in{' '}
                 <span>{this.cityTownVillage(concert)}</span>
               </li>
             )
