@@ -6,7 +6,7 @@ const Header = ({ siteTitle, totalConcerts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
-        <Link to="/">{siteTitle}</Link>
+        <Link to="/">{siteTitle}</Link>{' '}
         <span className="badge">{totalConcerts}</span>
       </h1>
     </div>
