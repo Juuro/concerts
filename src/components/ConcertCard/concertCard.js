@@ -8,6 +8,7 @@ class ConcertCard extends React.Component {
   constructor(props) {
     super(props)
     this.concert = this.props.concert
+    this.style = this.props.style
   }
 
   heading = () => {
@@ -66,11 +67,7 @@ class ConcertCard extends React.Component {
 
   render = () => (
     <li className={`concert-card card ${this.isInTheFuture()}`}>
-      <div className="concert-card-image">
-        <img
-          src="https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg"
-          alt=""
-        />
+      <div className="concert-card-image" style={{backgroundImage: 'url(https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg)'}}>
       </div>
       <div className="concert-card-body">
         <h2 className="card-title">{this.heading()}</h2>

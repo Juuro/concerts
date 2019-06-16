@@ -2,7 +2,7 @@
 
 .concert-card {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 2fr 2fr 2fr;
   grid-template-rows: auto;
   grid-template-areas:
     "image image map map"
@@ -29,18 +29,8 @@
   }
 
   .concert-card-image {
-    background-image: radial-gradient(
-      transparentize($color-primary, 0.5),
-      transparentize($color-red, 0.5)
-    );
-    display: block;
-    grid-area: image;
-
-    img {
-      object-fit: cover;
-      height: 100%;
-      width: 100%;
-    }
+    background-size: cover;
+    background-position: 50%;
   }
 
   .concert-card-body {
