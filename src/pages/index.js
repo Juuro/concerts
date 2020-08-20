@@ -38,7 +38,7 @@ export const pageQuery = graphql`
         title
       }
     }
-    allContentfulConcert(sort: { order: DESC, fields: [date] }) {
+    allContentfulConcert(sort: { order: DESC }) {
       edges {
         node {
           ...ContentfulConcertFields

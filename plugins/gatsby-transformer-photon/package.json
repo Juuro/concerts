@@ -1,0 +1,9 @@
+{
+  "name": "gatsby-transformer-photon",
+  "version": "0.0.1",
+  "description": "A transformer plugin for GatsbyJS to forward- and reverse-geocode content nodes",
+  "main": "index.js",
+  "dependencies": {
+    "node-fetch": "^2.6.0"
+  }
+}

@@ -51,25 +51,29 @@ module.exports = {
       resolve: `gatsby-source-contentful`,
       options: contentfulConfig,
     },
-    {
-      resolve: `gatsby-transformer-opencage-geocoder`,
-      options: {
-        // Your OpenCage API key
-        api_key: `d00c9c8449954f00a217e544dcd4df70`,
+    // {
+    //   resolve: `gatsby-transformer-opencage-geocoder`,
+    //   options: {
+    //     // Your OpenCage API key
+    //     api_key: `d00c9c8449954f00a217e544dcd4df70`,
 
-        // An array of configurations per node type to geocode
-        nodeTypes: [
-          // Reverse Geocoding
-          {
-            nodeType: `ContentfulConcert`,
-            positionFields: {
-              lat: `lat`,
-              lon: `lon`,
-            },
-            addFullResult: false,
-          },
-        ],
-      },
+    //     // An array of configurations per node type to geocode
+    //     nodeTypes: [
+    //       // Reverse Geocoding
+    //       {
+    //         nodeType: `ContentfulConcert`,
+    //         positionFields: {
+    //           lat: `lat`,
+    //           lon: `lon`,
+    //         },
+    //         addFullResult: false,
+    //       },
+    //     ],
+    //   },
+    // },
+    {
+      resolve: `gatsby-transformer-photon`,
+  
     },
     // this (optional) plugin enables Progressive Web App + Offline functionality
     // To learn more, visit: https://gatsby.dev/offline

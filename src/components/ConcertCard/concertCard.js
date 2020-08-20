@@ -9,6 +9,25 @@ class ConcertCard extends React.Component {
     super(props)
     this.concert = this.props.concert
     this.style = this.props.style
+    this.state = {
+      city: 'Loading'
+    }
+  }
+
+  componentDidMount = () => {
+    fetch(`https://cors-anywhere.herokuapp.com/https://photon.komoot.de/reverse?lon=${this.concert.city.lon}&lat=${this.concert.city.lat}&lang=de`)
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Something went wrong ...');
+        }
+      })
+      .then(data => {
+        const {features: [{properties: {city}}]} = data
+        this.setState({ city: city, isLoading: false })
+      })
+      .catch(error => this.setState({ error, isLoading: false }));
   }
 
   heading = () => {
@@ -78,7 +97,7 @@ class ConcertCard extends React.Component {
       </div>
       <div className="concert-card-map">
         <span>{this.concert.club}</span> in{' '}
-        <span>{this.cityTownVillage()}</span>
+        <span>{this.state.city}</span>
       </div>
     </li>
   )

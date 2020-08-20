@@ -41,7 +41,8 @@
     "start": "npm run develop",
     "serve": "gatsby serve",
     "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\"",
-    "release": "standard-version"
+    "release": "standard-version",
+    "cleandev": "gatsby clean && gatsby develop"
   },
   "repository": {
     "type": "git",
