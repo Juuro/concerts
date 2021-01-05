@@ -1,8 +1,8 @@
-import PropTypes from "prop-types"
-import React from "react"
-import { Link } from "gatsby"
+import PropTypes from 'prop-types'
+import React from 'react'
+import { Link } from 'gatsby'
 
-import "./concertCard.scss"
+import './concertCard.scss'
 
 class ConcertCard extends React.Component {
   constructor(props) {
@@ -24,17 +24,15 @@ class ConcertCard extends React.Component {
 
   bands = () => {
     if (this.concert.isFestival) {
-      return this.concert.bands.map(band => {
-        return (
-          <Link
-            to={`/band/${band.slug}`}
-            key={band.id}
-            className="badge bg-primary mr-2"
-          >
-            {band.name}
-          </Link>
-        )
-      })
+      return this.concert.bands.map(band => (
+        <Link
+          to={`/band/${band.slug}`}
+          key={band.id}
+          className="badge bg-primary mr-2"
+        >
+          {band.name}
+        </Link>
+      ))
     }
     return null
   }
@@ -53,17 +51,17 @@ class ConcertCard extends React.Component {
 
   isInTheFuture = () => {
     if (this.concert.date > new Date().toISOString()) {
-      return "future"
+      return 'future'
     }
-    return ""
+    return ''
   }
 
   getDate = () => {
     const date = new Date(this.concert.date)
-    return date.toLocaleDateString("de-DE", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     })
   }
 
