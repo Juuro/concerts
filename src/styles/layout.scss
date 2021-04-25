@@ -128,6 +128,12 @@ main {
   }
 }
 
+.map-box {
+  display: flex;
+  height: 500px;
+  width: 100%;
+}
+
 @media screen and (min-width: 768px) {
   main {
     width: 64rem;

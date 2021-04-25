@@ -17,6 +17,7 @@
     "gatsby-source-filesystem": "^2.3.24",
     "gatsby-transformer-opencage-geocoder": "https://github.com/Juuro/gatsby-transformer-opencage-geocoder",
     "gatsby-transformer-sharp": "^2.5.13",
+    "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
     "opencage-api-client": "^0.7.1",
     "path": "^0.12.7",
@@ -24,6 +25,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-helmet": "^6.1.0",
+    "react-mapkit": "^0.6.5",
     "standard-version": "^9.0.0"
   },
   "devDependencies": {

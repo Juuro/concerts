@@ -1,6 +1,7 @@
 import PropTypes from "prop-types"
 import React from "react"
 import { Link } from "gatsby"
+import { Map, Marker } from 'react-mapkit'
 
 import "./concertCard.scss"
 
@@ -77,8 +78,11 @@ class ConcertCard extends React.Component {
         {this.bands() && <div className="bands">{this.bands()}</div>}
       </div>
       <div className="concert-card-map">
-        <span>{this.concert.club}</span> in{' '}
-        <span>{this.cityTownVillage()}</span>
+        {/* <span>{this.concert.club}</span> in{' '}
+        <span>{this.cityTownVillage()}</span> */}
+        <Map center={[this.concert.city.lat, this.concert.city.lon]} cameraDistance="10000" isZoomEnabled={false} isScrollEnabled={false}>
+            <Marker key={this.concert.id} latitude={this.concert.city.lat} longitude={this.concert.city.lon} title={this.concert.club} />
+        </Map>
       </div>
     </li>
   )
