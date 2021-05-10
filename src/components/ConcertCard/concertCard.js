@@ -1,7 +1,6 @@
 import PropTypes from "prop-types"
 import React from "react"
 import { Link } from "gatsby"
-import { Map, Marker } from 'react-mapkit'
 
 import "./concertCard.scss"
 
@@ -25,7 +24,7 @@ class ConcertCard extends React.Component {
 
   bands = () => {
     if (this.concert.isFestival) {
-      return this.concert.bands.map(band => {
+      return this.concert.bands.map((band) => {
         return (
           <Link
             to={`/band/${band.slug}`}
@@ -70,19 +69,21 @@ class ConcertCard extends React.Component {
 
   render = () => (
     <li className={`concert-card card ${this.isInTheFuture()}`}>
-      <div className="concert-card-image" style={{backgroundImage: 'url(https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg)'}}>
-      </div>
+      <div
+        className="concert-card-image"
+        style={{
+          backgroundImage:
+            `url(${this.concert.bands[0].image?.file.url})`,
+        }}
+      ></div>
       <div className="concert-card-body">
         <h2 className="card-title">{this.heading()}</h2>
         <span>{this.getDate()}</span>
         {this.bands() && <div className="bands">{this.bands()}</div>}
       </div>
       <div className="concert-card-map">
-        {/* <span>{this.concert.club}</span> in{' '}
-        <span>{this.cityTownVillage()}</span> */}
-        <Map center={[this.concert.city.lat, this.concert.city.lon]} cameraDistance="10000" isZoomEnabled={false} isScrollEnabled={false}>
-            <Marker key={this.concert.id} latitude={this.concert.city.lat} longitude={this.concert.city.lon} title={this.concert.club} />
-        </Map>
+        <span>{this.concert.club}</span> in{' '}
+        <span>{this.cityTownVillage()}</span>
       </div>
     </li>
   )

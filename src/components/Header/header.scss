@@ -1,0 +1,12 @@
+@import "../../styles/variables.scss";
+
+nav {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+
+  a {
+    color: $color-black;
+    font-weight: bold;
+  }
+}
