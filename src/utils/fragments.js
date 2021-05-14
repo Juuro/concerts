@@ -26,6 +26,12 @@ export const ghostTagFields = graphql`
       name
       url
       slug
+      image {
+        id
+        file {
+          url
+        }
+      }
     }
     isFestival
     festival {

@@ -73,17 +73,8 @@ svg {
   vertical-align: middle;
 }
 
-header {
-  background-color: $color-white;
-
-  h1 {
-    margin: 0.5em 0;
-    padding: 0 1rem;
-  }
-}
-
 main {
-  padding: 0 1rem;
+  padding: 1rem 1rem 0;
   width: 100%;
 }
 
@@ -128,8 +119,15 @@ main {
   }
 }
 
+.map-box {
+  display: flex;
+  height: calc(100vh - 162px);
+  width: 100%;
+}
+
 @media screen and (min-width: 768px) {
   main {
+    margin: 0 auto;
     width: 64rem;
   }
 }

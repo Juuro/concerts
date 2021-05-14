@@ -9,16 +9,29 @@ import SEO from "../components/seo"
 const IndexPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
   const concerts = data.allContentfulConcert
+  const now = new Date()
+
+  const concertsInPast = () =>
+    concerts.edges.filter(({ node }) => new Date(node.date) < now)
+
+  const concertsInFuture = () =>
+    concerts.edges.filter(({ node }) => new Date(node.date) > now)
 
   return (
     <Layout>
-      <SEO title={siteTitle} />
-      {concerts.totalCount}
-      <ul className="list-unstyled">
-        {concerts.edges.map(({ node }) => (
-          <ConcertCard key={node.id} concert={node} />
-        ))}
-      </ul>
+      <main>
+        <div className="container">
+          <SEO title={siteTitle} />
+          {concertsInPast().length} concerts visited
+          <br />
+          {concertsInFuture().length} concerts planned
+          <ul className="list-unstyled">
+            {concerts.edges.map(({ node }) => (
+              <ConcertCard key={node.id} concert={node} />
+            ))}
+          </ul>
+        </div>
+      </main>
     </Layout>
   )
 }

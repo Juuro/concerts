@@ -1,0 +1,22 @@
+@import "../../styles/variables.scss";
+
+header {
+  background-color: $color-white;
+
+  h1 {
+    margin: 0.5em 0;
+    padding: 0 1rem;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 0 0 1rem;
+    width: 100%;
+
+    a {
+      color: $color-black;
+      font-weight: bold;
+    }
+  }
+}

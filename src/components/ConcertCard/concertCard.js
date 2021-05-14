@@ -24,7 +24,7 @@ class ConcertCard extends React.Component {
 
   bands = () => {
     if (this.concert.isFestival) {
-      return this.concert.bands.map(band => {
+      return this.concert.bands.map((band) => {
         return (
           <Link
             to={`/band/${band.slug}`}
@@ -69,8 +69,13 @@ class ConcertCard extends React.Component {
 
   render = () => (
     <li className={`concert-card card ${this.isInTheFuture()}`}>
-      <div className="concert-card-image" style={{backgroundImage: 'url(https://www.laut.de/Die-Aerzte/die-aerzte-168756.jpg)'}}>
-      </div>
+      <div
+        className="concert-card-image"
+        style={{
+          backgroundImage:
+            `url(${this.concert.bands[0].image?.file.url})`,
+        }}
+      ></div>
       <div className="concert-card-body">
         <h2 className="card-title">{this.heading()}</h2>
         <span>{this.getDate()}</span>
