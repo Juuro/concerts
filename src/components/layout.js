@@ -29,7 +29,7 @@ const Layout = ({ children }) => (
         <Header siteTitle={data.site.siteMetadata.title} />
 
         {children}
-        
+
         <footer>
           © {new Date().getFullYear()}, Built with
           {` `}

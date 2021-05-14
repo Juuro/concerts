@@ -5,16 +5,8 @@ import { graphql } from "gatsby"
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
-class Band extends React.Component {
-  constructor(props) {
-    super(props)
-    this.data = this.props.data
-    this.location = this.props.location
-    this.pageContext = this.props.pageContext
-    this.concerts = this.data.allContentfulConcert
-  }
-
-  cityTownVillage = (concert) => {
+const Band = ({ data: {allContentfulConcert: concerts}, pageContext: {name} }) => {
+  const cityTownVillage = (concert) => {
     switch (true) {
       case !!concert.fields.geocoderAddressFields.village:
         return concert.fields.geocoderAddressFields.village
@@ -26,32 +18,30 @@ class Band extends React.Component {
     }
   }
 
-  render = () => {
-    return (
-      <Layout>
-        <main>
-          <SEO title="hi!" />
-          <h1>
-            {this.pageContext.name}{" "}
-            <span className="badge bg-primary rounded-pill">
-              {this.concerts.totalCount}
-            </span>
-          </h1>
+  return (
+    <Layout>
+      <main>
+        <SEO title="hi!" />
+        <h1>
+          {name}{" "}
+          <span className="badge bg-primary rounded-pill">
+            {concerts.totalCount}
+          </span>
+        </h1>
 
-          <ul className="list-group">
-            {this.concerts.edges.map(({ node: concert }) => {
-              return (
-                <li key={concert.id} className="list-group-item">
-                  <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
-                  <span>{this.cityTownVillage(concert)}</span>
-                </li>
-              )
-            })}
-          </ul>
-        </main>
-      </Layout>
-    )
-  }
+        <ul className="list-group">
+          {concerts.edges.map(({ node: concert }) => {
+            return (
+              <li key={concert.id} className="list-group-item">
+                <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
+                <span>{cityTownVillage(concert)}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </main>
+    </Layout>
+  )
 }
 
 Band.propTypes = {
