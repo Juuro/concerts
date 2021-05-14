@@ -4,7 +4,7 @@ import { graphql } from "gatsby"
 import { Map, Marker, MapkitProvider } from "react-mapkit"
 
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 
 const MapPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
@@ -35,7 +35,7 @@ const MapPage = ({ data }) => {
 
   return (
     <Layout>
-      <SEO title={siteTitle} />
+      <Seo title={siteTitle} />
       <div className="map-box">
         <MapkitProvider
           tokenOrCallback={

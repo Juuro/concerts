@@ -3,7 +3,7 @@ import PropTypes from "prop-types"
 import { graphql } from "gatsby"
 
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 
 const Band = ({ data: {allContentfulConcert: concerts}, pageContext: {name} }) => {
   const cityTownVillage = (concert) => {
@@ -21,7 +21,7 @@ const Band = ({ data: {allContentfulConcert: concerts}, pageContext: {name} }) =
   return (
     <Layout>
       <main>
-        <SEO title="hi!" />
+        <Seo title="hi!" />
         <h1>
           {name}{" "}
           <span className="badge bg-primary rounded-pill">

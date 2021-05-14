@@ -4,7 +4,7 @@ import { graphql } from "gatsby"
 
 import Layout from "../components/layout"
 import ConcertCard from "../components/ConcertCard/concertCard"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 
 const IndexPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
@@ -21,7 +21,7 @@ const IndexPage = ({ data }) => {
     <Layout>
       <main>
         <div className="container">
-          <SEO title={siteTitle} />
+          <Seo title={siteTitle} />
           {concertsInPast().length} concerts visited
           <br />
           {concertsInFuture().length} concerts planned
