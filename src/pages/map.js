@@ -84,5 +84,3 @@ export const pageQuery = graphql`
     }
   }
 `
-
-// https://nominatim.openstreetmap.org/reverse?lon=8.54677330000004&lat=47.3663756&format=json

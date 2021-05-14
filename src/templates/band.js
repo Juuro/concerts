@@ -14,7 +14,7 @@ class Band extends React.Component {
     this.concerts = this.data.allContentfulConcert
   }
 
-  cityTownVillage = concert => {
+  cityTownVillage = (concert) => {
     switch (true) {
       case !!concert.fields.geocoderAddressFields.village:
         return concert.fields.geocoderAddressFields.village
@@ -29,24 +29,26 @@ class Band extends React.Component {
   render = () => {
     return (
       <Layout>
-        <SEO title="hi!" />
-        <h1>
-          {this.pageContext.name}{" "}
-          <span className="badge bg-primary rounded-pill">
-            {this.concerts.totalCount}
-          </span>
-        </h1>
+        <main>
+          <SEO title="hi!" />
+          <h1>
+            {this.pageContext.name}{" "}
+            <span className="badge bg-primary rounded-pill">
+              {this.concerts.totalCount}
+            </span>
+          </h1>
 
-        <ul className="list-group">
-          {this.concerts.edges.map(({ node: concert }) => {
-            return (
-              <li key={concert.id} className="list-group-item">
-                <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
-                <span>{this.cityTownVillage(concert)}</span>
-              </li>
-            )
-          })}
-        </ul>
+          <ul className="list-group">
+            {this.concerts.edges.map(({ node: concert }) => {
+              return (
+                <li key={concert.id} className="list-group-item">
+                  <span>{concert.date}</span> im <span>{concert.club}</span> in{" "}
+                  <span>{this.cityTownVillage(concert)}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </main>
       </Layout>
     )
   }

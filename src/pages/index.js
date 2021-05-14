@@ -19,17 +19,19 @@ const IndexPage = ({ data }) => {
 
   return (
     <Layout>
-      <div className="container">
-        <SEO title={siteTitle} />
-        {concertsInPast().length} concerts visited
-        <br />
-        {concertsInFuture().length} concerts planned
-        <ul className="list-unstyled">
-          {concerts.edges.map(({ node }) => (
-            <ConcertCard key={node.id} concert={node} />
-          ))}
-        </ul>
-      </div>
+      <main>
+        <div className="container">
+          <SEO title={siteTitle} />
+          {concertsInPast().length} concerts visited
+          <br />
+          {concertsInFuture().length} concerts planned
+          <ul className="list-unstyled">
+            {concerts.edges.map(({ node }) => (
+              <ConcertCard key={node.id} concert={node} />
+            ))}
+          </ul>
+        </div>
+      </main>
     </Layout>
   )
 }

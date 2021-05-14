@@ -73,18 +73,9 @@ svg {
   vertical-align: middle;
 }
 
-header {
-  background-color: $color-white;
-
-  h1 {
-    margin: 0.5em 0;
-    padding: 0 1rem;
-  }
-}
-
 main {
-  padding: 0 1rem;
-  //width: 100%;
+  padding: 1rem 1rem 0;
+  width: 100%;
 }
 
 .card {
@@ -130,12 +121,13 @@ main {
 
 .map-box {
   display: flex;
-  height: 500px;
+  height: calc(100vh - 162px);
   width: 100%;
 }
 
 @media screen and (min-width: 768px) {
   main {
-    // width: 64rem;
+    margin: 0 auto;
+    width: 64rem;
   }
 }
