@@ -4,27 +4,19 @@ import { Link } from "gatsby"
 
 import "./concertCard.scss"
 
-class ConcertCard extends React.Component {
-  constructor(props) {
-    super(props)
-    this.concert = this.props.concert
-    this.style = this.props.style
-  }
-
-  heading = () => {
-    if (this.concert.isFestival) {
-      return this.concert.festival.name
+const ConcertCard = ({ concert }) => {
+  const heading = () => {
+    if (concert.isFestival) {
+      return concert.festival.name
     }
     return (
-      <Link to={`/band/${this.concert.bands[0].slug}`}>
-        {this.concert.bands[0].name}
-      </Link>
+      <Link to={`/band/${concert.bands[0].slug}`}>{concert.bands[0].name}</Link>
     )
   }
 
-  bands = () => {
-    if (this.concert.isFestival) {
-      return this.concert.bands.map((band) => {
+  const bands = () => {
+    if (concert.isFestival) {
+      return concert.bands.map((band) => {
         return (
           <Link
             to={`/band/${band.slug}`}
@@ -39,27 +31,27 @@ class ConcertCard extends React.Component {
     return null
   }
 
-  cityTownVillage = () => {
+  const cityTownVillage = () => {
     switch (true) {
-      case !!this.concert.fields.geocoderAddressFields.village:
-        return this.concert.fields.geocoderAddressFields.village
-      case !!this.concert.fields.geocoderAddressFields.town:
-        return this.concert.fields.geocoderAddressFields.town
-      case !!this.concert.fields.geocoderAddressFields.city:
+      case !!concert.fields.geocoderAddressFields.village:
+        return concert.fields.geocoderAddressFields.village
+      case !!concert.fields.geocoderAddressFields.town:
+        return concert.fields.geocoderAddressFields.town
+      case !!concert.fields.geocoderAddressFields.city:
       default:
-        return this.concert.fields.geocoderAddressFields.city
+        return concert.fields.geocoderAddressFields.city
     }
   }
 
-  isInTheFuture = () => {
-    if (this.concert.date > new Date().toISOString()) {
+  const isInTheFuture = () => {
+    if (concert.date > new Date().toISOString()) {
       return "future"
     }
     return ""
   }
 
-  getDate = () => {
-    const date = new Date(this.concert.date)
+  const getDate = () => {
+    const date = new Date(concert.date)
     return date.toLocaleDateString("de-DE", {
       year: "numeric",
       month: "long",
@@ -67,23 +59,21 @@ class ConcertCard extends React.Component {
     })
   }
 
-  render = () => (
-    <li className={`concert-card card ${this.isInTheFuture()}`}>
+  return (
+    <li className={`concert-card card ${isInTheFuture()}`}>
       <div
         className="concert-card-image"
         style={{
-          backgroundImage:
-            `url(${this.concert.bands[0].image?.file.url})`,
+          backgroundImage: `url(${concert.bands[0].image?.file.url})`,
         }}
       ></div>
       <div className="concert-card-body">
-        <h2 className="card-title">{this.heading()}</h2>
-        <span>{this.getDate()}</span>
-        {this.bands() && <div className="bands">{this.bands()}</div>}
+        <h2 className="card-title">{heading()}</h2>
+        <span>{getDate()}</span>
+        {bands() && <div className="bands">{bands()}</div>}
       </div>
       <div className="concert-card-map">
-        <span>{this.concert.club}</span> in{' '}
-        <span>{this.cityTownVillage()}</span>
+        <span>{concert.club}</span> in <span>{cityTownVillage()}</span>
       </div>
     </li>
   )
