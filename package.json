@@ -1,9 +1,9 @@
 {
   "name": "gatsby-starter-default",
   "private": true,
-  "description": "A simple starter to get up and developing quickly with Gatsby",
-  "version": "0.3.0",
-  "author": "Kyle Mathews <mathews.kyle@gmail.com>",
+  "description": "All the concerts",
+  "version": "0.4.0",
+  "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "bluebird": "^3.7.2",
     "gatsby": "^3.5.0",
@@ -19,6 +19,8 @@
     "gatsby-transformer-opencage-geocoder": "^1.1.1",
     "gatsby-transformer-sharp": "^3.5.0",
     "jsonwebtoken": "^8.5.1",
+    "leaflet": "^1.9.3",
+    "leaflet.markercluster": "^1.5.3",
     "lodash": "^4.17.20",
     "opencage-api-client": "^1.0.0",
     "path": "^0.12.7",
@@ -30,7 +32,7 @@
     "standard-version": "^9.0.0"
   },
   "devDependencies": {
-    "node-sass": "^6.0.0",
+    "node-sass": "^8.0.0",
     "prettier": "^2.0.5"
   },
   "keywords": [
@@ -48,9 +50,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gatsbyjs/gatsby-starter-default"
+    "url": "https://github.com/Juuro/concerts"
   },
   "bugs": {
-    "url": "https://github.com/gatsbyjs/gatsby/issues"
+    "url": "https://github.com/Juuro/concerts/issues"
   }
 }

@@ -34,11 +34,12 @@ h3 {
 
 h1 {
   font-size: 4rem;
-  margin-top: 0.5em;
+  margin: .5em 0;
 }
 
 h2 {
   font-size: 2.5rem;
+  margin-bottom: .5em;
 }
 
 h3 {
@@ -102,27 +103,45 @@ main {
   flex-wrap: wrap;
 }
 
-.badge {
-  background-color: $color-primary;
-  color: $color-white;
-  display: inline;
-  margin: 0 0.4em 0.4rem 0;
-  border-radius: 0.3em;
-  padding: 0.1rem 0.5em;
-  white-space: nowrap;
-  transition: background-color $transition-delay ease-out;
-
-  &:hover {
-    background-color: transparentize($color-black, 0.8);
-    background-image: none;
-    color: $color-white;
-  }
-}
-
-.map-box {
+.mapid {
   display: flex;
   height: calc(100vh - 162px);
   width: 100%;
+}
+
+footer {
+  color: transparentize($color-black, .5);
+  font-size: .7em;
+  text-align: center;
+}
+
+h1,
+h2 {
+  >.badge {
+    margin-left: .4em;
+  }
+}
+
+.badge {
+  background-color: transparentize($color-black, 0.8);
+  border-radius: 0.3em;
+  color: $color-white;
+  display: inline;
+  margin: 0 0.4em 0.4em 0;
+  padding: .1em .5em;
+  white-space: nowrap;
+
+  &:has(.badge) {
+    padding-left: 0;
+
+    .badge {
+      padding: .2em .5em;
+    }
+  }
+}
+
+.bg-primary {
+  background-color: $color-primary;
 }
 
 @media screen and (min-width: 768px) {

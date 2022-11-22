@@ -22,18 +22,24 @@ const Layout = ({ children }) => (
             title
           }
         }
+        allContentfulConcert(sort: { order: DESC, fields: [date] }) {
+          edges {
+            node {
+              ...ContentfulConcertFields
+            }
+          }
+          totalCount
+        }
       }
     `}
     render={(data) => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} />
+        <Header siteTitle={data.site.siteMetadata.title} concerts={data.allContentfulConcert} />
 
         {children}
 
         <footer>
-          © {new Date().getFullYear()}, Built with
-          {` `}
-          <a href="https://www.gatsbyjs.org">Gatsby</a>
+          © {new Date().getFullYear()} · Built with ❤️ on 🌍! 🤟🏳️‍🌈
         </footer>
       </>
     )}

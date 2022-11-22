@@ -1,7 +1,12 @@
-import React from "react"
+import React, { useEffect, useRef } from 'react'
 import PropTypes from "prop-types"
 import { graphql } from "gatsby"
-import { Map, Marker, MapkitProvider } from "react-mapkit"
+import 'leaflet/dist/leaflet.css'
+import Leaflet from 'leaflet'
+import markerSvg from 'leaflet/src/images/marker.svg'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import Layout from "../components/layout"
 import Seo from "../components/seo"
@@ -9,15 +14,8 @@ import Seo from "../components/seo"
 const MapPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
   const concerts = data.allContentfulConcert
-
-  const getDate = (dateInput) => {
-    const date = new Date(dateInput)
-    return date.toLocaleDateString("de-DE", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
+  const map = useRef(null)
+  const mapElement = useRef(null)
 
   const getYear = (dateInput) => {
     const date = new Date(dateInput)
@@ -26,35 +24,71 @@ const MapPage = ({ data }) => {
     })
   }
 
-  const getName = (node) => {
-    if (node.isFestival) {
-      return `${node.festival.name} ${getYear(node.date)}`
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
     }
-    return node.bands[0].name
+    
+    const CustomIcon = Leaflet.Icon.extend({
+      options: {
+        iconSize: [40, 40],
+        shadowSize: [50, 64],
+        shadowAnchor: [4, 62],
+        popupAnchor: [0, -20]
+      }
+    })
+    var markerIcon = new CustomIcon({ iconUrl: markerSvg })
+    // eslint-disable-next-line no-magic-numbers
+    map.current = Leaflet.map(mapElement.current).setView([51.163375, 10.447683], 6)
+
+    const getDate = (dateInput) => {
+      const date = new Date(dateInput)
+      return date.toLocaleDateString("de-DE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    }
+
+    const getName = (node) => {
+      if (node.isFestival) {
+        return `${node.festival.name} ${getYear(node.date)}`
+      }
+      return node.bands[0].name
+    }
+
+    Leaflet.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/outdoors-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'pk.eyJ1IjoianV1cm8iLCJhIjoiY2tkaGdoNzk0MDJ1YTJzb2V4anZ3NXk4bSJ9.1m7LQQaTf2W4R-IgKKGZCQ',
+    }).addTo(map.current)
+
+
+    const markers = Leaflet.markerClusterGroup()
+    concerts.edges.forEach(({ node }) => {
+      const marker = Leaflet.marker([node.city.lat, node.city.lon], { icon: markerIcon }).addTo(map.current)
+      marker.bindPopup(`<strong>${getName(node)}</strong><br />${node.club} am ${getDate(node.date)}`)
+      markers.addLayer(marker)
+    })
+
+    map.current.addLayer(markers)
+  })
+
+  const mapOrNoMap = () => {
+    if (typeof window !== 'undefined') {
+      return <div className="mapid" ref={mapElement}></div>
+    }
+    return "NOTHING"
   }
 
   return (
     <Layout>
       <Seo title={siteTitle} />
-      <div className="map-box">
-        <MapkitProvider
-          tokenOrCallback={
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjZKMzc1SlBIM0sifQ.eyJpYXQiOjE2MTkzNTU3MTUuMDQxLCJpc3MiOiJBOEw5VFJTWkNSIn0.Z9Fv2cs3vfHhGJOoVIj2e1vonKZBXh_GDfdLXCLJ3Wxbidj8F2W0c9JOCFoHRAEHV85fPtysX1DqvMPRD-_P9g"
-          }
-        >
-          <Map center={[50.8, 11]} cameraDistance="1500000">
-            {concerts.edges.map(({ node }) => (
-              <Marker
-                key={node.id}
-                latitude={node.city.lat}
-                longitude={node.city.lon}
-                title={getName(node)}
-                subtitle={getDate(node.date)}
-              />
-            ))}
-          </Map>
-        </MapkitProvider>
-      </div>
+      {mapOrNoMap()}
     </Layout>
   )
 }
