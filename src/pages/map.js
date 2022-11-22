@@ -24,17 +24,21 @@ const MapPage = ({ data }) => {
     })
   }
 
-  const CustomIcon = Leaflet.Icon.extend({
-    options: {
-      iconSize: [40, 40],
-      shadowSize: [50, 64],
-      shadowAnchor: [4, 62],
-      popupAnchor: [0, -20]
-    }
-  })
-  var markerIcon = new CustomIcon({ iconUrl: markerSvg })
-
+  
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    
+    const CustomIcon = Leaflet.Icon.extend({
+      options: {
+        iconSize: [40, 40],
+        shadowSize: [50, 64],
+        shadowAnchor: [4, 62],
+        popupAnchor: [0, -20]
+      }
+    })
+    var markerIcon = new CustomIcon({ iconUrl: markerSvg })
     // eslint-disable-next-line no-magic-numbers
     map.current = Leaflet.map(mapElement.current).setView([51.163375, 10.447683], 6)
 
@@ -74,10 +78,17 @@ const MapPage = ({ data }) => {
     map.current.addLayer(markers)
   })
 
+  const mapOrNoMap = () => {
+    if (typeof window !== 'undefined') {
+      return <div className="mapid" ref={mapElement}></div>
+    }
+    return "NOTHING"
+  }
+
   return (
     <Layout>
       <Seo title={siteTitle} />
-      <div className="mapid" ref={mapElement}></div>
+      {mapOrNoMap()}
     </Layout>
   )
 }

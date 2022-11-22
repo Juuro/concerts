@@ -55,7 +55,7 @@ module.exports = {
       resolve: `gatsby-transformer-opencage-geocoder`,
       options: {
         // Your OpenCage API key
-        api_key: `d00c9c8449954f00a217e544dcd4df70`,
+        api_key: `57dd4532a38d483582b03c1d7a79d7b8`,
 
         // An array of configurations per node type to geocode
         nodeTypes: [
