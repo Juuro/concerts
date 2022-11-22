@@ -4,6 +4,7 @@ import { graphql } from "gatsby"
 
 import Layout from "../components/layout"
 import ConcertCard from "../components/ConcertCard/concertCard"
+import ConcertCount from "../components/ConcertCount/concertCount"
 import Seo from "../components/seo"
 
 const Band = ({ data: { allContentfulConcert: concerts }, pageContext: { name } }) => {
@@ -12,17 +13,17 @@ const Band = ({ data: { allContentfulConcert: concerts }, pageContext: { name } 
       <main>
         <Seo title="hi!" />
         <h2>
-          {name}{" "}
-          <span className="badge bg-primary rounded-pill">
-            {concerts.totalCount}
-          </span>
+          {name}
+          <ConcertCount concerts={concerts} />
         </h2>
 
-        {concerts.edges.map(({ node: concert }) => {
-          return (
-            <ConcertCard key={concert.id} concert={concert} />
-          )
-        })}
+        <ul className="list-unstyled">
+          {concerts.edges.map(({ node: concert }) => {
+            return (
+              <ConcertCard key={concert.id} concert={concert} />
+            )
+          })}
+        </ul>
       </main>
     </Layout>
   )

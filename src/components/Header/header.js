@@ -2,13 +2,17 @@ import { Link } from "gatsby"
 import PropTypes from "prop-types"
 import React from "react"
 
+import ConcertCount from "../ConcertCount/concertCount"
+
 import "./header.scss"
 
-const Header = ({ siteTitle }) => (
+const Header = ({ siteTitle, concerts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
         <Link to="/">{siteTitle}</Link>
+
+        <ConcertCount concerts={concerts} />
       </h1>
 
       <nav>

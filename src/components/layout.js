@@ -22,11 +22,19 @@ const Layout = ({ children }) => (
             title
           }
         }
+        allContentfulConcert(sort: { order: DESC, fields: [date] }) {
+          edges {
+            node {
+              ...ContentfulConcertFields
+            }
+          }
+          totalCount
+        }
       }
     `}
     render={(data) => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} />
+        <Header siteTitle={data.site.siteMetadata.title} concerts={data.allContentfulConcert} />
 
         {children}
 
