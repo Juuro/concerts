@@ -42,6 +42,7 @@ IndexPage.propTypes = {
   }).isRequired,
 }
 
+
 export default IndexPage
 
 export const pageQuery = graphql`
