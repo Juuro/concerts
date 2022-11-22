@@ -1,6 +1,5 @@
 import PropTypes from "prop-types"
 import React from "react"
-import { Link } from "gatsby"
 
 import "./concertCount.scss"
 
@@ -15,8 +14,8 @@ const ConcertCount = ({ concerts }) => {
 
 
   return (
-    <span className="badge rounded-pill" title="Concerts planned">
-      <span className="past badge bg-primary rounded-pill" title="Concerts visited">
+    <span className="badge rounded-pill" title={`${concertsInFuture().length} concerts planned`}>
+      <span className="past badge bg-primary rounded-pill" title={`${concertsInPast().length} concerts visited`}>
         {concertsInPast().length}
       </span>
       {concertsInFuture().length}
