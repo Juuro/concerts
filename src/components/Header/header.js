@@ -11,9 +11,9 @@ const Header = ({ siteTitle, concerts }) => (
     <div className="container">
       <h1>
         <Link to="/">{siteTitle}</Link>
-
-        <ConcertCount concerts={concerts} />
       </h1>
+      <wbr />
+      <ConcertCount concerts={concerts} />
 
       <nav>
         <a href="/">Home</a>

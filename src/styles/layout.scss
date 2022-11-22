@@ -14,6 +14,7 @@ html {
 body {
   background-color: transparentize($color-black, 0.94);
   margin: 0;
+  hyphens: auto;
 }
 
 h1,
@@ -39,7 +40,6 @@ h1 {
 
 h2 {
   font-size: 2.5rem;
-  margin-bottom: .5em;
 }
 
 h3 {
@@ -76,7 +76,9 @@ svg {
 
 main {
   padding: 1rem 1rem 0;
-  width: 100%;
+  margin: 0 auto;
+  width: 100rem;
+  max-width: 100%;
 }
 
 .card {
@@ -119,23 +121,30 @@ h1,
 h2 {
   >.badge {
     margin-left: .4em;
+
+    &:has(.badge) {
+      font-size: .8em;
+    }
   }
 }
 
 .badge {
-  background-color: transparentize($color-black, 0.8);
-  border-radius: 0.3em;
+  background-color: transparentize($color-black, .8);
+  border-radius: .3em;
   color: $color-white;
   display: inline;
-  margin: 0 0.4em 0.4em 0;
+  margin: 0 .4em .4em 0;
   padding: .1em .5em;
   white-space: nowrap;
 
   &:has(.badge) {
     padding-left: 0;
+    font-size: 2em;
+    font-weight: bold;
 
     .badge {
       padding: .2em .5em;
+      font-weight: bold;
     }
   }
 }
@@ -147,6 +156,6 @@ h2 {
 @media screen and (min-width: 768px) {
   main {
     margin: 0 auto;
-    width: 64rem;
+    width: 55rem;
   }
 }
