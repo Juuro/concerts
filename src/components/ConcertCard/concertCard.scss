@@ -5,7 +5,7 @@
   grid-template-columns: 1fr 2fr 2fr 2fr;
   grid-template-rows: auto;
   grid-template-areas:
-    "image image map map"
+    "image image location location"
     "body body body body";
   overflow: hidden;
   margin-bottom: 1rem;
@@ -47,13 +47,19 @@
     }
   }
 
-  .concert-card-map {
-    grid-area: map;
+  .concert-card-location {
+    grid-area: location;
+    display: flex;
+    align-items: center;
+
+    .club {
+      font-weight: bold;
+    }
   }
 }
 
 @media screen and (min-width: 768px) {
   .concert-card {
-    grid-template-areas: "image body body map";
+    grid-template-areas: "image body body location";
   }
 }

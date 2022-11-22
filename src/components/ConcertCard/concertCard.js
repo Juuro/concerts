@@ -86,8 +86,11 @@ const ConcertCard = ({ concert }) => {
         <span>{getDate()}</span>
         {bands() && <div className="bands">{bands()}</div>}
       </div>
-      <div className="concert-card-map">
-        <span>{concert.club}</span> in <span>{cityTownVillage()}</span>
+      <div className="concert-card-location">
+        <div>
+          <div class="club">{concert.club}</div>
+          <div class="city">{cityTownVillage()}</div>
+        </div>
       </div>
     </li>
   )

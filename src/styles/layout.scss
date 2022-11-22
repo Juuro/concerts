@@ -109,6 +109,41 @@ main {
   width: 100%;
 }
 
+footer {
+  color: transparentize($color-black, .5);
+  font-size: .7em;
+  text-align: center;
+}
+
+h1,
+h2 {
+  >.badge {
+    margin-left: .4em;
+  }
+}
+
+.badge {
+  background-color: transparentize($color-black, 0.8);
+  border-radius: 0.3em;
+  color: $color-white;
+  display: inline;
+  margin: 0 0.4em 0.4em 0;
+  padding: .1em .5em;
+  white-space: nowrap;
+
+  &:has(.badge) {
+    padding-left: 0;
+
+    .badge {
+      padding: .2em .5em;
+    }
+  }
+}
+
+.bg-primary {
+  background-color: $color-primary;
+}
+
 @media screen and (min-width: 768px) {
   main {
     margin: 0 auto;
