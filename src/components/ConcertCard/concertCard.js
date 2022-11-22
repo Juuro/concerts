@@ -15,8 +15,9 @@ const ConcertCard = ({ concert }) => {
   }
 
   const bands = () => {
+    const bands = [...concert.bands]
     if (concert.isFestival) {
-      return concert.bands.map((band) => {
+      return bands.map((band) => {
         return (
           <Link
             to={`/band/${band.slug}`}
@@ -28,7 +29,20 @@ const ConcertCard = ({ concert }) => {
         )
       })
     }
-    return null
+    else {
+      bands.shift()
+      return bands.map((band) => {
+        return (
+          <Link
+            to={`/band/${band.slug}`}
+            key={band.id}
+            className="badge bg-primary mr-2"
+          >
+            {band.name}
+          </Link>
+        )
+      })
+    }
   }
 
   const cityTownVillage = () => {
