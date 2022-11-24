@@ -18,6 +18,7 @@ if (!spaceId || !accessToken) {
   )
 }
 
+
 module.exports = {
   siteMetadata: {
     title: `Concerts I've visited`,
