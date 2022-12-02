@@ -11,7 +11,7 @@ const Band = ({ data: { allContentfulConcert: concerts }, pageContext: { name } 
   return (
     <Layout>
       <main>
-        <Seo title="hi!" />
+        <Seo title={name} />
         <h2>
           {name}
           <ConcertCount concerts={concerts} />
