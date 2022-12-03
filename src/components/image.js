@@ -25,7 +25,9 @@ const Image = () => (
         }
       }
     `}
-    render={data => <GatsbyImage image={data.placeholderImage.childImageSharp.fluid} />}
+    render={(data) => (
+      <GatsbyImage image={data.placeholderImage.childImageSharp.fluid} />
+    )}
   />
 )
 export default Image

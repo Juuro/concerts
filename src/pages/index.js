@@ -9,7 +9,7 @@ import Seo from "../components/seo"
 const IndexPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
   const concerts = data.allContentfulConcert
- 
+
   return (
     <Layout>
       <main>
@@ -41,7 +41,7 @@ export const pageQuery = graphql`
         title
       }
     }
-    allContentfulConcert(sort: {date: DESC}) {
+    allContentfulConcert(sort: { date: DESC }) {
       edges {
         node {
           ...ContentfulConcertFields
