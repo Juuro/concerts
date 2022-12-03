@@ -10,10 +10,15 @@ const ConcertCount = ({ concerts }) => {
   const concertsInFuture = () =>
     concerts.edges.filter(({ node }) => new Date(node.date) > now)
 
-
   return (
-    <span className="badge rounded-pill" title={`${concertsInFuture().length} concerts planned`}>
-      <span className="past badge bg-primary rounded-pill" title={`${concertsInPast().length} concerts visited`}>
+    <span
+      className="badge rounded-pill"
+      title={`${concertsInFuture().length} concerts planned`}
+    >
+      <span
+        className="past badge bg-primary rounded-pill"
+        title={`${concertsInPast().length} concerts visited`}
+      >
         {concertsInPast().length}
       </span>
       {concertsInFuture().length}

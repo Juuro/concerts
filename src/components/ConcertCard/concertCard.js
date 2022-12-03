@@ -28,8 +28,7 @@ const ConcertCard = ({ concert }) => {
           </Link>
         )
       })
-    }
-    else {
+    } else {
       bands.shift()
       return bands.map((band) => {
         return (
@@ -88,8 +87,8 @@ const ConcertCard = ({ concert }) => {
       </div>
       <div className="concert-card-location">
         <div>
-          <div class="club">{concert.club}</div>
-          <div class="city">{cityTownVillage()}</div>
+          <div className="club">{concert.club}</div>
+          <div className="city">{cityTownVillage()}</div>
         </div>
       </div>
     </li>

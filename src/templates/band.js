@@ -7,7 +7,10 @@ import ConcertCard from "../components/ConcertCard/concertCard"
 import ConcertCount from "../components/ConcertCount/concertCount"
 import Seo from "../components/seo"
 
-const Band = ({ data: { allContentfulConcert: concerts }, pageContext: { name } }) => {
+const Band = ({
+  data: { allContentfulConcert: concerts },
+  pageContext: { name },
+}) => {
   return (
     <Layout>
       <main>
@@ -19,9 +22,7 @@ const Band = ({ data: { allContentfulConcert: concerts }, pageContext: { name } 
 
         <ul className="list-unstyled">
           {concerts.edges.map(({ node: concert }) => {
-            return (
-              <ConcertCard key={concert.id} concert={concert} />
-            )
+            return <ConcertCard key={concert.id} concert={concert} />
           })}
         </ul>
       </main>
@@ -47,7 +48,7 @@ export default Band
 export const pageQuery = graphql`
   query BandQuery($slug: String!) {
     allContentfulConcert(
-      sort: { order: DESC, fields: [date] }
+      sort: { date: DESC }
       filter: { bands: { elemMatch: { slug: { eq: $slug } } } }
     ) {
       edges {
