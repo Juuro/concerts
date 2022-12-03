@@ -1,6 +1,7 @@
 const _ = require(`lodash`)
 const Promise = require(`bluebird`)
 const path = require(`path`)
+const opencage = require("opencage-api-client")
 /**
  * Implement Gatsby's Node APIs in this file.
  *
@@ -18,10 +19,7 @@ exports.createPages = ({ graphql, actions }) => {
     resolve(
       graphql(`
         {
-          allContentfulBand(
-            sort: { order: ASC, fields: name }
-            filter: { slug: { ne: "data-schema" } }
-          ) {
+          allContentfulBand(sort: {name: ASC}, filter: {slug: {ne: "data-schema"}}) {
             edges {
               node {
                 slug
@@ -84,5 +82,39 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions }) => {
         ],
       },
     })
+  }
+}
+
+exports.onCreateNode = async ({
+  node,
+  actions: { createNodeField },
+}) => {
+  if (node.internal.type === 'ContentfulConcert') {
+    console.log('onCreateNode', node.city)
+
+    const query = `${node.city.lat}, ${node.city.lon}`
+    const apiRequestOptions = { key: 'd00c9c8449954f00a217e544dcd4df70', q: query };
+
+    try {
+      let data = await opencage.geocode(apiRequestOptions);
+
+      if (data.status.code == 200) {
+        if (data.results.length > 0) {
+          var place = data.results[0];
+
+          createNodeField({
+            node,
+            name: `geocoderAddressFields`,
+            value: place.components
+          });
+        }
+      }
+      else {
+        console.error('error', data.status.message);
+      }
+    }
+    catch (error) {
+      console.log('ALARM! ALARM!! 🚨', error)
+    }
   }
 }

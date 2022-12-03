@@ -22,7 +22,7 @@ const Layout = ({ children }) => (
             title
           }
         }
-        allContentfulConcert(sort: { order: DESC, fields: [date] }) {
+        allContentfulConcert(sort: {date: DESC}) {
           edges {
             node {
               ...ContentfulConcertFields

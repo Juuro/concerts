@@ -47,8 +47,8 @@ export default Band
 export const pageQuery = graphql`
   query BandQuery($slug: String!) {
     allContentfulConcert(
-      sort: { order: DESC, fields: [date] }
-      filter: { bands: { elemMatch: { slug: { eq: $slug } } } }
+      sort: {date: DESC}
+      filter: {bands: {elemMatch: {slug: {eq: $slug}}}}
     ) {
       edges {
         node {
