@@ -22,7 +22,7 @@ const Layout = ({ children }) => (
             title
           }
         }
-        allContentfulConcert(sort: { order: DESC, fields: [date] }) {
+        allContentfulConcert(sort: { date: DESC }) {
           edges {
             node {
               ...ContentfulConcertFields
@@ -34,7 +34,10 @@ const Layout = ({ children }) => (
     `}
     render={(data) => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} concerts={data.allContentfulConcert} />
+        <Header
+          siteTitle={data.site.siteMetadata.title}
+          concerts={data.allContentfulConcert}
+        />
 
         {children}
 

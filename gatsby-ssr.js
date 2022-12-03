@@ -6,5 +6,5 @@
 
 // You can delete this file if you're not using it
 export const onRenderBody = ({ setHtmlAttributes }) => {
-  setHtmlAttributes({ lang: 'de' });
-};
+  setHtmlAttributes({ lang: "de" })
+}
