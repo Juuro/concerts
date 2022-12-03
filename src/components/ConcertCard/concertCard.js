@@ -28,8 +28,7 @@ const ConcertCard = ({ concert }) => {
           </Link>
         )
       })
-    }
-    else {
+    } else {
       bands.shift()
       return bands.map((band) => {
         return (

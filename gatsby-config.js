@@ -1,7 +1,7 @@
 try {
   // Load the Contentful config from the .contentful.json
   contentfulConfig = require("./.contentful")
-} catch (_) { }
+} catch (_) {}
 
 // Overwrite the Contentful config with environment variables if they exist
 contentfulConfig = {
@@ -75,6 +75,6 @@ module.exports = {
     // To learn more, visit: https://gatsby.dev/offline
     `gatsby-plugin-offline`,
     `gatsby-plugin-sass`,
-    `gatsby-plugin-image`
+    `gatsby-plugin-image`,
   ],
 }
