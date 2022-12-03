@@ -2,7 +2,7 @@
   "name": "gatsby-starter-default",
   "private": true,
   "description": "All the concerts",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "bluebird": "^3.7.2",
