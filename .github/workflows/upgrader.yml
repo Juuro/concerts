@@ -5,6 +5,7 @@ name: Yarn Upgrader
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 4 */1 * *"
 
@@ -25,9 +26,10 @@ jobs:
       - name: Yarn Upgrader
         uses: browniebroke/yarn-upgrade-action@v1
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4.2.3
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           branch: update/yarn-upgrade
           title: Run yarn upgrade
           commit-message: "chore(deps): Run yarn upgrade"
+          committer: "Sebastian Engel <sebastianengel@posteo.de>"
