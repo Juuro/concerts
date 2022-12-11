@@ -5,6 +5,7 @@ import "./statistics.scss"
 
 const Statistics = () => {
   const [yearCounts, setYearCounts] = useState({})
+  const [mostConcerts, setMostConcerts] = useState(0)
 
   const { allContentfulConcert: { nodes: dates } } = useStaticQuery(
     graphql`
@@ -18,6 +19,10 @@ const Statistics = () => {
     `
   )
 
+  const calcPercentage = absolute => {
+    return Math.round(absolute * 100 / mostConcerts)
+  }
+
   useEffect(() => {
     const yearArray = dates.map(date => Object.values(date)).flat()
 
@@ -27,14 +32,20 @@ const Statistics = () => {
         return yearCounts
       })
     }
-
-    console.log("yearCounts", yearCounts)
   }, [dates, yearCounts])
+
+  useEffect(() => {
+    setMostConcerts(Math.max.apply(null, Object.values(yearCounts)))
+  }, [yearCounts])
 
   return (
     <div className="card statistics">
       <h4>Stats</h4>
-      {yearCounts[2007]}
+      <ul>
+      {Object.entries(yearCounts).map(element => {
+        return (<li>{element[0]}: {calcPercentage(element[1])}</li>)
+      })}
+      </ul>
     </div>
   )
 }
