@@ -1,5 +1,19 @@
 @import "../../styles/variables.scss";
 
 .statistics {
+  padding: 1em;
   
+  ul {
+    list-style: none;
+    width: 200px;
+    padding: 0;
+
+    li {
+      background-color: $color-primary;
+      margin-bottom: .1em;
+      border-radius: .2em;
+      padding: .2em;
+      color: $color-white;
+    }
+  }
 }
