@@ -7,6 +7,8 @@ const Statistics = () => {
   const [yearCounts, setYearCounts] = useState({})
   const [mostConcerts, setMostConcerts] = useState(0)
 
+  const yearCountEntries = Object.entries(yearCounts)
+
   const { allContentfulConcert: { nodes: dates } } = useStaticQuery(
     graphql`
       query MyQuery {
@@ -24,6 +26,7 @@ const Statistics = () => {
   }
 
   useEffect(() => {
+    console.log('useEffect1')
     const yearArray = dates.map(date => Object.values(date)).flat()
 
     for (const year of yearArray) {
@@ -32,9 +35,12 @@ const Statistics = () => {
         return yearCounts
       })
     }
+
+    console.log('yearCounts', yearCounts)
   }, [dates, yearCounts])
 
   useEffect(() => {
+    console.log('useEffect2')
     setMostConcerts(Math.max.apply(null, Object.values(yearCounts)))
   }, [yearCounts])
 
@@ -42,8 +48,9 @@ const Statistics = () => {
     <div className="card statistics">
       <h4>Stats</h4>
       <ul>
-      {Object.entries(yearCounts).map(element => {
-        return (<li>{element[0]}: {calcPercentage(element[1])}</li>)
+      {yearCountEntries.map(element => {
+        // return 'möp'
+        return (<li key={element[0]}>{element[0]}: {element[1]} ({calcPercentage(element[1])}%)</li>)
       })}
       </ul>
     </div>
