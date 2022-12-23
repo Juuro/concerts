@@ -16,6 +16,7 @@ const ConcertCard = ({ concert }) => {
 
   const bands = () => {
     const bands = [...concert.bands]
+    // TODO: Badges as seperate (tag) component?
     if (concert.isFestival) {
       return bands.map((band) => {
         return (
