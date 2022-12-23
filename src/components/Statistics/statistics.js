@@ -77,7 +77,8 @@ const Statistics = () => {
     setMostConcerts(Math.max.apply(null, Object.values(yearCountsObject)))
   }, [yearCountsObject])
 
-  // TODO: Get the bar chart design right.
+  // TODO: Get the bar chart design right. MAybe work with overflow and masking?
+  // TODO: Split into three components: Statistics (or some kind of box with three columns, or just a div with display: flex), MostSeenBands, MostConcertsPerYear. The latter should also be usable on the full Statstics page and have more than just five entries.
   return (
     <React.StrictMode>
       <div className="card statistics">

@@ -13,6 +13,7 @@ import Header from "./Header/header"
 
 import "../styles/layout.scss"
 
+// TODO: Replace StaticQuery.
 const Layout = ({ children }) => (
   <StaticQuery
     query={graphql`
