@@ -8,7 +8,7 @@
     display: flex;
     gap: 1em;
 
-    > div {
+    >div {
       flex-grow: 1;
     }
   }
@@ -19,16 +19,28 @@
     margin: 0;
 
     li {
-      background-color: $color-primary;
+      background-color: $color-black;
       margin-bottom: 0.2em;
       border-radius: 0.3em;
       padding: 0.03em 0.5em;
       color: $color-white;
       font-size: .7em;
       max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition-property: background-color, width;
+      transition-duration: .2s;
+      transition-timing-function: linear;
+
+      &:hover {
+        width: 100% !important;
+        background-color: $color-primary;
+      }
 
       a {
         color: $color-white;
+        mix-blend-mode:hard-light;
       }
     }
   }

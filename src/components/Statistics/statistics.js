@@ -77,7 +77,6 @@ const Statistics = () => {
     setMostConcerts(Math.max.apply(null, Object.values(yearCountsObject)))
   }, [yearCountsObject])
 
-  // TODO: Get the bar chart design right. MAybe work with overflow and masking?
   // TODO: Split into three components: Statistics (or some kind of box with three columns, or just a div with display: flex), MostSeenBands, MostConcertsPerYear. The latter should also be usable on the full Statstics page and have more than just five entries.
   return (
     <React.StrictMode>
@@ -87,7 +86,7 @@ const Statistics = () => {
           <div>
             <ul>
               {yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
-                return (<li style={{ width: calcPercentage(element[1], mostConcerts) + '%' }} key={element[0]} title={element[1]}>{element[0]} <strong>{element[1]}</strong></li>)
+                return (<li style={{ width: calcPercentage(element[1], mostConcerts) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
               })}
             </ul>
           </div>
@@ -95,11 +94,11 @@ const Statistics = () => {
             <ul>
               {mostSeenBandsArray.map(element => {
                 const key = `${element.id}${element.numberOfConcerts}`
-                return (<li style={{ width: calcPercentage(element.numberOfConcerts, mostConcertsOfOneBand) + '%' }} key={key}><Link to={`/band/${element.slug}`}>{element.name} <strong>{element.numberOfConcerts}</strong></Link></li>)
+                return (<li style={{ width: calcPercentage(element.numberOfConcerts, mostConcertsOfOneBand) + '%' }} key={key}><Link to={`/band/${element.slug}`}><strong>{element.numberOfConcerts}</strong> {element.name}</Link></li>)
               })}
             </ul>
           </div>
-          <div>ho</div>
+          <div>ho ho ho</div>
         </div>
       </div>
     </React.StrictMode>
