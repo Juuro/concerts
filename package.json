@@ -6,7 +6,7 @@
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "bluebird": "^3.7.2",
-    "gatsby": "5.2.0",
+    "gatsby": "5.3.3",
     "gatsby-plugin-image": "^3.2.0",
     "gatsby-plugin-manifest": "^5.2.0",
     "gatsby-plugin-offline": "^6.2.0",
@@ -16,7 +16,6 @@
     "gatsby-source-contentful": "^8.2.0",
     "gatsby-source-filesystem": "^5.2.0",
     "gatsby-transformer-sharp": "^5.2.0",
-    "jsonwebtoken": "^8.5.1",
     "leaflet": "^1.9.3",
     "leaflet.markercluster": "^1.5.3",
     "lodash": "^4.17.20",
