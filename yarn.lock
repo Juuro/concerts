@@ -6466,9 +6466,9 @@ graphql-compose@^9.0.10, graphql-compose@^9.0.9:
     graphql-type-json "0.3.2"
 
 graphql-http@^1.7.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/graphql-http/-/graphql-http-1.9.0.tgz#fdde6c1a4d7f32bcaed25f6a573c03b22c07ac76"
-  integrity sha512-MMwhHK24BRzf/AODYnT7eu3eCFHzoj1LBeB/8j+pFuhk539bnYQLP8Z/ey92PEgAbbL28lml7uZXbbCDYHVM1A==
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/graphql-http/-/graphql-http-1.10.0.tgz#18a08b6c06163561b48a024c90b9f23197df912c"
+  integrity sha512-hPAVhru5W6EIrRgwaWJ9aD0PFcedZvjL0T+2CxW8QVaEU97HSkJKCtj4KeFreqc/Y3As7XnCE4JII+NYFV67vg==
 
 graphql-tag@^2.11.0, graphql-tag@^2.12.6:
   version "2.12.6"
