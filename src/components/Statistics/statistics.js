@@ -19,7 +19,8 @@ const Statistics = () => {
       query MyQuery {
         allContentfulConcert {
           nodes {
-            date(formatString: "YYYY")
+            years: date(formatString: "YYYY")
+            date
             fields {
               geocoderAddressFields {
                 city
@@ -72,8 +73,17 @@ const Statistics = () => {
   }, [mostSeenBandsArray])
 
   useEffect(() => {
-    const yearArray = dates.map(date => date.date).flat()
+    const yearArray = dates.map(date => {
+      if (new Date < new Date(date.date)) {
+        return
+      }
+      return date.years
+    }).flat()
+    
     const cityArray = dates.map(date => {
+      if (new Date < new Date(date.date)) {
+        return
+      }
       switch (true) {
         case !!date.fields.geocoderAddressFields.village:
           return date.fields.geocoderAddressFields.village
@@ -84,8 +94,6 @@ const Statistics = () => {
           return date.fields.geocoderAddressFields.city
       }
     })
-
-    console.log(cityArray)
 
     if (Object.entries(yearCountsObject).length === 0) {
       const yearCounts = {}
