@@ -5,11 +5,14 @@ import "./statistics.scss"
 
 const Statistics = () => {
   const [yearCountsObject, setYearCountsObject] = useState({})
+  const [cityCountsObject, setCityCountsObject] = useState({})
   const [mostConcerts, setMostConcerts] = useState(0)
+  const [mostCities, setMostCities] = useState(0)
   const [mostSeenBandsArray, setMostSeenBandsArray] = useState([])
   const [mostConcertsOfOneBand, setMostConcertsOfOneBand] = useState(0)
 
   const yearCountEntries = Object.entries(yearCountsObject)
+  const cityCountEntries = Object.entries(cityCountsObject)
 
   const { allContentfulConcert: { nodes: dates }, allContentfulBand: { edges: bands } } = useStaticQuery(
     graphql`
@@ -17,6 +20,13 @@ const Statistics = () => {
         allContentfulConcert {
           nodes {
             date(formatString: "YYYY")
+            fields {
+              geocoderAddressFields {
+                city
+                town
+                village
+              }
+            }
           }
         }
         allContentfulBand {
@@ -62,7 +72,20 @@ const Statistics = () => {
   }, [mostSeenBandsArray])
 
   useEffect(() => {
-    const yearArray = dates.map(date => Object.values(date)).flat()
+    const yearArray = dates.map(date => date.date).flat()
+    const cityArray = dates.map(date => {
+      switch (true) {
+        case !!date.fields.geocoderAddressFields.village:
+          return date.fields.geocoderAddressFields.village
+        case !!date.fields.geocoderAddressFields.town:
+          return date.fields.geocoderAddressFields.town
+        case !!date.fields.geocoderAddressFields.city:
+        default:
+          return date.fields.geocoderAddressFields.city
+      }
+    })
+
+    console.log(cityArray)
 
     if (Object.entries(yearCountsObject).length === 0) {
       const yearCounts = {}
@@ -71,17 +94,28 @@ const Statistics = () => {
       }
       setYearCountsObject(yearCounts)
     }
-  }, [dates, yearCountsObject])
+
+    if (Object.entries(cityCountsObject).length === 0) {
+      const cityCounts = {}
+      for (const city of cityArray) {
+        cityCounts[city] = cityCounts[city] ? cityCounts[city] + 1 : 1
+      }
+      setCityCountsObject(cityCounts)
+    }
+  }, [dates, yearCountsObject, cityCountsObject])
 
   useEffect(() => {
     setMostConcerts(Math.max.apply(null, Object.values(yearCountsObject)))
   }, [yearCountsObject])
 
+  useEffect(() => {
+    setMostCities(Math.max.apply(null, Object.values(cityCountsObject)))
+  }, [cityCountsObject])
+
   // TODO: Split into three components: Statistics (or some kind of box with three columns, or just a div with display: flex), MostSeenBands, MostConcertsPerYear. The latter should also be usable on the full Statstics page and have more than just five entries.
   return (
     <React.StrictMode>
       <div className="card statistics">
-        <h4>Stats</h4>
         <div className="stats-box">
           <div>
             <ul>
@@ -98,7 +132,13 @@ const Statistics = () => {
               })}
             </ul>
           </div>
-          <div>ho ho ho</div>
+          <div>
+            <ul>
+              {cityCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
+                return (<li style={{ width: calcPercentage(element[1], mostCities) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
+              })}
+            </ul>
+          </div>
         </div>
       </div>
     </React.StrictMode>

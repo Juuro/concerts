@@ -31,11 +31,15 @@
       text-overflow: ellipsis;
       transition-property: background-color, width;
       transition-duration: .2s;
-      transition-timing-function: linear;
+      transition-timing-function: ease-out;
 
       &:hover {
         width: 100% !important;
         background-color: $color-primary;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
       }
 
       a {
