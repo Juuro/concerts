@@ -131,7 +131,6 @@ const Statistics = () => {
                 return (<li style={{ width: calcPercentage(element[1], mostConcerts) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
               })}
             </ul>
-            <a href="" className="more">&#9679;&#9679;&#9679;</a>
           </div>
           <div>
             <ul>
@@ -140,7 +139,6 @@ const Statistics = () => {
                 return (<li style={{ width: calcPercentage(element.numberOfConcerts, mostConcertsOfOneBand) + '%' }} key={key}><Link to={`/band/${element.slug}`}><strong>{element.numberOfConcerts}</strong> {element.name}</Link></li>)
               })}
             </ul>
-            <a href="" className="more">&#9679;&#9679;&#9679;</a>
           </div>
           <div>
             <ul>
@@ -148,7 +146,6 @@ const Statistics = () => {
                 return (<li style={{ width: calcPercentage(element[1], mostCities) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
               })}
             </ul>
-            <a href="" className="more">&#9679;&#9679;&#9679;</a>
           </div>
         </div>
       </div>
