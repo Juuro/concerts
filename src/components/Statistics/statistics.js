@@ -126,6 +126,7 @@ const Statistics = () => {
       <div className="card statistics">
         <div className="stats-box">
           <div>
+            <h4 title="most concerts per year">year</h4>
             <ul>
               {yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
                 return (<li style={{ width: calcPercentage(element[1], mostConcerts) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
@@ -133,6 +134,7 @@ const Statistics = () => {
             </ul>
           </div>
           <div>
+            <h4 title="most concerts per band">band</h4>
             <ul>
               {mostSeenBandsArray.map(element => {
                 const key = `${element.id}${element.numberOfConcerts}`
@@ -141,6 +143,7 @@ const Statistics = () => {
             </ul>
           </div>
           <div>
+            <h4 title="most concerts per city">city</h4>
             <ul>
               {cityCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
                 return (<li style={{ width: calcPercentage(element[1], mostCities) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)

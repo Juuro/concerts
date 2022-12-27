@@ -10,6 +10,13 @@
     gap: 1em;
   }
 
+  h4 {
+    font-size: 0.8em;
+    display: block;
+    text-align: center;
+    margin: 0 0 .2em 0;
+  }
+
   ul {
     list-style: none;
     padding: 0;
@@ -41,7 +48,7 @@
 
       a {
         color: $color-white;
-        mix-blend-mode:hard-light;
+        mix-blend-mode: hard-light;
       }
     }
   }
