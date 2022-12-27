@@ -1,0 +1,69 @@
+@import "../../styles/variables.scss";
+
+.statistics {
+  padding: 1em;
+  width: 100%;
+
+  .stats-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1em;
+  }
+
+  h4 {
+    font-size: 0.8em;
+    display: block;
+    text-align: center;
+    margin: 0 0 .2em 0;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      background-color: $color-black;
+      margin-bottom: 0.2em;
+      border-radius: 0.3em;
+      padding: 0.03em 0.5em;
+      color: $color-white;
+      font-size: .7em;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition-property: background-color, width;
+      transition-duration: .2s;
+      transition-timing-function: ease-out;
+
+      &:hover {
+        width: 100% !important;
+        background-color: $color-primary;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      a {
+        color: $color-white;
+        mix-blend-mode: hard-light;
+      }
+    }
+  }
+
+  a.more {
+    display: block;
+    text-align: center;
+    transition-property: background-color;
+    transition-duration: .2s;
+    transition-timing-function: ease-out;
+    margin-top: 0.2em;
+
+    &:hover {
+      border-radius: 0.3em;
+      background-color: transparentize($color-black, .9);
+    }
+  }
+}

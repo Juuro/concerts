@@ -12,6 +12,7 @@ import { GatsbyImage } from "gatsby-plugin-image"
  * - `StaticQuery`: https://gatsby.dev/staticquery
  */
 
+// TODO: Replace StaticQuery.
 const Image = () => (
   <StaticQuery
     query={graphql`
