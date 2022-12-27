@@ -58,10 +58,11 @@ h6 {
 a {
   color: $color-primary;
   text-decoration: none;
-  transition: color $transition-delay ease-out;
+  transition: color $transition-duration ease-out;
 
+  // TODO: Fix hover colour for tags.
   &:hover {
-    color: $color-red;
+    color: $color-black;
   }
 }
 
