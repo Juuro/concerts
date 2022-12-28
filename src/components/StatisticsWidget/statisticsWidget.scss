@@ -1,0 +1,9 @@
+@import "../../styles/variables.scss";
+
+.statistics-widget {
+  padding: 1em;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1em;
+}

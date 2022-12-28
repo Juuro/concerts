@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react"
-import { useStaticQuery, graphql, Link } from "gatsby"
+import { useStaticQuery, graphql } from "gatsby"
 
-import "./statistics.scss"
+import "./statisticsWidget.scss"
+import BarChart from "../BarChart/barchart"
 
-const Statistics = () => {
+const StatisticsWidget = () => {
   const [yearCountsObject, setYearCountsObject] = useState({})
   const [cityCountsObject, setCityCountsObject] = useState({})
   const [mostConcerts, setMostConcerts] = useState(0)
@@ -46,13 +47,6 @@ const Statistics = () => {
     `
   )
 
-  const calcPercentage = (absolute, dings) => {
-    if (dings >= 0) {
-      const percentage = Math.round(absolute * 100 / dings)
-      return percentage
-    }
-  }
-
   useEffect(() => {
     const bandsArray = bands.filter(elem => !!elem.node.concert)
       .map(elem => {
@@ -73,16 +67,9 @@ const Statistics = () => {
   }, [mostSeenBandsArray])
 
   useEffect(() => {
-    const yearArray = dates.map(date => {
-      if (new Date < new Date(date.date)) {
-        return
-      }
-      return date.years
-    }).flat()
-
     const cityArray = dates.map(date => {
-      if (new Date < new Date(date.date)) {
-        return
+      if (new Date() < new Date(date.date)) {
+        return false
       }
       switch (true) {
         case !!date.fields.geocoderAddressFields.village:
@@ -95,14 +82,6 @@ const Statistics = () => {
       }
     })
 
-    if (Object.entries(yearCountsObject).length === 0) {
-      const yearCounts = {}
-      for (const year of yearArray) {
-        yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1
-      }
-      setYearCountsObject(yearCounts)
-    }
-
     if (Object.entries(cityCountsObject).length === 0) {
       const cityCounts = {}
       for (const city of cityArray) {
@@ -110,7 +89,24 @@ const Statistics = () => {
       }
       setCityCountsObject(cityCounts)
     }
-  }, [dates, yearCountsObject, cityCountsObject])
+  }, [dates, cityCountsObject])
+
+  useEffect(() => {
+    const yearArray = dates.map(date => {
+      if (new Date() < new Date(date.date)) {
+        return false
+      }
+      return date.years
+    }).flat()
+
+    if (Object.entries(yearCountsObject).length === 0) {
+      const yearCounts = {}
+      for (const year of yearArray) {
+        yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1
+      }
+      setYearCountsObject(yearCounts)
+    }
+  }, [dates, yearCountsObject])
 
   useEffect(() => {
     setMostConcerts(Math.max.apply(null, Object.values(yearCountsObject)))
@@ -120,40 +116,15 @@ const Statistics = () => {
     setMostCities(Math.max.apply(null, Object.values(cityCountsObject)))
   }, [cityCountsObject])
 
-  // TODO: Split into three components: Statistics (or some kind of box with three columns, or just a div with display: flex), MostSeenBands, MostConcertsPerYear. The latter should also be usable on the full Statstics page and have more than just five entries.
   return (
     <React.StrictMode>
-      <div className="card statistics">
-        <div className="stats-box">
-          <div>
-            <h4 title="most concerts per year">year</h4>
-            <ul>
-              {yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
-                return (<li style={{ width: calcPercentage(element[1], mostConcerts) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
-              })}
-            </ul>
-          </div>
-          <div>
-            <h4 title="most concerts per band">band</h4>
-            <ul>
-              {mostSeenBandsArray.map(element => {
-                const key = `${element.id}${element.numberOfConcerts}`
-                return (<li style={{ width: calcPercentage(element.numberOfConcerts, mostConcertsOfOneBand) + '%' }} key={key}><Link to={`/band/${element.slug}`}><strong>{element.numberOfConcerts}</strong> {element.name}</Link></li>)
-              })}
-            </ul>
-          </div>
-          <div>
-            <h4 title="most concerts per city">city</h4>
-            <ul>
-              {cityCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(element => {
-                return (<li style={{ width: calcPercentage(element[1], mostCities) + '%' }} key={element[0]} title={element[1]}><strong>{element[1]}</strong> {element[0]}</li>)
-              })}
-            </ul>
-          </div>
-        </div>
+      <div className="card statistics-widget">
+        <BarChart data={yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5)} max={mostConcerts} title="most concerts per year" category="year" />
+        <BarChart data={mostSeenBandsArray.map(element => [element.name, element.numberOfConcerts, element.slug])} max={mostConcertsOfOneBand} title="most concerts per band" category="band" />
+        <BarChart data={cityCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5)} max={mostCities} title="most concerts per city" category="city" />
       </div>
     </React.StrictMode>
   )
 }
 
-export default Statistics
+export default StatisticsWidget

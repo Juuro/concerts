@@ -5,7 +5,7 @@ import { graphql } from "gatsby"
 import Layout from "../components/layout"
 import ConcertCard from "../components/ConcertCard/concertCard"
 import Seo from "../components/seo"
-import Statistics from "../components/Statistics/statistics"
+import StatisticsWidget from "../components/StatisticsWidget/statisticsWidget"
 
 const IndexPage = ({ data }) => {
   const siteTitle = data.site.siteMetadata.title
@@ -16,7 +16,7 @@ const IndexPage = ({ data }) => {
       <main>
         <div className="container">
           <Seo title={siteTitle} />
-          <Statistics />
+          <StatisticsWidget />
           <ul className="list-unstyled">
             {concerts.edges.map(({ node }) => (
               <ConcertCard key={node.id} concert={node} />
