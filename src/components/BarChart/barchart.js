@@ -12,7 +12,6 @@ const BarChart = ({ data, max, title, category }) => {
   }
 
   const createLink = (element) => {
-    console.log('HELLOOO')
     if (element[2]) {
       return (<Link to={`/${category}/${element[2]}`}><strong>{element[1]}</strong> {element[0]}</Link>)
     }
