@@ -20,7 +20,7 @@ const StatisticsWidget = () => {
       query MyQuery {
         allContentfulConcert {
           nodes {
-            years: date(formatString: "YYYY")
+            year: date(formatString: "YYYY")
             date
             fields {
               geocoderAddressFields {
@@ -92,11 +92,13 @@ const StatisticsWidget = () => {
   }, [dates, cityCountsObject])
 
   useEffect(() => {
-    const yearArray = dates.map(date => {
-      if (new Date() < new Date(date.date)) {
+    const yearArray = dates.filter(item => {
+      if (new Date() < new Date(item.date)) {
         return false
       }
-      return date.years
+      return true
+    }).map(item => {
+      return item.year
     }).flat()
 
     if (Object.entries(yearCountsObject).length === 0) {
@@ -119,8 +121,8 @@ const StatisticsWidget = () => {
   return (
     <React.StrictMode>
       <div className="card statistics-widget">
-        <BarChart data={yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5)} max={mostConcerts} title="most concerts per year" category="year" />
-        <BarChart data={mostSeenBandsArray.map(element => [element.name, element.numberOfConcerts, element.slug])} max={mostConcertsOfOneBand} title="most concerts per band" category="band" />
+        <BarChart data={yearCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5).map(year => [year[0], year[1], year[0]])} max={mostConcerts} title="most concerts per year" category="year" />
+        <BarChart data={mostSeenBandsArray.map(band => [band.name, band.numberOfConcerts, band.slug])} max={mostConcertsOfOneBand} title="most concerts per band" category="band" />
         <BarChart data={cityCountEntries.sort((a, b) => b[1] - a[1]).slice(0, 5)} max={mostCities} title="most concerts per city" category="city" />
       </div>
     </React.StrictMode>
