@@ -82,7 +82,7 @@ const ConcertCard = ({ concert }) => {
         }}
       ></div>
       <div className="concert-card-body">
-        <h2 className="card-title">{heading()}</h2>
+        <h3 className="card-title">{heading()}</h3>
         <span>{getDate()}</span>
         {bands() && <div className="bands">{bands()}</div>}
       </div>
