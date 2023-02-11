@@ -13,6 +13,7 @@ html {
 
 body {
   background-color: transparentize($color-black, 0.94);
+  hyphens: auto;
   margin: 0;
   word-break: break-word;
 }
@@ -35,7 +36,7 @@ h3 {
 
 h1 {
   font-size: 4rem;
-  margin-top: 0.5em;
+  margin: 0.5em 0;
 }
 
 h2 {
@@ -58,10 +59,11 @@ h6 {
 a {
   color: $color-primary;
   text-decoration: none;
-  transition: color $transition-delay ease-out;
+  transition: color $transition-duration ease-out;
 
+  // TODO: Fix hover colour for tags.
   &:hover {
-    color: $color-red;
+    color: $color-black;
   }
 }
 
@@ -76,7 +78,13 @@ svg {
 
 main {
   padding: 1rem 1rem 0;
-  width: 100%;
+  margin: 0 auto;
+  width: 100rem;
+  max-width: 100%;
+  
+  > h2 {
+    text-align: center;
+  }
 }
 
 .card {
@@ -103,32 +111,56 @@ main {
   flex-wrap: wrap;
 }
 
-.badge {
-  background-color: $color-primary;
-  color: $color-white;
-  display: inline;
-  margin: 0 0.4em 0.4rem 0;
-  border-radius: 0.3em;
-  padding: 0.1rem 0.5em;
-  white-space: nowrap;
-  transition: background-color $transition-delay ease-out;
-
-  &:hover {
-    background-color: transparentize($color-black, 0.8);
-    background-image: none;
-    color: $color-white;
-  }
-}
-
-.map-box {
+.mapid {
   display: flex;
   height: calc(100vh - 162px);
   width: 100%;
 }
 
+footer {
+  color: transparentize($color-black, 0.5);
+  font-size: 0.7em;
+  text-align: center;
+}
+
+h1,
+h2 {
+  > .badge {
+    margin-left: 0.4em;
+
+    &:has(.badge) {
+      font-size: 0.8em;
+    }
+  }
+}
+
+.badge {
+  background-color: transparentize($color-black, 0.8);
+  border-radius: 0.3em;
+  color: $color-white;
+  display: inline;
+  margin: 0 0.4em 0.4em 0;
+  padding: 0.1em 0.5em;
+
+  &:has(.badge) {
+    padding-left: 0;
+    font-size: 2em;
+    font-weight: bold;
+
+    .badge {
+      padding: 0.2em 0.5em;
+      font-weight: bold;
+    }
+  }
+}
+
+.bg-primary {
+  background-color: $color-primary;
+}
+
 @media screen and (min-width: 768px) {
   main {
     margin: 0 auto;
-    width: 64rem;
+    width: 55rem;
   }
 }

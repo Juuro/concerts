@@ -20,7 +20,7 @@ if (!spaceId || !accessToken) {
 
 module.exports = {
   siteMetadata: {
-    title: `Concerts I've visited`,
+    title: `Concerts`,
     description: `List of all concerts and festivals I've visited. Including pages for every band I ever saw.`,
     author: `@juuro`,
   },
@@ -51,29 +51,10 @@ module.exports = {
       resolve: `gatsby-source-contentful`,
       options: contentfulConfig,
     },
-    {
-      resolve: `gatsby-transformer-opencage-geocoder`,
-      options: {
-        // Your OpenCage API key
-        api_key: `d00c9c8449954f00a217e544dcd4df70`,
-
-        // An array of configurations per node type to geocode
-        nodeTypes: [
-          // Reverse Geocoding
-          {
-            nodeType: `ContentfulConcert`,
-            positionFields: {
-              lat: `lat`,
-              lon: `lon`,
-            },
-            addFullResult: false,
-          },
-        ],
-      },
-    },
     // this (optional) plugin enables Progressive Web App + Offline functionality
     // To learn more, visit: https://gatsby.dev/offline
     `gatsby-plugin-offline`,
     `gatsby-plugin-sass`,
+    `gatsby-plugin-image`,
   ],
 }

@@ -5,8 +5,9 @@ name: Yarn Upgrader
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 4 */1 * *'
+    - cron: "0 4 */1 * *"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,17 +18,18 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
-      with:
-        node-version: '13'
-    - name: Yarn Upgrader
-      uses: browniebroke/yarn-upgrade-action@v1
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ secrets.GH_ACCESS_TOKEN }}
-        branch: update/yarn-upgrade
-        title: Run yarn upgrade
-        commit-message: "chore(deps): Run yarn upgrade"
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - name: Yarn Upgrader
+        uses: browniebroke/yarn-upgrade-action@v1
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4.2.3
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          branch: update/yarn-upgrade
+          title: Run yarn upgrade
+          commit-message: "chore(deps): Run yarn upgrade"
+          committer: "Sebastian Engel <sebastianengel@posteo.de>"

@@ -2,11 +2,12 @@
 
 .concert-card {
   display: grid;
-  grid-template-columns: 1fr 2fr 2fr 2fr;
+  gap: 0 1rem;
+  grid-template-columns: 1fr 2fr;
   grid-template-rows: auto;
   grid-template-areas:
-    "image image map map"
-    "body body body body";
+    "image body"
+    "image location";
   overflow: hidden;
   margin-bottom: 1rem;
 
@@ -29,27 +30,49 @@
   }
 
   .concert-card-image {
+    grid-area: image;
     background-size: cover;
     background-position: 50%;
   }
 
   .concert-card-body {
     grid-area: body;
-    padding: 2rem 1rem;
+    padding: 1em 1em 0 0;
 
     .card-title {
+      font-size: 2rem;
       text-shadow: -1px 0 $color-white, 0 1px $color-white, 1px 0 $color-white,
         0 -1px $color-white;
     }
+
+    .bands {
+      margin-top: 0.5em;
+    }
   }
 
-  .concert-card-map {
-    grid-area: map;
+  .concert-card-location {
+    grid-area: location;
+    display: flex;
+    align-items: center;
+    padding: 0 1em 1em 0;
+
+    .club {
+      font-weight: bold;
+    }
   }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 1024px) {
   .concert-card {
-    grid-template-areas: "image body body map";
+    grid-template-areas: "image body body location";
+    grid-template-columns: 1fr 2fr 2fr 2fr;
+
+    .concert-card-body {
+      padding: 1rem 0;
+
+      .card-title {
+        font-size: 2.5rem;
+      }
+    }
   }
 }

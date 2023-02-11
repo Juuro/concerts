@@ -15,8 +15,23 @@ const ConcertCard = ({ concert }) => {
   }
 
   const bands = () => {
+    const bands = [...concert.bands]
+    // TODO: Badges as seperate (tag) component?
     if (concert.isFestival) {
-      return concert.bands.map((band) => {
+      return bands.map((band) => {
+        return (
+          <Link
+            to={`/band/${band.slug}`}
+            key={band.id}
+            className="badge bg-primary mr-2"
+          >
+            {band.name}
+          </Link>
+        )
+      })
+    } else {
+      bands.shift()
+      return bands.map((band) => {
         return (
           <Link
             to={`/band/${band.slug}`}
@@ -28,7 +43,6 @@ const ConcertCard = ({ concert }) => {
         )
       })
     }
-    return null
   }
 
   const cityTownVillage = () => {
@@ -68,12 +82,15 @@ const ConcertCard = ({ concert }) => {
         }}
       ></div>
       <div className="concert-card-body">
-        <h2 className="card-title">{heading()}</h2>
+        <h3 className="card-title">{heading()}</h3>
         <span>{getDate()}</span>
         {bands() && <div className="bands">{bands()}</div>}
       </div>
-      <div className="concert-card-map">
-        <span>{concert.club}</span> in <span>{cityTownVillage()}</span>
+      <div className="concert-card-location">
+        <div>
+          <div className="club">{concert.club}</div>
+          <div className="city">{cityTownVillage()}</div>
+        </div>
       </div>
     </li>
   )
