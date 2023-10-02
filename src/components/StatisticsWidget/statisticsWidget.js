@@ -39,6 +39,7 @@ const StatisticsWidget = () => {
               id
               concert {
                 id
+                date
               }
             }
           }
@@ -50,11 +51,13 @@ const StatisticsWidget = () => {
   useEffect(() => {
     const bandsArray = bands.filter(elem => !!elem.node.concert)
       .map(elem => {
+        const concertCount = elem.node.concert.filter(concert => new Date() > new Date(concert.date)).length
+
         return {
           id: elem.node.id,
           slug: elem.node.slug,
           name: elem.node.name,
-          numberOfConcerts: elem.node.concert.length
+          numberOfConcerts: concertCount
         }
       })
       .sort((a, b) => b.numberOfConcerts - a.numberOfConcerts)
@@ -80,7 +83,7 @@ const StatisticsWidget = () => {
         default:
           return date.fields.geocoderAddressFields.city
       }
-    })
+    }).filter((city) => city !== false)
 
     if (Object.entries(cityCountsObject).length === 0) {
       const cityCounts = {}
@@ -97,9 +100,12 @@ const StatisticsWidget = () => {
         return false
       }
       return true
-    }).map(item => {
+    })
+    .map(item => {
       return item.year
-    }).flat()
+    })
+    .filter((year) => year !== false)
+    .flat()
 
     if (Object.entries(yearCountsObject).length === 0) {
       const yearCounts = {}

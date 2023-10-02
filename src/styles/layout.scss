@@ -13,8 +13,9 @@ html {
 
 body {
   background-color: transparentize($color-black, 0.94);
-  margin: 0;
   hyphens: auto;
+  margin: 0;
+  word-break: break-word;
 }
 
 h1,
