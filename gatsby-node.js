@@ -9,6 +9,27 @@ const opencage = require("opencage-api-client")
  */
 
 // You can delete this file if you're not using it
+const mockComponents = {
+  'ISO_3166-1_alpha-2': 'DE',
+  'ISO_3166-1_alpha-3': 'DEU',
+  'ISO_3166-2': ['DE-BW'],
+  _category: 'outdoors/recreation',
+  _type: 'sports_centre',
+  city: 'Heidelberg',
+  continent: 'Europe',
+  country: 'Germany',
+  country_code: 'de',
+  county: 'Landkreis Ludwigsburg',
+  political_union: 'European Union',
+  postcode: '71638',
+  road: 'Fuchshofstraße',
+  sports_centre: 'Stadion',
+  state: 'Baden-Württemberg',
+  state_code: 'BW',
+  suburb: 'Ludwigsburg - Ost',
+  town: 'Ludwigsburg',
+  village: 'Gelbenholzen',
+}
 
 exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
@@ -26,8 +47,8 @@ exports.createPages = ({ graphql, actions }) => {
             edges {
               node {
                 slug
-                name
                 url
+                name
               }
             }
           }
@@ -56,7 +77,6 @@ exports.createPages = ({ graphql, actions }) => {
               // in page queries as GraphQL variables.
               slug: node.slug,
               name: node.name,
-              url: node.url,
             },
           })
         })
@@ -66,7 +86,68 @@ exports.createPages = ({ graphql, actions }) => {
     )
   })
 
-  return Promise.all([createBands])
+  const createYears = new Promise((resolve, reject) => {
+    const yearsTemplate = path.resolve(`./src/templates/year.js`)
+
+    resolve(
+      graphql(`
+        {
+          allContentfulConcert(sort: {date: ASC}) {
+            edges {
+              node {
+                year: date(formatString: "YYYY")
+                date
+              }
+            }
+          }
+        }
+      `).then((result) => {
+        if (result.errors) {
+          return reject(result.errors)
+        }
+
+        if (!result.data.allContentfulConcert) {
+          return resolve()
+        }
+
+        const items = result.data.allContentfulConcert.edges
+
+        // TODO: Clean this shit up.
+
+        const moep = items.filter(item => {
+          if (new Date() < new Date(item.node.date)) {
+            return false
+          }
+          return true
+        }).map(item => {
+          return item.node.year
+        })
+
+        const unique = [...new Set(moep)];
+
+        unique.forEach(year => {
+          const gt = `${year}-01-01`
+          const lt = `${year}-12-31`
+
+          createPage({
+            path: `/year/${year}`,
+            component: path.resolve(yearsTemplate),
+            context: {
+              // Data passed to context is available
+              // in page queries as GraphQL variables.
+              year,
+              gt,
+              lt
+            },
+          })
+        })
+
+        return resolve()
+      })
+    )
+  })
+
+  return Promise.all([createBands, createYears])
 }
 
 exports.onCreateWebpackConfig = ({ stage, loaders, actions }) => {
@@ -109,6 +190,7 @@ exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
             node,
             name: `geocoderAddressFields`,
             value: place.components,
+            // value: mockComponents,
           })
         }
       } else {
@@ -116,6 +198,15 @@ exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
       }
     } catch (error) {
       console.log("ALARM! ALARM!! 🚨", error)
+
+      if (error.status.code === 402) {
+
+        createNodeField({
+          node,
+          name: `geocoderAddressFields`,
+          value: mockComponents,
+        })
+      }
     }
   }
 }
