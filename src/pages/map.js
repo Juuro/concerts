@@ -34,6 +34,7 @@ const MapPage = ({ data }) => {
         iconSize: [40, 40],
         shadowSize: [50, 64],
         shadowAnchor: [4, 62],
+        iconAnchor: [20, 40],
         popupAnchor: [0, -20],
       },
     })
