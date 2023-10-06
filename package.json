@@ -39,6 +39,7 @@
   "scripts": {
     "build": "gatsby build",
     "dev": "gatsby develop",
+    "prod": "gatsby production",
     "format": "prettier --write ./src/**/*.{js,jsx,scss}",
     "start": "yarn dev",
     "serve": "gatsby serve",
