@@ -199,14 +199,14 @@ exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
     } catch (error) {
       console.log("ALARM! ALARM!! 🚨", error)
 
-      if (error.status.code === 402) {
+      // if (error.status.code === 402) {
 
-        createNodeField({
-          node,
-          name: `geocoderAddressFields`,
-          value: mockComponents,
-        })
-      }
+      //   createNodeField({
+      //     node,
+      //     name: `geocoderAddressFields`,
+      //     value: mockComponents,
+      //   })
+      // }
     }
   }
 }
