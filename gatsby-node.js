@@ -1,4 +1,3 @@
-const _ = require(`lodash`)
 const Promise = require(`bluebird`)
 const path = require(`path`)
 const opencage = require("opencage-api-client")
@@ -7,6 +6,29 @@ const opencage = require("opencage-api-client")
  *
  * See: https://www.gatsbyjs.org/docs/node-apis/
  */
+
+// You can delete this file if you're not using it
+const mockComponents = {
+  "ISO_3166-1_alpha-2": "DE",
+  "ISO_3166-1_alpha-3": "DEU",
+  "ISO_3166-2": ["DE-BW"],
+  _category: "outdoors/recreation",
+  _type: "sports_centre",
+  city: "Heidelberg",
+  continent: "Europe",
+  country: "Germany",
+  country_code: "de",
+  county: "Landkreis Ludwigsburg",
+  political_union: "European Union",
+  postcode: "71638",
+  road: "Fuchshofstraße",
+  sports_centre: "Stadion",
+  state: "Baden-Württemberg",
+  state_code: "BW",
+  suburb: "Ludwigsburg - Ost",
+  town: "Heidelberg",
+  village: "Heidelberg",
+}
 
 exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
@@ -41,7 +63,9 @@ exports.createPages = ({ graphql, actions }) => {
 
         const items = result.data.allContentfulBand.edges
 
-        _.forEach(items, ({ node }) => {
+        for (const item of items) {
+          const node = item.node
+
           // This part here defines, that our tag pages will use
           // a `/tag/:slug/` permalink.
           node.url = `/band/${node.slug}/`
@@ -56,7 +80,7 @@ exports.createPages = ({ graphql, actions }) => {
               name: node.name,
             },
           })
-        })
+        }
 
         return resolve()
       })
