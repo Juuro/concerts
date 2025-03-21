@@ -89,7 +89,11 @@ const ConcertCard = ({ concert }) => {
       <div className="concert-card-location">
         <div>
           <div className="club">{concert.club}</div>
-          <div className="city">{cityTownVillage()}</div>
+          <div className="city">
+            <Link to={`/city/${cityTownVillage()?.toLowerCase()}`}>
+              {cityTownVillage()}
+            </Link>
+          </div>
         </div>
       </div>
     </li>
