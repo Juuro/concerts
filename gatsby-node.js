@@ -132,6 +132,8 @@ exports.createPages = ({ graphql, actions }) => {
         for (const city of cityArray) {
           const slug = city?.toLowerCase().replace("/s+/", "-")
 
+          console.log("city", city, slug)
+
           createPage({
             path: `/city/${slug}/`,
             component: path.resolve(cityTemplate),

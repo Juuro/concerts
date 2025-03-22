@@ -11,6 +11,8 @@ const City = ({
   data: { cityConcerts, townConcerts, villageConcerts },
   pageContext: { name },
 }) => {
+  console.log("city name", name)
+
   const concerts = {
     edges: [
       ...cityConcerts.edges,
