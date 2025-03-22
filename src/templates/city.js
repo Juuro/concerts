@@ -11,7 +11,16 @@ const City = ({
   data: { cityConcerts, townConcerts, villageConcerts },
   pageContext: { name },
 }) => {
-  const concerts = cityConcerts || townConcerts || villageConcerts
+  const concerts = {
+    edges: [
+      ...cityConcerts.edges,
+      ...townConcerts.edges,
+      ...villageConcerts.edges,
+    ],
+  }
+
+  console.log("townConcerts", townConcerts)
+  console.log("concerts", concerts)
 
   return (
     <Layout>

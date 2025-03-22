@@ -129,8 +129,13 @@ exports.createPages = ({ graphql, actions }) => {
           }
         })
 
+        console.log("cityArray", cityArray)
+
         for (const city of cityArray) {
           const slug = city?.toLowerCase().replace("/s+/", "-")
+
+          console.log("city", city)
+          console.log("slug", slug)
 
           createPage({
             path: `/city/${slug}/`,
@@ -247,6 +252,8 @@ exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
       if (data.status.code == 200) {
         if (data.results.length > 0) {
           var place = data.results[0]
+
+          console.log("place", place)
 
           createNodeField({
             node,
