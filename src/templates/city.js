@@ -19,9 +19,6 @@ const City = ({
     ],
   }
 
-  console.log("townConcerts", townConcerts)
-  console.log("concerts", concerts)
-
   return (
     <Layout>
       <main>
