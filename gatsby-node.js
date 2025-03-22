@@ -14,6 +14,7 @@ const mockComponents = {
   "ISO_3166-2": ["DE-BW"],
   _category: "outdoors/recreation",
   _type: "sports_centre",
+  _normalized_city: "Heidelberg",
   city: "Heidelberg",
   continent: "Europe",
   country: "Germany",
@@ -101,6 +102,7 @@ exports.createPages = ({ graphql, actions }) => {
                   city
                   town
                   village
+                  _normalized_city
                 }
               }
             }
@@ -115,24 +117,12 @@ exports.createPages = ({ graphql, actions }) => {
           return resolve()
         }
 
-        const items = result.data.allContentfulConcert.nodes
-
-        const cityArray = items.map((date) => {
-          switch (true) {
-            case !!date.fields.geocoderAddressFields.village:
-              return date.fields.geocoderAddressFields.village
-            case !!date.fields.geocoderAddressFields.town:
-              return date.fields.geocoderAddressFields.town
-            case !!date.fields.geocoderAddressFields.city:
-            default:
-              return date.fields.geocoderAddressFields.city
-          }
+        const cities = result.data.allContentfulConcert.nodes.map((node) => {
+          return node.fields.geocoderAddressFields._normalized_city
         })
 
-        for (const city of cityArray) {
-          const slug = city?.toLowerCase().replace("/s+/", "-")
-
-          console.log("city", city, slug)
+        for (const city of cities) {
+          const slug = city.toLowerCase().replace("/s+/", "-")
 
           createPage({
             path: `/city/${slug}/`,

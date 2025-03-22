@@ -8,18 +8,10 @@ import ConcertCount from "../components/ConcertCount/concertCount"
 import Seo from "../components/seo"
 
 const City = ({
-  data: { cityConcerts, townConcerts, villageConcerts },
+  data: { allContentfulConcert: concerts },
   pageContext: { name },
 }) => {
-  console.log("city name", name)
-
-  const concerts = {
-    edges: [
-      ...cityConcerts.edges,
-      ...townConcerts.edges,
-      ...villageConcerts.edges,
-    ],
-  }
+  console.log("city name", name, concerts)
 
   return (
     <Layout>
@@ -55,31 +47,11 @@ export default City
 
 export const pageQuery = graphql`
   query CityQuery($name: String!) {
-    cityConcerts: allContentfulConcert(
+    allContentfulConcert(
       sort: { date: DESC }
-      filter: { fields: { geocoderAddressFields: { city: { eq: $name } } } }
-    ) {
-      edges {
-        node {
-          ...ContentfulConcertFields
-        }
+      filter: {
+        fields: { geocoderAddressFields: { _normalized_city: { eq: $name } } }
       }
-      totalCount
-    }
-    townConcerts: allContentfulConcert(
-      sort: { date: DESC }
-      filter: { fields: { geocoderAddressFields: { town: { eq: $name } } } }
-    ) {
-      edges {
-        node {
-          ...ContentfulConcertFields
-        }
-      }
-      totalCount
-    }
-    villageConcerts: allContentfulConcert(
-      sort: { date: DESC }
-      filter: { fields: { geocoderAddressFields: { village: { eq: $name } } } }
     ) {
       edges {
         node {

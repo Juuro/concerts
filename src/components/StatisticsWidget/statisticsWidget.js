@@ -18,38 +18,36 @@ const StatisticsWidget = () => {
   const {
     allContentfulConcert: { nodes: dates },
     allContentfulBand: { edges: bands },
-  } = useStaticQuery(
-    graphql`
-      query MyQuery {
-        allContentfulConcert {
-          nodes {
-            year: date(formatString: "YYYY")
-            date
-            fields {
-              geocoderAddressFields {
-                city
-                town
-                village
-              }
-            }
-          }
-        }
-        allContentfulBand {
-          edges {
-            node {
-              name
-              slug
-              id
-              concert {
-                id
-                date
-              }
+  } = useStaticQuery(graphql`
+    query MyQuery {
+      allContentfulConcert {
+        nodes {
+          year: date(formatString: "YYYY")
+          date
+          fields {
+            geocoderAddressFields {
+              city
+              town
+              village
             }
           }
         }
       }
-    `
-  )
+      allContentfulBand {
+        edges {
+          node {
+            name
+            slug
+            id
+            concert {
+              id
+              date
+            }
+          }
+        }
+      }
+    }
+  `)
 
   useEffect(() => {
     const bandsArray = bands
@@ -86,15 +84,8 @@ const StatisticsWidget = () => {
         if (new Date() < new Date(date.date)) {
           return false
         }
-        switch (true) {
-          case !!date.fields.geocoderAddressFields.village:
-            return date.fields.geocoderAddressFields.village
-          case !!date.fields.geocoderAddressFields.town:
-            return date.fields.geocoderAddressFields.town
-          case !!date.fields.geocoderAddressFields.city:
-          default:
-            return date.fields.geocoderAddressFields.city
-        }
+
+        return date.fields.geocoderAddressFields._normalized_city
       })
       .filter((city) => city !== false)
 
