@@ -26,9 +26,7 @@ const StatisticsWidget = () => {
           date
           fields {
             geocoderAddressFields {
-              city
-              town
-              village
+              _normalized_city
             }
           }
         }
@@ -87,11 +85,14 @@ const StatisticsWidget = () => {
 
         return date.fields.geocoderAddressFields._normalized_city
       })
-      .filter((city) => city !== false)
+      .filter((city) => city !== false && city !== null)
 
     if (Object.entries(cityCountsObject).length === 0) {
       const cityCounts = {}
       for (const city of cityArray) {
+        if (!city) {
+          continue
+        }
         cityCounts[city] = cityCounts[city] ? cityCounts[city] + 1 : 1
       }
       setCityCountsObject(cityCounts)
