@@ -79,7 +79,7 @@ const ConcertCard = ({ concert }) => {
           <div className="club">{concert.club}</div>
           <div className="city">
             <Link
-              to={`/city/${concert.fields.geocoderAddressFields._normalized_city.toLowerCase()}`}
+              to={`/city/${concert.fields.geocoderAddressFields._normalized_city?.toLowerCase()}`}
             >
               {concert.fields.geocoderAddressFields._normalized_city}
             </Link>
