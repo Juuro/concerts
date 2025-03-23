@@ -45,18 +45,6 @@ const ConcertCard = ({ concert }) => {
     }
   }
 
-  const cityTownVillage = () => {
-    switch (true) {
-      case !!concert.fields.geocoderAddressFields.village:
-        return concert.fields.geocoderAddressFields.village
-      case !!concert.fields.geocoderAddressFields.town:
-        return concert.fields.geocoderAddressFields.town
-      case !!concert.fields.geocoderAddressFields.city:
-      default:
-        return concert.fields.geocoderAddressFields.city
-    }
-  }
-
   const isInTheFuture = () => {
     if (concert.date > new Date().toISOString()) {
       return "future"
@@ -89,7 +77,13 @@ const ConcertCard = ({ concert }) => {
       <div className="concert-card-location">
         <div>
           <div className="club">{concert.club}</div>
-          <div className="city">{cityTownVillage()}</div>
+          <div className="city">
+            <Link
+              to={`/city/${concert.fields.geocoderAddressFields._normalized_city?.toLowerCase()}`}
+            >
+              {concert.fields.geocoderAddressFields._normalized_city}
+            </Link>
+          </div>
         </div>
       </div>
     </li>

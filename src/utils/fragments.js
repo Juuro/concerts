@@ -40,9 +40,7 @@ export const ghostTagFields = graphql`
     }
     fields {
       geocoderAddressFields {
-        city
-        town
-        village
+        _normalized_city
       }
     }
   }

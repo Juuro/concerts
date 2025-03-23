@@ -1,18 +1,23 @@
-@import "./variables.scss";
-@import "./font-face.scss";
+@use "sass:color";
+@use "./variables.scss";
+@use "./font-face.scss";
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  color: $color-black;
-  font-family: $font-family-text;
+  color: variables.$color-black;
+  font-family: variables.$font-family-text;
   font-size: 16px;
 }
 
 body {
-  background-color: transparentize($color-black, 0.94);
+  background-color: color.adjust(
+    variables.$color-black,
+    $alpha: -0.94,
+    $space: hsl
+  );
   hyphens: auto;
   margin: 0;
   word-break: break-word;
@@ -31,7 +36,7 @@ h6 {
 h1,
 h2,
 h3 {
-  font-family: $font-family-heading;
+  font-family: variables.$font-family-heading;
 }
 
 h1 {
@@ -57,13 +62,13 @@ h6 {
 }
 
 a {
-  color: $color-primary;
+  color: variables.$color-primary;
   text-decoration: none;
-  transition: color $transition-duration ease-out;
+  transition: color variables.$transition-duration ease-out;
 
   // TODO: Fix hover colour for tags.
   &:hover {
-    color: $color-black;
+    color: variables.$color-black;
   }
 }
 
@@ -81,14 +86,14 @@ main {
   margin: 0 auto;
   width: 100rem;
   max-width: 100%;
-  
+
   > h2 {
     text-align: center;
   }
 }
 
 .card {
-  background-color: $color-white;
+  background-color: variables.$color-white;
   border-radius: 1rem;
 
   h2 {
@@ -118,7 +123,7 @@ main {
 }
 
 footer {
-  color: transparentize($color-black, 0.5);
+  color: color.adjust(variables.$color-black, $alpha: -0.5, $space: hsl);
   font-size: 0.7em;
   text-align: center;
 }
@@ -135,9 +140,13 @@ h2 {
 }
 
 .badge {
-  background-color: transparentize($color-black, 0.8);
+  background-color: color.adjust(
+    variables.$color-black,
+    $alpha: -0.8,
+    $space: hsl
+  );
   border-radius: 0.3em;
-  color: $color-white;
+  color: variables.$color-white;
   display: inline;
   margin: 0 0.4em 0.4em 0;
   padding: 0.1em 0.5em;
@@ -155,7 +164,7 @@ h2 {
 }
 
 .bg-primary {
-  background-color: $color-primary;
+  background-color: variables.$color-primary;
 }
 
 @media screen and (min-width: 768px) {

@@ -6,7 +6,7 @@ import ConcertCount from "../ConcertCount/concertCount"
 
 import "./header.scss"
 
-const Header = ({ siteTitle, concerts }) => (
+const Header = ({ siteTitle = "", concerts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
@@ -25,10 +25,6 @@ const Header = ({ siteTitle, concerts }) => (
 
 Header.propTypes = {
   siteTitle: PropTypes.string,
-}
-
-Header.defaultProps = {
-  siteTitle: ``,
 }
 
 export default Header
