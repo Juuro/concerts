@@ -1,4 +1,4 @@
-@import "../../styles/variables.scss";
+@use "../../styles/variables.scss";
 
 .concert-card {
   display: grid;
@@ -14,10 +14,10 @@
   &.future {
     background-image: repeating-linear-gradient(
       120deg,
-      $color-white,
-      $color-white 1rem,
-      transparentize($color-black, 0.95) 1rem,
-      transparentize($color-black, 0.95) 2rem
+      variables.$color-white,
+      variables.$color-white 1rem,
+      rgba(68, 68, 68, 0.05) 1rem,
+      rgba(68, 68, 68, 0.05) 2rem
     );
 
     .concert-card-image {
@@ -41,8 +41,8 @@
 
     .card-title {
       font-size: 2rem;
-      text-shadow: -1px 0 $color-white, 0 1px $color-white, 1px 0 $color-white,
-        0 -1px $color-white;
+      text-shadow: -1px 0 variables.$color-white, 0 1px variables.$color-white,
+        1px 0 variables.$color-white, 0 -1px variables.$color-white;
     }
 
     .bands {
