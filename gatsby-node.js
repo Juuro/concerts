@@ -122,6 +122,9 @@ exports.createPages = ({ graphql, actions }) => {
         })
 
         for (const city of cities) {
+          if (!city) {
+            continue
+          }
           const slug = city.toLowerCase().replace("/s+/", "-")
 
           createPage({
