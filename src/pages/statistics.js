@@ -86,8 +86,8 @@ const StatisticsPage = () => {
   const festivalCountEntries = Object.entries(festivalCounts).sort(
     (a, b) => b[1] - a[1]
   )
-  const costPerYearEntries = Object.entries(costPerYear).sort(
-    (a, b) => b[0] - a[0]
+  const costPerYearEntries = Object.entries(costPerYear).sort((a, b) =>
+    b[0].localeCompare(a[0])
   )
   const costPerBandEntries = Object.entries(costPerBand).sort(
     (a, b) => b[1] - a[1]
@@ -143,7 +143,7 @@ const StatisticsPage = () => {
                 data={cityCountEntries.map((city) => [
                   city[0],
                   city[1],
-                  city[0]?.toLowerCase().replace(/\s+/g, "-"),
+                  city[0]?.toLowerCase().replace("/s+/", "-"),
                 ])}
                 max={maxCities}
                 title="all concerts per city"

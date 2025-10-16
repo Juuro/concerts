@@ -18,7 +18,6 @@ export const calculateYearCounts = (concerts) => {
     .map((item) => {
       return new Date(item.date).getFullYear().toString()
     })
-    .filter((year) => year !== false)
 
   const yearCounts = {}
   for (const year of yearArray) {
@@ -171,6 +170,7 @@ export const calculateCostPerYear = (concerts) => {
 
 /**
  * Calculate cost per band
+ * Note: Cost is divided equally among all bands for multi-band concerts
  * @param {Array} concerts - Array of concert nodes
  * @returns {Object} Object with band names as keys and total costs as values
  */
@@ -180,9 +180,10 @@ export const calculateCostPerBand = (concerts) => {
   concerts
     .filter((concert) => new Date() >= new Date(concert.date))
     .forEach((concert) => {
-      if (concert.cost && concert.cost > 0) {
-        concert.bands?.forEach((band) => {
-          costByBand[band.name] = (costByBand[band.name] || 0) + concert.cost
+      if (concert.cost && concert.cost > 0 && concert.bands?.length > 0) {
+        const costPerBand = concert.cost / concert.bands.length
+        concert.bands.forEach((band) => {
+          costByBand[band.name] = (costByBand[band.name] || 0) + costPerBand
         })
       }
     })
