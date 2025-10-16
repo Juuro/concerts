@@ -6,6 +6,7 @@
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "bluebird": "^3.7.2",
+    "contentful-management": "^11.60.4",
     "gatsby": "5.14.1",
     "gatsby-plugin-image": "^3.14.0",
     "gatsby-plugin-manifest": "^5.14.0",

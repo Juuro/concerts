@@ -1,3 +1,5 @@
+let contentfulConfig = {}
+
 try {
   // Load the Contentful config from the .contentful.json
   contentfulConfig = require("./.contentful")

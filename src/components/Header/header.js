@@ -18,6 +18,7 @@ const Header = ({ siteTitle = "", concerts }) => (
       <nav>
         <a href="/">Home</a>
         <a href="/map">Map</a>
+        <a href="/admin">Admin</a>
       </nav>
     </div>
   </header>
