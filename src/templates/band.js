@@ -69,14 +69,12 @@ const Band = ({
 
 Band.propTypes = {
   data: PropTypes.shape({
-    allContentfulBand: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      slug: PropTypes.string.isRequired,
-      url: PropTypes.string,
-    }),
+    allContentfulConcert: PropTypes.object.isRequired,
   }).isRequired,
-  location: PropTypes.shape({
-    pathname: PropTypes.string.isRequired,
+  pageContext: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    slug: PropTypes.string.isRequired,
+    lastfm: PropTypes.object,
   }).isRequired,
 }
 

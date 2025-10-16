@@ -76,7 +76,7 @@ const ConcertCard = ({ concert }) => {
       <div
         className="concert-card-image"
         style={{
-          backgroundImage: `url(${getImageUrl()})`,
+          backgroundImage: getImageUrl() ? `url(${getImageUrl()})` : "none",
         }}
       ></div>
       <div className="concert-card-body">
