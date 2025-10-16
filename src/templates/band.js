@@ -9,16 +9,53 @@ import Seo from "../components/seo"
 
 const Band = ({
   data: { allContentfulConcert: concerts },
-  pageContext: { name },
+  pageContext: { name, lastfm },
 }) => {
   return (
     <Layout>
       <main>
         <Seo title={name} />
-        <h2>
-          {name}
-          <ConcertCount concerts={concerts} />
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+            marginBottom: "20px",
+          }}
+        >
+          {lastfm?.images?.large && (
+            <img
+              src={lastfm.images.large}
+              alt={name}
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+            />
+          )}
+          <div>
+            <h2>
+              {name}
+              <ConcertCount concerts={concerts} />
+            </h2>
+            {lastfm?.genres && lastfm.genres.length > 0 && (
+              <div style={{ marginTop: "10px" }}>
+                <strong>Genres: </strong>
+                {lastfm.genres.slice(0, 5).map((genre, index) => (
+                  <span
+                    key={genre}
+                    className="badge bg-secondary"
+                    style={{ marginRight: "5px" }}
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         <ul className="list-unstyled">
           {concerts.edges.map(({ node: concert }) => {

@@ -61,12 +61,22 @@ const ConcertCard = ({ concert }) => {
     })
   }
 
+  // Get image URL - prefer Last.fm, fallback to Contentful
+  const getImageUrl = () => {
+    const lastfmImage =
+      concert.bands[0].fields?.lastfm?.images?.large ||
+      concert.bands[0].fields?.lastfm?.images?.extralarge
+    const contentfulImage = concert.bands[0].image?.file.url
+
+    return lastfmImage || contentfulImage
+  }
+
   return (
     <li className={`concert-card card ${isInTheFuture()}`}>
       <div
         className="concert-card-image"
         style={{
-          backgroundImage: `url(${concert.bands[0].image?.file.url})`,
+          backgroundImage: `url(${getImageUrl()})`,
         }}
       ></div>
       <div className="concert-card-body">
