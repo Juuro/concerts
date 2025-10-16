@@ -48,8 +48,8 @@ export default Year
 export const pageQuery = graphql`
   query YearQuery($gt: Date!, $lt: Date!) {
     allContentfulConcert(
-      sort: {date: DESC}
-      filter: {date: {gte: $gt, lte: $lt}}
+      sort: { date: DESC }
+      filter: { date: { gte: $gt, lte: $lt } }
     ) {
       edges {
         node {

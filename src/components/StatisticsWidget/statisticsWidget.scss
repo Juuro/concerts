@@ -6,4 +6,23 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 1em;
+
+  .statistics-widget-footer {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+
+    .view-all-link {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1rem;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 }

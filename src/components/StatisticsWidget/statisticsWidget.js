@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react"
-import { useStaticQuery, graphql } from "gatsby"
+import { useStaticQuery, graphql, Link } from "gatsby"
 
 import "./statisticsWidget.scss"
 import BarChart from "../BarChart/barchart"
+import {
+  calculateYearCounts,
+  calculateCityCounts,
+  calculateMostSeenBands,
+} from "../../utils/statisticsCalculations"
 
 const StatisticsWidget = () => {
   const [yearCountsObject, setYearCountsObject] = useState({})
@@ -48,22 +53,7 @@ const StatisticsWidget = () => {
   `)
 
   useEffect(() => {
-    const bandsArray = bands
-      .filter((elem) => !!elem.node.concert)
-      .map((elem) => {
-        const concertCount = elem.node.concert.filter(
-          (concert) => new Date() > new Date(concert.date)
-        ).length
-
-        return {
-          id: elem.node.id,
-          slug: elem.node.slug,
-          name: elem.node.name,
-          numberOfConcerts: concertCount,
-        }
-      })
-      .sort((a, b) => b.numberOfConcerts - a.numberOfConcerts)
-      .slice(0, 5)
+    const bandsArray = calculateMostSeenBands(bands).slice(0, 5)
     setMostSeenBandsArray(bandsArray)
   }, [bands])
 
@@ -77,47 +67,15 @@ const StatisticsWidget = () => {
   }, [mostSeenBandsArray])
 
   useEffect(() => {
-    const cityArray = dates
-      .map((date) => {
-        if (new Date() < new Date(date.date)) {
-          return false
-        }
-
-        return date.fields.geocoderAddressFields._normalized_city
-      })
-      .filter((city) => city !== false && city !== null)
-
+    const cityCounts = calculateCityCounts(dates)
     if (Object.entries(cityCountsObject).length === 0) {
-      const cityCounts = {}
-      for (const city of cityArray) {
-        if (!city) {
-          continue
-        }
-        cityCounts[city] = cityCounts[city] ? cityCounts[city] + 1 : 1
-      }
       setCityCountsObject(cityCounts)
     }
   }, [dates, cityCountsObject])
 
   useEffect(() => {
-    const yearArray = dates
-      .filter((item) => {
-        if (new Date() < new Date(item.date)) {
-          return false
-        }
-        return true
-      })
-      .map((item) => {
-        return item.year
-      })
-      .filter((year) => year !== false)
-      .flat()
-
+    const yearCounts = calculateYearCounts(dates)
     if (Object.entries(yearCountsObject).length === 0) {
-      const yearCounts = {}
-      for (const year of yearArray) {
-        yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1
-      }
       setYearCountsObject(yearCounts)
     }
   }, [dates, yearCountsObject])
@@ -165,6 +123,11 @@ const StatisticsWidget = () => {
           title="most concerts per city"
           category="city"
         />
+        <div className="statistics-widget-footer">
+          <Link to="/statistics" className="view-all-link">
+            View all statistics →
+          </Link>
+        </div>
       </div>
     </React.StrictMode>
   )

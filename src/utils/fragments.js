@@ -38,6 +38,7 @@ export const ghostTagFields = graphql`
       name
       url
     }
+    cost
     fields {
       geocoderAddressFields {
         _normalized_city

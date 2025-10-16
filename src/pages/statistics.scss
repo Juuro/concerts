@@ -1,0 +1,90 @@
+.statistics-page {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+
+  .statistics-section {
+    padding: 1.5rem;
+
+    h4 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+  }
+
+  .festivals-vs-concerts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+      }
+    }
+  }
+
+  .cost-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e9ecef;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &.total {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #007bff;
+        font-size: 1.1rem;
+      }
+
+      a {
+        color: #333;
+        text-decoration: none;
+
+        &:hover {
+          color: #007bff;
+        }
+      }
+
+      strong {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .statistics-page {
+    gap: 1.5rem;
+
+    .statistics-section {
+      padding: 1rem;
+    }
+
+    .festivals-vs-concerts {
+      grid-template-columns: 1fr;
+    }
+  }
+}
