@@ -40,8 +40,8 @@ const ConcertForm = ({ environment, bands, onSuccess }) => {
       return
     }
 
-    const lat = parseFloat(latitude)
-    const lon = parseFloat(longitude)
+    const lat = Number(latitude)
+    const lon = Number(longitude)
 
     if (isNaN(lat) || lat < -90 || lat > 90) {
       setMessage("Latitude must be a number between -90 and 90")
