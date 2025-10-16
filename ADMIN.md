@@ -8,7 +8,7 @@ This admin section allows you to manage concerts/festivals and bands through a w
 - **Add Concerts/Festivals**: Create new concert or festival entries with all required fields
 - **Add Bands**: Create new band entries with name, URL, and image
 - **Band Selection**: Select from existing bands when creating concerts
-- **Session Management**: Credentials are stored in local storage for convenience
+- **Session Management**: Credentials are stored in session storage (cleared when browser closes)
 - **Form Validation**: Client-side validation for all required fields
 
 ## How to Access

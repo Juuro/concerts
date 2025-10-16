@@ -40,6 +40,21 @@ const ConcertForm = ({ environment, bands, onSuccess }) => {
       return
     }
 
+    const lat = parseFloat(latitude)
+    const lon = parseFloat(longitude)
+
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      setMessage("Latitude must be a number between -90 and 90")
+      setSubmitting(false)
+      return
+    }
+
+    if (isNaN(lon) || lon < -180 || lon > 180) {
+      setMessage("Longitude must be a number between -180 and 180")
+      setSubmitting(false)
+      return
+    }
+
     if (isFestival && !festivalName) {
       setMessage("Festival name is required when creating a festival")
       setSubmitting(false)
