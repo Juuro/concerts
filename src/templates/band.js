@@ -74,7 +74,19 @@ Band.propTypes = {
   pageContext: PropTypes.shape({
     name: PropTypes.string.isRequired,
     slug: PropTypes.string.isRequired,
-    lastfm: PropTypes.object,
+    lastfm: PropTypes.shape({
+      name: PropTypes.string,
+      url: PropTypes.string,
+      images: PropTypes.shape({
+        small: PropTypes.string,
+        medium: PropTypes.string,
+        large: PropTypes.string,
+        extralarge: PropTypes.string,
+        mega: PropTypes.string,
+      }),
+      genres: PropTypes.arrayOf(PropTypes.string),
+      bio: PropTypes.string,
+    }),
   }).isRequired,
 }
 
