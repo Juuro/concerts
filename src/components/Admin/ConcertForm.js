@@ -56,8 +56,8 @@ const ConcertForm = ({ environment, bands, onSuccess }) => {
         },
         city: {
           "en-US": {
-            lat: parseFloat(latitude),
-            lon: parseFloat(longitude),
+            lat: lat,
+            lon: lon,
           },
         },
         bands: {

@@ -9,6 +9,7 @@ const AdminDashboard = ({ credentials, onLogout }) => {
   const [bands, setBands] = useState([])
   const [concerts, setConcerts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [client, setClient] = useState(null)
   const [environment, setEnvironment] = useState(null)
 
@@ -42,8 +43,10 @@ const AdminDashboard = ({ credentials, onLogout }) => {
         setLoading(false)
       } catch (error) {
         console.error("Error initializing Contentful:", error)
-        alert("Failed to connect to Contentful. Please check your credentials.")
-        onLogout()
+        setError(
+          "Failed to connect to Contentful. Please check your credentials and try again."
+        )
+        setLoading(false)
       }
     }
 
@@ -74,6 +77,17 @@ const AdminDashboard = ({ credentials, onLogout }) => {
     return (
       <div className="admin-dashboard">
         <h2>Loading...</h2>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="admin-dashboard">
+        <div className="alert alert-danger">{error}</div>
+        <button onClick={onLogout} className="btn btn-secondary">
+          Back to Login
+        </button>
       </div>
     )
   }
