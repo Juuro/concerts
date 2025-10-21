@@ -23,18 +23,7 @@ const Band = ({
             marginBottom: "20px",
           }}
         >
-          {lastfm?.images?.large && (
-            <img
-              src={lastfm.images.large}
-              alt={name}
-              style={{
-                width: "150px",
-                height: "150px",
-                objectFit: "cover",
-                borderRadius: "8px",
-              }}
-            />
-          )}
+          {/* Last.fm API only returns placeholder images, so we don't use them */}
           <div>
             <h2>
               {name}
@@ -52,6 +41,13 @@ const Band = ({
                     {genre}
                   </span>
                 ))}
+              </div>
+            )}
+            {lastfm?.url && (
+              <div style={{ marginTop: "10px" }}>
+                <a href={lastfm.url} target="_blank" rel="noopener noreferrer">
+                  View on Last.fm →
+                </a>
               </div>
             )}
           </div>

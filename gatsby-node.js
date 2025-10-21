@@ -242,6 +242,37 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions }) => {
   }
 }
 
+exports.createSchemaCustomization = ({ actions }) => {
+  const { createTypes } = actions
+
+  const typeDefs = `
+    type ContentfulBandFields {
+      lastfm: LastFmData
+    }
+
+    type LastFmData {
+      name: String
+      url: String
+      images: LastFmImages
+      genres: [String]
+    }
+
+    type LastFmImages {
+      small: String
+      medium: String
+      large: String
+      extralarge: String
+      mega: String
+    }
+
+    type ContentfulBand implements Node {
+      fields: ContentfulBandFields
+    }
+  `
+
+  createTypes(typeDefs)
+}
+
 exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
   if (node.internal.type === "ContentfulConcert") {
     const query = `${node.city.lat}, ${node.city.lon}`

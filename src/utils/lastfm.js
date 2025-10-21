@@ -1,4 +1,4 @@
-const LastfmAPI = require("lastfm").LastfmAPI
+const LastfmAPI = require("lastfm").LastFmNode
 
 /**
  * Utility module for interacting with Last.fm API
@@ -34,51 +34,48 @@ const getArtistInfo = (artistName) => {
       return
     }
 
-    lfm.artist.getInfo(
-      {
-        artist: artistName,
-        autocorrect: 1,
-      },
-      (err, data) => {
-        if (err) {
-          console.error(`Error fetching Last.fm data for ${artistName}:`, err)
-          resolve(null)
-          return
-        }
+    const request = lfm.request("artist.getInfo", {
+      artist: artistName,
+      autocorrect: 1,
+    })
 
-        if (!data || !data.artist) {
-          console.warn(`No Last.fm data found for ${artistName}`)
-          resolve(null)
-          return
-        }
-
-        const artist = data.artist
-
-        // Extract image URLs - Last.fm returns images in different sizes
-        const images = artist.image || []
-        const imageUrls = {
-          small: images.find((img) => img.size === "small")?.["#text"] || null,
-          medium:
-            images.find((img) => img.size === "medium")?.["#text"] || null,
-          large: images.find((img) => img.size === "large")?.["#text"] || null,
-          extralarge:
-            images.find((img) => img.size === "extralarge")?.["#text"] || null,
-          mega: images.find((img) => img.size === "mega")?.["#text"] || null,
-        }
-
-        // Extract genres/tags
-        const tags = artist.tags?.tag || []
-        const genres = tags.map((tag) => tag.name)
-
-        resolve({
-          name: artist.name,
-          url: artist.url,
-          images: imageUrls,
-          genres: genres,
-          bio: artist.bio?.summary || null,
-        })
+    request.on("success", (data) => {
+      if (!data || !data.artist) {
+        console.warn(`No Last.fm data found for ${artistName}`)
+        resolve(null)
+        return
       }
-    )
+
+      const artist = data.artist
+
+      // Extract image URLs - Last.fm returns images in different sizes
+      const images = artist.image || []
+      const imageUrls = {
+        small: images.find((img) => img.size === "small")?.["#text"] || null,
+        medium: images.find((img) => img.size === "medium")?.["#text"] || null,
+        large: images.find((img) => img.size === "large")?.["#text"] || null,
+        extralarge:
+          images.find((img) => img.size === "extralarge")?.["#text"] || null,
+        mega: images.find((img) => img.size === "mega")?.["#text"] || null,
+      }
+
+      // Extract genres/tags
+      const tags = artist.tags?.tag || []
+      const genres = tags.map((tag) => tag.name)
+
+      resolve({
+        name: artist.name,
+        url: artist.url,
+        images: imageUrls,
+        genres: genres,
+        bio: artist.bio?.summary || null,
+      })
+    })
+
+    request.on("error", (err) => {
+      console.error(`Error fetching Last.fm data for ${artistName}:`, err)
+      resolve(null)
+    })
   })
 }
 

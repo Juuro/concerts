@@ -61,14 +61,10 @@ const ConcertCard = ({ concert }) => {
     })
   }
 
-  // Get image URL - prefer Last.fm, fallback to Contentful
+  // Get image URL - prefer Contentful over Last.fm placeholders
   const getImageUrl = () => {
-    const lastfmImage =
-      concert.bands[0].fields?.lastfm?.images?.large ||
-      concert.bands[0].fields?.lastfm?.images?.extralarge
-    const contentfulImage = concert.bands[0].image?.file.url
-
-    return lastfmImage || contentfulImage
+    // Last.fm API only returns placeholder images, so use Contentful images
+    return concert.bands[0].image?.file.url
   }
 
   return (
