@@ -24,16 +24,18 @@ const Layout = ({ children }) => {
       }
     }
   `)
-  return <>
-    <Header
-      siteTitle={data.site.siteMetadata.title}
-      concerts={data.allContentfulConcert}
-    />
+  return (
+    <>
+      <Header
+        siteTitle={data.site.siteMetadata.title}
+        concerts={data.allContentfulConcert}
+      />
 
-    {children}
+      {children}
 
-    <footer>© {new Date().getFullYear()} · Built with ❤️ on 🌍! 🤟🏳️‍🌈</footer>
-  </>
+      <footer>© {new Date().getFullYear()} · Built with ❤️ on 🌍! 🤟🏳️‍🌈</footer>
+    </>
+  )
 }
 
 Layout.propTypes = {

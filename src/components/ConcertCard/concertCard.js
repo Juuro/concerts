@@ -1,10 +1,25 @@
 import PropTypes from "prop-types"
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "gatsby"
 
 import "./concertCard.scss"
+import { fetchBandImage, getBandImageUrl } from "../../utils/unsplash"
 
 const ConcertCard = ({ concert }) => {
+  const [bandImage, setBandImage] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadBandImage = async () => {
+      if (concert.bands && concert.bands.length > 0) {
+        const image = await fetchBandImage(concert.bands[0].name)
+        setBandImage(image)
+      }
+      setIsLoading(false)
+    }
+
+    loadBandImage()
+  }, [concert.bands])
   const heading = () => {
     if (concert.isFestival) {
       return concert.festival.name
@@ -66,7 +81,7 @@ const ConcertCard = ({ concert }) => {
       <div
         className="concert-card-image"
         style={{
-          backgroundImage: `url(${concert.bands[0].image?.file.url})`,
+          backgroundImage: `url(${getBandImageUrl(concert.bands[0], bandImage)})`,
         }}
       ></div>
       <div className="concert-card-body">
