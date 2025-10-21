@@ -9,16 +9,49 @@ import Seo from "../components/seo"
 
 const Band = ({
   data: { allContentfulConcert: concerts },
-  pageContext: { name },
+  pageContext: { name, lastfm },
 }) => {
   return (
     <Layout>
       <main>
         <Seo title={name} />
-        <h2>
-          {name}
-          <ConcertCount concerts={concerts} />
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+            marginBottom: "20px",
+          }}
+        >
+          {/* Last.fm API only returns placeholder images, so we don't use them */}
+          <div>
+            <h2>
+              {name}
+              <ConcertCount concerts={concerts} />
+            </h2>
+            {lastfm?.genres && lastfm.genres.length > 0 && (
+              <div style={{ marginTop: "10px" }}>
+                <strong>Genres: </strong>
+                {lastfm.genres.slice(0, 5).map((genre, index) => (
+                  <span
+                    key={genre}
+                    className="badge bg-secondary"
+                    style={{ marginRight: "5px" }}
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
+            {lastfm?.url && (
+              <div style={{ marginTop: "10px" }}>
+                <a href={lastfm.url} target="_blank" rel="noopener noreferrer">
+                  View on Last.fm →
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
 
         <ul className="list-unstyled">
           {concerts.edges.map(({ node: concert }) => {
@@ -32,14 +65,24 @@ const Band = ({
 
 Band.propTypes = {
   data: PropTypes.shape({
-    allContentfulBand: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      slug: PropTypes.string.isRequired,
-      url: PropTypes.string,
-    }),
+    allContentfulConcert: PropTypes.object.isRequired,
   }).isRequired,
-  location: PropTypes.shape({
-    pathname: PropTypes.string.isRequired,
+  pageContext: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    slug: PropTypes.string.isRequired,
+    lastfm: PropTypes.shape({
+      name: PropTypes.string,
+      url: PropTypes.string,
+      images: PropTypes.shape({
+        small: PropTypes.string,
+        medium: PropTypes.string,
+        large: PropTypes.string,
+        extralarge: PropTypes.string,
+        mega: PropTypes.string,
+      }),
+      genres: PropTypes.arrayOf(PropTypes.string),
+      bio: PropTypes.string,
+    }),
   }).isRequired,
 }
 

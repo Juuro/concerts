@@ -1,6 +1,7 @@
 const Promise = require(`bluebird`)
 const path = require(`path`)
 const opencage = require("opencage-api-client")
+const { getArtistInfo } = require("./src/utils/lastfm")
 /**
  * Implement Gatsby's Node APIs in this file.
  *
@@ -53,7 +54,7 @@ exports.createPages = ({ graphql, actions }) => {
             }
           }
         }
-      `).then((result) => {
+      `).then(async (result) => {
         if (result.errors) {
           return reject(result.errors)
         }
@@ -64,9 +65,21 @@ exports.createPages = ({ graphql, actions }) => {
 
         const items = result.data.allContentfulBand.edges
 
-        for (const item of items) {
-          const node = item.node
+        // Fetch Last.fm data for all bands
+        const bandsWithLastfm = await Promise.map(
+          items,
+          async (item) => {
+            const node = item.node
+            const lastfmData = await getArtistInfo(node.name)
+            return {
+              node,
+              lastfmData,
+            }
+          },
+          { concurrency: 5 }
+        )
 
+        for (const { node, lastfmData } of bandsWithLastfm) {
           // This part here defines, that our tag pages will use
           // a `/tag/:slug/` permalink.
           node.url = `/band/${node.slug}/`
@@ -79,6 +92,7 @@ exports.createPages = ({ graphql, actions }) => {
               // in page queries as GraphQL variables.
               slug: node.slug,
               name: node.name,
+              lastfm: lastfmData,
             },
           })
         }
@@ -228,6 +242,37 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions }) => {
   }
 }
 
+exports.createSchemaCustomization = ({ actions }) => {
+  const { createTypes } = actions
+
+  const typeDefs = `
+    type ContentfulBandFields {
+      lastfm: LastFmData
+    }
+
+    type LastFmData {
+      name: String
+      url: String
+      images: LastFmImages
+      genres: [String]
+    }
+
+    type LastFmImages {
+      small: String
+      medium: String
+      large: String
+      extralarge: String
+      mega: String
+    }
+
+    type ContentfulBand implements Node {
+      fields: ContentfulBandFields
+    }
+  `
+
+  createTypes(typeDefs)
+}
+
 exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
   if (node.internal.type === "ContentfulConcert") {
     const query = `${node.city.lat}, ${node.city.lon}`
@@ -261,6 +306,22 @@ exports.onCreateNode = async ({ node, actions: { createNodeField } }) => {
       //   name: `geocoderAddressFields`,
       //   value: mockComponents,
       // })
+    }
+  }
+
+  // Add Last.fm data to band nodes
+  if (node.internal.type === "ContentfulBand") {
+    try {
+      const lastfmData = await getArtistInfo(node.name)
+      if (lastfmData) {
+        createNodeField({
+          node,
+          name: `lastfm`,
+          value: lastfmData,
+        })
+      }
+    } catch (error) {
+      console.error(`Error fetching Last.fm data for ${node.name}:`, error)
     }
   }
 }

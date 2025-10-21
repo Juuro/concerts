@@ -7587,6 +7587,13 @@ language-tags@^1.0.9:
   dependencies:
     language-subtag-registry "^0.3.20"
 
+lastfm@^0.9.4:
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/lastfm/-/lastfm-0.9.4.tgz#54c68fbfa31630cdc21b2bf37a1b1a59ec1e4617"
+  integrity sha512-zT7nQfdFZVdUMjjaUwRldKFrmb5lv/8q/bcxzzDMZuK9Nq4nSoxbeHWq9SXDpREaJztd9aAXPPyaY2HOotdbCw==
+  dependencies:
+    underscore "~1.13.6"
+
 latest-version@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/latest-version/-/latest-version-7.0.0.tgz#843201591ea81a4d404932eeb61240fe04e9e5da"
@@ -11125,6 +11132,11 @@ unc-path-regex@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/unc-path-regex/-/unc-path-regex-0.1.2.tgz#e73dd3d7b0d7c5ed86fbac6b0ae7d8c6a69d50fa"
   integrity sha512-eXL4nmJT7oCpkZsHZUOJo8hcX3GbsiDOa0Qu9F646fi8dT3XuSVopVqAcEiVzSKKH7UoDti23wNX3qGFxcW5Qg==
+
+underscore@~1.13.6:
+  version "1.13.7"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.7.tgz#970e33963af9a7dda228f17ebe8399e5fbe63a10"
+  integrity sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==
 
 undici-types@~6.20.0:
   version "6.20.0"
