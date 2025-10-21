@@ -61,12 +61,18 @@ const ConcertCard = ({ concert }) => {
     })
   }
 
+  // Get image URL - prefer Contentful over Last.fm placeholders
+  const getImageUrl = () => {
+    // Last.fm API only returns placeholder images, so use Contentful images
+    return concert.bands[0].image?.file.url
+  }
+
   return (
     <li className={`concert-card card ${isInTheFuture()}`}>
       <div
         className="concert-card-image"
         style={{
-          backgroundImage: `url(${concert.bands[0].image?.file.url})`,
+          backgroundImage: getImageUrl() ? `url(${getImageUrl()})` : "none",
         }}
       ></div>
       <div className="concert-card-body">

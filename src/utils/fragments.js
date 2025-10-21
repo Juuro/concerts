@@ -32,6 +32,20 @@ export const ghostTagFields = graphql`
           url
         }
       }
+      fields {
+        lastfm {
+          name
+          url
+          images {
+            small
+            medium
+            large
+            extralarge
+            mega
+          }
+          genres
+        }
+      }
     }
     isFestival
     festival {

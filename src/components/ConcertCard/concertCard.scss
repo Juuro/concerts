@@ -41,8 +41,11 @@
 
     .card-title {
       font-size: 2rem;
-      text-shadow: -1px 0 variables.$color-white, 0 1px variables.$color-white,
-        1px 0 variables.$color-white, 0 -1px variables.$color-white;
+      text-shadow:
+        -1px 0 variables.$color-white,
+        0 1px variables.$color-white,
+        1px 0 variables.$color-white,
+        0 -1px variables.$color-white;
     }
 
     .bands {
