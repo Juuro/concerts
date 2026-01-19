@@ -29,7 +29,16 @@ export default async function BandPage({ params }) {
   const allConcerts = await getAllConcerts()
 
   if (!band) {
-    return <div>Band not found</div>
+    return (
+      <Layout concerts={allConcerts}>
+        <main>
+          <div className="container">
+            <h2>Band not found</h2>
+            <p>The band you are looking for does not exist.</p>
+          </div>
+        </main>
+      </Layout>
+    )
   }
 
   const concertsFormatted = {

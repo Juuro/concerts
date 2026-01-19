@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { cityToSlug } from '../../utils/helpers'
 
 import './statisticsWidget.scss'
 import BarChart from '../BarChart/barchart-next'
@@ -139,7 +140,7 @@ const StatisticsWidget = ({ concerts = [], bands = [] }) => {
           .map((city) => [
             city[0],
             city[1],
-            city[0]?.toLowerCase().replace(/\s+/g, '-'),
+            cityToSlug(city[0]),
           ])}
         max={mostCities}
         title="most concerts per city"

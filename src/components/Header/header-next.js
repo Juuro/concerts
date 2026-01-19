@@ -16,8 +16,8 @@ const Header = ({ siteTitle = "", concerts }) => (
       {concerts && <ConcertCount concerts={{ edges: concerts.map(c => ({ node: c })), totalCount: concerts.length }} />}
 
       <nav>
-        <a href="/">Home</a>
-        <a href="/map">Map</a>
+        <Link href="/">Home</Link>
+        <Link href="/map">Map</Link>
       </nav>
     </div>
   </header>

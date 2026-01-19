@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import Link from 'next/link'
+import { cityToSlug, extractCityName } from '../../utils/helpers'
 
 import './concertCard.scss'
 
@@ -85,9 +86,9 @@ const ConcertCard = ({ concert }) => {
           <div className="club">{concert.club}</div>
           <div className="city">
             <Link
-              href={`/city/${concert.fields.geocoderAddressFields?._normalized_city?.toLowerCase().replace(/\s+/g, '-')}`}
+              href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
             >
-              {concert.fields.geocoderAddressFields?._normalized_city}
+              {extractCityName(concert.fields.geocoderAddressFields)}
             </Link>
           </div>
         </div>

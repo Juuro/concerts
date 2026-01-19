@@ -81,6 +81,7 @@ async function transformConcert(entry) {
 
 /**
  * Fetch all concerts from Contentful
+ * Note: Next.js automatically caches fetch requests during build time
  */
 export async function getAllConcerts() {
   try {
@@ -103,6 +104,7 @@ export async function getAllConcerts() {
 
 /**
  * Fetch all bands from Contentful
+ * Note: Next.js automatically caches fetch requests during build time
  */
 export async function getAllBands() {
   try {
