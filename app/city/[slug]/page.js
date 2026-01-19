@@ -3,7 +3,7 @@ import Layout from '../../../src/components/layout-client'
 import ConcertCard from '../../../src/components/ConcertCard/concertCard-next'
 import ConcertCount from '../../../src/components/ConcertCount/concertCount'
 import { getAllCities, getConcertsByCity, getAllConcerts } from '../../../src/utils/data'
-import { cityToSlug } from '../../../src/utils/helpers'
+import { cityToSlug, findCityBySlug } from '../../../src/utils/helpers'
 
 export async function generateStaticParams() {
   const cities = await getAllCities()
@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const cities = await getAllCities()
-  const city = cities.find((c) => cityToSlug(c) === slug)
+  const city = findCityBySlug(slug, cities)
   
   return {
     title: `${city || slug} | Concerts`,
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
 export default async function CityPage({ params }) {
   const { slug } = await params
   const cities = await getAllCities()
-  const cityName = cities.find((c) => cityToSlug(c) === slug)
+  const cityName = findCityBySlug(slug, cities)
   const concerts = cityName ? await getConcertsByCity(cityName) : []
   const allConcerts = await getAllConcerts()
 

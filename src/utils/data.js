@@ -153,8 +153,9 @@ export async function getConcertsByBand(slug) {
  */
 export async function getConcertsByYear(year) {
   const allConcerts = await getAllConcerts();
-  const yearStart = new Date(`${year}-01-01`);
-  const yearEnd = new Date(`${year}-12-31`);
+  const yearNum = parseInt(year, 10);
+  const yearStart = new Date(yearNum, 0, 1);
+  const yearEnd = new Date(yearNum, 11, 31, 23, 59, 59, 999);
   
   return allConcerts.filter(concert => {
     const concertDate = new Date(concert.date);
