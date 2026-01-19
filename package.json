@@ -5,7 +5,7 @@
   "version": "1.1.0",
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
-    "contentful": "^10.17.4",
+    "contentful": "^11.10.2",
     "lastfm": "^0.9.4",
     "leaflet": "^1.9.3",
     "leaflet.markercluster": "^1.5.3",
@@ -19,6 +19,8 @@
     "standard-version": "^9.0.0"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.1.4",
     "prettier": "^3.5.3",
     "sass": "^1.86.0"
   },

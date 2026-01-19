@@ -3,6 +3,45 @@
 List of all the concerts I visited.
 Next.js frontend for a Contentful backend.
 
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22 (see `.nvmrc`)
+- Yarn package manager
+- Contentful account with concert data
+- API keys for OpenCage and Last.fm (optional)
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+yarn install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+4. Fill in your API credentials in `.env.local`
+
+5. Start the development server:
+```bash
+yarn dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Scripts
+
+- `yarn dev` - Start development server
+- `yarn build` - Build for production
+- `yarn start` - Start production server
+- `yarn lint` - Run ESLint
+- `yarn format` - Format code with Prettier
+
 ## Environment Variables
 
 The following environment variables are required:
@@ -20,3 +59,17 @@ The following environment variables are required:
 3. Add the API key to your `.env` file or environment variables
 
 Without a Last.fm API key, the site will fall back to using Contentful images.
+
+## Migration from Gatsby
+
+This project was migrated from Gatsby to Next.js 15. See [MIGRATION.md](MIGRATION.md) for details about the migration process and changes.
+
+## Tech Stack
+
+- **Next.js 15** - React framework with App Router
+- **React 18** - UI library
+- **Contentful** - Headless CMS
+- **Leaflet** - Interactive maps
+- **SCSS** - Styling
+- **Last.fm API** - Artist metadata
+- **OpenCage API** - Geocoding
