@@ -1,14 +1,18 @@
-import PropTypes from "prop-types"
-import React from "react"
+import React from "react";
+import type { ConcertsFormatted } from "../../types/concert";
 
-const ConcertCount = ({ concerts }) => {
-  const now = new Date()
+interface ConcertCountProps {
+  concerts: ConcertsFormatted;
+}
+
+const ConcertCount: React.FC<ConcertCountProps> = ({ concerts }) => {
+  const now = new Date();
 
   const concertsInPast = () =>
-    concerts.edges.filter(({ node }) => new Date(node.date) < now)
+    concerts.edges.filter(({ node }) => new Date(node.date) < now);
 
   const concertsInFuture = () =>
-    concerts.edges.filter(({ node }) => new Date(node.date) > now)
+    concerts.edges.filter(({ node }) => new Date(node.date) > now);
 
   return (
     <span
@@ -23,11 +27,7 @@ const ConcertCount = ({ concerts }) => {
       </span>
       {concertsInFuture().length}
     </span>
-  )
-}
+  );
+};
 
-ConcertCount.propTypes = {
-  concert: PropTypes.object,
-}
-
-export default ConcertCount
+export default ConcertCount;
