@@ -1,7 +1,7 @@
-import React from "react"
-import { Link } from "gatsby"
+import React from 'react'
+import Link from 'next/link'
 
-import "./barchart.scss"
+import './barchart.scss'
 
 const BarChart = ({ data, max, title, category }) => {
   const calcPercentage = (absolute, dings) => {
@@ -14,7 +14,7 @@ const BarChart = ({ data, max, title, category }) => {
   const createLink = (element) => {
     if (element[2]) {
       return (
-        <Link to={`/${category}/${element[2]}`}>
+        <Link href={`/${category}/${element[2]}`}>
           <strong>{element[1]}</strong> {element[0]}
         </Link>
       )
@@ -35,7 +35,7 @@ const BarChart = ({ data, max, title, category }) => {
             <li key={element[0]} title={element[0]}>
               <span
                 className="bar"
-                style={{ width: calcPercentage(element[1], max) + "%" }}
+                style={{ width: calcPercentage(element[1], max) + '%' }}
               >
                 &nbsp;
               </span>

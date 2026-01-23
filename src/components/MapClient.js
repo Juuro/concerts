@@ -9,38 +9,54 @@ export default function MapClient({ concerts }) {
   const map = useRef(null)
   const mapElement = useRef(null)
 
-  const getYear = (dateInput) => {
-    const date = new Date(dateInput)
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-    })
-  }
-
-  const getDate = (dateInput) => {
-    const date = new Date(dateInput)
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  const getName = (concert) => {
-    if (concert.isFestival) {
-      return `${concert.festival.name} ${getYear(concert.date)}`
-    }
-    return concert.bands[0]?.name || 'Unknown'
-  }
-
   useEffect(() => {
-    if (typeof window === 'undefined' || !mapElement.current || map.current) {
+    if (typeof window === 'undefined' || !mapElement.current) {
       return
+    }
+
+    // Guard: Don't initialize if map already exists
+    if (map.current) {
+      return
+    }
+
+    // Helper functions defined inside useEffect to avoid dependency issues
+    const getYear = (dateInput) => {
+      const date = new Date(dateInput)
+      return date.toLocaleDateString('de-DE', {
+        year: 'numeric',
+      })
+    }
+
+    const getDate = (dateInput) => {
+      const date = new Date(dateInput)
+      return date.toLocaleDateString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    }
+
+    const getName = (concert) => {
+      if (concert.isFestival) {
+        return `${concert.festival.name} ${getYear(concert.date)}`
+      }
+      return concert.bands[0]?.name || 'Unknown'
     }
 
     // Dynamically import Leaflet modules only on client side
     import('leaflet').then((L) => {
       import('leaflet/dist/images/marker-icon.png').then((markerIcon) => {
         import('leaflet.markercluster').then(() => {
+          // Guard: Check again after async imports (component may have unmounted)
+          if (!mapElement.current || map.current) {
+            return
+          }
+
+          // Guard: Check if container already has a Leaflet instance
+          if (mapElement.current._leaflet_id) {
+            return
+          }
+
           const Leaflet = L.default
 
           const CustomIcon = Leaflet.Icon.extend({
@@ -98,8 +114,12 @@ export default function MapClient({ concerts }) {
         map.current.remove()
         map.current = null
       }
+      // Clear Leaflet ID from container
+      if (mapElement.current) {
+        mapElement.current._leaflet_id = null
+      }
     }
-  }, [concerts])
+  }, []) // Empty dependency array - only run on mount
 
   return <div className="mapid" ref={mapElement}></div>
 }

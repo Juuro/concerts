@@ -6,7 +6,7 @@
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "contentful": "^11.10.2",
-    "lastfm": "^0.9.4",
+    "lastfm-ts-api": "^1.0.0",
     "leaflet": "^1.9.3",
     "leaflet.markercluster": "^1.5.3",
     "next": "^15.1.4",

@@ -59,6 +59,8 @@ typings/
 .next/
 out/
 build
+public
+.cache
 
 # Old Gatsby files
 src/pages.old-gatsby/

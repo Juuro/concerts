@@ -1,8 +1,10 @@
 import React from 'react'
 import Layout from '../../../src/components/layout-client'
-import ConcertCard from '../../../src/components/ConcertCard/concertCard-next'
+import ConcertCard from '../../../src/components/ConcertCard/concertCard'
 import ConcertCount from '../../../src/components/ConcertCount/concertCount'
 import { getAllYears, getConcertsByYear, getAllConcerts } from '../../../src/utils/data'
+
+export const dynamic = 'force-static'
 
 export async function generateStaticParams() {
   const years = await getAllYears()

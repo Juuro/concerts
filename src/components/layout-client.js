@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Header from './Header/header-next'
+import Header from './Header/header'
 import '../styles/layout.scss'
 
 const Layout = ({ children, concerts }) => {

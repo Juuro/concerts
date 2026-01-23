@@ -2744,12 +2744,10 @@ language-tags@^1.0.9:
   dependencies:
     language-subtag-registry "^0.3.20"
 
-lastfm@^0.9.4:
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/lastfm/-/lastfm-0.9.4.tgz#54c68fbfa31630cdc21b2bf37a1b1a59ec1e4617"
-  integrity sha512-zT7nQfdFZVdUMjjaUwRldKFrmb5lv/8q/bcxzzDMZuK9Nq4nSoxbeHWq9SXDpREaJztd9aAXPPyaY2HOotdbCw==
-  dependencies:
-    underscore "~1.13.6"
+lastfm-ts-api@^1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/lastfm-ts-api/-/lastfm-ts-api-1.0.2.tgz#e4e34de5733f518cd42d66c797731eaa5d6cf6c3"
+  integrity sha512-4b8Yl7eTkzGMjod4W9brjS5cvcsJDa1DvE9cTitfld2uoRDlEgeW7vH1YaJAOPJVvu3miSEulupxPxMDDuDrgg==
 
 leaflet.markercluster@^1.5.3:
   version "1.5.3"
@@ -4161,11 +4159,6 @@ unbox-primitive@^1.1.0:
     has-bigints "^1.0.2"
     has-symbols "^1.1.0"
     which-boxed-primitive "^1.1.1"
-
-underscore@~1.13.6:
-  version "1.13.7"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.7.tgz#970e33963af9a7dda228f17ebe8399e5fbe63a10"
-  integrity sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==
 
 unrs-resolver@^1.6.2:
   version "1.11.1"

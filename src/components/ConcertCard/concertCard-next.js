@@ -1,17 +1,19 @@
-import PropTypes from 'prop-types'
-import React from 'react'
-import Link from 'next/link'
-import { cityToSlug, extractCityName } from '../../utils/helpers'
+import PropTypes from "prop-types"
+import React from "react"
+import Link from "next/link"
+import { cityToSlug, extractCityName } from "../../utils/helpers"
 
-import './concertCard.scss'
+import "./concertCard.scss"
 
 const ConcertCard = ({ concert }) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival.name
+      return concert.festival.fields.name
     }
     return (
-      <Link href={`/band/${concert.bands[0].slug}`}>{concert.bands[0].name}</Link>
+      <Link href={`/band/${concert.bands[0].slug}`}>
+        {concert.bands[0].name}
+      </Link>
     )
   }
 
@@ -48,24 +50,27 @@ const ConcertCard = ({ concert }) => {
 
   const isInTheFuture = () => {
     if (concert.date > new Date().toISOString()) {
-      return 'future'
+      return "future"
     }
-    return ''
+    return ""
   }
 
   const getDate = () => {
     const date = new Date(concert.date)
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return date.toLocaleDateString("de-DE", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
   }
 
   // Get image URL - prefer Contentful over Last.fm placeholders
   const getImageUrl = () => {
     // Last.fm API only returns placeholder images, so use Contentful images
-    return concert.bands[0]?.image?.file?.url || concert.bands[0]?.image?.fields?.file?.url
+    return (
+      concert.bands[0]?.image?.file?.url ||
+      concert.bands[0]?.image?.fields?.file?.url
+    )
   }
 
   return (
@@ -73,7 +78,7 @@ const ConcertCard = ({ concert }) => {
       <div
         className="concert-card-image"
         style={{
-          backgroundImage: getImageUrl() ? `url(${getImageUrl()})` : 'none',
+          backgroundImage: getImageUrl() ? `url(${getImageUrl()})` : "none",
         }}
       ></div>
       <div className="concert-card-body">

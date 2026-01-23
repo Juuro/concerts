@@ -1,16 +1,19 @@
 import PropTypes from "prop-types"
 import React from "react"
-import { Link } from "gatsby"
+import Link from "next/link"
+import { cityToSlug, extractCityName } from "../../utils/helpers"
 
 import "./concertCard.scss"
 
 const ConcertCard = ({ concert }) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival.name
+      return concert.festival.fields.name
     }
     return (
-      <Link to={`/band/${concert.bands[0].slug}`}>{concert.bands[0].name}</Link>
+      <Link href={`/band/${concert.bands[0].slug}`}>
+        {concert.bands[0].name}
+      </Link>
     )
   }
 
@@ -21,7 +24,7 @@ const ConcertCard = ({ concert }) => {
       return bands.map((band) => {
         return (
           <Link
-            to={`/band/${band.slug}`}
+            href={`/band/${band.slug}`}
             key={band.id}
             className="badge bg-primary mr-2"
           >
@@ -34,7 +37,7 @@ const ConcertCard = ({ concert }) => {
       return bands.map((band) => {
         return (
           <Link
-            to={`/band/${band.slug}`}
+            href={`/band/${band.slug}`}
             key={band.id}
             className="badge bg-primary mr-2"
           >
@@ -64,7 +67,10 @@ const ConcertCard = ({ concert }) => {
   // Get image URL - prefer Contentful over Last.fm placeholders
   const getImageUrl = () => {
     // Last.fm API only returns placeholder images, so use Contentful images
-    return concert.bands[0].image?.file.url
+    return (
+      concert.bands[0]?.image?.file?.url ||
+      concert.bands[0]?.image?.fields?.file?.url
+    )
   }
 
   return (
@@ -85,9 +91,9 @@ const ConcertCard = ({ concert }) => {
           <div className="club">{concert.club}</div>
           <div className="city">
             <Link
-              to={`/city/${concert.fields.geocoderAddressFields._normalized_city?.toLowerCase()}`}
+              href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
             >
-              {concert.fields.geocoderAddressFields._normalized_city}
+              {extractCityName(concert.fields.geocoderAddressFields)}
             </Link>
           </div>
         </div>

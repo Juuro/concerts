@@ -1,11 +1,13 @@
-import React from 'react'
-import Layout from '../src/components/layout-client'
-import ConcertCard from '../src/components/ConcertCard/concertCard-next'
-import StatisticsWidget from '../src/components/StatisticsWidget/statisticsWidget-next'
-import { getAllConcerts, getAllBands, getSiteMetadata } from '../src/utils/data'
+import React from "react"
+import Layout from "../src/components/layout-client"
+import ConcertCard from "../src/components/ConcertCard/concertCard"
+import StatisticsWidget from "../src/components/StatisticsWidget/statisticsWidget"
+import { getAllConcerts, getAllBands, getSiteMetadata } from "../src/utils/data"
+
+export const dynamic = "force-static"
 
 export const metadata = {
-  title: 'Concerts',
+  title: "Concerts",
   description: "List of all concerts and festivals I've visited.",
 }
 

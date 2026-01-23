@@ -1,8 +1,11 @@
 import React from 'react'
 import Layout from '../../../src/components/layout-client'
-import ConcertCard from '../../../src/components/ConcertCard/concertCard-next'
+import ConcertCard from '../../../src/components/ConcertCard/concertCard'
 import ConcertCount from '../../../src/components/ConcertCount/concertCount'
 import { getAllBands, getConcertsByBand, getAllConcerts } from '../../../src/utils/data'
+import { isFeatureEnabled, FEATURE_FLAGS } from '../../../src/utils/featureFlags'
+
+export const dynamic = 'force-static'
 
 export async function generateStaticParams() {
   const bands = await getAllBands()
@@ -13,7 +16,11 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params
-  const bands = await getAllBands()
+  // Fetch data once and reuse
+  const [bands, allConcerts] = await Promise.all([
+    getAllBands(),
+    getAllConcerts(),
+  ])
   const band = bands.find((b) => b.slug === slug)
   
   return {
@@ -23,10 +30,13 @@ export async function generateMetadata({ params }) {
 
 export default async function BandPage({ params }) {
   const { slug } = await params
-  const bands = await getAllBands()
+  // Fetch data once and reuse (prevents duplicate API calls)
+  const [bands, allConcerts] = await Promise.all([
+    getAllBands(),
+    getAllConcerts(),
+  ])
   const band = bands.find((b) => b.slug === slug)
   const concerts = await getConcertsByBand(slug)
-  const allConcerts = await getAllConcerts()
 
   if (!band) {
     return (
@@ -63,27 +73,30 @@ export default async function BandPage({ params }) {
                 {band.name}
                 <ConcertCount concerts={concertsFormatted} />
               </h2>
-              {band.lastfm?.genres && band.lastfm.genres.length > 0 && (
-                <div style={{ marginTop: '10px' }}>
-                  <strong>Genres: </strong>
-                  {band.lastfm.genres.slice(0, 5).map((genre) => (
-                    <span
-                      key={genre}
-                      className="badge bg-secondary"
-                      style={{ marginRight: '5px' }}
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {band.lastfm?.url && (
-                <div style={{ marginTop: '10px' }}>
-                  <a href={band.lastfm.url} target="_blank" rel="noopener noreferrer">
-                    View on Last.fm →
-                  </a>
-                </div>
-              )}
+              {isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true) &&
+                band.lastfm?.genres &&
+                band.lastfm.genres.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <strong>Genres: </strong>
+                    {band.lastfm.genres.slice(0, 5).map((genre) => (
+                      <span
+                        key={genre}
+                        className="badge bg-secondary"
+                        style={{ marginRight: '5px' }}
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              {isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true) &&
+                band.lastfm?.url && (
+                  <div style={{ marginTop: '10px' }}>
+                    <a href={band.lastfm.url} target="_blank" rel="noopener noreferrer">
+                      View on Last.fm →
+                    </a>
+                  </div>
+                )}
             </div>
           </div>
 

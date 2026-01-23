@@ -1,9 +1,11 @@
 import React from 'react'
 import Layout from '../../../src/components/layout-client'
-import ConcertCard from '../../../src/components/ConcertCard/concertCard-next'
+import ConcertCard from '../../../src/components/ConcertCard/concertCard'
 import ConcertCount from '../../../src/components/ConcertCount/concertCount'
 import { getAllCities, getConcertsByCity, getAllConcerts } from '../../../src/utils/data'
 import { cityToSlug, findCityBySlug } from '../../../src/utils/helpers'
+
+export const dynamic = 'force-static'
 
 export async function generateStaticParams() {
   const cities = await getAllCities()
