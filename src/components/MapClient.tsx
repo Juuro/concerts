@@ -1,47 +1,52 @@
-'use client'
+'use client';
 
-import React, { useEffect, useRef } from 'react'
-import 'leaflet/dist/leaflet.css'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import React, { useEffect, useRef } from 'react';
+import type { Concert } from '../types/concert';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
-export default function MapClient({ concerts }) {
-  const map = useRef(null)
-  const mapElement = useRef(null)
+interface MapClientProps {
+  concerts: Concert[];
+}
+
+export default function MapClient({ concerts }: MapClientProps) {
+  const map = useRef<any>(null);
+  const mapElement = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapElement.current) {
-      return
+      return;
     }
 
     // Guard: Don't initialize if map already exists
     if (map.current) {
-      return
+      return;
     }
 
     // Helper functions defined inside useEffect to avoid dependency issues
-    const getYear = (dateInput) => {
-      const date = new Date(dateInput)
+    const getYear = (dateInput: string) => {
+      const date = new Date(dateInput);
       return date.toLocaleDateString('de-DE', {
         year: 'numeric',
-      })
-    }
+      });
+    };
 
-    const getDate = (dateInput) => {
-      const date = new Date(dateInput)
+    const getDate = (dateInput: string) => {
+      const date = new Date(dateInput);
       return date.toLocaleDateString('de-DE', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-      })
-    }
+      });
+    };
 
-    const getName = (concert) => {
+    const getName = (concert: Concert) => {
       if (concert.isFestival) {
-        return `${concert.festival.name} ${getYear(concert.date)}`
+        return `${concert.festival?.fields?.name || concert.festival?.name || ''} ${getYear(concert.date)}`;
       }
-      return concert.bands[0]?.name || 'Unknown'
-    }
+      return concert.bands[0]?.name || 'Unknown';
+    };
 
     // Dynamically import Leaflet modules only on client side
     import('leaflet').then((L) => {
@@ -49,15 +54,15 @@ export default function MapClient({ concerts }) {
         import('leaflet.markercluster').then(() => {
           // Guard: Check again after async imports (component may have unmounted)
           if (!mapElement.current || map.current) {
-            return
+            return;
           }
 
           // Guard: Check if container already has a Leaflet instance
-          if (mapElement.current._leaflet_id) {
-            return
+          if ((mapElement.current as any)._leaflet_id) {
+            return;
           }
 
-          const Leaflet = L.default
+          const Leaflet = L.default;
 
           const CustomIcon = Leaflet.Icon.extend({
             options: {
@@ -66,16 +71,16 @@ export default function MapClient({ concerts }) {
               popupAnchor: [1, -34],
               shadowSize: [41, 41],
             },
-          })
+          });
 
           const icon = new CustomIcon({
-            iconUrl: markerIcon.default.src,
-          })
+            iconUrl: (markerIcon.default as any).src,
+          });
 
-          map.current = Leaflet.map(mapElement.current).setView(
+          map.current = Leaflet.map(mapElement.current!).setView(
             [51.163375, 10.447683],
             6
-          )
+          );
 
           Leaflet.tileLayer(
             'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
@@ -89,37 +94,37 @@ export default function MapClient({ concerts }) {
               accessToken:
                 'pk.eyJ1IjoianV1cm8iLCJhIjoiY2tkaGdoNzk0MDJ1YTJzb2V4anZ3NXk4bSJ9.1m7LQQaTf2W4R-IgKKGZCQ',
             }
-          ).addTo(map.current)
+          ).addTo(map.current);
 
-          const markers = Leaflet.markerClusterGroup()
+          const markers = Leaflet.markerClusterGroup();
           concerts.forEach((concert) => {
             const marker = Leaflet.marker([concert.city.lat, concert.city.lon], {
               icon: icon,
-            })
+            });
             marker.bindPopup(
-              `<strong>${getName(concert)}</strong><br />${concert.club} am ${getDate(
+              `<strong>${getName(concert)}</strong><br />${concert.club || ''} am ${getDate(
                 concert.date
               )}`
-            )
-            markers.addLayer(marker)
-          })
+            );
+            markers.addLayer(marker);
+          });
 
-          map.current.addLayer(markers)
-        })
-      })
-    })
+          map.current.addLayer(markers);
+        });
+      });
+    });
 
     return () => {
       if (map.current) {
-        map.current.remove()
-        map.current = null
+        map.current.remove();
+        map.current = null;
       }
       // Clear Leaflet ID from container
       if (mapElement.current) {
-        mapElement.current._leaflet_id = null
+        (mapElement.current as any)._leaflet_id = null;
       }
-    }
-  }, []) // Empty dependency array - only run on mount
+    };
+  }, [concerts]); // Include concerts in dependency array
 
-  return <div className="mapid" ref={mapElement}></div>
+  return <div className="mapid" ref={mapElement}></div>;
 }

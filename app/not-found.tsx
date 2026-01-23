@@ -1,5 +1,5 @@
-import React from 'react'
-import Layout from '../src/components/layout-client'
+import React from 'react';
+import Layout from '../src/components/layout-client';
 
 export default function NotFound() {
   return (
@@ -11,5 +11,5 @@ export default function NotFound() {
         </div>
       </main>
     </Layout>
-  )
+  );
 }

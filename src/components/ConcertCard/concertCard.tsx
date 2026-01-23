@@ -1,24 +1,27 @@
-import PropTypes from "prop-types"
-import React from "react"
-import Link from "next/link"
-import { cityToSlug, extractCityName } from "../../utils/helpers"
+import React from "react";
+import Link from "next/link";
+import { cityToSlug, extractCityName } from "../../utils/helpers";
+import type { Concert } from "../../types/concert";
+import "./concertCard.scss";
 
-import "./concertCard.scss"
+interface ConcertCardProps {
+  concert: Concert;
+}
 
-const ConcertCard = ({ concert }) => {
+const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival.fields.name
+      return concert.festival?.fields?.name || concert.festival?.name || '';
     }
     return (
       <Link href={`/band/${concert.bands[0].slug}`}>
         {concert.bands[0].name}
       </Link>
-    )
-  }
+    );
+  };
 
   const bands = () => {
-    const bands = [...concert.bands]
+    const bands = [...concert.bands];
     // TODO: Badges as seperate (tag) component?
     if (concert.isFestival) {
       return bands.map((band) => {
@@ -30,10 +33,10 @@ const ConcertCard = ({ concert }) => {
           >
             {band.name}
           </Link>
-        )
-      })
+        );
+      });
     } else {
-      bands.shift()
+      bands.shift();
       return bands.map((band) => {
         return (
           <Link
@@ -43,26 +46,26 @@ const ConcertCard = ({ concert }) => {
           >
             {band.name}
           </Link>
-        )
-      })
+        );
+      });
     }
-  }
+  };
 
   const isInTheFuture = () => {
     if (concert.date > new Date().toISOString()) {
-      return "future"
+      return "future";
     }
-    return ""
-  }
+    return "";
+  };
 
   const getDate = () => {
-    const date = new Date(concert.date)
+    const date = new Date(concert.date);
     return date.toLocaleDateString("de-DE", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   // Get image URL - prefer Contentful over Last.fm placeholders
   const getImageUrl = () => {
@@ -70,8 +73,8 @@ const ConcertCard = ({ concert }) => {
     return (
       concert.bands[0]?.image?.file?.url ||
       concert.bands[0]?.image?.fields?.file?.url
-    )
-  }
+    );
+  };
 
   return (
     <li className={`concert-card card ${isInTheFuture()}`}>
@@ -99,11 +102,7 @@ const ConcertCard = ({ concert }) => {
         </div>
       </div>
     </li>
-  )
-}
+  );
+};
 
-ConcertCard.propTypes = {
-  concert: PropTypes.object,
-}
-
-export default ConcertCard
+export default ConcertCard;

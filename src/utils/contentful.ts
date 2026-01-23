@@ -5,7 +5,7 @@ const spaceId = process.env.CONTENTFUL_SPACE_ID;
 const accessToken = process.env.CONTENTFUL_DELIVERY_TOKEN;
 
 if (!spaceId || !accessToken) {
-  const missing = [];
+  const missing: string[] = [];
   if (!spaceId) missing.push('CONTENTFUL_SPACE_ID');
   if (!accessToken) missing.push('CONTENTFUL_DELIVERY_TOKEN');
   
