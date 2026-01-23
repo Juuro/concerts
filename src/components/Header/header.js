@@ -1,23 +1,23 @@
-import { Link } from "gatsby"
-import PropTypes from "prop-types"
-import React from "react"
+import Link from 'next/link'
+import PropTypes from 'prop-types'
+import React from 'react'
 
-import ConcertCount from "../ConcertCount/concertCount"
+import ConcertCount from '../ConcertCount/concertCount'
 
-import "./header.scss"
+import './header.scss'
 
 const Header = ({ siteTitle = "", concerts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
-        <Link to="/">{siteTitle}</Link>
+        <Link href="/">{siteTitle}</Link>
       </h1>
       <wbr />
-      <ConcertCount concerts={concerts} />
+      {concerts && <ConcertCount concerts={{ edges: concerts.map(c => ({ node: c })), totalCount: concerts.length }} />}
 
       <nav>
-        <a href="/">Home</a>
-        <a href="/map">Map</a>
+        <Link href="/">Home</Link>
+        <Link href="/map">Map</Link>
       </nav>
     </div>
   </header>
@@ -25,6 +25,7 @@ const Header = ({ siteTitle = "", concerts }) => (
 
 Header.propTypes = {
   siteTitle: PropTypes.string,
+  concerts: PropTypes.array,
 }
 
 export default Header

@@ -55,9 +55,17 @@ typings/
 .env
 .env.local
 
-# gatsby files
-.cache/
+# Next.js files
+.next/
+out/
+build
 public
+.cache
+
+# Old Gatsby files
+src/pages.old-gatsby/
+src/templates.old-gatsby/
+old-gatsby-configs/
 
 # Mac files
 .DS_Store
