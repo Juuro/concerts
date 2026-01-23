@@ -1,18 +1,21 @@
-import lastfm from 'lastfm';
-
 /**
  * Utility module for interacting with Last.fm API
  */
 
-const { LastFmNode } = lastfm;
-
 let lastfmClient = null;
+let LastFmNode = null;
 
 /**
  * Initialize Last.fm API client
  */
-const initLastfm = () => {
+const initLastfm = async () => {
   if (!lastfmClient && process.env.LASTFM_API_KEY) {
+    // Dynamic import to avoid issues with Next.js bundling
+    if (!LastFmNode) {
+      const lastfm = await import('lastfm');
+      LastFmNode = lastfm.default.LastFmNode;
+    }
+    
     lastfmClient = new LastFmNode({
       api_key: process.env.LASTFM_API_KEY,
       secret: process.env.LASTFM_SECRET || "",
@@ -26,9 +29,9 @@ const initLastfm = () => {
  * @param {string} artistName - Name of the artist/band
  * @returns {Promise<object|null>} Artist info including image URLs and tags/genres
  */
-export const getArtistInfo = (artistName) => {
-  return new Promise((resolve) => {
-    const lfm = initLastfm();
+export const getArtistInfo = async (artistName) => {
+  return new Promise(async (resolve) => {
+    const lfm = await initLastfm();
 
     if (!lfm) {
       console.warn("Last.fm API key not configured, skipping artist info fetch");
