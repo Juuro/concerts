@@ -11,7 +11,7 @@ interface ConcertCardProps {
 const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival?.fields?.name || concert.festival?.name || '';
+      return concert.festival?.fields.name || '';
     }
     return (
       <Link href={`/band/${concert.bands[0].slug}`}>

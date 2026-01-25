@@ -17,12 +17,10 @@ export interface Band {
 }
 
 export interface Festival {
-  fields?: {
+  fields: {
     name: string;
     url?: string;
   };
-  name?: string;
-  url?: string;
 }
 
 export interface Concert {

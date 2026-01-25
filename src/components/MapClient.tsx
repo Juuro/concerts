@@ -46,7 +46,7 @@ export default function MapClient({ concerts }: MapClientProps) {
 
     const getName = (concert: Concert) => {
       if (concert.isFestival) {
-        return `${concert.festival?.fields?.name || concert.festival?.name || ''} ${getYear(concert.date)}`;
+        return `${concert.festival?.fields.name || ''} ${getYear(concert.date)}`;
       }
       return concert.bands[0]?.name || 'Unknown';
     };
