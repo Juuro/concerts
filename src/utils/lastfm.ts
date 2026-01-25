@@ -6,16 +6,67 @@ import { LastFMArtist } from 'lastfm-ts-api';
 import { isFeatureEnabled, FEATURE_FLAGS } from './featureFlags';
 import type { LastFMArtistInfoOrNull } from '../types/lastfm';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function getLastFmErrorCode(error: unknown): number | null {
+  const message = getErrorMessage(error);
+  // lastfm-ts-api formats as "... (Code 29)" when Last.fm returns an error code
+  const match = message.match(/\(Code\s+(\d+)\)/i) ?? message.match(/Code\s+(\d+)/i);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 // Build-time cache to prevent duplicate API calls during static generation
 const artistCache = new Map<string, LastFMArtistInfoOrNull>();
 // Track pending requests to prevent duplicate concurrent calls
 const pendingRequests = new Map<string, Promise<LastFMArtistInfoOrNull>>();
 // Track rate limit errors with timestamps for retry logic
 const rateLimitErrors = new Map<string, number>();
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests to respect rate limits
-const RATE_LIMIT_RETRY_DELAY = 5000; // 5 seconds before retrying after rate limit
-const MAX_RETRIES = 3;
+const MIN_REQUEST_INTERVAL = 1500; // be conservative to avoid hammering Last.fm
+const RATE_LIMIT_RETRY_DELAY = 15000; // back off more aggressively after 429-like responses
+const GLOBAL_RATE_LIMIT_COOLDOWN = 60000; // if we get rate-limited, pause all Last.fm calls for a while
+const MAX_TIMEOUT_RETRIES = 1;
+const MAX_RATE_LIMIT_RETRIES = 1;
+
+let globalRateLimitUntil = 0;
+let lastGlobalRateLimitLogAt = 0;
+
+const MAX_CONCURRENT_REQUESTS = 2;
+let inFlightRequests = 0;
+const requestWaiters: Array<() => void> = [];
+let nextAllowedRequestAt = 0;
+
+async function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return;
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function acquireRequestSlot(): Promise<void> {
+  if (inFlightRequests < MAX_CONCURRENT_REQUESTS) {
+    inFlightRequests += 1;
+    return;
+  }
+  await new Promise<void>((resolve) => requestWaiters.push(resolve));
+  inFlightRequests += 1;
+}
+
+function releaseRequestSlot(): void {
+  inFlightRequests = Math.max(0, inFlightRequests - 1);
+  const next = requestWaiters.shift();
+  if (next) next();
+}
+
+async function waitForNextRequestWindow(): Promise<void> {
+  const now = Date.now();
+  if (now < nextAllowedRequestAt) {
+    await sleep(nextAllowedRequestAt - now);
+  }
+  nextAllowedRequestAt = Date.now() + MIN_REQUEST_INTERVAL;
+}
 
 /**
  * Fetch artist information from Last.fm
@@ -31,6 +82,22 @@ export const getArtistInfo = async (
 
   if (!process.env.LASTFM_API_KEY) {
     console.warn("Last.fm API key not configured, skipping artist info fetch");
+    return null;
+  }
+
+  if (!artistName.trim()) {
+    return null;
+  }
+
+  // Global circuit breaker: if we've recently been rate-limited, don't make any calls.
+  if (Date.now() < globalRateLimitUntil) {
+    // Avoid spamming logs.
+    if (Date.now() - lastGlobalRateLimitLogAt > 10000) {
+      lastGlobalRateLimitLogAt = Date.now();
+      console.warn(
+        `Last.fm calls paused due to recent rate limiting (cooldown ends in ${Math.max(0, globalRateLimitUntil - Date.now())}ms)`
+      );
+    }
     return null;
   }
 
@@ -63,22 +130,30 @@ export const getArtistInfo = async (
     return pendingRequests.get(cacheKey)!;
   }
 
-  // Rate limiting: ensure minimum interval between requests
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest)
-    );
-  }
-  lastRequestTime = Date.now();
-
   // Create pending request promise
   const requestPromise = (async (): Promise<LastFMArtistInfoOrNull> => {
+    await acquireRequestSlot();
     try {
-      const artist = new LastFMArtist(process.env.LASTFM_API_KEY!);
-      // getInfo returns Promise when callback is provided but not used
-      const data = await (artist.getInfo({ artist: artistName, autocorrect: 1 }, () => {}) as Promise<any>);
+      // Global circuit breaker (checked again inside slot to avoid races).
+      if (Date.now() < globalRateLimitUntil) {
+        return null;
+      }
+
+      // Ensure we don't start requests too quickly, even with limited concurrency.
+      await waitForNextRequestWindow();
+
+      const apiKey = process.env.LASTFM_API_KEY!;
+      const secret = process.env.LASTFM_SECRET;
+      const artist = secret ? new LastFMArtist(apiKey, secret) : new LastFMArtist(apiKey);
+      // In the version of lastfm-ts-api used in this repo, `getInfo` is typed as callback-based.
+      // Passing a callback also changes what the returned Promise resolves to, so we wrap the
+      // callback into our own Promise and await that instead.
+      const data = await new Promise<any>((resolve, reject) => {
+        artist.getInfo({ artist: artistName, autocorrect: 1 }, (err: unknown, res: unknown) => {
+          if (err) reject(err);
+          else resolve(res);
+        });
+      });
 
       if (!data || !data.artist) {
         console.warn(`No Last.fm data found for ${artistName}`);
@@ -131,9 +206,16 @@ export const getArtistInfo = async (
       artistCache.set(cacheKey, result);
       return result;
     } catch (error: any) {
+      const message = getErrorMessage(error);
+      const errorCode = getLastFmErrorCode(error);
+
       // Handle "artist not found" as a normal case
-      if (error.message?.includes('could not be found') ||
-          error.message?.includes('not found')) {
+      if (
+        errorCode === 6 ||
+        errorCode === 7 ||
+        /could not be found/i.test(message) ||
+        /\bnot found\b/i.test(message)
+      ) {
         // Cache null to prevent repeated API calls for missing artists
         artistCache.set(cacheKey, null);
         // Log as warning (not error) since this is expected behavior
@@ -141,26 +223,41 @@ export const getArtistInfo = async (
         return null;
       }
 
+      // Invalid or suspended key: don't retry, but make it obvious why Last.fm is empty.
+      if (errorCode === 10 || errorCode === 26) {
+        console.warn(
+          `Last.fm API key invalid/suspended (code ${errorCode}). Skipping artist info fetch for "${artistName}".`
+        );
+        artistCache.set(cacheKey, null);
+        return null;
+      }
+
       // Handle rate limit errors with retry logic
-      if (error.message?.includes('Rate Limit Exceeded')) {
-        if (retryCount < MAX_RETRIES) {
+      if (errorCode === 29 || /rate\s*limit/i.test(message)) {
+        // Trip global circuit breaker to avoid blocking/banning.
+        globalRateLimitUntil = Math.max(globalRateLimitUntil, Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN);
+
+        if (retryCount < MAX_RATE_LIMIT_RETRIES) {
           // Cache rate limit error with timestamp
           rateLimitErrors.set(cacheKey, Date.now());
           artistCache.set(cacheKey, null);
           
           // Wait before retrying with exponential backoff
-          const backoffDelay = Math.min(RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount), 30000);
+          const backoffDelay = Math.min(RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount), 60000);
           console.warn(`Last.fm rate limit exceeded for ${artistName}. Retrying after ${backoffDelay}ms...`);
           
           // Clear pending request before retrying
           pendingRequests.delete(cacheKey);
           
           await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+
+          // Extend global cooldown to at least cover the per-request backoff too.
+          globalRateLimitUntil = Math.max(globalRateLimitUntil, Date.now() + backoffDelay);
           
           // Retry the request (will create new pending request)
           return getArtistInfo(artistName, retryCount + 1);
         } else {
-          console.warn(`Last.fm rate limit exceeded for ${artistName} after ${MAX_RETRIES} retries. Skipping.`);
+          console.warn(`Last.fm rate limit exceeded for ${artistName}. Skipping to avoid clogging the API.`);
           rateLimitErrors.set(cacheKey, Date.now());
           artistCache.set(cacheKey, null);
           return null;
@@ -168,10 +265,15 @@ export const getArtistInfo = async (
       }
 
       // Handle timeout errors with retry
-      if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout') || error.message?.includes('ECONNRESET')) {
-        if (retryCount < MAX_RETRIES) {
+      if (
+        error?.name === 'AbortError' ||
+        error.code === 'ETIMEDOUT' ||
+        /timeout/i.test(message) ||
+        /timed out/i.test(message)
+      ) {
+        if (retryCount < MAX_TIMEOUT_RETRIES) {
           const retryDelay = 1000 * (retryCount + 1); // 1s, 2s, 3s
-          console.warn(`Last.fm timeout for ${artistName}. Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          console.warn(`Last.fm timeout for ${artistName}. Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_TIMEOUT_RETRIES})`);
           
           // Clear pending request before retrying
           pendingRequests.delete(cacheKey);
@@ -181,7 +283,7 @@ export const getArtistInfo = async (
           // Retry the request (will create new pending request)
           return getArtistInfo(artistName, retryCount + 1);
         } else {
-          console.error(`Last.fm timeout for ${artistName} after ${MAX_RETRIES} retries. Giving up.`);
+          console.error(`Last.fm timeout for ${artistName} after ${MAX_TIMEOUT_RETRIES} retries. Giving up.`);
           artistCache.set(cacheKey, null);
           return null;
         }
@@ -194,6 +296,7 @@ export const getArtistInfo = async (
     } finally {
       // Remove from pending requests
       pendingRequests.delete(cacheKey);
+      releaseRequestSlot();
     }
   })();
 

@@ -5,6 +5,7 @@ import ConcertCount from '../../../src/components/ConcertCount/concertCount';
 import { getAllBands, getConcertsByBand, getAllConcerts } from '../../../src/utils/data';
 import { isFeatureEnabled, FEATURE_FLAGS } from '../../../src/utils/featureFlags';
 import type { Metadata } from 'next';
+import styles from './page.module.scss';
 
 export const dynamic = 'force-static';
 
@@ -56,48 +57,37 @@ export default async function BandPage({ params }: { params: Promise<{ slug: str
     edges: concerts.map(c => ({ node: c })),
     totalCount: concerts.length,
   };
+  const lastfmEnabled = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true);
 
   return (
     <Layout concerts={allConcerts}>
       <main>
         <div className="container">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              marginBottom: '20px',
-            }}
-          >
+          <div className={styles.headerRow}>
             <div>
               <h2>
                 {band.name}
                 <ConcertCount concerts={concertsFormatted} />
               </h2>
-              {isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true) &&
-                band.lastfm?.genres &&
-                band.lastfm.genres.length > 0 && (
-                  <div style={{ marginTop: '10px' }}>
-                    <strong>Genres: </strong>
+              {lastfmEnabled && band.lastfm?.genres && band.lastfm.genres.length > 0 && (
+                <div className={styles.genresRow}>
+                  <strong>Genres:</strong>
+                  <span className={styles.genreBadges}>
                     {band.lastfm.genres.slice(0, 5).map((genre) => (
-                      <span
-                        key={genre}
-                        className="badge bg-secondary"
-                        style={{ marginRight: '5px' }}
-                      >
+                      <span key={genre} className={styles.genreBadge}>
                         {genre}
                       </span>
                     ))}
-                  </div>
-                )}
-              {isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true) &&
-                band.lastfm?.url && (
-                  <div style={{ marginTop: '10px' }}>
-                    <a href={band.lastfm.url} target="_blank" rel="noopener noreferrer">
-                      View on Last.fm →
-                    </a>
-                  </div>
-                )}
+                  </span>
+                </div>
+              )}
+              {lastfmEnabled && band.lastfm?.url && (
+                <div className={styles.lastfmLinkRow}>
+                  <a className={styles.lastfmLink} href={band.lastfm.url} target="_blank" rel="noopener noreferrer">
+                    View on Last.fm →
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 

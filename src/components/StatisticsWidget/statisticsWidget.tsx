@@ -67,7 +67,7 @@ const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({ concerts = [], band
 
         return concert.fields?.geocoderAddressFields?._normalized_city;
       })
-      .filter((city): city is string => city !== false && city !== null);
+      .filter((city): city is string => typeof city === "string" && city.length > 0);
 
     if (Object.entries(cityCountsObject).length === 0 && cityArray.length > 0) {
       const cityCounts: Record<string, number> = {};
@@ -93,12 +93,15 @@ const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({ concerts = [], band
       })
       .map((concert) => {
         const date = new Date(concert.date);
-        return date.getFullYear().toString();
+        const year = date.getFullYear();
+        return Number.isFinite(year) ? year.toString() : undefined;
       });
+    
+    const yearArrayFiltered = yearArray.filter((year): year is string => typeof year === "string" && year.length > 0);
 
-    if (Object.entries(yearCountsObject).length === 0 && yearArray.length > 0) {
+    if (Object.entries(yearCountsObject).length === 0 && yearArrayFiltered.length > 0) {
       const yearCounts: Record<string, number> = {};
-      for (const year of yearArray) {
+      for (const year of yearArrayFiltered) {
         yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1;
       }
       setYearCountsObject(yearCounts);

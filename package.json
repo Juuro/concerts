@@ -35,7 +35,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/prefetch-lastfm.mjs && next build",
     "dev": "next dev",
     "start": "next start",
     "format": "prettier --write ./src/**/*.{js,jsx,ts,tsx,scss}",
