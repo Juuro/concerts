@@ -258,11 +258,12 @@ async function main() {
         // Invalid/suspended key: soft-fail by stopping further calls.
         if (code === 10 || code === 26) {
           console.warn(`[lastfm prefetch] API key error (code ${code}). Stopping prefetch early.`);
-          return writeCache(cachePath, artists, { stoppedEarly: true, reason: `api_key_${code}` });
+          await writeCache(cachePath, artists, { stoppedEarly: true, reason: `api_key_${code}` });
+          return;
         }
 
         // Rate limit: cool down and continue (no endless retries).
-        if (code === 29 || /rate\\s*limit/i.test(msg)) {
+        if (code === 29 || /rate\s*limit/i.test(msg)) {
           console.warn('[lastfm prefetch] Rate limited (code 29). Stopping early to avoid clogging the API.');
           artists[key] = null;
           await writeCache(cachePath, artists, { stoppedEarly: true, reason: 'rate_limited' });
@@ -306,7 +307,7 @@ async function writeCache(cachePath, artists, meta) {
   console.log(`[lastfm prefetch] Wrote cache: ${cachePath}`);
 }
 
-main().catch((err) => {
+await main().catch((err) => {
   console.warn(`[lastfm prefetch] Failed (soft): ${getErrorMessage(err)}`);
   // Soft-fail: do not throw; let build proceed without Last.fm.
 });

@@ -13,9 +13,13 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
     if (concert.isFestival) {
       return concert.festival?.fields.name || '';
     }
+    const mainBand = concert.bands[0];
+    if (!mainBand) {
+      return 'Unknown band';
+    }
     return (
-      <Link href={`/band/${concert.bands[0].slug}`}>
-        {concert.bands[0].name}
+      <Link href={`/band/${mainBand.slug}`}>
+        {mainBand.name}
       </Link>
     );
   };
