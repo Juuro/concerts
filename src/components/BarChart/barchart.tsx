@@ -1,30 +1,37 @@
-import React from 'react'
-import Link from 'next/link'
+import React from 'react';
+import Link from 'next/link';
+import './barchart.scss';
 
-import './barchart.scss'
+interface BarChartProps {
+  data: Array<[string, number, string?]>;
+  max: number;
+  title: string;
+  category: string;
+}
 
-const BarChart = ({ data, max, title, category }) => {
-  const calcPercentage = (absolute, dings) => {
+const BarChart: React.FC<BarChartProps> = ({ data, max, title, category }) => {
+  const calcPercentage = (absolute: number, dings: number): number | undefined => {
     if (dings >= 0) {
-      const percentage = Math.round((absolute * 100) / dings)
-      return percentage
+      const percentage = Math.round((absolute * 100) / dings);
+      return percentage;
     }
-  }
+    return undefined;
+  };
 
-  const createLink = (element) => {
+  const createLink = (element: [string, number, string?]) => {
     if (element[2]) {
       return (
         <Link href={`/${category}/${element[2]}`}>
           <strong>{element[1]}</strong> {element[0]}
         </Link>
-      )
+      );
     }
     return (
       <>
         <strong>{element[1]}</strong> {element[0]}
       </>
-    )
-  }
+    );
+  };
 
   return (
     <div className="barchart">
@@ -35,17 +42,17 @@ const BarChart = ({ data, max, title, category }) => {
             <li key={element[0]} title={element[0]}>
               <span
                 className="bar"
-                style={{ width: calcPercentage(element[1], max) + '%' }}
+                style={{ width: (calcPercentage(element[1], max) ?? 0) + '%' }}
               >
                 &nbsp;
               </span>
               <span className="text">{createLink(element)}</span>
             </li>
-          )
+          );
         })}
       </ul>
     </div>
-  )
-}
+  );
+};
 
-export default BarChart
+export default BarChart;

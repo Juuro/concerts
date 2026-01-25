@@ -4,13 +4,14 @@
 
 import { LastFMArtist } from 'lastfm-ts-api';
 import { isFeatureEnabled, FEATURE_FLAGS } from './featureFlags';
+import type { LastFMArtistInfoOrNull } from '../types/lastfm';
 
 // Build-time cache to prevent duplicate API calls during static generation
-const artistCache = new Map();
+const artistCache = new Map<string, LastFMArtistInfoOrNull>();
 // Track pending requests to prevent duplicate concurrent calls
-const pendingRequests = new Map();
+const pendingRequests = new Map<string, Promise<LastFMArtistInfoOrNull>>();
 // Track rate limit errors with timestamps for retry logic
-const rateLimitErrors = new Map();
+const rateLimitErrors = new Map<string, number>();
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests to respect rate limits
 const RATE_LIMIT_RETRY_DELAY = 5000; // 5 seconds before retrying after rate limit
@@ -18,11 +19,11 @@ const MAX_RETRIES = 3;
 
 /**
  * Fetch artist information from Last.fm
- * @param {string} artistName - Name of the artist/band
- * @param {number} retryCount - Internal retry counter
- * @returns {Promise<object|null>} Artist info including image URLs and tags/genres
  */
-export const getArtistInfo = async (artistName, retryCount = 0) => {
+export const getArtistInfo = async (
+  artistName: string,
+  retryCount = 0
+): Promise<LastFMArtistInfoOrNull> => {
   // Check feature flag first - if disabled, return null immediately
   if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)) {
     return null;
@@ -42,22 +43,24 @@ export const getArtistInfo = async (artistName, retryCount = 0) => {
     // Return cached result, but if it's a rate limit error, check if we should retry
     if (cached === null && rateLimitErrors.has(cacheKey)) {
       const errorTime = rateLimitErrors.get(cacheKey);
-      const timeSinceError = Date.now() - errorTime;
-      if (timeSinceError < RATE_LIMIT_RETRY_DELAY) {
-        // Still in cooldown period, return null
-        return null;
+      if (errorTime !== undefined) {
+        const timeSinceError = Date.now() - errorTime;
+        if (timeSinceError < RATE_LIMIT_RETRY_DELAY) {
+          // Still in cooldown period, return null
+          return null;
+        }
+        // Cooldown expired, clear error and retry
+        rateLimitErrors.delete(cacheKey);
+        artistCache.delete(cacheKey);
       }
-      // Cooldown expired, clear error and retry
-      rateLimitErrors.delete(cacheKey);
-      artistCache.delete(cacheKey);
     } else {
-      return cached;
+      return cached ?? null;
     }
   }
 
   // Check if request is already pending (prevents duplicate concurrent calls)
   if (pendingRequests.has(cacheKey)) {
-    return pendingRequests.get(cacheKey);
+    return pendingRequests.get(cacheKey)!;
   }
 
   // Rate limiting: ensure minimum interval between requests
@@ -71,11 +74,11 @@ export const getArtistInfo = async (artistName, retryCount = 0) => {
   lastRequestTime = Date.now();
 
   // Create pending request promise
-  const requestPromise = (async () => {
-
+  const requestPromise = (async (): Promise<LastFMArtistInfoOrNull> => {
     try {
-      const artist = new LastFMArtist(process.env.LASTFM_API_KEY);
-      const data = await artist.getInfo({ artist: artistName, autocorrect: 1 });
+      const artist = new LastFMArtist(process.env.LASTFM_API_KEY!);
+      // getInfo returns Promise when callback is provided but not used
+      const data = await (artist.getInfo({ artist: artistName, autocorrect: 1 }, () => {}) as Promise<any>);
 
       if (!data || !data.artist) {
         console.warn(`No Last.fm data found for ${artistName}`);
@@ -89,16 +92,16 @@ export const getArtistInfo = async (artistName, retryCount = 0) => {
       // Handle both array format and object format
       const images = artistData.image || [];
       const imageUrls = {
-        small: null,
-        medium: null,
-        large: null,
-        extralarge: null,
-        mega: null,
+        small: null as string | null,
+        medium: null as string | null,
+        large: null as string | null,
+        extralarge: null as string | null,
+        mega: null as string | null,
       };
 
       if (Array.isArray(images)) {
-        images.forEach((img) => {
-          const size = img.size || img['#text'] ? 'medium' : null;
+        images.forEach((img: any) => {
+          const size = img.size || (img['#text'] ? 'medium' : null);
           const url = img['#text'] || img.url || null;
           if (size && url) {
             if (size === 'small') imageUrls.small = url;
@@ -113,7 +116,7 @@ export const getArtistInfo = async (artistName, retryCount = 0) => {
       // Extract genres/tags
       const tags = artistData.tags?.tag || [];
       const genres = Array.isArray(tags)
-        ? tags.map((tag) => (typeof tag === 'string' ? tag : tag.name))
+        ? tags.map((tag: any) => (typeof tag === 'string' ? tag : tag.name))
         : [];
 
       const result = {
@@ -127,7 +130,7 @@ export const getArtistInfo = async (artistName, retryCount = 0) => {
       // Cache successful response
       artistCache.set(cacheKey, result);
       return result;
-    } catch (error) {
+    } catch (error: any) {
       // Handle "artist not found" as a normal case
       if (error.message?.includes('could not be found') ||
           error.message?.includes('not found')) {

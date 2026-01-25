@@ -14,11 +14,8 @@
 
 /**
  * Parse boolean environment variable
- * @param {string} value - Environment variable value
- * @param {boolean} defaultValue - Default value if not set
- * @returns {boolean}
  */
-function parseBoolean(value, defaultValue = false) {
+function parseBoolean(value: string | undefined, defaultValue = false): boolean {
   if (value === undefined || value === null) {
     return defaultValue;
   }
@@ -28,11 +25,11 @@ function parseBoolean(value, defaultValue = false) {
 
 /**
  * Check if a feature flag is enabled
- * @param {string} flagName - Name of the feature flag (env var name)
- * @param {boolean} defaultValue - Default value if flag is not set
- * @returns {boolean}
+ * @param flagName - Name of the feature flag (env var name)
+ * @param defaultValue - Default value if flag is not set
+ * @returns boolean
  */
-export function isFeatureEnabled(flagName, defaultValue = false) {
+export function isFeatureEnabled(flagName: string, defaultValue = false): boolean {
   // In Next.js, server-side env vars are available via process.env
   const value = process.env[flagName];
   return parseBoolean(value, defaultValue);
@@ -44,4 +41,4 @@ export function isFeatureEnabled(flagName, defaultValue = false) {
 export const FEATURE_FLAGS = {
   ENABLE_LASTFM: 'ENABLE_LASTFM',
   ENABLE_GEOCODING: 'ENABLE_GEOCODING',
-};
+} as const;

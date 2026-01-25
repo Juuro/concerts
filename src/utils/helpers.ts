@@ -2,12 +2,12 @@
  * Utility functions for data transformation
  */
 
+import type { GeocodingData } from '../types/geocoding';
+
 /**
  * Convert city name to URL-friendly slug
- * @param {string} cityName - City name to convert
- * @returns {string} URL-friendly slug
  */
-export function cityToSlug(cityName) {
+export function cityToSlug(cityName: string | null | undefined): string {
   if (!cityName) return '';
   return cityName
     .trim()
@@ -20,20 +20,15 @@ export function cityToSlug(cityName) {
 
 /**
  * Extract city name from geocoding data
- * @param {object} geocodingData - Geocoding address components
- * @returns {string} Normalized city name
  */
-export function extractCityName(geocodingData) {
+export function extractCityName(geocodingData: GeocodingData | null | undefined): string {
   if (!geocodingData) return '';
   return geocodingData._normalized_city || '';
 }
 
 /**
  * Find city name by slug
- * @param {string} slug - URL slug
- * @param {Array} cities - List of city names
- * @returns {string|null} City name or null if not found
  */
-export function findCityBySlug(slug, cities) {
+export function findCityBySlug(slug: string, cities: string[]): string | null {
   return cities.find((city) => cityToSlug(city) === slug) || null;
 }

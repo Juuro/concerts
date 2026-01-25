@@ -1,0 +1,54 @@
+# .cursorrules: Universal AI Instructions for Next.js Project
+
+## Core Stack
+
+- Next.js 15+ App Router, TypeScript 5.6+, Yarn 4+ (yarn only, no npm/pnpm)
+- SCSS Modules (.module.scss) and global SCSS only
+- Zod validation, React 19 server/client components
+- Sass/SCSS with modules support (sass package required)
+
+## Structure Expectations
+
+src/
+app/ # Pages & API routes
+components/ # UI components  
+ lib/ # Utils, DB, API clients
+types/ # Shared TS types
+styles/ # Global SCSS files
+Root: next.config.js, tsconfig.json (absolute imports), yarn.lock
+
+## Commands
+
+yarn dev/build/lint/test/clean
+
+## Rules (Always Follow)
+
+- TypeScript everywhere; strict null checks.
+- 'use client' directive for client components only.
+- Functional hooks only; PascalCase components.
+- Global SCSS: src/styles/globals.scss for resets/base only
+- Zod for all inputs; try/catch error handling.
+- Absolute imports from src/.
+
+## Styling Guidelines
+
+- SCSS Modules required: Component.module.scss co-located with components
+- Import pattern: const { container, button } = styles;
+- Nesting, variables ($primary-color), mixins in SCSS modules
+- Global SCSS limited to resets, typography, spacing variables
+- CSS custom properties + SCSS variables for theming
+- Flexbox/Grid layouts; mobile-first responsive design
+- No inline styles whatsoever
+
+## Prohibited
+
+- Modify yarn.lock manually.
+- Tailwind CSS, CSS-in-JS (styled-components, emotion), vanilla CSS.
+- Global SCSS beyond base styles (no component-specific rules).
+- Class components or JS files.
+
+## Generation Style
+
+- Concise, readable code with JSDoc for complex logic.
+- Prefer server components; explicit client boundaries.
+- Vitest + React Testing Library for tests.

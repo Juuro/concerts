@@ -1,12 +1,15 @@
-import Link from 'next/link'
-import PropTypes from 'prop-types'
-import React from 'react'
+import Link from 'next/link';
+import React from 'react';
+import ConcertCount from '../ConcertCount/concertCount';
+import type { Concert } from '../../types/concert';
+import './header.scss';
 
-import ConcertCount from '../ConcertCount/concertCount'
+interface HeaderProps {
+  siteTitle?: string;
+  concerts?: Concert[];
+}
 
-import './header.scss'
-
-const Header = ({ siteTitle = "", concerts }) => (
+const Header: React.FC<HeaderProps> = ({ siteTitle = "", concerts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
@@ -21,11 +24,6 @@ const Header = ({ siteTitle = "", concerts }) => (
       </nav>
     </div>
   </header>
-)
+);
 
-Header.propTypes = {
-  siteTitle: PropTypes.string,
-  concerts: PropTypes.array,
-}
-
-export default Header
+export default Header;
