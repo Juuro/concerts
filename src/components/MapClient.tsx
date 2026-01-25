@@ -24,6 +24,9 @@ export default function MapClient({ concerts }: MapClientProps) {
       return;
     }
 
+    // Capture ref values for cleanup
+    const currentMapElement = mapElement.current;
+
     // Helper functions defined inside useEffect to avoid dependency issues
     const getYear = (dateInput: string) => {
       const date = new Date(dateInput);
@@ -53,31 +56,27 @@ export default function MapClient({ concerts }: MapClientProps) {
       import('leaflet/dist/images/marker-icon.png').then((markerIcon) => {
         import('leaflet.markercluster').then(() => {
           // Guard: Check again after async imports (component may have unmounted)
-          if (!mapElement.current || map.current) {
+          if (!currentMapElement || map.current) {
             return;
           }
 
           // Guard: Check if container already has a Leaflet instance
-          if ((mapElement.current as any)._leaflet_id) {
+          if ((currentMapElement as any)._leaflet_id) {
             return;
           }
 
           const Leaflet = L.default;
 
-          const CustomIcon = Leaflet.Icon.extend({
-            options: {
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41],
-            },
-          });
-
-          const icon = new CustomIcon({
+          // Create icon using Leaflet.Icon with options
+          const icon = new Leaflet.Icon({
             iconUrl: (markerIcon.default as any).src,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
           });
 
-          map.current = Leaflet.map(mapElement.current!).setView(
+          map.current = Leaflet.map(currentMapElement).setView(
             [51.163375, 10.447683],
             6
           );
@@ -93,7 +92,7 @@ export default function MapClient({ concerts }: MapClientProps) {
               zoomOffset: -1,
               accessToken:
                 'pk.eyJ1IjoianV1cm8iLCJhIjoiY2tkaGdoNzk0MDJ1YTJzb2V4anZ3NXk4bSJ9.1m7LQQaTf2W4R-IgKKGZCQ',
-            }
+            } as any
           ).addTo(map.current);
 
           const markers = Leaflet.markerClusterGroup();
@@ -115,13 +114,15 @@ export default function MapClient({ concerts }: MapClientProps) {
     });
 
     return () => {
-      if (map.current) {
-        map.current.remove();
+      const currentMap = map.current;
+      
+      if (currentMap) {
+        currentMap.remove();
         map.current = null;
       }
-      // Clear Leaflet ID from container
-      if (mapElement.current) {
-        (mapElement.current as any)._leaflet_id = null;
+      // Clear Leaflet ID from container using captured ref
+      if (currentMapElement) {
+        (currentMapElement as any)._leaflet_id = null;
       }
     };
   }, [concerts]); // Include concerts in dependency array

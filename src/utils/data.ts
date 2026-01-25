@@ -2,9 +2,10 @@ import contentfulClient from "./contentful";
 import { getArtistInfo } from "./lastfm";
 import opencage from "opencage-api-client";
 import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags";
+import { getConcertFields, getBandFields, getFestivalFields, getCity } from "./contentfulHelpers";
 import type { Concert, Band, SiteMetadata, ConcertsFormatted } from "../types/concert";
 import type { GeocodingData, OpenCageComponents } from "../types/geocoding";
-import type { ContentfulConcertEntry, ContentfulBandEntry } from "../types/contentful";
+import type { ContentfulConcertEntry, ContentfulBandEntry, ContentfulCity, ContentfulFestivalEntry, ContentfulConcertFields, ContentfulBandFields } from "../types/contentful";
 import type { LastFMArtistInfoOrNull } from "../types/lastfm";
 
 // Module-level cache for build-time data
@@ -87,23 +88,27 @@ async function getGeocodingData(lat: number, lon: number): Promise<GeocodingData
  * Transform Contentful concert entry to match expected format
  */
 async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert> {
+  const fields = getConcertFields(entry);
+  const city = getCity(fields);
   const geocodingData = await getGeocodingData(
-    entry.fields.city.lat,
-    entry.fields.city.lon
+    city.lat,
+    city.lon
   );
 
   // Fetch Last.fm data for each band (only if feature flag is enabled)
+  const bands: ContentfulBandEntry[] = (fields.bands as ContentfulBandEntry[] | undefined) || [];
   const bandsWithLastfm = await Promise.all(
-    (entry.fields.bands || []).map(async (band: ContentfulBandEntry) => {
+    bands.map(async (band: ContentfulBandEntry) => {
+      const bandFields = getBandFields(band);
       const lastfmData: LastFMArtistInfoOrNull = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)
-        ? await getArtistInfo(band.fields.name)
+        ? await getArtistInfo(bandFields.name)
         : null;
       return {
         id: band.sys.id,
-        name: band.fields.name,
-        slug: band.fields.slug,
-        url: `/band/${band.fields.slug}/`,
-        image: band.fields.image,
+        name: bandFields.name,
+        slug: bandFields.slug,
+        url: `/band/${bandFields.slug}/`,
+        image: bandFields.image,
         fields: {
           lastfm: lastfmData,
         },
@@ -111,14 +116,27 @@ async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert>
     })
   );
 
+  // Transform festival if it exists
+  const festival = fields.festival
+    ? (() => {
+        const festivalFields = getFestivalFields(fields.festival);
+        return {
+          fields: {
+            name: festivalFields.name,
+            url: festivalFields.url,
+          },
+        };
+      })()
+    : null;
+
   return {
     id: entry.sys.id,
-    date: entry.fields.date,
-    city: entry.fields.city,
-    club: entry.fields.club,
+    date: fields.date,
+    city: city,
+    club: fields.club,
     bands: bandsWithLastfm,
-    isFestival: entry.fields.isFestival || false,
-    festival: entry.fields.festival || null,
+    isFestival: fields.isFestival || false,
+    festival: festival,
     fields: {
       geocoderAddressFields: geocodingData,
     },
@@ -144,14 +162,14 @@ export async function getAllConcerts(): Promise<Concert[]> {
   // Start fetching and cache the promise
   concertsCache.promise = (async (): Promise<Concert[]> => {
     try {
-      const entries = await contentfulClient.getEntries<ContentfulConcertEntry>({
+      const entries = await contentfulClient.getEntries({
         content_type: "concert",
-        order: "-fields.date",
+        order: ["-fields.date"],
         limit: 1000,
       });
 
       const concerts = await Promise.all(
-        entries.items.map((entry) => transformConcert(entry))
+        entries.items.map((entry) => transformConcert(entry as ContentfulConcertEntry))
       );
 
       concertsCache.data = concerts;
@@ -204,31 +222,34 @@ export async function getAllBands(): Promise<Band[]> {
       });
 
       // Fetch bands from Contentful
-      const entries = await contentfulClient.getEntries<ContentfulBandEntry>({
+      const entries = await contentfulClient.getEntries({
         content_type: "band",
-        order: "fields.name",
+        order: ["fields.name"],
         limit: 1000,
       });
 
       const bands = await Promise.all(
         entries.items
           .filter((entry) => {
-            return entry.fields.slug !== "data-schema";
+            const fields = getBandFields(entry as ContentfulBandEntry);
+            return fields.slug !== "data-schema";
           })
           .map(async (entry) => {
+            const bandEntry = entry as ContentfulBandEntry;
+            const bandFields = getBandFields(bandEntry);
             const lastfmData: LastFMArtistInfoOrNull = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)
-              ? await getArtistInfo(entry.fields.name)
+              ? await getArtistInfo(bandFields.name)
               : null;
 
             // Use pre-grouped concerts instead of calling getConcertsByBand()
-            const concerts = concertsByBandSlug.get(entry.fields.slug) || [];
+            const concerts = concertsByBandSlug.get(bandFields.slug) || [];
 
             return {
-              id: entry.sys.id,
-              name: entry.fields.name,
-              slug: entry.fields.slug,
-              url: `/band/${entry.fields.slug}/`,
-              image: entry.fields.image,
+              id: bandEntry.sys.id,
+              name: bandFields.name,
+              slug: bandFields.slug,
+              url: `/band/${bandFields.slug}/`,
+              image: bandFields.image,
               lastfm: lastfmData,
               concert: concerts,
             };

@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Concerts',
   description: "List of all concerts and festivals I've visited. Including pages for every band I ever saw.",
-  author: '@juuro',
+  authors: [{ name: '@juuro' }],
 };
 
 export default function RootLayout({

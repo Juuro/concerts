@@ -94,8 +94,7 @@ const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({ concerts = [], band
       .map((concert) => {
         const date = new Date(concert.date);
         return date.getFullYear().toString();
-      })
-      .filter((year) => year !== false);
+      });
 
     if (Object.entries(yearCountsObject).length === 0 && yearArray.length > 0) {
       const yearCounts: Record<string, number> = {};

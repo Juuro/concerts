@@ -2,7 +2,7 @@
  * Contentful SDK types
  */
 
-import type { Entry, Asset } from 'contentful';
+import type { Entry } from 'contentful';
 
 export interface ContentfulCity {
   lat: number;
@@ -27,20 +27,24 @@ export interface ContentfulBandFields {
   name: string;
   slug: string;
   image?: ContentfulImage;
+  [key: string]: any;
 }
 
-export interface ContentfulBandEntry extends Entry {
+export type ContentfulBandEntry = Entry<{
+  contentTypeId: 'band';
   fields: ContentfulBandFields;
-}
+}>;
 
 export interface ContentfulFestivalFields {
   name: string;
   url?: string;
+  [key: string]: any;
 }
 
-export interface ContentfulFestivalEntry extends Entry {
+export type ContentfulFestivalEntry = Entry<{
+  contentTypeId: 'festival';
   fields: ContentfulFestivalFields;
-}
+}>;
 
 export interface ContentfulConcertFields {
   date: string;
@@ -49,8 +53,10 @@ export interface ContentfulConcertFields {
   bands?: ContentfulBandEntry[];
   isFestival?: boolean;
   festival?: ContentfulFestivalEntry;
+  [key: string]: any;
 }
 
-export interface ContentfulConcertEntry extends Entry {
+export type ContentfulConcertEntry = Entry<{
+  contentTypeId: 'concert';
   fields: ContentfulConcertFields;
-}
+}>;

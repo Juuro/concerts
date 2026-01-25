@@ -29,7 +29,11 @@ export interface OpenCageResponse {
 /**
  * Geocoding data returned by getGeocodingData
  */
-export interface GeocodingData extends OpenCageComponents {
+export interface GeocodingData {
   _normalized_city: string;
   _is_coordinates?: boolean;
+  city?: string;
+  town?: string;
+  village?: string;
+  [key: string]: string | boolean | undefined;
 }

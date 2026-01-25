@@ -77,7 +77,8 @@ export const getArtistInfo = async (
   const requestPromise = (async (): Promise<LastFMArtistInfoOrNull> => {
     try {
       const artist = new LastFMArtist(process.env.LASTFM_API_KEY!);
-      const data = await artist.getInfo({ artist: artistName, autocorrect: 1 });
+      // getInfo returns Promise when callback is provided but not used
+      const data = await (artist.getInfo({ artist: artistName, autocorrect: 1 }, () => {}) as Promise<any>);
 
       if (!data || !data.artist) {
         console.warn(`No Last.fm data found for ${artistName}`);
