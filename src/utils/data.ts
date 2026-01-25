@@ -1,5 +1,6 @@
 import contentfulClient from "./contentful";
-import { getArtistInfo } from "./lastfm";
+import fs from "node:fs/promises";
+import path from "node:path";
 import opencage from "opencage-api-client";
 import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags";
 import { getConcertFields, getBandFields, getFestivalFields, getCity } from "./contentfulHelpers";
@@ -17,6 +18,48 @@ interface Cache<T> {
 
 const concertsCache: Cache<Concert[]> = { data: null, promise: null };
 const bandsCache: Cache<Band[]> = { data: null, promise: null };
+
+type LastfmCacheFile = {
+  artists?: Record<string, LastFMArtistInfoOrNull>;
+  generatedAt?: string;
+  meta?: unknown;
+};
+
+let lastfmCachePromise: Promise<Map<string, LastFMArtistInfoOrNull>> | null = null;
+
+function normalizeLastfmKey(name: string): string {
+  return name.toLowerCase().trim();
+}
+
+async function loadLastfmCache(): Promise<Map<string, LastFMArtistInfoOrNull>> {
+  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)) {
+    return new Map();
+  }
+
+  if (lastfmCachePromise) return lastfmCachePromise;
+
+  lastfmCachePromise = (async () => {
+    const candidates = [
+      path.join(process.cwd(), ".next", "cache", "lastfm-artists.json"),
+      path.join(process.cwd(), ".cache", "lastfm-artists.json"),
+    ];
+
+    for (const filePath of candidates) {
+      try {
+        const raw = await fs.readFile(filePath, "utf8");
+        const parsed = JSON.parse(raw) as LastfmCacheFile;
+        const artists = parsed?.artists ?? {};
+        return new Map(Object.entries(artists));
+      } catch {
+        // ignore missing/invalid cache file; fall back to next candidate
+      }
+    }
+
+    return new Map();
+  })();
+
+  return lastfmCachePromise;
+}
 
 /**
  * Normalize geocoding data to extract city name
@@ -95,21 +138,20 @@ async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert>
     city.lon
   );
 
-  // Fetch Last.fm data for each band (only if feature flag is enabled)
+  const lastfmByArtist = await loadLastfmCache();
+
   const bands: ContentfulBandEntry[] = (fields.bands as ContentfulBandEntry[] | undefined) || [];
-  const bandsWithLastfm = await Promise.all(
+  const bandsFormatted = await Promise.all(
     bands.map(async (band: ContentfulBandEntry) => {
       const bandFields = getBandFields(band);
-      const lastfmData: LastFMArtistInfoOrNull = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)
-        ? await getArtistInfo(bandFields.name)
-        : null;
+      const lastfm = lastfmByArtist.get(normalizeLastfmKey(bandFields.name)) ?? null;
       return {
         id: band.sys.id,
         name: bandFields.name,
         slug: bandFields.slug,
         url: `/band/${bandFields.slug}/`,
         image: bandFields.image,
-        lastfm: lastfmData,
+        lastfm,
       };
     })
   );
@@ -132,7 +174,7 @@ async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert>
     date: fields.date,
     city: city,
     club: fields.club,
-    bands: bandsWithLastfm,
+    bands: bandsFormatted,
     isFestival: fields.isFestival || false,
     festival: festival,
     fields: {
@@ -207,6 +249,7 @@ export async function getAllBands(): Promise<Band[]> {
     try {
       // Fetch concerts once - uses cache if already fetched
       const allConcerts = await getAllConcerts();
+      const lastfmByArtist = await loadLastfmCache();
 
       // Group concerts by band slug for O(1) lookup
       const concertsByBandSlug = new Map<string, Concert[]>();
@@ -235,9 +278,7 @@ export async function getAllBands(): Promise<Band[]> {
           .map(async (entry) => {
             const bandEntry = entry as ContentfulBandEntry;
             const bandFields = getBandFields(bandEntry);
-            const lastfmData: LastFMArtistInfoOrNull = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)
-              ? await getArtistInfo(bandFields.name)
-              : null;
+            const lastfm = lastfmByArtist.get(normalizeLastfmKey(bandFields.name)) ?? null;
 
             // Use pre-grouped concerts instead of calling getConcertsByBand()
             const concerts = concertsByBandSlug.get(bandFields.slug) || [];
@@ -248,7 +289,7 @@ export async function getAllBands(): Promise<Band[]> {
               slug: bandFields.slug,
               url: `/band/${bandFields.slug}/`,
               image: bandFields.image,
-              lastfm: lastfmData,
+              lastfm,
               concert: concerts,
             };
           })
