@@ -19,7 +19,7 @@ Root: next.config.js, tsconfig.json (absolute imports), yarn.lock
 
 ## Commands
 
-yarn dev/build/lint/test/type-check/clean
+yarn dev/build/lint/test/clean
 
 ## Rules (Always Follow)
 

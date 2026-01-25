@@ -109,9 +109,7 @@ async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert>
         slug: bandFields.slug,
         url: `/band/${bandFields.slug}/`,
         image: bandFields.image,
-        fields: {
-          lastfm: lastfmData,
-        },
+        lastfm: lastfmData,
       };
     })
   );

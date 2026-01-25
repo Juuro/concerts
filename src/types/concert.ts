@@ -12,9 +12,6 @@ export interface Band {
   slug: string;
   url: string;
   image?: ContentfulImage;
-  fields?: {
-    lastfm: LastFMArtistInfoOrNull;
-  };
   lastfm?: LastFMArtistInfoOrNull;
   concert?: Concert[];
 }
