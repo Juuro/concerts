@@ -167,9 +167,11 @@ function normalizePhotonToGeocodingData(lat, lon, photonJson) {
     return {
       _normalized_city: city.trim(),
       city: typeof props.city === 'string' ? props.city : undefined,
+      locality: typeof props.locality === 'string' ? props.locality : undefined,
       name: typeof props.name === 'string' ? props.name : undefined,
-      country: typeof props.country === 'string' ? props.country : undefined,
+      county: typeof props.county === 'string' ? props.county : undefined,
       state: typeof props.state === 'string' ? props.state : undefined,
+      country: typeof props.country === 'string' ? props.country : undefined,
     };
   }
  

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cityToSlug, extractCityName } from "../../utils/helpers";
 import type { Concert } from "../../types/concert";
 import "./concertCard.scss";
@@ -80,14 +81,28 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
     );
   };
 
+  const getImageSrc = () => {
+    const url = getImageUrl();
+    if (!url) return undefined;
+    if (url.startsWith("//")) return `https:${url}`;
+    return url;
+  };
+
   return (
     <li className={`concert-card card ${isInTheFuture()}`}>
-      <div
-        className="concert-card-image"
-        style={{
-          backgroundImage: getImageUrl() ? `url(${getImageUrl()})` : "none",
-        }}
-      ></div>
+      <div className="concert-card-image" aria-hidden="true">
+        {getImageSrc() ? (
+          <Image
+            src={getImageSrc() as string}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 240px, 33vw"
+            className="concert-card-image-img"
+          />
+        ) : (
+          <div className="concert-card-image-placeholder" />
+        )}
+      </div>
       <div className="concert-card-body">
         <h3 className="card-title">{heading()}</h3>
         <span>{getDate()}</span>
