@@ -1,29 +1,30 @@
 /**
- * OpenCage Geocoding API response types
+ * Photon reverse geocoding response types
+ * https://photon.komoot.io
  */
 
-export interface OpenCageComponents {
-  _normalized_city?: string;
+export interface PhotonProperties {
+  name?: string;
   city?: string;
-  town?: string;
-  village?: string;
-  [key: string]: string | undefined;
+  locality?: string;
+  county?: string;
+  state?: string;
+  country?: string;
+  [key: string]: unknown;
 }
 
-export interface OpenCageResult {
-  components: OpenCageComponents;
+export interface PhotonFeature {
+  type: "Feature";
   geometry: {
-    lat: number;
-    lng: number;
+    type: "Point";
+    coordinates: [number, number];
   };
+  properties: PhotonProperties;
 }
 
-export interface OpenCageResponse {
-  status: {
-    code: number;
-    message: string;
-  };
-  results: OpenCageResult[];
+export interface PhotonReverseResponse {
+  type: "FeatureCollection";
+  features: PhotonFeature[];
 }
 
 /**
@@ -33,6 +34,11 @@ export interface GeocodingData {
   _normalized_city: string;
   _is_coordinates?: boolean;
   city?: string;
+  locality?: string;
+  name?: string;
+  county?: string;
+  state?: string;
+  country?: string;
   town?: string;
   village?: string;
   [key: string]: string | boolean | undefined;
