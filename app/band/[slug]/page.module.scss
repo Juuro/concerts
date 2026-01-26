@@ -5,15 +5,18 @@
   margin-bottom: 20px;
 }
 
-.genresRow {
-  margin-top: 10px;
+// ConcertCount is globally styled (nested `.badge`) to be intentionally prominent.
+// On the band page only, shrink it without changing its shape.
+.headerRow h2 > :global(.badge) {
+  display: inline-block;
+  transform: scale(0.78);
+  transform-origin: left center;
 }
 
 .genreBadges {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-left: 6px;
 }
 
 .genreBadge {
@@ -24,11 +27,45 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-.lastfmLinkRow {
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 10px;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.2;
+}
+
+.metaSeparator {
+  color: rgba(0, 0, 0, 0.35);
 }
 
 .lastfmLink {
-  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  color: rgba(0, 0, 0, 0.6);
+  background: transparent;
+  border: 0;
+  transition:
+    color 200ms ease-out;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
+  }
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.75);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ff0666;
+    outline-offset: 3px;
+  }
 }
 
