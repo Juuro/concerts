@@ -10,7 +10,8 @@ Next.js frontend for a Contentful backend.
 - Node.js 22 (see `.nvmrc`)
 - Yarn package manager
 - Contentful account with concert data
-- API keys for OpenCage and Last.fm (optional)
+- Photon reverse geocoding (no API key; please be fair with usage)
+- Last.fm API keys (optional)
 
 ### Installation
 
@@ -48,7 +49,7 @@ The following environment variables are required:
 
 - `CONTENTFUL_SPACE_ID` - Your Contentful space ID
 - `CONTENTFUL_DELIVERY_TOKEN` - Your Contentful delivery token
-- `OPENCAGE_API_KEY` - OpenCage geocoding API key
+- `PHOTON_BASE_URL` - Optional base URL for Photon (defaults to `https://photon.komoot.io`)
 - `LASTFM_API_KEY` - Last.fm API key for fetching band images and genre information (optional, but recommended)
 - `LASTFM_SECRET` - Last.fm API secret (optional)
 
@@ -72,4 +73,4 @@ This project was migrated from Gatsby to Next.js 15. See [MIGRATION.md](MIGRATIO
 - **Leaflet** - Interactive maps
 - **SCSS** - Styling
 - **Last.fm API** - Artist metadata
-- **OpenCage API** - Geocoding
+- **Photon** - Reverse geocoding

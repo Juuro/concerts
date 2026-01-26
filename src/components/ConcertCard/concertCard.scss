@@ -31,8 +31,22 @@
 
   .concert-card-image {
     grid-area: image;
-    background-size: cover;
-    background-position: 50%;
+    position: relative;
+    overflow: hidden;
+    background: rgba(68, 68, 68, 0.06);
+  }
+
+  .concert-card-image-img {
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
+
+  .concert-card-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 45%),
+      linear-gradient(135deg, rgba(255, 6, 102, 0.18) 0%, rgba(68, 68, 68, 0.08) 100%);
   }
 
   .concert-card-body {

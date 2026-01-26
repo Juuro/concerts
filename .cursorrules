@@ -29,6 +29,7 @@ yarn dev/build/lint/test/clean
 - Global SCSS: src/styles/globals.scss for resets/base only
 - Zod for all inputs; try/catch error handling.
 - Absolute imports from src/.
+- When fixing a bug or an error analyse the code carefully. Make sure to break nothing else when fixing something!
 
 ## Styling Guidelines
 
@@ -52,3 +53,19 @@ yarn dev/build/lint/test/clean
 - Concise, readable code with JSDoc for complex logic.
 - Prefer server components; explicit client boundaries.
 - Vitest + React Testing Library for tests.
+
+## Features
+
+### Feature flags
+
+- In .env feature flags can turned on or turned off
+- There are currently these feature flags:
+  - ENABLE_LASTFM
+  - ENABLE_GEOCODING
+
+### Last.fm for artist genres
+
+- Calls Last.fm: prebuild only via scripts/prefetch-lastfm.mjs.
+- Stores results: .next/cache/lastfm-artists.json (fallback .cache/lastfm-artists.json).
+- Build uses cached data: src/utils/data.ts reads the cache and attaches band.lastfm.
+- Pages never call Last.fm directly; they only render band.lastfm when ENABLE_LASTFM=true.
