@@ -30,6 +30,8 @@ yarn dev/build/lint/test/clean
 - Zod for all inputs; try/catch error handling.
 - Absolute imports from src/.
 - When fixing a bug or an error analyse the code carefully. Make sure to break nothing else when fixing something!
+- Create a new feature branch when working on a new feature: feat/NAME_OF_THE_FEATURE
+- Create a new fix branch when fixing a new bug/error: fix/NAME_OF_THE_BUG
 
 ## Styling Guidelines
 
