@@ -1,26 +1,18 @@
 import React from "react"
+import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertCard from "../../../src/components/ConcertCard/concertCard"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import {
-  getAllBands,
-  getConcertsByBand,
-  getAllConcerts,
-} from "../../../src/utils/data"
-import {
-  isFeatureEnabled,
-  FEATURE_FLAGS,
-} from "../../../src/utils/featureFlags"
+import { getAllConcerts, getConcertsByBand } from "@/lib/concerts"
+import { getBandBySlug, getAllBandSlugs } from "@/lib/bands"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
 
-export const dynamic = "force-static"
+export const dynamic = "force-dynamic"
 
 export async function generateStaticParams() {
-  const bands = await getAllBands()
-  return bands.map((band) => ({
-    slug: band.slug,
-  }))
+  const slugs = await getAllBandSlugs()
+  return slugs.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({
@@ -29,12 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  // Fetch data once and reuse
-  const [bands, allConcerts] = await Promise.all([
-    getAllBands(),
-    getAllConcerts(),
-  ])
-  const band = bands.find((b) => b.slug === slug)
+  const band = await getBandBySlug(slug)
 
   return {
     title: `${band?.name || slug} | Concerts`,
@@ -47,38 +34,38 @@ export default async function BandPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  // Fetch data once and reuse (prevents duplicate API calls)
-  const [bands, allConcerts] = await Promise.all([
-    getAllBands(),
+  const [band, allConcerts] = await Promise.all([
+    getBandBySlug(slug),
     getAllConcerts(),
   ])
-  const band = bands.find((b) => b.slug === slug)
-  const concerts = await getConcertsByBand(slug)
 
   if (!band) {
-    return (
-      <Layout concerts={allConcerts}>
-        <main>
-          <div className="container">
-            <h2>Band not found</h2>
-            <p>The band you are looking for does not exist.</p>
-          </div>
-        </main>
-      </Layout>
-    )
+    notFound()
   }
+
+  const concerts = await getConcertsByBand(slug)
+
+  // Transform for layout
+  const allConcertsFormatted = allConcerts.map((c) => ({
+    ...c,
+    bands: c.bands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      url: b.url,
+    })),
+  }))
 
   const concertsFormatted = {
     edges: concerts.map((c) => ({ node: c })),
     totalCount: concerts.length,
   }
-  const lastfmEnabled = isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)
-  const hasGenres =
-    lastfmEnabled && band.lastfm?.genres && band.lastfm.genres.length > 0
-  const hasLastfmUrl = lastfmEnabled && Boolean(band.lastfm?.url)
+
+  const hasGenres = band.lastfm?.genres && band.lastfm.genres.length > 0
+  const hasLastfmUrl = Boolean(band.lastfm?.url)
 
   return (
-    <Layout concerts={allConcerts}>
+    <Layout concerts={allConcertsFormatted}>
       <main>
         <div className="container">
           <div className={styles.headerRow}>
@@ -91,7 +78,7 @@ export default async function BandPage({
                 <div className={styles.metaRow}>
                   {hasGenres && (
                     <span className={styles.genreBadges}>
-                      {band.lastfm!.genres.slice(0, 5).map((genre) => (
+                      {band.lastfm!.genres!.slice(0, 5).map((genre) => (
                         <span key={genre} className={styles.genreBadge}>
                           {genre}
                         </span>
@@ -101,7 +88,7 @@ export default async function BandPage({
                   {hasLastfmUrl && (
                     <a
                       className={styles.lastfmLink}
-                      href={band.lastfm!.url}
+                      href={band.lastfm!.url!}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="View on Last.fm"
@@ -141,9 +128,20 @@ export default async function BandPage({
           </div>
 
           <ul className="list-unstyled">
-            {concerts.map((concert) => {
-              return <ConcertCard key={concert.id} concert={concert} />
-            })}
+            {concerts.map((concert) => (
+              <ConcertCard
+                key={concert.id}
+                concert={{
+                  ...concert,
+                  bands: concert.bands.map((b) => ({
+                    id: b.id,
+                    name: b.name,
+                    slug: b.slug,
+                    url: b.url,
+                  })),
+                }}
+              />
+            ))}
           </ul>
         </div>
       </main>

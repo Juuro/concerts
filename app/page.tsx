@@ -2,10 +2,11 @@ import React from "react";
 import Layout from "../src/components/layout-client";
 import ConcertCard from "../src/components/ConcertCard/concertCard";
 import StatisticsWidget from "../src/components/StatisticsWidget/statisticsWidget";
-import { getAllConcerts, getAllBands, getSiteMetadata } from "../src/utils/data";
+import { getAllConcerts } from "@/lib/concerts";
+import { getAllBands } from "@/lib/bands";
 import type { Metadata } from 'next';
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Concerts",
@@ -15,15 +16,36 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const concerts = await getAllConcerts();
   const bands = await getAllBands();
-  const siteMetadata = getSiteMetadata();
+
+  // Transform concerts to match expected format
+  const concertsFormatted = concerts.map((concert) => ({
+    ...concert,
+    city: concert.city,
+    bands: concert.bands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      url: b.url,
+      image: b.imageUrl ? { fields: { file: { url: b.imageUrl } } } : undefined,
+      lastfm: b.lastfm,
+    })),
+  }));
+
+  // Transform bands to match expected format
+  const bandsFormatted = bands.map((band) => ({
+    ...band,
+    url: band.url,
+    image: band.imageUrl ? { fields: { file: { url: band.imageUrl } } } : undefined,
+    concert: band.concert,
+  }));
 
   return (
-    <Layout concerts={concerts}>
+    <Layout concerts={concertsFormatted}>
       <main>
         <div className="container">
-          <StatisticsWidget concerts={concerts} bands={bands} />
+          <StatisticsWidget concerts={concertsFormatted} bands={bandsFormatted} />
           <ul className="list-unstyled">
-            {concerts.map((concert) => (
+            {concertsFormatted.map((concert) => (
               <ConcertCard key={concert.id} concert={concert} />
             ))}
           </ul>

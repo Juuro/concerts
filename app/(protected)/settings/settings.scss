@@ -1,0 +1,146 @@
+@use "../../../src/styles/variables.scss";
+
+.settings {
+  padding: 2rem 1rem;
+  max-width: 600px;
+
+  h1 {
+    font-family: variables.$font-family-heading;
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  &__subtitle {
+    color: #666;
+    margin: 0 0 2rem;
+  }
+
+  &__form {
+    background-color: variables.$color-white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+  }
+
+  &__message {
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+
+    &--success {
+      background-color: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      color: #2e7d32;
+    }
+
+    &--error {
+      background-color: #fee;
+      border: 1px solid #fcc;
+      color: variables.$color-red;
+    }
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+
+    &:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    h2 {
+      font-family: variables.$font-family-heading;
+      font-size: 1.125rem;
+      margin: 0 0 1rem;
+    }
+  }
+
+  &__field {
+    margin-bottom: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.375rem;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: variables.$font-family-text;
+      font-size: 1rem;
+      padding: 0.75rem;
+      transition: border-color variables.$transition-duration ease;
+      width: 100%;
+
+      &:focus {
+        border-color: variables.$color-primary;
+        outline: none;
+      }
+
+      &:disabled {
+        background-color: #eee;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__hint {
+    color: #888;
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.375rem;
+  }
+
+  &__checkbox {
+    label {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      font-weight: normal;
+      gap: 0.5rem;
+    }
+
+    input[type="checkbox"] {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  &__actions {
+    border-top: 1px solid #eee;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+
+    button {
+      background-color: variables.$color-primary;
+      border: none;
+      border-radius: 8px;
+      color: variables.$color-white;
+      cursor: pointer;
+      font-family: variables.$font-family-text;
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      transition: background-color variables.$transition-duration ease;
+
+      &:hover:not(:disabled) {
+        background-color: darken(variables.$color-primary, 10%);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+  }
+}

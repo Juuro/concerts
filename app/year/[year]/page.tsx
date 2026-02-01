@@ -2,10 +2,10 @@ import React from 'react';
 import Layout from '../../../src/components/layout-client';
 import ConcertCard from '../../../src/components/ConcertCard/concertCard';
 import ConcertCount from '../../../src/components/ConcertCount/concertCount';
-import { getAllYears, getConcertsByYear, getAllConcerts } from '../../../src/utils/data';
+import { getAllYears, getConcertsByYear, getAllConcerts } from '@/lib/concerts';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const years = await getAllYears();
@@ -16,7 +16,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ year: string }> }): Promise<Metadata> {
   const { year } = await params;
-  
+
   return {
     title: `${year} | Concerts`,
   };
@@ -24,8 +24,21 @@ export async function generateMetadata({ params }: { params: Promise<{ year: str
 
 export default async function YearPage({ params }: { params: Promise<{ year: string }> }) {
   const { year } = await params;
-  const concerts = await getConcertsByYear(year);
-  const allConcerts = await getAllConcerts();
+  const [concerts, allConcerts] = await Promise.all([
+    getConcertsByYear(year),
+    getAllConcerts(),
+  ]);
+
+  // Transform for layout
+  const allConcertsFormatted = allConcerts.map((c) => ({
+    ...c,
+    bands: c.bands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      url: b.url,
+    })),
+  }));
 
   const concertsFormatted = {
     edges: concerts.map(c => ({ node: c })),
@@ -33,7 +46,7 @@ export default async function YearPage({ params }: { params: Promise<{ year: str
   };
 
   return (
-    <Layout concerts={allConcerts}>
+    <Layout concerts={allConcertsFormatted}>
       <main>
         <div className="container">
           <h2>
@@ -42,9 +55,20 @@ export default async function YearPage({ params }: { params: Promise<{ year: str
           </h2>
 
           <ul className="list-unstyled">
-            {concerts.map((concert) => {
-              return <ConcertCard key={concert.id} concert={concert} />;
-            })}
+            {concerts.map((concert) => (
+              <ConcertCard
+                key={concert.id}
+                concert={{
+                  ...concert,
+                  bands: concert.bands.map((b) => ({
+                    id: b.id,
+                    name: b.name,
+                    slug: b.slug,
+                    url: b.url,
+                  })),
+                }}
+              />
+            ))}
           </ul>
         </div>
       </main>
