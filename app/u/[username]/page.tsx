@@ -129,6 +129,9 @@ export default async function PublicProfilePage({
                         name: b.name,
                         slug: b.slug,
                         url: b.url,
+                        image: b.imageUrl
+                          ? { fields: { file: { url: b.imageUrl } } }
+                          : undefined,
                       })),
                       isFestival: concert.isFestival,
                       festival: concert.festival

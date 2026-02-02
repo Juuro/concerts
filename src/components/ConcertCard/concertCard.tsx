@@ -1,32 +1,28 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { cityToSlug, extractCityName } from "../../utils/helpers";
-import type { Concert } from "../../types/concert";
-import "./concertCard.scss";
+import React from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { cityToSlug, extractCityName } from "../../utils/helpers"
+import type { Concert } from "../../types/concert"
+import "./concertCard.scss"
 
 interface ConcertCardProps {
-  concert: Concert;
+  concert: Concert
 }
 
 const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival?.fields.name || '';
+      return concert.festival?.fields.name || ""
     }
-    const mainBand = concert.bands[0];
+    const mainBand = concert.bands[0]
     if (!mainBand) {
-      return 'Unknown band';
+      return "Unknown band"
     }
-    return (
-      <Link href={`/band/${mainBand.slug}`}>
-        {mainBand.name}
-      </Link>
-    );
-  };
+    return <Link href={`/band/${mainBand.slug}`}>{mainBand.name}</Link>
+  }
 
   const bands = () => {
-    const bands = [...concert.bands];
+    const bands = [...concert.bands]
     // TODO: Badges as seperate (tag) component?
     if (concert.isFestival) {
       return bands.map((band) => {
@@ -38,10 +34,10 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           >
             {band.name}
           </Link>
-        );
-      });
+        )
+      })
     } else {
-      bands.shift();
+      bands.shift()
       return bands.map((band) => {
         return (
           <Link
@@ -51,42 +47,40 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           >
             {band.name}
           </Link>
-        );
-      });
+        )
+      })
     }
-  };
+  }
 
   const isInTheFuture = () => {
     if (concert.date > new Date().toISOString()) {
-      return "future";
+      return "future"
     }
-    return "";
-  };
+    return ""
+  }
 
   const getDate = () => {
-    const date = new Date(concert.date);
+    const date = new Date(concert.date)
     return date.toLocaleDateString("de-DE", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-  };
+    })
+  }
 
-  // Get image URL - prefer Contentful over Last.fm placeholders
   const getImageUrl = () => {
-    // Last.fm API only returns placeholder images, so use Contentful images
     return (
       concert.bands[0]?.image?.file?.url ||
       concert.bands[0]?.image?.fields?.file?.url
-    );
-  };
+    )
+  }
 
   const getImageSrc = () => {
-    const url = getImageUrl();
-    if (!url) return undefined;
-    if (url.startsWith("//")) return `https:${url}`;
-    return url;
-  };
+    const url = getImageUrl()
+    if (!url) return undefined
+    if (url.startsWith("//")) return `https:${url}`
+    return url
+  }
 
   return (
     <li className={`concert-card card ${isInTheFuture()}`}>
@@ -121,7 +115,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
         </div>
       </div>
     </li>
-  );
-};
+  )
+}
 
-export default ConcertCard;
+export default ConcertCard

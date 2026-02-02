@@ -167,6 +167,9 @@ export default async function BandPage({
                     name: b.name,
                     slug: b.slug,
                     url: b.url,
+                    image: b.imageUrl
+                      ? { fields: { file: { url: b.imageUrl } } }
+                      : undefined,
                   })),
                   festival: concert.festival
                     ? {
