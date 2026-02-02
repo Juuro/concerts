@@ -63,6 +63,7 @@ export default async function HomePage() {
           bio: band.lastfm.bio ?? null,
         }
       : undefined,
+    concert: band.concert,
   }))
 
   return (
