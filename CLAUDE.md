@@ -64,6 +64,7 @@ yarn migrate:contentful  # Import data from Contentful to PostgreSQL
 ### Feature Flags
 
 Environment-controlled in `.env`:
+
 - `ENABLE_LASTFM` - Toggle Last.fm data enrichment
 
 ## Code Patterns
@@ -74,6 +75,7 @@ Environment-controlled in `.env`:
 - TypeScript strict mode enabled
 - SCSS files (not modules) co-located with components
 - Absolute imports via `@/*` path alias
+- Use `<Image />` from `next/image` instead of `<img>`
 
 ## Git Conventions
 
@@ -87,17 +89,20 @@ Environment-controlled in `.env`:
 Copy `.env.example` to `.env.local` with:
 
 Required:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - Random secret for auth
 - `BETTER_AUTH_URL` - App URL (http://localhost:3000 for dev)
 - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` - GitHub OAuth app
 
 Optional:
+
 - `LASTFM_API_KEY` and `LASTFM_SECRET` - For band data enrichment
 
 ## Authentication
 
 Better Auth handles:
+
 - GitHub OAuth login
 - Session management with cookies
 - Route protection via middleware

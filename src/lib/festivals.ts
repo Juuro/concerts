@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import type { Festival as PrismaFestival } from "@/generated/prisma";
+import type { Festival as PrismaFestival } from "@/generated/prisma/client";
 
 export interface TransformedFestival {
   id: string;

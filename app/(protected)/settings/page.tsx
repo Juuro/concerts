@@ -1,51 +1,57 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
-import "./settings.scss";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "@/lib/auth-client"
+import "./settings.scss"
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
-  const [username, setUsername] = useState(session?.user?.username || "");
-  const [isPublic, setIsPublic] = useState(session?.user?.isPublic || false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const router = useRouter()
+  const { data: session, isPending } = useSession()
+  const [username, setUsername] = useState(session?.user?.username || "")
+  const [isPublic, setIsPublic] = useState(session?.user?.isPublic || false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState<{
+    type: "success" | "error"
+    text: string
+  } | null>(null)
 
   if (isPending) {
     return (
       <div className="settings">
         <p>Loading...</p>
       </div>
-    );
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
+    e.preventDefault()
+    setIsSubmitting(true)
+    setMessage(null)
 
     try {
       const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, isPublic }),
-      });
+      })
 
       if (res.ok) {
-        setMessage({ type: "success", text: "Settings saved successfully!" });
-        router.refresh();
+        setMessage({ type: "success", text: "Settings saved successfully!" })
+        router.refresh()
       } else {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Failed to save settings" });
+        const data = await res.json()
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to save settings",
+        })
       }
     } catch (err) {
-      setMessage({ type: "error", text: "An unexpected error occurred" });
+      setMessage({ type: "error", text: "An unexpected error occurred" })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="settings">
@@ -54,7 +60,9 @@ export default function SettingsPage() {
 
       <form className="settings__form" onSubmit={handleSubmit}>
         {message && (
-          <div className={`settings__message settings__message--${message.type}`}>
+          <div
+            className={`settings__message settings__message--${message.type}`}
+          >
             {message.text}
           </div>
         )}
@@ -64,13 +72,23 @@ export default function SettingsPage() {
 
           <div className="settings__field">
             <label htmlFor="email">Email</label>
-            <input type="email" id="email" value={session?.user?.email || ""} disabled />
+            <input
+              type="email"
+              id="email"
+              value={session?.user?.email || ""}
+              disabled
+            />
             <span className="settings__hint">Email cannot be changed</span>
           </div>
 
           <div className="settings__field">
             <label htmlFor="name">Name</label>
-            <input type="text" id="name" value={session?.user?.name || ""} disabled />
+            <input
+              type="text"
+              id="name"
+              value={session?.user?.name || ""}
+              disabled
+            />
           </div>
 
           <div className="settings__field">
@@ -103,7 +121,8 @@ export default function SettingsPage() {
               Make my profile public
             </label>
             <span className="settings__hint">
-              When enabled, others can view your concert history at your public profile URL
+              When enabled, others can view your concert history at your public
+              profile URL
             </span>
           </div>
         </div>
@@ -115,5 +134,5 @@ export default function SettingsPage() {
         </div>
       </form>
     </div>
-  );
+  )
 }

@@ -1,40 +1,41 @@
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getUserConcerts } from "@/lib/concerts";
-import Header from "@/components/Header/header";
-import ConcertCard from "@/components/ConcertCard/concertCard";
-import "./profile.scss";
+import { notFound } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+import { getUserConcerts } from "@/lib/concerts"
+import Header from "@/components/Header/header"
+import ConcertCard from "@/components/ConcertCard/concertCard"
+import "./profile.scss"
+import Image from "next/image"
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600 // Revalidate every hour
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ username: string }>;
+  params: Promise<{ username: string }>
 }) {
-  const { username } = await params;
+  const { username } = await params
 
   const user = await prisma.user.findUnique({
     where: { username },
     select: { name: true, username: true, isPublic: true },
-  });
+  })
 
   if (!user || !user.isPublic) {
-    return { title: "Profile Not Found" };
+    return { title: "Profile Not Found" }
   }
 
   return {
     title: `${user.name || user.username}'s Concerts`,
     description: `View the concert collection of ${user.name || user.username}`,
-  };
+  }
 }
 
 export default async function PublicProfilePage({
   params,
 }: {
-  params: Promise<{ username: string }>;
+  params: Promise<{ username: string }>
 }) {
-  const { username } = await params;
+  const { username } = await params
 
   const user = await prisma.user.findUnique({
     where: { username },
@@ -45,19 +46,23 @@ export default async function PublicProfilePage({
       image: true,
       isPublic: true,
     },
-  });
+  })
 
   if (!user || !user.isPublic) {
-    notFound();
+    notFound()
   }
 
-  const concerts = await getUserConcerts(user.id);
+  const concerts = await getUserConcerts(user.id)
 
   // Calculate statistics
-  const totalConcerts = concerts.length;
-  const uniqueBands = new Set(concerts.flatMap((c) => c.bands.map((b) => b.slug))).size;
-  const uniqueCities = new Set(concerts.map((c) => c.fields.geocoderAddressFields._normalized_city)).size;
-  const years = new Set(concerts.map((c) => new Date(c.date).getFullYear()));
+  const totalConcerts = concerts.length
+  const uniqueBands = new Set(
+    concerts.flatMap((c) => c.bands.map((b) => b.slug))
+  ).size
+  const uniqueCities = new Set(
+    concerts.map((c) => c.fields.geocoderAddressFields._normalized_city)
+  ).size
+  const years = new Set(concerts.map((c) => new Date(c.date).getFullYear()))
 
   return (
     <>
@@ -66,14 +71,20 @@ export default async function PublicProfilePage({
         <div className="public-profile">
           <div className="public-profile__header">
             {user.image ? (
-              <img src={user.image} alt={user.name || user.username || ""} className="public-profile__avatar" />
+              <Image
+                src={user.image}
+                alt={user.name || user.username || ""}
+                className="public-profile__avatar"
+              />
             ) : (
               <div className="public-profile__avatar public-profile__avatar--placeholder">
                 {(user.name || user.username || "U")[0].toUpperCase()}
               </div>
             )}
             <div>
-              <h1 className="public-profile__name">{user.name || user.username}</h1>
+              <h1 className="public-profile__name">
+                {user.name || user.username}
+              </h1>
               <p className="public-profile__username">@{user.username}</p>
             </div>
           </div>
@@ -112,7 +123,7 @@ export default async function PublicProfilePage({
                       id: concert.id,
                       date: concert.date,
                       city: concert.city,
-                      club: concert.club,
+                      club: concert.club ?? undefined,
                       bands: concert.bands.map((b) => ({
                         id: b.id,
                         name: b.name,
@@ -120,7 +131,14 @@ export default async function PublicProfilePage({
                         url: b.url,
                       })),
                       isFestival: concert.isFestival,
-                      festival: concert.festival,
+                      festival: concert.festival
+                        ? {
+                            fields: {
+                              name: concert.festival.fields.name,
+                              url: concert.festival.fields.url ?? undefined,
+                            },
+                          }
+                        : null,
                       fields: concert.fields,
                     }}
                   />
@@ -131,5 +149,5 @@ export default async function PublicProfilePage({
         </div>
       </main>
     </>
-  );
+  )
 }

@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import type { Band as PrismaBand } from "@/generated/prisma";
+import type { Band as PrismaBand } from "@/generated/prisma/client";
 import { getConcertsByBand, type TransformedConcert } from "./concerts";
 
 export interface TransformedBand {

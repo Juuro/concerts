@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import type { Concert as PrismaConcert, Band as PrismaBand, Festival as PrismaFestival, ConcertBand } from "@/generated/prisma";
+import type { Concert as PrismaConcert, Band as PrismaBand, Festival as PrismaFestival, ConcertBand } from "@/generated/prisma/client";
 
 // Types matching the existing app structure
 export interface TransformedBand {
@@ -55,8 +55,10 @@ function transformConcert(concert: ConcertWithRelations): TransformedConcert {
     },
     club: concert.club,
     bands: concert.bands
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((cb) => ({
+      .sort((a: ConcertBand & { band: PrismaBand }, b: ConcertBand & { band: PrismaBand }) =>
+        a.sortOrder - b.sortOrder
+      )
+      .map((cb: ConcertBand & { band: PrismaBand }) => ({
         id: cb.band.id,
         name: cb.band.name,
         slug: cb.band.slug,

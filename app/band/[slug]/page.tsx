@@ -48,16 +48,44 @@ export default async function BandPage({
   // Transform for layout
   const allConcertsFormatted = allConcerts.map((c) => ({
     ...c,
+    club: c.club ?? undefined,
     bands: c.bands.map((b) => ({
       id: b.id,
       name: b.name,
       slug: b.slug,
       url: b.url,
     })),
+    festival: c.festival
+      ? {
+          fields: {
+            name: c.festival.fields.name,
+            url: c.festival.fields.url ?? undefined,
+          },
+        }
+      : null,
   }))
 
   const concertsFormatted = {
-    edges: concerts.map((c) => ({ node: c })),
+    edges: concerts.map((c) => ({
+      node: {
+        ...c,
+        club: c.club ?? undefined,
+        bands: c.bands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          slug: b.slug,
+          url: b.url,
+        })),
+        festival: c.festival
+          ? {
+              fields: {
+                name: c.festival.fields.name,
+                url: c.festival.fields.url ?? undefined,
+              },
+            }
+          : null,
+      },
+    })),
     totalCount: concerts.length,
   }
 
@@ -133,12 +161,21 @@ export default async function BandPage({
                 key={concert.id}
                 concert={{
                   ...concert,
+                  club: concert.club ?? undefined,
                   bands: concert.bands.map((b) => ({
                     id: b.id,
                     name: b.name,
                     slug: b.slug,
                     url: b.url,
                   })),
+                  festival: concert.festival
+                    ? {
+                        fields: {
+                          name: concert.festival.fields.name,
+                          url: concert.festival.fields.url ?? undefined,
+                        },
+                      }
+                    : null,
                 }}
               />
             ))}

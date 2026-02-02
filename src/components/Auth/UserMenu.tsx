@@ -1,32 +1,33 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { signOut, useSession } from "@/lib/auth-client";
-import "./userMenu.scss";
+import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
+import { signOut, useSession } from "@/lib/auth-client"
+import "./userMenu.scss"
+import Image from "next/image"
 
 export default function UserMenu() {
-  const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession()
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        setIsOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleSignOut = async () => {
-    await signOut();
-    setIsOpen(false);
-  };
+    await signOut()
+    setIsOpen(false)
+  }
 
-  if (!session?.user) return null;
+  if (!session?.user) return null
 
   return (
     <div className="user-menu" ref={menuRef}>
@@ -37,7 +38,7 @@ export default function UserMenu() {
         aria-haspopup="true"
       >
         {session.user.image ? (
-          <img
+          <Image
             src={session.user.image}
             alt={session.user.name || "User"}
             className="user-menu__avatar"
@@ -52,22 +53,35 @@ export default function UserMenu() {
       {isOpen && (
         <div className="user-menu__dropdown">
           <div className="user-menu__info">
-            <span className="user-menu__name">{session.user.name || "User"}</span>
+            <span className="user-menu__name">
+              {session.user.name || "User"}
+            </span>
             <span className="user-menu__email">{session.user.email}</span>
           </div>
           <hr className="user-menu__divider" />
-          <Link href="/dashboard" className="user-menu__item" onClick={() => setIsOpen(false)}>
+          <Link
+            href="/dashboard"
+            className="user-menu__item"
+            onClick={() => setIsOpen(false)}
+          >
             My Concerts
           </Link>
-          <Link href="/settings" className="user-menu__item" onClick={() => setIsOpen(false)}>
+          <Link
+            href="/settings"
+            className="user-menu__item"
+            onClick={() => setIsOpen(false)}
+          >
             Settings
           </Link>
           <hr className="user-menu__divider" />
-          <button className="user-menu__item user-menu__item--danger" onClick={handleSignOut}>
+          <button
+            className="user-menu__item user-menu__item--danger"
+            onClick={handleSignOut}
+          >
             Sign Out
           </button>
         </div>
       )}
     </div>
-  );
+  )
 }
