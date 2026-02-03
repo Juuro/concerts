@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertCard from "../../../src/components/ConcertCard/concertCard"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllCities, getConcertsByCity, getAllConcerts } from "@/lib/concerts"
+import { getAllCities, getConcertsByCity, getConcertCounts } from "@/lib/concerts"
 import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import type { Metadata } from "next"
 
@@ -43,62 +43,25 @@ export default async function CityPage({
     notFound()
   }
 
-  const [concerts, allConcerts] = await Promise.all([
+  const [concerts, concertCounts] = await Promise.all([
     getConcertsByCity(cityName),
-    getAllConcerts(),
+    getConcertCounts(),
   ])
 
-  // Transform for layout
-  const allConcertsFormatted = allConcerts.map((c) => ({
-    ...c,
-    club: c.club ?? undefined,
-    bands: c.bands.map((b) => ({
-      id: b.id,
-      name: b.name,
-      slug: b.slug,
-      url: b.url,
-    })),
-    festival: c.festival
-      ? {
-          fields: {
-            name: c.festival.fields.name,
-            url: c.festival.fields.url ?? undefined,
-          },
-        }
-      : null,
-  }))
-
-  const concertsFormatted = {
-    edges: concerts.map((c) => ({
-      node: {
-        ...c,
-        club: c.club ?? undefined,
-        bands: c.bands.map((b) => ({
-          id: b.id,
-          name: b.name,
-          slug: b.slug,
-          url: b.url,
-        })),
-        festival: c.festival
-          ? {
-              fields: {
-                name: c.festival.fields.name,
-                url: c.festival.fields.url ?? undefined,
-              },
-            }
-          : null,
-      },
-    })),
-    totalCount: concerts.length,
+  // Calculate past/future counts for this city's concerts
+  const now = new Date()
+  const cityConcertCounts = {
+    past: concerts.filter((c) => new Date(c.date) < now).length,
+    future: concerts.filter((c) => new Date(c.date) >= now).length,
   }
 
   return (
-    <Layout concerts={allConcertsFormatted}>
+    <Layout concertCounts={concertCounts}>
       <main>
         <div className="container">
           <h2>
             {cityName}
-            <ConcertCount concerts={concertsFormatted} />
+            <ConcertCount counts={cityConcertCounts} />
           </h2>
 
           <ul className="list-unstyled">

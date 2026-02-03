@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertCard from "../../../src/components/ConcertCard/concertCard"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllConcerts, getConcertsByBand } from "@/lib/concerts"
+import { getConcertCounts, getConcertsByBand } from "@/lib/concerts"
 import { getBandBySlug, getAllBandSlugs } from "@/lib/bands"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
@@ -34,9 +34,9 @@ export default async function BandPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const [band, allConcerts] = await Promise.all([
+  const [band, concertCounts] = await Promise.all([
     getBandBySlug(slug),
-    getAllConcerts(),
+    getConcertCounts(),
   ])
 
   if (!band) {
@@ -45,62 +45,25 @@ export default async function BandPage({
 
   const concerts = await getConcertsByBand(slug)
 
-  // Transform for layout
-  const allConcertsFormatted = allConcerts.map((c) => ({
-    ...c,
-    club: c.club ?? undefined,
-    bands: c.bands.map((b) => ({
-      id: b.id,
-      name: b.name,
-      slug: b.slug,
-      url: b.url,
-    })),
-    festival: c.festival
-      ? {
-          fields: {
-            name: c.festival.fields.name,
-            url: c.festival.fields.url ?? undefined,
-          },
-        }
-      : null,
-  }))
-
-  const concertsFormatted = {
-    edges: concerts.map((c) => ({
-      node: {
-        ...c,
-        club: c.club ?? undefined,
-        bands: c.bands.map((b) => ({
-          id: b.id,
-          name: b.name,
-          slug: b.slug,
-          url: b.url,
-        })),
-        festival: c.festival
-          ? {
-              fields: {
-                name: c.festival.fields.name,
-                url: c.festival.fields.url ?? undefined,
-              },
-            }
-          : null,
-      },
-    })),
-    totalCount: concerts.length,
+  // Calculate past/future counts for this band's concerts
+  const now = new Date()
+  const bandConcertCounts = {
+    past: concerts.filter((c) => new Date(c.date) < now).length,
+    future: concerts.filter((c) => new Date(c.date) >= now).length,
   }
 
   const hasGenres = band.lastfm?.genres && band.lastfm.genres.length > 0
   const hasLastfmUrl = Boolean(band.lastfm?.url)
 
   return (
-    <Layout concerts={allConcertsFormatted}>
+    <Layout concertCounts={concertCounts}>
       <main>
         <div className="container">
           <div className={styles.headerRow}>
             <div>
               <h2>
                 {band.name}
-                <ConcertCount concerts={concertsFormatted} />
+                <ConcertCount counts={bandConcertCounts} />
               </h2>
               {(hasGenres || hasLastfmUrl) && (
                 <div className={styles.metaRow}>

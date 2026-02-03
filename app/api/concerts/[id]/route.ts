@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getConcertById, updateConcert, deleteConcert, type UpdateConcertInput } from "@/lib/concerts";
@@ -51,6 +52,9 @@ export async function PUT(
       return NextResponse.json({ error: "Concert not found or not authorized" }, { status: 404 });
     }
 
+    // Revalidate statistics cache
+    revalidateTag("concert-statistics");
+
     return NextResponse.json(concert);
   } catch (error) {
     console.error("Error updating concert:", error);
@@ -77,6 +81,9 @@ export async function DELETE(
   if (!deleted) {
     return NextResponse.json({ error: "Concert not found or not authorized" }, { status: 404 });
   }
+
+  // Revalidate statistics cache
+  revalidateTag("concert-statistics");
 
   return NextResponse.json({ success: true });
 }

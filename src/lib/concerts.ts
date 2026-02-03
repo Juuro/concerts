@@ -1,5 +1,7 @@
 import { prisma } from "./prisma";
+import { unstable_cache } from "next/cache";
 import type { Concert as PrismaConcert, Band as PrismaBand, Festival as PrismaFestival, ConcertBand } from "@/generated/prisma/client";
+import { cityToSlug } from "@/utils/helpers";
 
 // Types matching the existing app structure
 export interface TransformedBand {
@@ -362,3 +364,184 @@ export async function getConcertById(id: string): Promise<TransformedConcert | n
   if (!concert) return null;
   return transformConcert(concert);
 }
+
+// ============================================
+// Pagination Types and Functions
+// ============================================
+
+export interface PaginatedConcerts {
+  items: TransformedConcert[];
+  nextCursor: string | null;
+  prevCursor: string | null;
+  hasMore: boolean;
+  hasPrevious: boolean;
+}
+
+export async function getConcertsPaginated(
+  cursor?: string,
+  limit = 20,
+  direction: "forward" | "backward" = "forward"
+): Promise<PaginatedConcerts> {
+  const take = direction === "forward" ? limit + 1 : -(limit + 1);
+  
+  const concerts = await prisma.concert.findMany({
+    take,
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    include: {
+      bands: {
+        include: { band: true },
+        orderBy: { sortOrder: "asc" },
+      },
+      festival: true,
+    },
+    orderBy: [{ date: "desc" }, { id: "desc" }],
+  });
+
+  // For backward direction, reverse to maintain consistent order
+  if (direction === "backward") {
+    concerts.reverse();
+  }
+
+  const hasExtra = concerts.length > limit;
+  const items = hasExtra 
+    ? (direction === "forward" ? concerts.slice(0, -1) : concerts.slice(1))
+    : concerts;
+
+  return {
+    items: items.map(transformConcert),
+    nextCursor: direction === "forward" && hasExtra ? items[items.length - 1].id : (direction === "backward" ? items[items.length - 1]?.id ?? null : null),
+    prevCursor: direction === "backward" && hasExtra ? items[0].id : (direction === "forward" && cursor ? items[0]?.id ?? null : null),
+    hasMore: direction === "forward" ? hasExtra : true,
+    hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
+  };
+}
+
+// ============================================
+// Concert Counts (lightweight)
+// ============================================
+
+export interface ConcertCounts {
+  past: number;
+  future: number;
+}
+
+export async function getConcertCounts(): Promise<ConcertCounts> {
+  const now = new Date();
+  const [past, future] = await Promise.all([
+    prisma.concert.count({ where: { date: { lt: now } } }),
+    prisma.concert.count({ where: { date: { gte: now } } }),
+  ]);
+  return { past, future };
+}
+
+// ============================================
+// Statistics (server-side with caching)
+// ============================================
+
+export interface ConcertStatistics {
+  yearCounts: Array<[string, number, string]>;
+  cityCounts: Array<[string, number, string]>;
+  mostSeenBands: Array<[string, number, string]>;
+  maxYearCount: number;
+  maxCityCount: number;
+  maxBandCount: number;
+  totalPast: number;
+  totalFuture: number;
+}
+
+async function computeConcertStatistics(): Promise<ConcertStatistics> {
+  const now = new Date();
+
+  // Use Prisma aggregations for efficient queries
+  const [yearStats, cityStats, bandStats, pastCount, futureCount] = await Promise.all([
+    // Year counts - get all past concerts grouped by year
+    prisma.concert.groupBy({
+      by: ["date"],
+      where: { date: { lt: now } },
+      _count: true,
+    }).then((results) => {
+      const yearMap = new Map<string, number>();
+      for (const r of results) {
+        const year = r.date.getFullYear().toString();
+        yearMap.set(year, (yearMap.get(year) || 0) + r._count);
+      }
+      return Array.from(yearMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([year, count]) => [year, count, year] as [string, number, string]);
+    }),
+
+    // City counts
+    prisma.concert.groupBy({
+      by: ["city"],
+      where: { 
+        date: { lt: now },
+        city: { not: null },
+      },
+      _count: true,
+      orderBy: { _count: { city: "desc" } },
+      take: 5,
+    }).then((results) => 
+      results
+        .filter((r): r is typeof r & { city: string } => r.city !== null)
+        .map((r) => [r.city, r._count, cityToSlug(r.city)] as [string, number, string])
+    ),
+
+    // Most seen bands - need to join through ConcertBand
+    prisma.concertBand.groupBy({
+      by: ["bandId"],
+      _count: true,
+      orderBy: { _count: { bandId: "desc" } },
+      take: 10, // Get more initially to filter by past concerts
+    }).then(async (results) => {
+      // Get band details and filter by past concerts
+      const bandIds = results.map((r) => r.bandId);
+      const bands = await prisma.band.findMany({
+        where: { id: { in: bandIds } },
+        select: { id: true, name: true, slug: true },
+      });
+      
+      // Get counts only for past concerts
+      const bandCounts = await Promise.all(
+        bandIds.map(async (bandId) => {
+          const count = await prisma.concertBand.count({
+            where: {
+              bandId,
+              concert: { date: { lt: now } },
+            },
+          });
+          const band = bands.find((b) => b.id === bandId);
+          return band ? { ...band, count } : null;
+        })
+      );
+
+      return bandCounts
+        .filter((b): b is NonNullable<typeof b> => b !== null && b.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map((b) => [b.name, b.count, b.slug] as [string, number, string]);
+    }),
+
+    // Past/future counts
+    prisma.concert.count({ where: { date: { lt: now } } }),
+    prisma.concert.count({ where: { date: { gte: now } } }),
+  ]);
+
+  return {
+    yearCounts: yearStats,
+    cityCounts: cityStats,
+    mostSeenBands: bandStats,
+    maxYearCount: yearStats[0]?.[1] ?? 0,
+    maxCityCount: cityStats[0]?.[1] ?? 0,
+    maxBandCount: bandStats[0]?.[1] ?? 0,
+    totalPast: pastCount,
+    totalFuture: futureCount,
+  };
+}
+
+// Cached version with 1-hour revalidation
+export const getConcertStatistics = unstable_cache(
+  computeConcertStatistics,
+  ["concert-statistics"],
+  { revalidate: 3600, tags: ["concert-statistics"] }
+);

@@ -2,7 +2,7 @@ import React from "react"
 import Layout from "../../../src/components/layout-client"
 import ConcertCard from "../../../src/components/ConcertCard/concertCard"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllYears, getConcertsByYear, getAllConcerts } from "@/lib/concerts"
+import { getAllYears, getConcertsByYear, getConcertCounts } from "@/lib/concerts"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -32,96 +32,25 @@ export default async function YearPage({
   params: Promise<{ year: string }>
 }) {
   const { year } = await params
-  const [concerts, allConcerts] = await Promise.all([
+  const [concerts, concertCounts] = await Promise.all([
     getConcertsByYear(year),
-    getAllConcerts(),
+    getConcertCounts(),
   ])
 
-  // Transform for layout
-  const allConcertsFormatted = allConcerts.map((c) => ({
-    ...c,
-    club: c.club ?? undefined,
-    bands: c.bands.map((b) => ({
-      id: b.id,
-      name: b.name,
-      slug: b.slug,
-      url: b.url,
-      image: b.imageUrl ? { fields: { file: { url: b.imageUrl } } } : undefined,
-      lastfm: b.lastfm
-        ? {
-            url: b.lastfm.url ?? "",
-            name: b.name,
-            images: {
-              small: "",
-              medium: "",
-              large: "",
-              extralarge: "",
-              mega: "",
-            },
-            genres: b.lastfm.genres ?? [],
-            bio: b.lastfm.bio ?? null,
-          }
-        : undefined,
-    })),
-    festival: c.festival
-      ? {
-          fields: {
-            name: c.festival.fields.name,
-            url: c.festival.fields.url ?? undefined,
-          },
-        }
-      : null,
-  }))
-
-  const concertsFormatted = {
-    edges: concerts.map((c) => ({
-      node: {
-        ...c,
-        club: c.club ?? undefined,
-        bands: c.bands.map((b) => ({
-          id: b.id,
-          name: b.name,
-          slug: b.slug,
-          url: b.url,
-          image: b.imageUrl
-            ? { fields: { file: { url: b.imageUrl } } }
-            : undefined,
-          lastfm: b.lastfm
-            ? {
-                url: b.lastfm.url ?? "",
-                name: b.name,
-                images: {
-                  small: "",
-                  medium: "",
-                  large: "",
-                  extralarge: "",
-                  mega: "",
-                },
-                genres: b.lastfm.genres ?? [],
-                bio: b.lastfm.bio ?? null,
-              }
-            : undefined,
-        })),
-        festival: c.festival
-          ? {
-              fields: {
-                name: c.festival.fields.name,
-                url: c.festival.fields.url ?? undefined,
-              },
-            }
-          : null,
-      },
-    })),
-    totalCount: concerts.length,
+  // Calculate past/future counts for this year's concerts
+  const now = new Date()
+  const yearConcertCounts = {
+    past: concerts.filter((c) => new Date(c.date) < now).length,
+    future: concerts.filter((c) => new Date(c.date) >= now).length,
   }
 
   return (
-    <Layout concerts={allConcertsFormatted}>
+    <Layout concertCounts={concertCounts}>
       <main>
         <div className="container">
           <h2>
             {year}
-            <ConcertCount concerts={concertsFormatted} />
+            <ConcertCount counts={yearConcertCounts} />
           </h2>
 
           <ul className="list-unstyled">

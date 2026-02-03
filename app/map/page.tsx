@@ -1,7 +1,7 @@
 import React from "react"
 import Layout from "../../src/components/layout-client"
 import MapClient from "../../src/components/MapClient"
-import { getAllConcerts } from "@/lib/concerts"
+import { getAllConcerts, getConcertCounts } from "@/lib/concerts"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -12,9 +12,12 @@ export const metadata: Metadata = {
 }
 
 export default async function MapPage() {
-  const concerts = await getAllConcerts()
+  const [concerts, concertCounts] = await Promise.all([
+    getAllConcerts(),
+    getConcertCounts(),
+  ])
 
-  // Transform for layout and map
+  // Transform for map
   const concertsFormatted = concerts.map((c) => ({
     ...c,
     club: c.club ?? undefined,
@@ -35,7 +38,7 @@ export default async function MapPage() {
   }))
 
   return (
-    <Layout concerts={concertsFormatted}>
+    <Layout concertCounts={concertCounts}>
       <MapClient concerts={concertsFormatted} />
     </Layout>
   )

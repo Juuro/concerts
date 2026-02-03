@@ -3,7 +3,7 @@ import Layout from '../src/components/layout-client';
 
 export default function NotFound() {
   return (
-    <Layout concerts={[]}>
+    <Layout>
       <main>
         <div className="container">
           <h1>404: Not Found</h1>
