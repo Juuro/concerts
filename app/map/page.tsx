@@ -1,22 +1,45 @@
-import React from 'react';
-import Layout from '../../src/components/layout-client';
-import MapClient from '../../src/components/MapClient';
-import { getAllConcerts } from '../../src/utils/data';
-import type { Metadata } from 'next';
+import React from "react"
+import Layout from "../../src/components/layout-client"
+import MapClient from "../../src/components/MapClient"
+import { getAllConcerts, getConcertCounts } from "@/lib/concerts"
+import type { Metadata } from "next"
 
-export const dynamic = 'force-static';
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: 'Map | Concerts',
-  description: 'Map of all concerts',
-};
+  title: "Map | Concerts",
+  description: "Map of all concerts",
+}
 
 export default async function MapPage() {
-  const concerts = await getAllConcerts();
+  const [concerts, concertCounts] = await Promise.all([
+    getAllConcerts(),
+    getConcertCounts(),
+  ])
+
+  // Transform for map
+  const concertsFormatted = concerts.map((c) => ({
+    ...c,
+    club: c.club ?? undefined,
+    bands: c.bands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      url: b.url,
+    })),
+    festival: c.festival
+      ? {
+          fields: {
+            name: c.festival.fields.name,
+            url: c.festival.fields.url ?? undefined,
+          },
+        }
+      : null,
+  }))
 
   return (
-    <Layout concerts={concerts}>
-      <MapClient concerts={concerts} />
+    <Layout concertCounts={concertCounts}>
+      <MapClient concerts={concertsFormatted} />
     </Layout>
-  );
+  )
 }

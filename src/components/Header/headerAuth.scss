@@ -1,0 +1,36 @@
+@use "../../styles/variables.scss";
+
+.header-auth {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+
+  &--loading {
+    height: 36px;
+    width: 100px;
+  }
+
+  &__link {
+    color: variables.$color-black;
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__login {
+    background-color: variables.$color-primary;
+    border-radius: 6px;
+    color: variables.$color-white;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    transition: background-color variables.$transition-duration ease;
+
+    &:hover {
+      background-color: darken(variables.$color-primary, 10%);
+    }
+  }
+}

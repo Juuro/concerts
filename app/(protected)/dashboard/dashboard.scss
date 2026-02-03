@@ -1,0 +1,134 @@
+@use "../../../src/styles/variables.scss";
+
+.dashboard {
+  padding: 2rem 1rem;
+
+  &__header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-family: variables.$font-family-heading;
+    font-size: 2rem;
+    margin: 0;
+  }
+
+  &__subtitle {
+    color: #666;
+    margin: 0.25rem 0 0;
+  }
+
+  &__add-btn {
+    background-color: variables.$color-primary;
+    border: none;
+    border-radius: 8px;
+    color: variables.$color-white;
+    cursor: pointer;
+    font-family: variables.$font-family-text;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    transition: background-color variables.$transition-duration ease;
+
+    &:hover {
+      background-color: darken(variables.$color-primary, 10%);
+    }
+  }
+
+  &__stats {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    margin-bottom: 2rem;
+  }
+
+  &__empty {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+
+    h2 {
+      font-family: variables.$font-family-heading;
+      margin: 0 0 0.5rem;
+    }
+
+    p {
+      color: #666;
+      margin: 0 0 1.5rem;
+    }
+  }
+
+  &__section-title {
+    font-family: variables.$font-family-heading;
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+  }
+
+  &__concert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__concert-item {
+    background-color: variables.$color-white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &__concert-actions {
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 0.75rem 1rem;
+  }
+
+  &__edit-btn {
+    background-color: transparent;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: variables.$color-black;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    transition: all variables.$transition-duration ease;
+
+    &:hover {
+      background-color: #f5f5f5;
+      border-color: #ccc;
+    }
+  }
+}
+
+.stat-card {
+  background-color: variables.$color-white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+
+  &__value {
+    color: variables.$color-primary;
+    display: block;
+    font-family: variables.$font-family-heading;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  &__label {
+    color: #666;
+    display: block;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+}
