@@ -3,7 +3,11 @@ import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllCities, getConcertsPaginated, getConcertCounts } from "@/lib/concerts"
+import {
+  getAllCities,
+  getConcertsPaginated,
+  getConcertCounts,
+} from "@/lib/concerts"
 import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
@@ -49,7 +53,7 @@ export default async function CityPage({
 
   const [concertCounts, initialData] = await Promise.all([
     getConcertCounts(),
-    getConcertsPaginated(cursor, 20, 'forward', { city: cityName }),
+    getConcertsPaginated(cursor, 20, "forward", { city: cityName }),
   ])
 
   // Calculate past/future counts for this city's concerts
@@ -58,15 +62,15 @@ export default async function CityPage({
     prisma.concert.count({
       where: {
         city: cityName,
-        date: { lt: now }
-      }
+        date: { lt: now },
+      },
     }),
     prisma.concert.count({
       where: {
         city: cityName,
-        date: { gte: now }
-      }
-    })
+        date: { gte: now },
+      },
+    }),
   ])
 
   const cityConcertCounts = {

@@ -31,7 +31,8 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   const searchParams = useSearchParams()
   const { showToast } = useToast()
 
-  const [concerts, setConcerts] = useState<TransformedConcert[]>(initialConcerts)
+  const [concerts, setConcerts] =
+    useState<TransformedConcert[]>(initialConcerts)
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [hasPrevious, setHasPrevious] = useState(initialHasPrevious)
@@ -43,10 +44,16 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   // Build query string from filter params
-  const buildQueryString = useCallback((additionalParams: Record<string, string> = {}) => {
-    const params = new URLSearchParams({ ...filterParams, ...additionalParams })
-    return params.toString()
-  }, [filterParams])
+  const buildQueryString = useCallback(
+    (additionalParams: Record<string, string> = {}) => {
+      const params = new URLSearchParams({
+        ...filterParams,
+        ...additionalParams,
+      })
+      return params.toString()
+    },
+    [filterParams]
+  )
 
   // Fetch more concerts (forward direction)
   const loadMore = useCallback(async () => {
@@ -59,8 +66,8 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
       try {
         const queryString = buildQueryString({
           cursor: nextCursor,
-          limit: '20',
-          direction: 'forward'
+          limit: "20",
+          direction: "forward",
         })
         const res = await fetch(`/api/concerts?${queryString}`)
 
@@ -101,7 +108,15 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     await fetchWithRetry(0)
     setLoadingMore(false)
-  }, [nextCursor, hasMore, loadingMore, router, searchParams, showToast, buildQueryString])
+  }, [
+    nextCursor,
+    hasMore,
+    loadingMore,
+    router,
+    searchParams,
+    showToast,
+    buildQueryString,
+  ])
 
   // Fetch earlier concerts (backward direction)
   const loadEarlier = useCallback(async () => {
@@ -116,8 +131,8 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
       try {
         const queryString = buildQueryString({
           cursor: firstConcertId,
-          limit: '20',
-          direction: 'backward'
+          limit: "20",
+          direction: "backward",
         })
         const res = await fetch(`/api/concerts?${queryString}`)
 
@@ -153,7 +168,15 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     await fetchWithRetry(0)
     setLoadingEarlier(false)
-  }, [concerts, hasPrevious, loadingEarlier, router, searchParams, showToast, buildQueryString])
+  }, [
+    concerts,
+    hasPrevious,
+    loadingEarlier,
+    router,
+    searchParams,
+    showToast,
+    buildQueryString,
+  ])
 
   // Set up IntersectionObserver for infinite scroll
   useEffect(() => {

@@ -2,7 +2,11 @@ import React from "react"
 import Layout from "../src/components/layout-client"
 import StatisticsWidgetServer from "../src/components/StatisticsWidget/StatisticsWidgetServer"
 import { ConcertListInfinite } from "../src/components/ConcertList"
-import { getConcertsPaginated, getConcertStatistics, getConcertCounts } from "@/lib/concerts"
+import {
+  getConcertsPaginated,
+  getConcertStatistics,
+  getConcertCounts,
+} from "@/lib/concerts"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"

@@ -2,7 +2,11 @@ import React from "react"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllYears, getConcertsPaginated, getConcertCounts } from "@/lib/concerts"
+import {
+  getAllYears,
+  getConcertsPaginated,
+  getConcertCounts,
+} from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 
@@ -40,7 +44,7 @@ export default async function YearPage({
 
   const [concertCounts, initialData] = await Promise.all([
     getConcertCounts(),
-    getConcertsPaginated(cursor, 20, 'forward', { year: yearNum }),
+    getConcertsPaginated(cursor, 20, "forward", { year: yearNum }),
   ])
 
   // Calculate past/future counts for this year's concerts
@@ -53,18 +57,18 @@ export default async function YearPage({
       where: {
         date: {
           gte: yearStart,
-          lt: now
-        }
-      }
+          lt: now,
+        },
+      },
     }),
     prisma.concert.count({
       where: {
         date: {
           gte: now,
-          lte: yearEnd
-        }
-      }
-    })
+          lte: yearEnd,
+        },
+      },
+    }),
   ])
 
   const yearConcertCounts = {

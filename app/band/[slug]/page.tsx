@@ -49,12 +49,9 @@ export default async function BandPage({
   }
 
   // Fetch initial paginated concerts for this band
-  const initialData = await getConcertsPaginated(
-    cursor,
-    20,
-    'forward',
-    { bandSlug: slug }
-  )
+  const initialData = await getConcertsPaginated(cursor, 20, "forward", {
+    bandSlug: slug,
+  })
 
   // Calculate past/future counts for this band's concerts
   const now = new Date()
@@ -62,15 +59,15 @@ export default async function BandPage({
     prisma.concert.count({
       where: {
         bands: { some: { band: { slug } } },
-        date: { lt: now }
-      }
+        date: { lt: now },
+      },
     }),
     prisma.concert.count({
       where: {
         bands: { some: { band: { slug } } },
-        date: { gte: now }
-      }
-    })
+        date: { gte: now },
+      },
+    }),
   ])
 
   const bandConcertCounts = {
