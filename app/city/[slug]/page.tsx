@@ -1,10 +1,11 @@
 import React from "react"
 import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
-import ConcertCard from "../../../src/components/ConcertCard/concertCard"
+import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllCities, getConcertsByCity, getConcertCounts } from "@/lib/concerts"
+import { getAllCities, getConcertsPaginated, getConcertCounts } from "@/lib/concerts"
 import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
+import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -32,10 +33,13 @@ export async function generateMetadata({
 
 export default async function CityPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ cursor?: string }>
 }) {
   const { slug } = await params
+  const { cursor } = await searchParams
   const cities = await getAllCities()
   const cityName = findCityBySlug(slug, cities)
 
@@ -43,16 +47,31 @@ export default async function CityPage({
     notFound()
   }
 
-  const [concerts, concertCounts] = await Promise.all([
-    getConcertsByCity(cityName),
+  const [concertCounts, initialData] = await Promise.all([
     getConcertCounts(),
+    getConcertsPaginated(cursor, 20, 'forward', { city: cityName }),
   ])
 
   // Calculate past/future counts for this city's concerts
   const now = new Date()
+  const [pastCount, futureCount] = await Promise.all([
+    prisma.concert.count({
+      where: {
+        city: cityName,
+        date: { lt: now }
+      }
+    }),
+    prisma.concert.count({
+      where: {
+        city: cityName,
+        date: { gte: now }
+      }
+    })
+  ])
+
   const cityConcertCounts = {
-    past: concerts.filter((c) => new Date(c.date) < now).length,
-    future: concerts.filter((c) => new Date(c.date) >= now).length,
+    past: pastCount,
+    future: futureCount,
   }
 
   return (
@@ -64,31 +83,13 @@ export default async function CityPage({
             <ConcertCount counts={cityConcertCounts} />
           </h2>
 
-          <ul className="list-unstyled">
-            {concerts.map((concert) => (
-              <ConcertCard
-                key={concert.id}
-                concert={{
-                  ...concert,
-                  club: concert.club ?? undefined,
-                  bands: concert.bands.map((b) => ({
-                    id: b.id,
-                    name: b.name,
-                    slug: b.slug,
-                    url: b.url,
-                  })),
-                  festival: concert.festival
-                    ? {
-                        fields: {
-                          name: concert.festival.fields.name,
-                          url: concert.festival.fields.url ?? undefined,
-                        },
-                      }
-                    : null,
-                }}
-              />
-            ))}
-          </ul>
+          <ConcertListInfinite
+            initialConcerts={initialData.items}
+            initialNextCursor={initialData.nextCursor}
+            initialHasMore={initialData.hasMore}
+            initialHasPrevious={initialData.hasPrevious}
+            filterParams={{ city: cityName }}
+          />
         </div>
       </main>
     </Layout>

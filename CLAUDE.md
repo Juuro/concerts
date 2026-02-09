@@ -67,6 +67,22 @@ Environment-controlled in `.env`:
 
 - `ENABLE_LASTFM` - Toggle Last.fm data enrichment
 
+### Infinite Scrolling
+
+All pages that display concert lists use infinite scrolling with cursor-based pagination:
+
+- **Pages**: Homepage, Dashboard (My Concerts), Band pages, City pages, Year pages, Public user profiles
+- **Component**: `ConcertListInfinite` (uses IntersectionObserver for automatic loading)
+- **Backend**: `getConcertsPaginated()` function in `src/lib/concerts.ts` with `ConcertFilters` interface
+- **API**: `/api/concerts` endpoint supports filter parameters (userId, username, bandSlug, city, year)
+- **Pagination**: Cursor-based, 20 items per page by default
+- **Features**:
+  - Automatic scroll detection and loading
+  - Bidirectional pagination (forward and backward with "Load earlier" button)
+  - Deep linking support via URL cursor parameter
+  - Toast notifications for errors
+- **Provider**: Global `ToastProvider` in `app/providers.tsx` wraps the entire app for toast context
+
 ## Code Patterns
 
 - Server components by default; explicit `'use client'` for interactivity

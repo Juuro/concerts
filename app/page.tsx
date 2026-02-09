@@ -2,7 +2,6 @@ import React from "react"
 import Layout from "../src/components/layout-client"
 import StatisticsWidgetServer from "../src/components/StatisticsWidget/StatisticsWidgetServer"
 import { ConcertListInfinite } from "../src/components/ConcertList"
-import { ToastProvider } from "../src/components/Toast"
 import { getConcertsPaginated, getConcertStatistics, getConcertCounts } from "@/lib/concerts"
 import type { Metadata } from "next"
 
@@ -53,14 +52,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <main>
         <div className="container">
           <StatisticsWidgetServer statistics={statistics} />
-          <ToastProvider>
-            <ConcertListInfinite
-              initialConcerts={concertsFormatted}
-              initialNextCursor={paginatedConcerts.nextCursor}
-              initialHasMore={paginatedConcerts.hasMore}
-              initialHasPrevious={paginatedConcerts.hasPrevious}
-            />
-          </ToastProvider>
+          <ConcertListInfinite
+            initialConcerts={concertsFormatted}
+            initialNextCursor={paginatedConcerts.nextCursor}
+            initialHasMore={paginatedConcerts.hasMore}
+            initialHasPrevious={paginatedConcerts.hasPrevious}
+          />
         </div>
       </main>
     </Layout>

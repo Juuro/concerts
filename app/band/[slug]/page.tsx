@@ -1,10 +1,11 @@
 import React from "react"
 import { notFound } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
-import ConcertCard from "../../../src/components/ConcertCard/concertCard"
+import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getConcertCounts, getConcertsByBand } from "@/lib/concerts"
+import { getConcertCounts, getConcertsPaginated } from "@/lib/concerts"
 import { getBandBySlug, getAllBandSlugs } from "@/lib/bands"
+import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
 
@@ -30,10 +31,14 @@ export async function generateMetadata({
 
 export default async function BandPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ cursor?: string }>
 }) {
   const { slug } = await params
+  const { cursor } = await searchParams
+
   const [band, concertCounts] = await Promise.all([
     getBandBySlug(slug),
     getConcertCounts(),
@@ -43,13 +48,34 @@ export default async function BandPage({
     notFound()
   }
 
-  const concerts = await getConcertsByBand(slug)
+  // Fetch initial paginated concerts for this band
+  const initialData = await getConcertsPaginated(
+    cursor,
+    20,
+    'forward',
+    { bandSlug: slug }
+  )
 
   // Calculate past/future counts for this band's concerts
   const now = new Date()
+  const [pastCount, futureCount] = await Promise.all([
+    prisma.concert.count({
+      where: {
+        bands: { some: { band: { slug } } },
+        date: { lt: now }
+      }
+    }),
+    prisma.concert.count({
+      where: {
+        bands: { some: { band: { slug } } },
+        date: { gte: now }
+      }
+    })
+  ])
+
   const bandConcertCounts = {
-    past: concerts.filter((c) => new Date(c.date) < now).length,
-    future: concerts.filter((c) => new Date(c.date) >= now).length,
+    past: pastCount,
+    future: futureCount,
   }
 
   const hasGenres = band.lastfm?.genres && band.lastfm.genres.length > 0
@@ -118,34 +144,13 @@ export default async function BandPage({
             </div>
           </div>
 
-          <ul className="list-unstyled">
-            {concerts.map((concert) => (
-              <ConcertCard
-                key={concert.id}
-                concert={{
-                  ...concert,
-                  club: concert.club ?? undefined,
-                  bands: concert.bands.map((b) => ({
-                    id: b.id,
-                    name: b.name,
-                    slug: b.slug,
-                    url: b.url,
-                    image: b.imageUrl
-                      ? { fields: { file: { url: b.imageUrl } } }
-                      : undefined,
-                  })),
-                  festival: concert.festival
-                    ? {
-                        fields: {
-                          name: concert.festival.fields.name,
-                          url: concert.festival.fields.url ?? undefined,
-                        },
-                      }
-                    : null,
-                }}
-              />
-            ))}
-          </ul>
+          <ConcertListInfinite
+            initialConcerts={initialData.items}
+            initialNextCursor={initialData.nextCursor}
+            initialHasMore={initialData.hasMore}
+            initialHasPrevious={initialData.hasPrevious}
+            filterParams={{ bandSlug: slug }}
+          />
         </div>
       </main>
     </Layout>

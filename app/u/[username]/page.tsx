@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getUserConcerts } from "@/lib/concerts"
+import { getConcertsPaginated } from "@/lib/concerts"
 import Header from "@/components/Header/header"
-import ConcertCard from "@/components/ConcertCard/concertCard"
+import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import "./profile.scss"
 import Image from "next/image"
 
@@ -32,10 +32,13 @@ export async function generateMetadata({
 
 export default async function PublicProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>
+  searchParams: Promise<{ cursor?: string }>
 }) {
   const { username } = await params
+  const { cursor } = await searchParams
 
   const user = await prisma.user.findUnique({
     where: { username },
@@ -52,17 +55,39 @@ export default async function PublicProfilePage({
     notFound()
   }
 
-  const concerts = await getUserConcerts(user.id)
+  // Fetch initial paginated concerts
+  const initialData = await getConcertsPaginated(
+    cursor,
+    20,
+    'forward',
+    { userId: user.id, isPublic: true }
+  )
 
-  // Calculate statistics
-  const totalConcerts = concerts.length
-  const uniqueBands = new Set(
-    concerts.flatMap((c) => c.bands.map((b) => b.slug))
-  ).size
-  const uniqueCities = new Set(
-    concerts.map((c) => c.fields.geocoderAddressFields._normalized_city)
-  ).size
-  const years = new Set(concerts.map((c) => new Date(c.date).getFullYear()))
+  // Calculate statistics using separate count/aggregation queries
+  const [totalConcerts, uniqueBandsData, uniqueCitiesData, uniqueYearsData] = await Promise.all([
+    prisma.concert.count({
+      where: { userId: user.id }
+    }),
+    prisma.concertBand.groupBy({
+      by: ['bandId'],
+      where: { concert: { userId: user.id } }
+    }),
+    prisma.concert.groupBy({
+      by: ['city'],
+      where: {
+        userId: user.id,
+        city: { not: null }
+      }
+    }),
+    prisma.concert.findMany({
+      where: { userId: user.id },
+      select: { date: true }
+    })
+  ])
+
+  const uniqueBands = uniqueBandsData.length
+  const uniqueCities = uniqueCitiesData.length
+  const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
 
   return (
     <>
@@ -108,45 +133,20 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
-          {concerts.length === 0 ? (
+          {initialData.items.length === 0 && !cursor ? (
             <div className="public-profile__empty">
               <p>No concerts to show yet.</p>
             </div>
           ) : (
             <div className="public-profile__concerts">
               <h2 className="public-profile__section-title">Concert History</h2>
-              <div className="public-profile__concert-list">
-                {concerts.map((concert) => (
-                  <ConcertCard
-                    key={concert.id}
-                    concert={{
-                      id: concert.id,
-                      date: concert.date,
-                      city: concert.city,
-                      club: concert.club ?? undefined,
-                      bands: concert.bands.map((b) => ({
-                        id: b.id,
-                        name: b.name,
-                        slug: b.slug,
-                        url: b.url,
-                        image: b.imageUrl
-                          ? { fields: { file: { url: b.imageUrl } } }
-                          : undefined,
-                      })),
-                      isFestival: concert.isFestival,
-                      festival: concert.festival
-                        ? {
-                            fields: {
-                              name: concert.festival.fields.name,
-                              url: concert.festival.fields.url ?? undefined,
-                            },
-                          }
-                        : null,
-                      fields: concert.fields,
-                    }}
-                  />
-                ))}
-              </div>
+              <ConcertListInfinite
+                initialConcerts={initialData.items}
+                initialNextCursor={initialData.nextCursor}
+                initialHasMore={initialData.hasMore}
+                initialHasPrevious={initialData.hasPrevious}
+                filterParams={{ username }}
+              />
             </div>
           )}
         </div>

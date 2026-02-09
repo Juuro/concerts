@@ -1,15 +1,23 @@
+"use client"
+
 import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { cityToSlug, extractCityName } from "../../utils/helpers"
-import type { Concert } from "../../types/concert"
+import type { TransformedConcert } from "@/lib/concerts"
 import "./concertCard.scss"
 
 interface ConcertCardProps {
-  concert: Concert
+  concert: TransformedConcert
+  showEditButton?: boolean
+  currentUserId?: string
 }
 
-const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
+const ConcertCard: React.FC<ConcertCardProps> = ({
+  concert,
+  showEditButton = false,
+  currentUserId
+}) => {
   const heading = () => {
     if (concert.isFestival) {
       return concert.festival?.fields.name || ""
@@ -68,15 +76,8 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
     })
   }
 
-  const getImageUrl = () => {
-    return (
-      concert.bands[0]?.image?.file?.url ||
-      concert.bands[0]?.image?.fields?.file?.url
-    )
-  }
-
   const getImageSrc = () => {
-    const url = getImageUrl()
+    const url = concert.bands[0]?.imageUrl
     if (!url) return undefined
     if (url.startsWith("//")) return `https:${url}`
     return url
@@ -113,6 +114,11 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
             </Link>
           </div>
         </div>
+        {showEditButton && currentUserId === concert.userId && (
+          <Link href={`/concerts/edit/${concert.id}`} className="concert-card-edit-btn">
+            Edit
+          </Link>
+        )}
       </div>
     </li>
   )

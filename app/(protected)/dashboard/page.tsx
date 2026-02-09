@@ -2,8 +2,9 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { getUserConcerts } from "@/lib/concerts"
-import ConcertCard from "@/components/ConcertCard/concertCard"
+import { getConcertsPaginated } from "@/lib/concerts"
+import { prisma } from "@/lib/prisma"
+import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import "./dashboard.scss"
 
 export const dynamic = "force-dynamic"
@@ -13,7 +14,11 @@ export const metadata = {
   description: "Manage your concert collection",
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cursor?: string }>;
+}) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -22,17 +27,44 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
-  const concerts = await getUserConcerts(session.user.id)
+  // Get search params
+  const { cursor } = await searchParams
 
-  // Calculate statistics
-  const totalConcerts = concerts.length
-  const uniqueBands = new Set(
-    concerts.flatMap((c) => c.bands.map((b) => b.slug))
-  ).size
-  const uniqueCities = new Set(
-    concerts.map((c) => c.fields.geocoderAddressFields._normalized_city)
-  ).size
-  const years = new Set(concerts.map((c) => new Date(c.date).getFullYear()))
+  // Fetch initial paginated concerts
+  const initialData = await getConcertsPaginated(
+    cursor,
+    20,
+    'forward',
+    { userId: session.user.id }
+  )
+
+  // Calculate statistics using separate count/aggregation queries
+  const [totalConcerts, uniqueBandsData, uniqueCitiesData, uniqueYearsData] = await Promise.all([
+    prisma.concert.count({
+      where: { userId: session.user.id }
+    }),
+    prisma.concertBand.groupBy({
+      by: ['bandId'],
+      where: {
+        concert: { userId: session.user.id }
+      }
+    }),
+    prisma.concert.groupBy({
+      by: ['city'],
+      where: {
+        userId: session.user.id,
+        city: { not: null }
+      }
+    }),
+    prisma.concert.findMany({
+      where: { userId: session.user.id },
+      select: { date: true }
+    })
+  ])
+
+  const uniqueBands = uniqueBandsData.length
+  const uniqueCities = uniqueCitiesData.length
+  const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
 
   return (
     <div className="dashboard">
@@ -67,7 +99,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {concerts.length === 0 ? (
+      {initialData.items.length === 0 && !cursor ? (
         <div className="dashboard__empty">
           <h2>No concerts yet</h2>
           <p>
@@ -80,44 +112,15 @@ export default async function DashboardPage() {
       ) : (
         <div className="dashboard__concerts">
           <h2 className="dashboard__section-title">Recent Concerts</h2>
-          <div className="dashboard__concert-list">
-            {concerts.map((concert) => (
-              <div key={concert.id} className="dashboard__concert-item">
-                <ConcertCard
-                  concert={{
-                    id: concert.id,
-                    date: concert.date,
-                    city: concert.city,
-                    club: concert.club ?? undefined,
-                    bands: concert.bands.map((b) => ({
-                      id: b.id,
-                      name: b.name,
-                      slug: b.slug,
-                      url: b.url,
-                    })),
-                    isFestival: concert.isFestival,
-                    festival: concert.festival
-                      ? {
-                          fields: {
-                            name: concert.festival.fields.name,
-                            url: concert.festival.fields.url ?? undefined,
-                          },
-                        }
-                      : null,
-                    fields: concert.fields,
-                  }}
-                />
-                <div className="dashboard__concert-actions">
-                  <Link
-                    href={`/concerts/edit/${concert.id}`}
-                    className="dashboard__edit-btn"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ConcertListInfinite
+            initialConcerts={initialData.items}
+            initialNextCursor={initialData.nextCursor}
+            initialHasMore={initialData.hasMore}
+            initialHasPrevious={initialData.hasPrevious}
+            filterParams={{ userOnly: 'true' }}
+            showEditButtons={true}
+            currentUserId={session.user.id}
+          />
         </div>
       )}
     </div>

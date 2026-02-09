@@ -1,8 +1,9 @@
 import React from "react"
 import Layout from "../../../src/components/layout-client"
-import ConcertCard from "../../../src/components/ConcertCard/concertCard"
+import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getAllYears, getConcertsByYear, getConcertCounts } from "@/lib/concerts"
+import { getAllYears, getConcertsPaginated, getConcertCounts } from "@/lib/concerts"
+import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -28,20 +29,47 @@ export async function generateMetadata({
 
 export default async function YearPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ year: string }>
+  searchParams: Promise<{ cursor?: string }>
 }) {
   const { year } = await params
-  const [concerts, concertCounts] = await Promise.all([
-    getConcertsByYear(year),
+  const { cursor } = await searchParams
+  const yearNum = parseInt(year, 10)
+
+  const [concertCounts, initialData] = await Promise.all([
     getConcertCounts(),
+    getConcertsPaginated(cursor, 20, 'forward', { year: yearNum }),
   ])
 
   // Calculate past/future counts for this year's concerts
   const now = new Date()
+  const yearStart = new Date(yearNum, 0, 1)
+  const yearEnd = new Date(yearNum, 11, 31, 23, 59, 59, 999)
+
+  const [pastCount, futureCount] = await Promise.all([
+    prisma.concert.count({
+      where: {
+        date: {
+          gte: yearStart,
+          lt: now
+        }
+      }
+    }),
+    prisma.concert.count({
+      where: {
+        date: {
+          gte: now,
+          lte: yearEnd
+        }
+      }
+    })
+  ])
+
   const yearConcertCounts = {
-    past: concerts.filter((c) => new Date(c.date) < now).length,
-    future: concerts.filter((c) => new Date(c.date) >= now).length,
+    past: pastCount,
+    future: futureCount,
   }
 
   return (
@@ -53,49 +81,13 @@ export default async function YearPage({
             <ConcertCount counts={yearConcertCounts} />
           </h2>
 
-          <ul className="list-unstyled">
-            {concerts.map((concert) => (
-              <ConcertCard
-                key={concert.id}
-                concert={{
-                  ...concert,
-                  club: concert.club ?? undefined,
-                  bands: concert.bands.map((b) => ({
-                    id: b.id,
-                    name: b.name,
-                    slug: b.slug,
-                    url: b.url,
-                    image: b.imageUrl
-                      ? { fields: { file: { url: b.imageUrl } } }
-                      : undefined,
-                    lastfm: b.lastfm
-                      ? {
-                          url: b.lastfm.url ?? "",
-                          name: b.name,
-                          images: {
-                            small: "",
-                            medium: "",
-                            large: "",
-                            extralarge: "",
-                            mega: "",
-                          },
-                          genres: b.lastfm.genres ?? [],
-                          bio: b.lastfm.bio ?? null,
-                        }
-                      : undefined,
-                  })),
-                  festival: concert.festival
-                    ? {
-                        fields: {
-                          name: concert.festival.fields.name,
-                          url: concert.festival.fields.url ?? undefined,
-                        },
-                      }
-                    : null,
-                }}
-              />
-            ))}
-          </ul>
+          <ConcertListInfinite
+            initialConcerts={initialData.items}
+            initialNextCursor={initialData.nextCursor}
+            initialHasMore={initialData.hasMore}
+            initialHasPrevious={initialData.hasPrevious}
+            filterParams={{ year }}
+          />
         </div>
       </main>
     </Layout>

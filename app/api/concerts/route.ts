@@ -2,16 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserConcerts, createConcert, getConcertsPaginated, type CreateConcertInput } from "@/lib/concerts";
+import { createConcert, getConcertsPaginated, type CreateConcertInput, type ConcertFilters } from "@/lib/concerts";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const cursor = searchParams.get("cursor") ?? undefined;
   const limit = parseInt(searchParams.get("limit") || "20", 10);
   const direction = (searchParams.get("direction") || "forward") as "forward" | "backward";
-  const userOnly = searchParams.get("userOnly") === "true";
 
-  // If userOnly, require auth and return user's concerts
+  // Extract filter parameters
+  const userOnly = searchParams.get("userOnly") === "true";
+  const userId = searchParams.get("userId") ?? undefined;
+  const username = searchParams.get("username") ?? undefined;
+  const bandSlug = searchParams.get("bandSlug") ?? undefined;
+  const city = searchParams.get("city") ?? undefined;
+  const yearParam = searchParams.get("year");
+  const year = yearParam ? parseInt(yearParam, 10) : undefined;
+
+  // Build filters object
+  const filters: ConcertFilters = {};
+
+  // Handle userOnly (authenticated user's concerts)
   if (userOnly) {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -21,12 +33,47 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const concerts = await getUserConcerts(session.user.id);
-    return NextResponse.json(concerts);
+    filters.userId = session.user.id;
   }
 
-  // Public paginated endpoint
-  const result = await getConcertsPaginated(cursor, limit, direction);
+  // Handle username filter (convert to userId, requires public profile)
+  if (username) {
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: { id: true, isPublic: true }
+    });
+
+    if (!user || !user.isPublic) {
+      return NextResponse.json({ error: "User not found or not public" }, { status: 404 });
+    }
+
+    filters.userId = user.id;
+    filters.isPublic = true;
+  }
+
+  // Handle userId filter (for public profiles)
+  if (userId && !userOnly) {
+    filters.userId = userId;
+    filters.isPublic = true;
+  }
+
+  // Handle bandSlug filter
+  if (bandSlug) {
+    filters.bandSlug = bandSlug;
+  }
+
+  // Handle city filter
+  if (city) {
+    filters.city = city;
+  }
+
+  // Handle year filter
+  if (year) {
+    filters.year = year;
+  }
+
+  // Fetch paginated results with filters
+  const result = await getConcertsPaginated(cursor, limit, direction, filters);
   return NextResponse.json(result);
 }
 

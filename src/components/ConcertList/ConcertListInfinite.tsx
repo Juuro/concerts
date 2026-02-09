@@ -5,14 +5,17 @@ import { useRouter, useSearchParams } from "next/navigation"
 import ConcertCard from "../ConcertCard/concertCard"
 import ConcertCardSkeleton from "../ConcertCard/ConcertCardSkeleton"
 import { useToast } from "../Toast"
-import type { Concert } from "../../types/concert"
+import type { TransformedConcert } from "@/lib/concerts"
 import "./concertListInfinite.scss"
 
 interface ConcertListInfiniteProps {
-  initialConcerts: Concert[]
+  initialConcerts: TransformedConcert[]
   initialNextCursor: string | null
   initialHasMore: boolean
   initialHasPrevious: boolean
+  filterParams?: Record<string, string>
+  showEditButtons?: boolean
+  currentUserId?: string
 }
 
 const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
@@ -20,12 +23,15 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   initialNextCursor,
   initialHasMore,
   initialHasPrevious,
+  filterParams = {},
+  showEditButtons = false,
+  currentUserId,
 }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { showToast } = useToast()
 
-  const [concerts, setConcerts] = useState<Concert[]>(initialConcerts)
+  const [concerts, setConcerts] = useState<TransformedConcert[]>(initialConcerts)
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [hasPrevious, setHasPrevious] = useState(initialHasPrevious)
@@ -36,6 +42,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
+  // Build query string from filter params
+  const buildQueryString = useCallback((additionalParams: Record<string, string> = {}) => {
+    const params = new URLSearchParams({ ...filterParams, ...additionalParams })
+    return params.toString()
+  }, [filterParams])
+
   // Fetch more concerts (forward direction)
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore || !nextCursor) return
@@ -45,9 +57,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     const fetchWithRetry = async (attempt: number): Promise<void> => {
       try {
-        const res = await fetch(
-          `/api/concerts?cursor=${nextCursor}&limit=20&direction=forward`
-        )
+        const queryString = buildQueryString({
+          cursor: nextCursor,
+          limit: '20',
+          direction: 'forward'
+        })
+        const res = await fetch(`/api/concerts?${queryString}`)
 
         if (!res.ok) throw new Error("Failed to fetch concerts")
 
@@ -86,7 +101,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     await fetchWithRetry(0)
     setLoadingMore(false)
-  }, [nextCursor, hasMore, loadingMore, router, searchParams, showToast])
+  }, [nextCursor, hasMore, loadingMore, router, searchParams, showToast, buildQueryString])
 
   // Fetch earlier concerts (backward direction)
   const loadEarlier = useCallback(async () => {
@@ -99,9 +114,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     const fetchWithRetry = async (attempt: number): Promise<void> => {
       try {
-        const res = await fetch(
-          `/api/concerts?cursor=${firstConcertId}&limit=20&direction=backward`
-        )
+        const queryString = buildQueryString({
+          cursor: firstConcertId,
+          limit: '20',
+          direction: 'backward'
+        })
+        const res = await fetch(`/api/concerts?${queryString}`)
 
         if (!res.ok) throw new Error("Failed to fetch concerts")
 
@@ -135,7 +153,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
     await fetchWithRetry(0)
     setLoadingEarlier(false)
-  }, [concerts, hasPrevious, loadingEarlier, router, searchParams, showToast])
+  }, [concerts, hasPrevious, loadingEarlier, router, searchParams, showToast, buildQueryString])
 
   // Set up IntersectionObserver for infinite scroll
   useEffect(() => {
@@ -190,7 +208,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
       {/* Concert List */}
       <ul className="list-unstyled">
         {concerts.map((concert) => (
-          <ConcertCard key={concert.id} concert={concert} />
+          <ConcertCard
+            key={concert.id}
+            concert={concert}
+            showEditButton={showEditButtons}
+            currentUserId={currentUserId}
+          />
         ))}
       </ul>
 

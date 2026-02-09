@@ -19,6 +19,7 @@ export interface TransformedBand {
 
 export interface TransformedConcert {
   id: string;
+  userId: string;
   date: string;
   city: {
     lat: number;
@@ -50,6 +51,7 @@ type ConcertWithRelations = PrismaConcert & {
 function transformConcert(concert: ConcertWithRelations): TransformedConcert {
   return {
     id: concert.id,
+    userId: concert.userId,
     date: concert.date.toISOString(),
     city: {
       lat: concert.latitude,
@@ -369,6 +371,14 @@ export async function getConcertById(id: string): Promise<TransformedConcert | n
 // Pagination Types and Functions
 // ============================================
 
+export interface ConcertFilters {
+  userId?: string;      // Filter by specific user
+  bandSlug?: string;    // Filter by specific band
+  city?: string;        // Filter by city name
+  year?: number;        // Filter by year
+  isPublic?: boolean;   // Only show public user concerts
+}
+
 export interface PaginatedConcerts {
   items: TransformedConcert[];
   nextCursor: string | null;
@@ -380,19 +390,56 @@ export interface PaginatedConcerts {
 export async function getConcertsPaginated(
   cursor?: string,
   limit = 20,
-  direction: "forward" | "backward" = "forward"
+  direction: "forward" | "backward" = "forward",
+  filters?: ConcertFilters
 ): Promise<PaginatedConcerts> {
   const take = direction === "forward" ? limit + 1 : -(limit + 1);
-  
+
+  // Build where clause based on filters
+  const where: any = {};
+
+  if (filters?.userId) {
+    where.userId = filters.userId;
+  }
+
+  if (filters?.bandSlug) {
+    where.bands = {
+      some: {
+        band: { slug: filters.bandSlug }
+      }
+    };
+  }
+
+  if (filters?.city) {
+    where.city = filters.city;
+  }
+
+  if (filters?.year) {
+    const yearStart = new Date(filters.year, 0, 1);
+    const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999);
+    where.date = {
+      gte: yearStart,
+      lte: yearEnd
+    };
+  }
+
+  if (filters?.isPublic !== undefined) {
+    where.user = {
+      isPublic: filters.isPublic
+    };
+  }
+
   const concerts = await prisma.concert.findMany({
     take,
     ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    where,
     include: {
       bands: {
         include: { band: true },
         orderBy: { sortOrder: "asc" },
       },
       festival: true,
+      ...(filters?.isPublic !== undefined && { user: { select: { isPublic: true } } }),
     },
     orderBy: [{ date: "desc" }, { id: "desc" }],
   });
