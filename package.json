@@ -52,7 +52,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "migrate:contentful": "tsx -r tsconfig-paths/register scripts/migrate-contentful.ts"
+    "migrate:contentful": "tsx -r tsconfig-paths/register scripts/migrate-contentful.ts",
+    "migrate:venues": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/migrate-venue-data.ts"
   },
   "repository": {
     "type": "git",

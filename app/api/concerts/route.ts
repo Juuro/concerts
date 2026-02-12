@@ -99,13 +99,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // Validate required fields
+    if (!body.venue || !body.latitude || !body.longitude) {
+      return NextResponse.json(
+        { error: "Venue, latitude, and longitude are required" },
+        { status: 400 }
+      )
+    }
+
     const input: CreateConcertInput = {
       userId: session.user.id,
       date: new Date(body.date),
       latitude: body.latitude,
       longitude: body.longitude,
-      city: body.city,
-      club: body.club,
+      venue: body.venue,
       isFestival: body.isFestival || false,
       festivalId: body.festivalId,
       bandIds: body.bandIds || [],

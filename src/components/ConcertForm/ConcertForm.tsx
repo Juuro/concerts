@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import VenueAutocomplete from "@/components/VenueAutocomplete/VenueAutocomplete"
+import type { PhotonSearchResult } from "@/types/photon"
 import "./concertForm.scss"
 
 interface Band {
@@ -22,8 +24,9 @@ interface ConcertFormProps {
     date: string
     latitude: number
     longitude: number
-    city?: string | null
-    club?: string | null
+    venue?: string | null
+    city?: string | null  // Keep for backward compat during migration
+    club?: string | null  // Keep for backward compat during migration
     isFestival: boolean
     festivalId?: string | null
     bands: { bandId: string; name: string; isHeadliner?: boolean }[]
@@ -38,12 +41,16 @@ export default function ConcertForm({ concert, mode }: ConcertFormProps) {
 
   // Form state
   const [date, setDate] = useState(concert?.date?.split("T")[0] || "")
-  const [latitude, setLatitude] = useState(concert?.latitude?.toString() || "")
-  const [longitude, setLongitude] = useState(
-    concert?.longitude?.toString() || ""
+  const [venue, setVenue] = useState(
+    concert?.venue || concert?.club || concert?.city || ""
   )
-  const [city, setCity] = useState(concert?.city || "")
-  const [club, setClub] = useState(concert?.club || "")
+  const [latitude, setLatitude] = useState<number | undefined>(
+    concert?.latitude
+  )
+  const [longitude, setLongitude] = useState<number | undefined>(
+    concert?.longitude
+  )
+  const [venueSelected, setVenueSelected] = useState(!!concert?.venue)
   const [isFestival, setIsFestival] = useState(concert?.isFestival || false)
   const [festivalId, setFestivalId] = useState(concert?.festivalId || "")
 
@@ -144,18 +151,37 @@ export default function ConcertForm({ concert, mode }: ConcertFormProps) {
     }
   }
 
+  const handleVenueSelect = (result: PhotonSearchResult) => {
+    setVenue(result.name)
+    setLatitude(result.lat)
+    setLongitude(result.lon)
+    setVenueSelected(true)
+  }
+
+  const handleVenueClear = () => {
+    setVenue("")
+    setLatitude(undefined)
+    setLongitude(undefined)
+    setVenueSelected(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
+    if (!venueSelected || !latitude || !longitude) {
+      setError("Please select a venue from the search results")
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       const payload = {
         date,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        city: city || undefined,
-        club: club || undefined,
+        latitude,
+        longitude,
+        venue,
         isFestival,
         festivalId: isFestival ? festivalId || undefined : undefined,
         bandIds: selectedBands.map((b) => ({
@@ -231,51 +257,26 @@ export default function ConcertForm({ concert, mode }: ConcertFormProps) {
           />
         </div>
 
-        <div className="concert-form__row">
-          <div className="concert-form__field">
-            <label htmlFor="latitude">Latitude *</label>
-            <input
-              type="number"
-              id="latitude"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              step="any"
-              required
-            />
-          </div>
-          <div className="concert-form__field">
-            <label htmlFor="longitude">Longitude *</label>
-            <input
-              type="number"
-              id="longitude"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              step="any"
-              required
-            />
-          </div>
-        </div>
-
         <div className="concert-form__field">
-          <label htmlFor="city">City</label>
-          <input
-            type="text"
-            id="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="e.g., Berlin"
+          <label htmlFor="venue">Venue *</label>
+          <VenueAutocomplete
+            value={venue}
+            latitude={latitude}
+            longitude={longitude}
+            onSelect={handleVenueSelect}
+            onClear={handleVenueClear}
+            disabled={isSubmitting}
+            error={
+              !venueSelected && venue
+                ? "Please select a venue from the dropdown"
+                : undefined
+            }
           />
-        </div>
-
-        <div className="concert-form__field">
-          <label htmlFor="club">Venue</label>
-          <input
-            type="text"
-            id="club"
-            value={club}
-            onChange={(e) => setClub(e.target.value)}
-            placeholder="e.g., SO36"
-          />
+          {venueSelected && latitude && longitude && (
+            <div className="concert-form__venue-coords">
+              ✓ Selected: {venue} ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+            </div>
+          )}
         </div>
       </div>
 
@@ -385,7 +386,7 @@ export default function ConcertForm({ concert, mode }: ConcertFormProps) {
         <button
           type="submit"
           className="concert-form__submit"
-          disabled={isSubmitting || selectedBands.length === 0}
+          disabled={isSubmitting || selectedBands.length === 0 || !venueSelected}
         >
           {isSubmitting
             ? "Saving..."

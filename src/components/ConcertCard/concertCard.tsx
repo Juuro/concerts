@@ -105,7 +105,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
       </div>
       <div className="concert-card-location">
         <div>
-          <div className="club">{concert.club}</div>
+          <div className="venue">{concert.venue || concert.club}</div>
           <div className="city">
             <Link
               href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}

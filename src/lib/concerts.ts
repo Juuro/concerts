@@ -7,6 +7,8 @@ import type {
   ConcertBand,
 } from "@/generated/prisma/client"
 import { cityToSlug } from "@/utils/helpers"
+import { getGeocodingData } from "@/utils/data"
+import type { GeocodingData } from "@/types/geocoding"
 
 // Types matching the existing app structure
 export interface TransformedBand {
@@ -30,7 +32,7 @@ export interface TransformedConcert {
     lat: number
     lon: number
   }
-  club?: string | null
+  venue?: string | null
   bands: TransformedBand[]
   isFestival: boolean
   festival: {
@@ -40,11 +42,7 @@ export interface TransformedConcert {
     }
   } | null
   fields: {
-    geocoderAddressFields: {
-      _normalized_city: string
-      city?: string
-      country?: string
-    }
+    geocoderAddressFields: GeocodingData
   }
 }
 
@@ -53,7 +51,10 @@ type ConcertWithRelations = PrismaConcert & {
   festival: PrismaFestival | null
 }
 
-function transformConcert(concert: ConcertWithRelations): TransformedConcert {
+async function transformConcert(concert: ConcertWithRelations): Promise<TransformedConcert> {
+  // Use reverse geocoding to get real city name from coordinates
+  const geocodingData = await getGeocodingData(concert.latitude, concert.longitude)
+
   return {
     id: concert.id,
     userId: concert.userId,
@@ -62,7 +63,7 @@ function transformConcert(concert: ConcertWithRelations): TransformedConcert {
       lat: concert.latitude,
       lon: concert.longitude,
     },
-    club: concert.club,
+    venue: concert.venue,
     bands: concert.bands
       .sort(
         (
@@ -94,12 +95,7 @@ function transformConcert(concert: ConcertWithRelations): TransformedConcert {
         }
       : null,
     fields: {
-      geocoderAddressFields: {
-        _normalized_city:
-          concert.city ||
-          `${concert.latitude.toFixed(3)}, ${concert.longitude.toFixed(3)}`,
-        city: concert.city || undefined,
-      },
+      geocoderAddressFields: geocodingData,
     },
   }
 }
@@ -120,7 +116,7 @@ export async function getUserConcerts(
     orderBy: { date: "desc" },
   })
 
-  return concerts.map(transformConcert)
+  return Promise.all(concerts.map(transformConcert))
 }
 
 // Get all concerts (public, for global views)
@@ -136,7 +132,7 @@ export async function getAllConcerts(): Promise<TransformedConcert[]> {
     orderBy: { date: "desc" },
   })
 
-  return concerts.map(transformConcert)
+  return Promise.all(concerts.map(transformConcert))
 }
 
 // Get concerts by band slug
@@ -161,7 +157,7 @@ export async function getConcertsByBand(
     orderBy: { date: "desc" },
   })
 
-  return concerts.map(transformConcert)
+  return Promise.all(concerts.map(transformConcert))
 }
 
 // Get concerts by year
@@ -189,15 +185,14 @@ export async function getConcertsByYear(
     orderBy: { date: "desc" },
   })
 
-  return concerts.map(transformConcert)
+  return Promise.all(concerts.map(transformConcert))
 }
 
-// Get concerts by city
+// Get concerts by city (city derived from reverse geocoding)
 export async function getConcertsByCity(
   cityName: string
 ): Promise<TransformedConcert[]> {
   const concerts = await prisma.concert.findMany({
-    where: { city: cityName },
     include: {
       bands: {
         include: { band: true },
@@ -208,7 +203,10 @@ export async function getConcertsByCity(
     orderBy: { date: "desc" },
   })
 
-  return concerts.map(transformConcert)
+  const transformed = await Promise.all(concerts.map(transformConcert))
+  return transformed.filter(
+    (c) => c.fields.geocoderAddressFields?._normalized_city === cityName
+  )
 }
 
 // Get all unique years
@@ -251,8 +249,7 @@ export interface CreateConcertInput {
   date: Date
   latitude: number
   longitude: number
-  city?: string
-  club?: string
+  venue: string
   isFestival?: boolean
   festivalId?: string
   bandIds: { bandId: string; isHeadliner?: boolean }[]
@@ -267,8 +264,7 @@ export async function createConcert(
       date: input.date,
       latitude: input.latitude,
       longitude: input.longitude,
-      city: input.city,
-      club: input.club,
+      venue: input.venue,
       isFestival: input.isFestival || false,
       festivalId: input.festivalId,
       bands: {
@@ -288,15 +284,14 @@ export async function createConcert(
     },
   })
 
-  return transformConcert(concert)
+  return await transformConcert(concert)
 }
 
 export interface UpdateConcertInput {
   date?: Date
   latitude?: number
   longitude?: number
-  city?: string
-  club?: string
+  venue?: string
   isFestival?: boolean
   festivalId?: string | null
   bandIds?: { bandId: string; isHeadliner?: boolean }[]
@@ -329,8 +324,7 @@ export async function updateConcert(
       date: input.date,
       latitude: input.latitude,
       longitude: input.longitude,
-      city: input.city,
-      club: input.club,
+      venue: input.venue,
       isFestival: input.isFestival,
       festivalId: input.festivalId,
       ...(input.bandIds && {
@@ -352,7 +346,7 @@ export async function updateConcert(
     },
   })
 
-  return transformConcert(concert)
+  return await transformConcert(concert)
 }
 
 export async function deleteConcert(
@@ -389,7 +383,7 @@ export async function getConcertById(
   })
 
   if (!concert) return null
-  return transformConcert(concert)
+  return await transformConcert(concert)
 }
 
 // ============================================
@@ -484,7 +478,7 @@ export async function getConcertsPaginated(
     : concerts
 
   return {
-    items: items.map(transformConcert),
+    items: await Promise.all(items.map(transformConcert)),
     nextCursor:
       direction === "forward" && hasExtra
         ? items[items.length - 1].id

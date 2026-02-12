@@ -75,8 +75,18 @@
     padding: 0 1em 1em 0;
     gap: 1rem;
 
+    .venue {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .city {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
     .club {
-      font-weight: bold;
+      font-weight: bold;  // Keep for backward compat
     }
   }
 }

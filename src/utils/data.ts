@@ -220,7 +220,7 @@ async function fetchPhotonReverseGeocodingQueued(lat: number, lon: number): Prom
 /**
  * Fetch geocoding data for a location
  */
-async function getGeocodingData(lat: number, lon: number): Promise<GeocodingData> {
+export async function getGeocodingData(lat: number, lon: number): Promise<GeocodingData> {
   // Check feature flag first - if disabled, return coordinates as string
   if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_GEOCODING, true)) {
     return {
