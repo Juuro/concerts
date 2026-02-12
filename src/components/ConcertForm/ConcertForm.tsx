@@ -25,8 +25,6 @@ interface ConcertFormProps {
     latitude: number
     longitude: number
     venue?: string | null
-    city?: string | null  // Keep for backward compat during migration
-    club?: string | null  // Keep for backward compat during migration
     isFestival: boolean
     festivalId?: string | null
     bands: { bandId: string; name: string; isHeadliner?: boolean }[]
@@ -41,9 +39,7 @@ export default function ConcertForm({ concert, mode }: ConcertFormProps) {
 
   // Form state
   const [date, setDate] = useState(concert?.date?.split("T")[0] || "")
-  const [venue, setVenue] = useState(
-    concert?.venue || concert?.club || concert?.city || ""
-  )
+  const [venue, setVenue] = useState(concert?.venue || "")
   const [latitude, setLatitude] = useState<number | undefined>(
     concert?.latitude
   )

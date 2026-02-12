@@ -32,8 +32,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Transform concerts to match expected format
   const concertsFormatted = paginatedConcerts.items.map((concert) => ({
     ...concert,
-    club: concert.club ?? undefined,
-    city: concert.city,
     bands: concert.bands.map((b) => ({
       id: b.id,
       name: b.name,

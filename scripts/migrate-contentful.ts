@@ -247,7 +247,7 @@ async function migrateConcerts(
           date: new Date(fields.date),
           latitude: fields.city.lat,
           longitude: fields.city.lon,
-          club: fields.club,
+          venue: fields.club,
           isFestival: fields.isFestival || false,
           festivalId,
         },

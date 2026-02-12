@@ -20,7 +20,6 @@ export default async function MapPage() {
   // Transform for map
   const concertsFormatted = concerts.map((c) => ({
     ...c,
-    club: c.club ?? undefined,
     bands: c.bands.map((b) => ({
       id: b.id,
       name: b.name,

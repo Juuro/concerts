@@ -97,7 +97,7 @@ export default function MapClient({ concerts }: MapClientProps) {
             tileSize: 512,
             zoomOffset: -1,
             accessToken:
-              'pk.eyJ1IjoianV1cm8iLCJhIjoiY2tkaGdoNzk0MDJ1YTJzb2V4anZ3NXk4bSJ9.1m7LQQaTf2W4R-IgKKGZCQ',
+              process.env.NEXT_PUBLIC_MAPBOX_TOKEN!,
           };
 
           Leaflet.tileLayer(
@@ -111,7 +111,7 @@ export default function MapClient({ concerts }: MapClientProps) {
               icon: icon,
             });
             marker.bindPopup(
-              `<strong>${getName(concert)}</strong><br />${concert.club || ''} am ${getDate(
+              `<strong>${getName(concert)}</strong><br />${concert.venue || ''} am ${getDate(
                 concert.date
               )}`
             );

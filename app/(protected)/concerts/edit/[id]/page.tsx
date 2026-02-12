@@ -56,8 +56,6 @@ export default async function EditConcertPage({
           date: concert.date.toISOString(),
           latitude: concert.latitude,
           longitude: concert.longitude,
-          city: concert.city,
-          club: concert.club,
           isFestival: concert.isFestival,
           festivalId: concert.festivalId,
           bands: concert.bands.map((cb) => ({

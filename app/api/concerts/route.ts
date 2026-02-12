@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get("userId") ?? undefined
   const username = searchParams.get("username") ?? undefined
   const bandSlug = searchParams.get("bandSlug") ?? undefined
-  const city = searchParams.get("city") ?? undefined
   const yearParam = searchParams.get("year")
   const year = yearParam ? parseInt(yearParam, 10) : undefined
 
@@ -72,14 +71,15 @@ export async function GET(request: NextRequest) {
     filters.bandSlug = bandSlug
   }
 
-  // Handle city filter
-  if (city) {
-    filters.city = city
-  }
-
   // Handle year filter
   if (year) {
     filters.year = year
+  }
+
+  // Handle city filter
+  const city = searchParams.get("city") ?? undefined
+  if (city) {
+    filters.city = city
   }
 
   // Fetch paginated results with filters

@@ -8,8 +8,8 @@ import {
   getConcertsPaginated,
   getConcertCounts,
 } from "@/lib/concerts"
-import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import { prisma } from "@/lib/prisma"
+import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -51,25 +51,16 @@ export default async function CityPage({
     notFound()
   }
 
-  const [concertCounts, initialData] = await Promise.all([
+  const now = new Date()
+
+  const [concertCounts, initialData, pastCount, futureCount] = await Promise.all([
     getConcertCounts(),
     getConcertsPaginated(cursor, 20, "forward", { city: cityName }),
-  ])
-
-  // Calculate past/future counts for this city's concerts
-  const now = new Date()
-  const [pastCount, futureCount] = await Promise.all([
     prisma.concert.count({
-      where: {
-        city: cityName,
-        date: { lt: now },
-      },
+      where: { normalizedCity: cityName, date: { lt: now } },
     }),
     prisma.concert.count({
-      where: {
-        city: cityName,
-        date: { gte: now },
-      },
+      where: { normalizedCity: cityName, date: { gte: now } },
     }),
   ])
 

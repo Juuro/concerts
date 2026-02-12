@@ -1,6 +1,7 @@
 import contentfulClient from "./contentful";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { unstable_cache } from "next/cache";
 import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags";
 import { getConcertFields, getBandFields, getFestivalFields, getCity } from "./contentfulHelpers";
 import type { Concert, Band, SiteMetadata, ConcertsFormatted } from "../types/concert";
@@ -218,9 +219,9 @@ async function fetchPhotonReverseGeocodingQueued(lat: number, lon: number): Prom
 }
 
 /**
- * Fetch geocoding data for a location
+ * Fetch geocoding data for a location (uncached version)
  */
-export async function getGeocodingData(lat: number, lon: number): Promise<GeocodingData> {
+export async function getGeocodingDataUncached(lat: number, lon: number): Promise<GeocodingData> {
   // Check feature flag first - if disabled, return coordinates as string
   if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_GEOCODING, true)) {
     return {
@@ -247,6 +248,17 @@ export async function getGeocodingData(lat: number, lon: number): Promise<Geocod
     _is_coordinates: true,
   };
 }
+
+/**
+ * Fetch geocoding data for a location (cached via Next.js unstable_cache)
+ */
+export const getGeocodingData = unstable_cache(
+  async (lat: number, lon: number): Promise<GeocodingData> => {
+    return getGeocodingDataUncached(lat, lon);
+  },
+  ["geocoding"],
+  { revalidate: 604800 }
+);
 
 /**
  * Transform Contentful concert entry to match expected format
@@ -294,7 +306,7 @@ async function transformConcert(entry: ContentfulConcertEntry): Promise<Concert>
     id: entry.sys.id,
     date: fields.date,
     city: city,
-    club: fields.club,
+    venue: fields.club,
     bands: bandsFormatted,
     isFestival: fields.isFestival || false,
     festival: festival,

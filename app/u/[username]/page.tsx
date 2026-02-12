@@ -64,7 +64,7 @@ export default async function PublicProfilePage({
   )
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, uniqueCitiesData, uniqueYearsData] = await Promise.all([
+  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData] = await Promise.all([
     prisma.concert.count({
       where: { userId: user.id }
     }),
@@ -72,12 +72,10 @@ export default async function PublicProfilePage({
       by: ['bandId'],
       where: { concert: { userId: user.id } }
     }),
-    prisma.concert.groupBy({
-      by: ['city'],
-      where: {
-        userId: user.id,
-        city: { not: null }
-      }
+    prisma.concert.findMany({
+      where: { userId: user.id, normalizedCity: { not: null } },
+      select: { normalizedCity: true },
+      distinct: ["normalizedCity"],
     }),
     prisma.concert.findMany({
       where: { userId: user.id },
@@ -86,7 +84,7 @@ export default async function PublicProfilePage({
   ])
 
   const uniqueBands = uniqueBandsData.length
-  const uniqueCities = uniqueCitiesData.length
+  const uniqueCities = userConcertCoords.length
   const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
 
   return (
