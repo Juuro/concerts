@@ -651,3 +651,133 @@ export const getConcertStatistics = unstable_cache(
   ["concert-statistics"],
   { revalidate: 3600, tags: ["concert-statistics"] }
 )
+
+// ============================================
+// Per-user statistics
+// ============================================
+
+async function computeUserConcertStatistics(
+  userId: string
+): Promise<ConcertStatistics> {
+  const now = new Date()
+
+  const [yearStats, cityStats, bandStats, pastCount, futureCount] =
+    await Promise.all([
+      prisma.concert
+        .groupBy({
+          by: ["date"],
+          where: { userId, date: { lt: now } },
+          _count: true,
+        })
+        .then((results) => {
+          const yearMap = new Map<string, number>()
+          for (const r of results) {
+            const year = r.date.getFullYear().toString()
+            yearMap.set(year, (yearMap.get(year) || 0) + r._count)
+          }
+          return Array.from(yearMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(
+              ([year, count]) => [year, count, year] as [string, number, string]
+            )
+        }),
+
+      prisma.concert
+        .groupBy({
+          by: ["normalizedCity"],
+          where: { userId, date: { lt: now }, normalizedCity: { not: null } },
+          _count: true,
+          orderBy: { _count: { normalizedCity: "desc" } },
+          take: 5,
+        })
+        .then((results) =>
+          results.map(
+            (r) =>
+              [r.normalizedCity!, r._count, cityToSlug(r.normalizedCity!)] as [
+                string,
+                number,
+                string,
+              ]
+          )
+        ),
+
+      prisma.concertBand
+        .groupBy({
+          by: ["bandId"],
+          where: { concert: { userId } },
+          _count: true,
+          orderBy: { _count: { bandId: "desc" } },
+          take: 10,
+        })
+        .then(async (results) => {
+          const bandIds = results.map((r) => r.bandId)
+          const bands = await prisma.band.findMany({
+            where: { id: { in: bandIds } },
+            select: { id: true, name: true, slug: true },
+          })
+
+          const bandCounts = await Promise.all(
+            bandIds.map(async (bandId) => {
+              const count = await prisma.concertBand.count({
+                where: {
+                  bandId,
+                  concert: { userId, date: { lt: now } },
+                },
+              })
+              const band = bands.find((b) => b.id === bandId)
+              return band ? { ...band, count } : null
+            })
+          )
+
+          return bandCounts
+            .filter(
+              (b): b is NonNullable<typeof b> => b !== null && b.count > 0
+            )
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+            .map((b) => [b.name, b.count, b.slug] as [string, number, string])
+        }),
+
+      prisma.concert.count({ where: { userId, date: { lt: now } } }),
+      prisma.concert.count({ where: { userId, date: { gte: now } } }),
+    ])
+
+  return {
+    yearCounts: yearStats,
+    cityCounts: cityStats,
+    mostSeenBands: bandStats,
+    maxYearCount: yearStats[0]?.[1] ?? 0,
+    maxCityCount: cityStats[0]?.[1] ?? 0,
+    maxBandCount: bandStats[0]?.[1] ?? 0,
+    totalPast: pastCount,
+    totalFuture: futureCount,
+  }
+}
+
+export const getUserConcertStatistics = unstable_cache(
+  async (userId: string) => computeUserConcertStatistics(userId),
+  ["user-concert-statistics"],
+  { revalidate: 3600, tags: ["user-concert-statistics"] }
+)
+
+export async function getUserConcertCounts(
+  userId: string
+): Promise<ConcertCounts> {
+  const now = new Date()
+  const [past, future] = await Promise.all([
+    prisma.concert.count({ where: { userId, date: { lt: now } } }),
+    prisma.concert.count({ where: { userId, date: { gte: now } } }),
+  ])
+  return { past, future }
+}
+
+export async function getGlobalAppStats() {
+  const now = new Date()
+  const [concertCount, bandCount, userCount] = await Promise.all([
+    prisma.concert.count({ where: { date: { lt: now } } }),
+    prisma.band.count(),
+    prisma.user.count({ where: { isPublic: true } }),
+  ])
+  return { concertCount, bandCount, userCount }
+}

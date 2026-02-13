@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getConcertsPaginated } from "@/lib/concerts"
+import { getConcertsPaginated, getUserConcertStatistics, getUserConcertCounts } from "@/lib/concerts"
 import Header from "@/components/Header/header"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
+import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"
+import ConcertCount from "@/components/ConcertCount/concertCount"
 import "./profile.scss"
 import Image from "next/image"
 
@@ -64,7 +66,7 @@ export default async function PublicProfilePage({
   )
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData] = await Promise.all([
+  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts] = await Promise.all([
     prisma.concert.count({
       where: { userId: user.id }
     }),
@@ -80,7 +82,9 @@ export default async function PublicProfilePage({
     prisma.concert.findMany({
       where: { userId: user.id },
       select: { date: true }
-    })
+    }),
+    getUserConcertStatistics(user.id),
+    getUserConcertCounts(user.id),
   ])
 
   const uniqueBands = uniqueBandsData.length
@@ -108,9 +112,12 @@ export default async function PublicProfilePage({
               <h1 className="public-profile__name">
                 {user.name || user.username}
               </h1>
+              <ConcertCount counts={userCounts} />
               <p className="public-profile__username">@{user.username}</p>
             </div>
           </div>
+
+          <StatisticsWidgetServer statistics={userStats} />
 
           <div className="public-profile__stats">
             <div className="stat-card">

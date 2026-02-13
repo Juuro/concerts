@@ -1,0 +1,101 @@
+@use "sass:color";
+@use "../src/styles/variables.scss";
+
+.home-hero {
+  padding: 4rem 1rem;
+  text-align: center;
+
+  h2 {
+    font-family: variables.$font-family-heading;
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+  }
+
+  p {
+    color: #666;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0 auto 2rem;
+    max-width: 540px;
+  }
+}
+
+.home-stats {
+  padding: 2rem 0;
+  text-align: center;
+
+  h3 {
+    color: #666;
+    font-family: variables.$font-family-heading;
+    font-size: 1.25rem;
+    font-weight: normal;
+    margin: 0 0 1.5rem;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.home-features {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding: 2rem 0;
+
+  &__card {
+    padding: 1.5rem;
+    text-align: center;
+
+    h4 {
+      font-family: variables.$font-family-heading;
+      margin: 0 0 0.5rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+}
+
+.home-cta {
+  padding: 3rem 1rem;
+  text-align: center;
+
+  h3 {
+    font-family: variables.$font-family-heading;
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    color: #666;
+    margin: 0 0 1.5rem;
+  }
+}
+
+.home-btn {
+  background-color: variables.$color-primary;
+  border: none;
+  border-radius: 8px;
+  color: variables.$color-white;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.75rem 2rem;
+  text-decoration: none;
+  transition: background-color variables.$transition-duration ease-out;
+
+  &:hover {
+    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
+    color: variables.$color-white;
+  }
+}
