@@ -23,7 +23,6 @@ const Header: React.FC<HeaderProps> = ({ siteTitle = "", concertCounts }) => (
 
       <nav>
         <Link href="/">Home</Link>
-        <Link href="/map">Map</Link>
         <HeaderAuth />
       </nav>
     </div>

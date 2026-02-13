@@ -40,6 +40,28 @@
     right: 0;
     top: calc(100% + 8px);
     z-index: 100;
+
+    // Closed state
+    opacity: 0;
+    transform: translateY(-4px);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 100ms variables.$transition-easing-accelerate,
+      transform 100ms variables.$transition-easing-accelerate,
+      visibility 0ms linear 100ms;
+
+    // Open state
+    &--open {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 150ms variables.$transition-easing-decelerate,
+        transform 150ms variables.$transition-easing-decelerate,
+        visibility 0ms linear 0ms;
+    }
   }
 
   &__info {
@@ -73,6 +95,7 @@
     display: block;
     font-family: variables.$font-family-text;
     font-size: 1rem;
+    font-weight: normal;
     padding: 0.75rem 1rem;
     text-align: left;
     text-decoration: none;

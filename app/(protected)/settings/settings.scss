@@ -1,8 +1,15 @@
 @use "../../../src/styles/variables.scss";
+@use "../../../src/styles/buttons.scss" as buttons;
+
+@keyframes copy-pulse {
+  50% {
+    transform: scale(1.08);
+  }
+}
 
 .settings {
   padding: 2rem 1rem;
-  max-width: 600px;
+  width: 100%;
 
   h1 {
     font-family: variables.$font-family-heading;
@@ -19,6 +26,8 @@
     background-color: variables.$color-white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 600px;
+    margin: 0 auto;
     padding: 2rem;
   }
 
@@ -102,6 +111,100 @@
     margin-top: 0.375rem;
   }
 
+  &__url-display {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows variables.$transition-duration variables.$transition-easing-accelerate,
+      opacity variables.$transition-duration variables.$transition-easing-accelerate;
+
+    &--visible {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      transition:
+        grid-template-rows variables.$transition-duration variables.$transition-easing-decelerate,
+        opacity variables.$transition-duration variables.$transition-easing-decelerate;
+    }
+  }
+
+  &__url-display-inner {
+    border-left: 3px solid variables.$color-primary;
+    margin-top: 0.75rem;
+    overflow: hidden;
+    padding: 0.5rem 0 0.5rem 1rem;
+  }
+
+  &__url-label {
+    color: #666;
+    display: block;
+    font-size: 0.75rem;
+    margin-bottom: 0.375rem;
+  }
+
+  &__url-row {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__url-link {
+    color: variables.$color-primary;
+    font-family: monospace;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__url-placeholder {
+    color: #999;
+    font-family: monospace;
+    font-size: 0.9375rem;
+
+    em {
+      font-style: italic;
+    }
+  }
+
+  &__url-warning {
+    color: #999;
+    font-size: 0.8125rem;
+  }
+
+  &__url-copy {
+    background: variables.$color-white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    color: #555;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: variables.$font-family-text;
+    font-size: 0.8125rem;
+    margin-left: auto;
+    padding: 0.375rem 0.75rem;
+    transition: all variables.$transition-duration ease;
+
+    &:hover:not(:disabled) {
+      background: #eee;
+      border-color: #ccc;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &--copied {
+      animation: copy-pulse variables.$transition-duration variables.$transition-easing-decelerate;
+      border-color: #28a745;
+      color: #28a745;
+    }
+  }
+
   &__checkbox {
     label {
       align-items: center;
@@ -118,29 +221,13 @@
   }
 
   &__actions {
-    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
     margin-top: 2rem;
     padding-top: 1.5rem;
 
     button {
-      background-color: variables.$color-primary;
-      border: none;
-      border-radius: 8px;
-      color: variables.$color-white;
-      cursor: pointer;
-      font-family: variables.$font-family-text;
-      font-size: 1rem;
-      padding: 0.75rem 1.5rem;
-      transition: background-color variables.$transition-duration ease;
-
-      &:hover:not(:disabled) {
-        background-color: darken(variables.$color-primary, 10%);
-      }
-
-      &:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-      }
+      @include buttons.btn-primary;
     }
   }
 }

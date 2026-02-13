@@ -41,6 +41,8 @@ export default function UserMenu() {
           <Image
             src={session.user.image}
             alt={session.user.name || "User"}
+            width={36}
+            height={36}
             className="user-menu__avatar"
           />
         ) : (
@@ -50,38 +52,29 @@ export default function UserMenu() {
         )}
       </button>
 
-      {isOpen && (
-        <div className="user-menu__dropdown">
-          <div className="user-menu__info">
-            <span className="user-menu__name">
-              {session.user.name || "User"}
-            </span>
-            <span className="user-menu__email">{session.user.email}</span>
-          </div>
-          <hr className="user-menu__divider" />
-          <Link
-            href="/dashboard"
-            className="user-menu__item"
-            onClick={() => setIsOpen(false)}
-          >
-            My Concerts
-          </Link>
-          <Link
-            href="/settings"
-            className="user-menu__item"
-            onClick={() => setIsOpen(false)}
-          >
-            Settings
-          </Link>
-          <hr className="user-menu__divider" />
-          <button
-            className="user-menu__item user-menu__item--danger"
-            onClick={handleSignOut}
-          >
-            Sign Out
-          </button>
+      <div className={`user-menu__dropdown ${isOpen ? "user-menu__dropdown--open" : ""}`}>
+        <div className="user-menu__info">
+          <span className="user-menu__name">
+            {session.user.name || "User"}
+          </span>
+          <span className="user-menu__email">{session.user.email}</span>
         </div>
-      )}
+        <hr className="user-menu__divider" />
+        <Link
+          href="/settings"
+          className="user-menu__item"
+          onClick={() => setIsOpen(false)}
+        >
+          Settings
+        </Link>
+        <hr className="user-menu__divider" />
+        <button
+          className="user-menu__item user-menu__item--danger"
+          onClick={handleSignOut}
+        >
+          Sign Out
+        </button>
+      </div>
     </div>
   )
 }

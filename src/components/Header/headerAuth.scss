@@ -1,4 +1,5 @@
 @use "../../styles/variables.scss";
+@use "../../styles/buttons.scss" as buttons;
 
 .header-auth {
   align-items: center;
@@ -21,16 +22,9 @@
   }
 
   &__login {
-    background-color: variables.$color-primary;
+    @include buttons.btn-primary;
     border-radius: 6px;
-    color: variables.$color-white;
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
-    text-decoration: none;
-    transition: background-color variables.$transition-duration ease;
-
-    &:hover {
-      background-color: darken(variables.$color-primary, 10%);
-    }
   }
 }

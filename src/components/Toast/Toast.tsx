@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import "./toast.scss"
 
 export interface ToastProps {
@@ -22,26 +22,30 @@ const Toast: React.FC<ToastProps> = ({
   onClose,
 }) => {
   const [isVisible, setIsVisible] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
+
+  const triggerClose = useCallback(() => {
+    if (isExiting) return
+    setIsExiting(true)
+    setTimeout(() => {
+      setIsVisible(false)
+      onClose?.()
+    }, 200)
+  }, [isExiting, onClose])
 
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
-        setIsVisible(false)
-        onClose?.()
+        triggerClose()
       }, duration)
       return () => clearTimeout(timer)
     }
-  }, [duration, onClose])
-
-  const handleClose = () => {
-    setIsVisible(false)
-    onClose?.()
-  }
+  }, [duration, triggerClose])
 
   if (!isVisible) return null
 
   return (
-    <div className={`toast toast--${type}`} role="alert">
+    <div className={`toast toast--${type} ${isExiting ? "toast--exiting" : ""}`} role="alert">
       <span className="toast__message">{message}</span>
       <div className="toast__actions">
         {action && (
@@ -50,7 +54,7 @@ const Toast: React.FC<ToastProps> = ({
             className="toast__action-btn"
             onClick={() => {
               action.onClick()
-              handleClose()
+              triggerClose()
             }}
           >
             {action.label}
@@ -59,7 +63,7 @@ const Toast: React.FC<ToastProps> = ({
         <button
           type="button"
           className="toast__close-btn"
-          onClick={handleClose}
+          onClick={triggerClose}
           aria-label="Close"
         >
           ×

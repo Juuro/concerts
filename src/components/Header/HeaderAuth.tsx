@@ -22,6 +22,9 @@ export default function HeaderAuth() {
 
   return (
     <div className="header-auth">
+      <Link href="/map" className="header-auth__link">
+        Map
+      </Link>
       <Link href="/dashboard" className="header-auth__link">
         My Concerts
       </Link>

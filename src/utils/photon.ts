@@ -102,18 +102,46 @@ async function fetchPhotonSearch(
     url.searchParams.set("osm_tag", params.osm_tag)
   }
 
-  // Fetch results
-  const res = await fetch(url.toString(), {
-    method: "GET",
-    headers: { Accept: "application/json" },
-  })
+  // Fetch results with timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+  let res: Response
+  try {
+    res = await fetch(url.toString(), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+  } catch (error) {
+    console.error(`Photon fetch failed for ${url.toString()}:`, error)
+    return []
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!res.ok) {
-    console.error(`Photon search failed: ${res.status}`)
+    console.error(
+      `Photon search failed: ${res.status} ${res.statusText} for ${url.toString()}`
+    )
     return []
   }
 
-  const json = (await res.json()) as PhotonSearchResponse
+  let json: PhotonSearchResponse
+  try {
+    json = (await res.json()) as PhotonSearchResponse
+  } catch (parseError) {
+    console.error(
+      `Failed to parse Photon response for ${url.toString()}:`,
+      parseError
+    )
+    return []
+  }
+
+  if (!json.features || !Array.isArray(json.features)) {
+    console.error(`Photon response missing features array for ${url.toString()}`)
+    return []
+  }
 
   // Transform features to search results
   return json.features.map((feature) => {

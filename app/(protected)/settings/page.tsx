@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useSession } from "@/lib/auth-client"
 import "./settings.scss"
 
@@ -15,6 +16,7 @@ export default function SettingsPage() {
     type: "success" | "error"
     text: string
   } | null>(null)
+  const [copied, setCopied] = useState(false)
 
   if (isPending) {
     return (
@@ -102,9 +104,6 @@ export default function SettingsPage() {
               pattern="[a-z0-9-]+"
               title="Only lowercase letters, numbers, and hyphens allowed"
             />
-            <span className="settings__hint">
-              Your public profile URL will be: /u/{username || "username"}
-            </span>
           </div>
         </div>
 
@@ -124,6 +123,39 @@ export default function SettingsPage() {
               When enabled, others can view your concert history at your public
               profile URL
             </span>
+          </div>
+
+          <div className={`settings__url-display ${isPublic ? "settings__url-display--visible" : ""}`}>
+            <div className="settings__url-display-inner">
+              {username ? (
+                <>
+                  <span className="settings__url-label">Your public profile URL:</span>
+                  <div className="settings__url-row">
+                    <Link href={`/u/${username}`} className="settings__url-link">
+                      /u/{username}
+                    </Link>
+                    <button
+                      type="button"
+                      className={`settings__url-copy ${copied ? "settings__url-copy--copied" : ""}`}
+                      onClick={() => {
+                        navigator.clipboard
+                          .writeText(`${window.location.origin}/u/${username}`)
+                          .then(() => {
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 2000)
+                          })
+                      }}
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span className="settings__url-warning">
+                  Set a username above to get a public profile URL.
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

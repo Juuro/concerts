@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getConcertsPaginated, getUserConcertStatistics, getUserConcertCounts } from "@/lib/concerts"
+import { getConcertsPaginated, getUserConcerts, getUserConcertStatistics, getUserConcertCounts } from "@/lib/concerts"
 import Header from "@/components/Header/header"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"
+import StatCard from "@/components/StatCard/StatCard"
 import ConcertCount from "@/components/ConcertCount/concertCount"
+import MapClient from "@/components/MapClient"
 import "./profile.scss"
 import Image from "next/image"
 
@@ -66,7 +68,7 @@ export default async function PublicProfilePage({
   )
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts] = await Promise.all([
+  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
     prisma.concert.count({
       where: { userId: user.id }
     }),
@@ -85,11 +87,30 @@ export default async function PublicProfilePage({
     }),
     getUserConcertStatistics(user.id),
     getUserConcertCounts(user.id),
+    getUserConcerts(user.id),
   ])
 
   const uniqueBands = uniqueBandsData.length
   const uniqueCities = userConcertCoords.length
   const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
+
+  const concertsForMap = allUserConcerts.map((c) => ({
+    ...c,
+    bands: c.bands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      url: b.url,
+    })),
+    festival: c.festival
+      ? {
+          fields: {
+            name: c.festival.fields.name,
+            url: c.festival.fields.url ?? undefined,
+          },
+        }
+      : null,
+  }))
 
   return (
     <>
@@ -102,6 +123,8 @@ export default async function PublicProfilePage({
                 src={user.image}
                 alt={user.name || user.username || ""}
                 className="public-profile__avatar"
+                width={80}
+                height={80}
               />
             ) : (
               <div className="public-profile__avatar public-profile__avatar--placeholder">
@@ -111,32 +134,27 @@ export default async function PublicProfilePage({
             <div>
               <h1 className="public-profile__name">
                 {user.name || user.username}
+                <ConcertCount counts={userCounts} />
               </h1>
-              <ConcertCount counts={userCounts} />
               <p className="public-profile__username">@{user.username}</p>
             </div>
           </div>
 
-          <StatisticsWidgetServer statistics={userStats} />
+          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
           <div className="public-profile__stats">
-            <div className="stat-card">
-              <span className="stat-card__value">{totalConcerts}</span>
-              <span className="stat-card__label">Concerts</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card__value">{uniqueBands}</span>
-              <span className="stat-card__label">Bands</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card__value">{uniqueCities}</span>
-              <span className="stat-card__label">Cities</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card__value">{years.size}</span>
-              <span className="stat-card__label">Years</span>
-            </div>
+            <StatCard value={totalConcerts} label="Concerts" />
+            <StatCard value={uniqueBands} label="Bands" />
+            <StatCard value={uniqueCities} label="Cities" />
+            <StatCard value={years.size} label="Years" />
           </div>
+
+          {concertsForMap.length > 0 && (
+            <div className="public-profile__map">
+              <h2 className="public-profile__section-title">Concert Map</h2>
+              <MapClient concerts={concertsForMap} allowFullscreen />
+            </div>
+          )}
 
           {initialData.items.length === 0 && !cursor ? (
             <div className="public-profile__empty">

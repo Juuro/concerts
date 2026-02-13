@@ -11,12 +11,14 @@ interface ConcertCardProps {
   concert: TransformedConcert
   showEditButton?: boolean
   currentUserId?: string
+  animated?: boolean
 }
 
 const ConcertCard: React.FC<ConcertCardProps> = ({
   concert,
   showEditButton = false,
-  currentUserId
+  currentUserId,
+  animated = false,
 }) => {
   const heading = () => {
     if (concert.isFestival) {
@@ -84,7 +86,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
   }
 
   return (
-    <li className={`concert-card card ${isInTheFuture()}`}>
+    <li className={`concert-card card ${isInTheFuture()} ${animated ? "concert-card--animated" : ""}`}>
       <div className="concert-card-image" aria-hidden="true">
         {getImageSrc() ? (
           <Image

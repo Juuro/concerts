@@ -1,8 +1,8 @@
-@use "sass:color";
 @use "../src/styles/variables.scss";
+@use "../src/styles/buttons.scss" as buttons;
 
 .home-hero {
-  padding: 4rem 1rem;
+  padding: 3rem 1rem;
   text-align: center;
 
   h2 {
@@ -36,7 +36,7 @@
   &__grid {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     max-width: 600px;
     margin: 0 auto;
   }
@@ -45,7 +45,7 @@
 .home-features {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   padding: 2rem 0;
 
   &__card {
@@ -64,10 +64,16 @@
       margin: 0;
     }
   }
+
+  &__icon {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
 }
 
 .home-cta {
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
   text-align: center;
 
   h3 {
@@ -82,20 +88,16 @@
 }
 
 .home-btn {
-  background-color: variables.$color-primary;
-  border: none;
-  border-radius: 8px;
-  color: variables.$color-white;
-  cursor: pointer;
+  @include buttons.btn-primary;
   display: inline-block;
   font-size: 1.1rem;
   font-weight: bold;
   padding: 0.75rem 2rem;
-  text-decoration: none;
-  transition: background-color variables.$transition-duration ease-out;
+}
 
-  &:hover {
-    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
-    color: variables.$color-white;
+@media screen and (max-width: 680px) {
+  .home-stats__grid,
+  .home-features {
+    grid-template-columns: 1fr;
   }
 }

@@ -2,6 +2,8 @@ import React from "react"
 import Link from "next/link"
 import Layout from "../src/components/layout-client"
 import StatisticsWidgetServer from "../src/components/StatisticsWidget/StatisticsWidgetServer"
+import StatCard from "@/components/StatCard/StatCard"
+import FeatureCard from "@/components/FeatureCard/FeatureCard"
 import { ConcertListInfinite } from "../src/components/ConcertList"
 import {
   getConcertsPaginated,
@@ -86,25 +88,13 @@ async function LoggedInHome({
       <main>
         <div className="container">
           <div className="public-profile">
-            <StatisticsWidgetServer statistics={userStats} />
+            {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
             <div className="public-profile__stats">
-              <div className="stat-card">
-                <span className="stat-card__value">{totalConcerts}</span>
-                <span className="stat-card__label">Concerts</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__value">{uniqueBands}</span>
-                <span className="stat-card__label">Bands</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__value">{uniqueCities}</span>
-                <span className="stat-card__label">Cities</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__value">{years.size}</span>
-                <span className="stat-card__label">Years</span>
-              </div>
+              <StatCard value={totalConcerts} label="Concerts" />
+              <StatCard value={uniqueBands} label="Bands" />
+              <StatCard value={uniqueCities} label="Cities" />
+              <StatCard value={years.size} label="Years" />
             </div>
 
             {initialData.items.length === 0 && !cursor ? (
@@ -153,49 +143,34 @@ async function LandingPage() {
           <section className="home-stats">
             <h3>Join the community</h3>
             <div className="home-stats__grid">
-              <div className="stat-card">
-                <span className="stat-card__value">
-                  {stats.concertCount.toLocaleString()}
-                </span>
-                <span className="stat-card__label">Concerts tracked</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__value">
-                  {stats.bandCount.toLocaleString()}
-                </span>
-                <span className="stat-card__label">Bands</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__value">
-                  {stats.userCount.toLocaleString()}
-                </span>
-                <span className="stat-card__label">Music fans</span>
-              </div>
+              <StatCard value={stats.concertCount.toLocaleString()} label="Concerts tracked" />
+              <StatCard value={stats.bandCount.toLocaleString()} label="Bands" />
+              <StatCard value={stats.userCount.toLocaleString()} label="Music fans" />
             </div>
           </section>
 
           <section className="home-features">
-            <div className="home-features__card card">
-              <h4>Track every show</h4>
-              <p>
-                Log concerts with dates, venues, cities, and lineups. Build your
-                complete concert history.
-              </p>
-            </div>
-            <div className="home-features__card card">
-              <h4>Discover patterns</h4>
-              <p>
-                See your top bands, favorite cities, and busiest years with
-                beautiful charts and statistics.
-              </p>
-            </div>
-            <div className="home-features__card card">
-              <h4>Map your journey</h4>
-              <p>
-                Visualize all your concerts on an interactive map. See how far
-                your music has taken you.
-              </p>
-            </div>
+            <FeatureCard
+              icon="🎶"
+              title="Track every show"
+              description="Log concerts with dates, venues, cities, and lineups. Build your complete concert history."
+              iconClassName="home-features__icon"
+              cardClassName="home-features__card"
+            />
+            <FeatureCard
+              icon="📊"
+              title="Discover patterns"
+              description="See your top bands, favorite cities, and busiest years with beautiful charts and statistics."
+              iconClassName="home-features__icon"
+              cardClassName="home-features__card"
+            />
+            <FeatureCard
+              icon="🌍"
+              title="Map your journey"
+              description="Visualize all your concerts on an interactive map. See how far your music has taken you."
+              iconClassName="home-features__icon"
+              cardClassName="home-features__card"
+            />
           </section>
 
           <section className="home-cta">

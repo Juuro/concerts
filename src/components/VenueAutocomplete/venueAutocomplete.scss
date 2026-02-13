@@ -1,3 +1,12 @@
+@use "../../styles/variables.scss";
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 .venue-autocomplete {
   position: relative;
   width: 100%;
@@ -65,6 +74,7 @@
   }
 
   &__dropdown {
+    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate both;
     position: absolute;
     top: calc(100% + 0.25rem);
     left: 0;

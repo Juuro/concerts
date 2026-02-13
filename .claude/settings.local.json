@@ -6,7 +6,19 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
-      "Bash(yarn lint:*)"
+      "Bash(yarn lint:*)",
+      "Bash(yarn:*)",
+      "mcp__design-systems__search_design_knowledge",
+      "mcp__design-systems__search_chunks",
+      "WebFetch(domain:tr.designtokens.org)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(xargs:*)",
+      "Bash(find:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7"
+  ]
 }

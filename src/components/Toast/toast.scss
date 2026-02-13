@@ -78,6 +78,10 @@
       color: #333;
     }
   }
+
+  &--exiting {
+    animation: toast-slide-out variables.$transition-duration variables.$transition-easing-accelerate forwards;
+  }
 }
 
 @keyframes toast-slide-in {
@@ -88,5 +92,12 @@
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
   }
 }

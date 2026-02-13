@@ -43,7 +43,7 @@
   "license": "MIT",
   "scripts": {
     "build": "prisma generate && next build",
-    "dev": "next dev",
+    "dev": "prisma generate && next dev",
     "start": "next start",
     "format": "prettier --write ./src/**/*.{js,jsx,ts,tsx,scss}",
     "lint": "next lint",

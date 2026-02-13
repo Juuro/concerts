@@ -1,4 +1,19 @@
 @use "../../styles/variables.scss";
+@use "../../styles/buttons.scss" as buttons;
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes tag-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
 
 .concert-form {
   background-color: variables.$color-white;
@@ -103,6 +118,7 @@
   }
 
   &__results {
+    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate both;
     background-color: variables.$color-white;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -149,17 +165,10 @@
     }
 
     button {
-      background-color: variables.$color-primary;
-      border: none;
+      @include buttons.btn-primary;
       border-radius: 4px;
-      color: variables.$color-white;
-      cursor: pointer;
       font-size: 0.875rem;
       padding: 0.5rem 1rem;
-
-      &:hover {
-        background-color: darken(variables.$color-primary, 10%);
-      }
     }
   }
 
@@ -172,6 +181,7 @@
 
   &__band-tag {
     align-items: center;
+    animation: tag-enter 150ms variables.$transition-easing-decelerate both;
     background-color: #f0f0f0;
     border-radius: 20px;
     display: flex;
@@ -211,7 +221,6 @@
   }
 
   &__actions {
-    border-top: 1px solid #eee;
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
@@ -219,48 +228,15 @@
     padding-top: 1.5rem;
   }
 
-  &__cancel,
-  &__delete,
-  &__submit {
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: variables.$font-family-text;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    transition: all variables.$transition-duration ease;
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-  }
-
   &__cancel {
-    background-color: transparent;
-    border: 1px solid #ddd;
-    color: variables.$color-black;
-
-    &:hover:not(:disabled) {
-      background-color: #f5f5f5;
-    }
+    @include buttons.btn-secondary;
   }
 
   &__delete {
-    background-color: variables.$color-red;
-    color: variables.$color-white;
-
-    &:hover:not(:disabled) {
-      background-color: darken(variables.$color-red, 10%);
-    }
+    @include buttons.btn-danger;
   }
 
   &__submit {
-    background-color: variables.$color-primary;
-    color: variables.$color-white;
-
-    &:hover:not(:disabled) {
-      background-color: darken(variables.$color-primary, 10%);
-    }
+    @include buttons.btn-primary;
   }
 }

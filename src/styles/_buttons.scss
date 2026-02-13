@@ -1,0 +1,88 @@
+@use "sass:color";
+@use "./variables.scss";
+
+// Shared base for all button-like elements (both <button> and <a>)
+@mixin btn-base {
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: variables.$font-family-text;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  transition:
+    background-color variables.$transition-duration ease,
+    border-color variables.$transition-duration ease,
+    box-shadow variables.$transition-duration ease;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// Primary: hot pink background, white text
+@mixin btn-primary {
+  @include btn-base;
+  background-color: variables.$color-primary;
+  border: none;
+  color: variables.$color-white;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
+    color: variables.$color-white;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
+
+  &:active:not(:disabled) {
+    background-color: color.adjust(variables.$color-primary, $lightness: -15%);
+  }
+}
+
+// Secondary/Outline: transparent bg, border, dark text
+@mixin btn-secondary {
+  @include btn-base;
+  background-color: transparent;
+  border: 1px solid #ddd;
+  color: variables.$color-black;
+
+  &:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+    color: variables.$color-black;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
+
+  &:active:not(:disabled) {
+    background-color: #ebebeb;
+  }
+}
+
+// Danger: red background, white text
+@mixin btn-danger {
+  @include btn-base;
+  background-color: variables.$color-red;
+  border: none;
+  color: variables.$color-white;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust(variables.$color-red, $lightness: -10%);
+    color: variables.$color-white;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-red;
+    outline-offset: 2px;
+  }
+
+  &:active:not(:disabled) {
+    background-color: color.adjust(variables.$color-red, $lightness: -15%);
+  }
+}

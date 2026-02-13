@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import type { StaticImageData } from "next/image"
 import type { Map as LeafletMap, TileLayerOptions } from "leaflet"
 import type { Concert } from "../types/concert"
@@ -10,6 +10,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css"
 
 interface MapClientProps {
   concerts: Concert[]
+  allowFullscreen?: boolean
 }
 
 type LeafletContainer = HTMLDivElement & {
@@ -21,9 +22,23 @@ type MapboxTileLayerOptions = TileLayerOptions & {
 }
 type LeafletModule = typeof import("leaflet")
 
-export default function MapClient({ concerts }: MapClientProps) {
+export default function MapClient({ concerts, allowFullscreen }: MapClientProps) {
   const map = useRef<LeafletMap | null>(null)
   const mapElement = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev)
+  }, [])
+
+  useEffect(() => {
+    if (!map.current) return
+    // Give the CSS transition time to apply, then tell Leaflet to recalculate
+    const timeout = setTimeout(() => {
+      map.current?.invalidateSize()
+    }, 50)
+    return () => clearTimeout(timeout)
+  }, [isFullscreen])
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapElement.current) {
@@ -103,7 +118,7 @@ export default function MapClient({ concerts }: MapClientProps) {
             id: "mapbox/outdoors-v11",
             tileSize: 512,
             zoomOffset: -1,
-            accessToken: process.env.MAPBOX_TOKEN!,
+            accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN!,
           }
 
           Leaflet.tileLayer(
@@ -146,5 +161,19 @@ export default function MapClient({ concerts }: MapClientProps) {
     }
   }, [concerts]) // Include concerts in dependency array
 
-  return <div className="mapid" ref={mapElement}></div>
+  return (
+    <div className={`map-wrapper${isFullscreen ? " map-wrapper--fullscreen" : ""}`}>
+      {allowFullscreen && (
+        <button
+          type="button"
+          className="map-wrapper__fullscreen-btn"
+          onClick={toggleFullscreen}
+          aria-label={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
+        >
+          {isFullscreen ? "Close" : "Fullscreen"}
+        </button>
+      )}
+      <div className="mapid" ref={mapElement}></div>
+    </div>
+  )
 }
