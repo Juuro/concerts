@@ -1,6 +1,12 @@
 @use "sass:color";
 @use "../../styles/variables.scss";
 
+@keyframes bar-grow {
+  from {
+    width: 0;
+  }
+}
+
 .barchart {
   overflow: hidden;
 
@@ -23,6 +29,12 @@
       white-space: nowrap;
       position: relative;
 
+      @for $i from 1 through 5 {
+        &:nth-child(#{$i}) .bar {
+          animation-delay: #{($i - 1) * 50}ms;
+        }
+      }
+
       .bar {
         background-color: color.adjust(
           variables.$color-black,
@@ -32,6 +44,7 @@
         border-radius: 0.3em;
         display: block;
         position: absolute;
+        animation: bar-grow variables.$transition-duration-slow variables.$transition-easing-decelerate both;
       }
 
       .text {

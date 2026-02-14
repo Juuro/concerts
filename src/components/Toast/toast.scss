@@ -1,0 +1,103 @@
+@use "../../styles/variables.scss";
+
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: toast-slide-in 0.3s ease-out;
+  background: variables.$color-white;
+  border-left: 4px solid;
+
+  &--error {
+    border-left-color: #dc3545;
+    background: #fff5f5;
+  }
+
+  &--success {
+    border-left-color: #28a745;
+    background: #f0fff4;
+  }
+
+  &--info {
+    border-left-color: #17a2b8;
+    background: #f0f9ff;
+  }
+
+  &__message {
+    flex: 1;
+    margin-right: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__action-btn {
+    background: none;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__close-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+    padding: 0.25rem;
+
+    &:hover {
+      color: #333;
+    }
+  }
+
+  &--exiting {
+    animation: toast-slide-out variables.$transition-duration variables.$transition-easing-accelerate forwards;
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

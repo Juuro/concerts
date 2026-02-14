@@ -7,3 +7,6 @@ $font-family-text: OpenSans, sans-serif;
 $font-family-heading: Rubik, sans-serif;
 
 $transition-duration: 200ms;
+$transition-duration-slow: 300ms;
+$transition-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+$transition-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
