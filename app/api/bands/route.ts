@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { createBand, type CreateBandInput } from "@/lib/bands";
+import { createBand, updateBandLastfm, type CreateBandInput } from "@/lib/bands";
+import { getArtistInfo } from "@/utils/lastfm";
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({
@@ -31,12 +32,33 @@ export async function POST(request: NextRequest) {
       name: body.name,
       slug,
       imageUrl: body.imageUrl,
+      websiteUrl: body.websiteUrl,
       lastfmUrl: body.lastfmUrl,
       genres: body.genres,
       bio: body.bio,
     };
 
     const band = await createBand(input);
+
+    // Fire-and-forget Last.fm enrichment
+    getArtistInfo(band.name)
+      .then(async (lastfmData) => {
+        if (!lastfmData) return;
+        await updateBandLastfm(band.id, {
+          lastfmUrl: lastfmData.url || undefined,
+          genres: lastfmData.genres || [],
+          bio: lastfmData.bio || undefined,
+          imageUrl:
+            lastfmData.images.extralarge ||
+            lastfmData.images.large ||
+            lastfmData.images.medium ||
+            undefined,
+        });
+      })
+      .catch((err) => {
+        console.error(`Background enrichment failed for ${band.name}:`, err);
+      });
+
     return NextResponse.json(band, { status: 201 });
   } catch (error: any) {
     console.error("Error creating band:", error);

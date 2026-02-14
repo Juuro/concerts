@@ -17,6 +17,7 @@ export interface TransformedBand {
   slug: string
   url: string
   imageUrl?: string | null
+  websiteUrl?: string | null
   lastfm?: {
     url?: string | null
     genres?: string[]
@@ -33,6 +34,7 @@ export interface TransformedConcert {
     lon: number
   }
   venue?: string | null
+  cost?: string | null
   bands: TransformedBand[]
   isFestival: boolean
   festival: {
@@ -64,6 +66,7 @@ async function transformConcert(concert: ConcertWithRelations): Promise<Transfor
       lon: concert.longitude,
     },
     venue: concert.venue,
+    cost: concert.cost ? concert.cost.toString() : null,
     bands: concert.bands
       .sort(
         (
@@ -77,6 +80,7 @@ async function transformConcert(concert: ConcertWithRelations): Promise<Transfor
         slug: cb.band.slug,
         url: `/band/${cb.band.slug}/`,
         imageUrl: cb.band.imageUrl,
+        websiteUrl: cb.band.websiteUrl,
         lastfm: cb.band.lastfmUrl
           ? {
               url: cb.band.lastfmUrl,
@@ -244,6 +248,7 @@ export interface CreateConcertInput {
   venue: string
   isFestival?: boolean
   festivalId?: string
+  cost?: number
   bandIds: { bandId: string; isHeadliner?: boolean }[]
 }
 
@@ -266,6 +271,7 @@ export async function createConcert(
       normalizedCity,
       isFestival: input.isFestival || false,
       festivalId: input.festivalId,
+      cost: input.cost !== undefined ? input.cost : undefined,
       bands: {
         create: input.bandIds.map((b, index) => ({
           bandId: b.bandId,
@@ -293,6 +299,7 @@ export interface UpdateConcertInput {
   venue?: string
   isFestival?: boolean
   festivalId?: string | null
+  cost?: number | null
   bandIds?: { bandId: string; isHeadliner?: boolean }[]
 }
 
@@ -340,6 +347,7 @@ export async function updateConcert(
       normalizedCity,
       isFestival: input.isFestival,
       festivalId: input.festivalId,
+      ...(input.cost !== undefined && { cost: input.cost }),
       ...(input.bandIds && {
         bands: {
           create: input.bandIds.map((b, index) => ({
@@ -780,4 +788,43 @@ export async function getGlobalAppStats() {
     prisma.user.count({ where: { isPublic: true } }),
   ])
   return { concertCount, bandCount, userCount }
+}
+
+// ============================================
+// User Spending Aggregation
+// ============================================
+
+export async function getUserTotalSpent(
+  userId: string,
+  filters?: { bandSlug?: string; city?: string; year?: number }
+): Promise<{ total: number; currency: string }> {
+  const where: any = { userId, cost: { not: null } }
+
+  if (filters?.bandSlug) {
+    where.bands = { some: { band: { slug: filters.bandSlug } } }
+  }
+  if (filters?.city) {
+    where.normalizedCity = filters.city
+  }
+  if (filters?.year) {
+    const yearStart = new Date(filters.year, 0, 1)
+    const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999)
+    where.date = { gte: yearStart, lte: yearEnd }
+  }
+
+  const [result, user] = await Promise.all([
+    prisma.concert.aggregate({
+      where,
+      _sum: { cost: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    }),
+  ])
+
+  return {
+    total: result._sum.cost ? Number(result._sum.cost) : 0,
+    currency: user?.currency || "EUR",
+  }
 }

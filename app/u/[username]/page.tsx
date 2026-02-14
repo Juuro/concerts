@@ -52,6 +52,9 @@ export default async function PublicProfilePage({
       username: true,
       image: true,
       isPublic: true,
+      hideLocationPublic: true,
+      hideCostPublic: true,
+      currency: true,
     },
   })
 
@@ -67,6 +70,9 @@ export default async function PublicProfilePage({
     { userId: user.id, isPublic: true }
   )
 
+  const hideLocation = user.hideLocationPublic
+  const hideCost = user.hideCostPublic
+
   // Calculate statistics using separate count/aggregation queries
   const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
     prisma.concert.count({
@@ -76,18 +82,22 @@ export default async function PublicProfilePage({
       by: ['bandId'],
       where: { concert: { userId: user.id } }
     }),
-    prisma.concert.findMany({
-      where: { userId: user.id, normalizedCity: { not: null } },
-      select: { normalizedCity: true },
-      distinct: ["normalizedCity"],
-    }),
+    hideLocation
+      ? Promise.resolve([])
+      : prisma.concert.findMany({
+          where: { userId: user.id, normalizedCity: { not: null } },
+          select: { normalizedCity: true },
+          distinct: ["normalizedCity"],
+        }),
     prisma.concert.findMany({
       where: { userId: user.id },
       select: { date: true }
     }),
     getUserConcertStatistics(user.id),
     getUserConcertCounts(user.id),
-    getUserConcerts(user.id),
+    hideLocation
+      ? Promise.resolve([])
+      : getUserConcerts(user.id),
   ])
 
   const uniqueBands = uniqueBandsData.length
@@ -140,16 +150,16 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
-          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
+          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} hideCityChart={hideLocation} />}
 
           <div className="public-profile__stats">
             <StatCard value={totalConcerts} label="Concerts" />
             <StatCard value={uniqueBands} label="Bands" />
-            <StatCard value={uniqueCities} label="Cities" />
+            {!hideLocation && <StatCard value={uniqueCities} label="Cities" />}
             <StatCard value={years.size} label="Years" />
           </div>
 
-          {concertsForMap.length > 0 && (
+          {!hideLocation && concertsForMap.length > 0 && (
             <div className="public-profile__map">
               <h2 className="public-profile__section-title">Concert Map</h2>
               <MapClient concerts={concertsForMap} allowFullscreen />
@@ -169,6 +179,9 @@ export default async function PublicProfilePage({
                 initialHasMore={initialData.hasMore}
                 initialHasPrevious={initialData.hasPrevious}
                 filterParams={{ username }}
+                hideLocation={hideLocation}
+                hideCost={hideCost}
+                currency={hideCost ? undefined : user.currency}
               />
             </div>
           )}

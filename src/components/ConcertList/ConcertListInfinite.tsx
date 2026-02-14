@@ -16,6 +16,9 @@ interface ConcertListInfiniteProps {
   filterParams?: Record<string, string>
   showEditButtons?: boolean
   currentUserId?: string
+  hideLocation?: boolean
+  hideCost?: boolean
+  currency?: string
 }
 
 const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
@@ -26,6 +29,9 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   filterParams = {},
   showEditButtons = false,
   currentUserId,
+  hideLocation = false,
+  hideCost = false,
+  currency,
 }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -238,6 +244,9 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
             showEditButton={showEditButtons}
             currentUserId={currentUserId}
             animated={!initialIdsRef.current.has(concert.id)}
+            hideLocation={hideLocation}
+            hideCost={hideCost}
+            currency={currency}
           />
         ))}
       </ul>

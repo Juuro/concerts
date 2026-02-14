@@ -14,7 +14,18 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { username, isPublic } = body;
+    const { username, isPublic, currency, hideLocationPublic, hideCostPublic } = body;
+
+    // Validate currency if provided
+    const VALID_CURRENCIES = [
+      "EUR", "USD", "GBP", "SEK", "NOK", "DKK", "CHF", "PLN", "CZK", "HUF",
+    ];
+    if (currency && !VALID_CURRENCIES.includes(currency)) {
+      return NextResponse.json(
+        { error: "Invalid currency" },
+        { status: 400 }
+      );
+    }
 
     // Validate username format
     if (username && !/^[a-z0-9-]+$/.test(username)) {
@@ -44,6 +55,9 @@ export async function PUT(request: NextRequest) {
       data: {
         username: username || null,
         isPublic: isPublic || false,
+        hideLocationPublic: hideLocationPublic ?? true,
+        hideCostPublic: hideCostPublic ?? true,
+        ...(currency && { currency }),
       },
     });
 
@@ -53,6 +67,9 @@ export async function PUT(request: NextRequest) {
       name: updatedUser.name,
       username: updatedUser.username,
       isPublic: updatedUser.isPublic,
+      currency: updatedUser.currency,
+      hideLocationPublic: updatedUser.hideLocationPublic,
+      hideCostPublic: updatedUser.hideCostPublic,
     });
   } catch (error: any) {
     console.error("Error updating profile:", error);

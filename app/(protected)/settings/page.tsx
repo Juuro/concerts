@@ -11,6 +11,13 @@ export default function SettingsPage() {
   const { data: session, isPending } = useSession()
   const [username, setUsername] = useState(session?.user?.username || "")
   const [isPublic, setIsPublic] = useState(session?.user?.isPublic || false)
+  const [hideLocationPublic, setHideLocationPublic] = useState(
+    session?.user?.hideLocationPublic ?? true
+  )
+  const [hideCostPublic, setHideCostPublic] = useState(
+    session?.user?.hideCostPublic ?? true
+  )
+  const [currency, setCurrency] = useState(session?.user?.currency || "EUR")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{
     type: "success" | "error"
@@ -35,7 +42,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, isPublic }),
+        body: JSON.stringify({ username, isPublic, currency, hideLocationPublic, hideCostPublic }),
       })
 
       if (res.ok) {
@@ -108,6 +115,30 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings__section">
+          <h2>Preferences</h2>
+
+          <div className="settings__field">
+            <label htmlFor="currency">Currency</label>
+            <select
+              id="currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="SEK">SEK</option>
+              <option value="NOK">NOK</option>
+              <option value="DKK">DKK</option>
+              <option value="CHF">CHF</option>
+              <option value="PLN">PLN</option>
+              <option value="CZK">CZK</option>
+              <option value="HUF">HUF</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings__section">
           <h2>Privacy</h2>
 
           <div className="settings__field settings__checkbox">
@@ -155,6 +186,41 @@ export default function SettingsPage() {
                   Set a username above to get a public profile URL.
                 </span>
               )}
+            </div>
+          </div>
+
+          <div className={`settings__privacy-options ${isPublic ? "settings__privacy-options--visible" : ""}`}>
+            <div className="settings__privacy-options-inner">
+              <div className="settings__field settings__checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={hideLocationPublic}
+                    onChange={(e) => setHideLocationPublic(e.target.checked)}
+                  />
+                  Hide location data on public profile
+                </label>
+                <span className="settings__hint">
+                  Venue names, city names, the city statistics chart, the concert map, and dates of future concerts will be hidden from your public profile.
+                </span>
+                <div className="settings__info-warning">
+                  <strong>Privacy note:</strong> Sharing location data for future concerts reveals when you will be at specific venues and when you are not at home. Even just a band name and date is enough to find the exact venue and time. We recommend keeping this enabled.
+                </div>
+              </div>
+
+              <div className="settings__field settings__checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={hideCostPublic}
+                    onChange={(e) => setHideCostPublic(e.target.checked)}
+                  />
+                  Hide money spent on public profile
+                </label>
+                <span className="settings__hint">
+                  Concert ticket costs will be hidden from your public profile.
+                </span>
+              </div>
             </div>
           </div>
         </div>

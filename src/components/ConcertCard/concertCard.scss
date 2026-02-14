@@ -101,6 +101,12 @@
       font-weight: bold;  // Keep for backward compat
     }
   }
+
+  .concert-card-cost {
+    color: #666;
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+  }
 }
 
 @media screen and (min-width: 1024px) {

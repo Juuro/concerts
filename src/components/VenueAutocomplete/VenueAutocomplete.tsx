@@ -121,6 +121,12 @@ export default function VenueAutocomplete({
           handleSelect(results[highlightedIndex])
         }
         break
+      case " ":
+        if (highlightedIndex >= 0 && highlightedIndex < results.length) {
+          e.preventDefault()
+          handleSelect(results[highlightedIndex])
+        }
+        break
       case "Escape":
         e.preventDefault()
         setIsOpen(false)
@@ -148,6 +154,16 @@ export default function VenueAutocomplete({
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen && results.length > 0}
+          aria-controls="venue-listbox"
+          aria-activedescendant={
+            highlightedIndex >= 0
+              ? `venue-option-${highlightedIndex}`
+              : undefined
+          }
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -174,11 +190,20 @@ export default function VenueAutocomplete({
       {error && <div className="venue-autocomplete__error">{error}</div>}
 
       {isOpen && results.length > 0 && (
-        <div ref={dropdownRef} className="venue-autocomplete__dropdown">
+        <div
+          ref={dropdownRef}
+          className="venue-autocomplete__dropdown"
+          role="listbox"
+          id="venue-listbox"
+          aria-label="Venue search results"
+        >
           {results.map((result, index) => (
             <button
               key={`${result.osmId}-${index}`}
               type="button"
+              role="option"
+              id={`venue-option-${index}`}
+              aria-selected={index === highlightedIndex}
               className={`venue-autocomplete__item ${
                 index === highlightedIndex ? "highlighted" : ""
               }`}

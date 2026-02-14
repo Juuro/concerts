@@ -8,6 +8,7 @@ export interface TransformedBand {
   slug: string;
   url: string;
   imageUrl?: string | null;
+  websiteUrl?: string | null;
   lastfm?: {
     url?: string | null;
     genres?: string[];
@@ -23,6 +24,7 @@ function transformBand(band: PrismaBand): Omit<TransformedBand, "concert"> {
     slug: band.slug,
     url: `/band/${band.slug}/`,
     imageUrl: band.imageUrl,
+    websiteUrl: band.websiteUrl,
     lastfm: band.lastfmUrl
       ? {
           url: band.lastfmUrl,
@@ -104,6 +106,7 @@ export interface CreateBandInput {
   name: string;
   slug: string;
   imageUrl?: string;
+  websiteUrl?: string;
   lastfmUrl?: string;
   genres?: string[];
   bio?: string;
@@ -115,6 +118,7 @@ export async function createBand(input: CreateBandInput): Promise<Omit<Transform
       name: input.name,
       slug: input.slug,
       imageUrl: input.imageUrl,
+      websiteUrl: input.websiteUrl,
       lastfmUrl: input.lastfmUrl,
       genres: input.genres || [],
       bio: input.bio,
@@ -164,6 +168,31 @@ export async function getOrCreateBand(name: string): Promise<Omit<TransformedBan
     });
   }
 
+  return transformBand(band);
+}
+
+// Update a band's editable fields
+export interface UpdateBandInput {
+  name?: string;
+  imageUrl?: string | null;
+  websiteUrl?: string | null;
+}
+
+export async function updateBand(
+  slug: string,
+  data: UpdateBandInput
+): Promise<Omit<TransformedBand, "concert"> | null> {
+  const existing = await prisma.band.findUnique({ where: { slug } });
+  if (!existing) return null;
+
+  const band = await prisma.band.update({
+    where: { slug },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
+      ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+    },
+  });
   return transformBand(band);
 }
 

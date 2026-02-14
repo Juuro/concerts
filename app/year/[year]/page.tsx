@@ -6,8 +6,11 @@ import {
   getAllYears,
   getConcertsPaginated,
   getConcertCounts,
+  getUserTotalSpent,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -42,9 +45,14 @@ export default async function YearPage({
   const { cursor } = await searchParams
   const yearNum = parseInt(year, 10)
 
-  const [concertCounts, initialData] = await Promise.all([
+  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
+
+  const [concertCounts, initialData, yearSpent] = await Promise.all([
     getConcertCounts(),
     getConcertsPaginated(cursor, 20, "forward", { year: yearNum }),
+    session?.user
+      ? getUserTotalSpent(session.user.id, { year: yearNum })
+      : Promise.resolve(null),
   ])
 
   // Calculate past/future counts for this year's concerts
@@ -84,6 +92,11 @@ export default async function YearPage({
             {year}
             <ConcertCount counts={yearConcertCounts} />
           </h2>
+          {yearSpent && yearSpent.total > 0 && (
+            <p style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.55)', margin: '4px 0 16px' }}>
+              {yearSpent.total.toFixed(2)} {yearSpent.currency} spent
+            </p>
+          )}
 
           <ConcertListInfinite
             initialConcerts={initialData.items}

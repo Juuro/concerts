@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getConcertById, updateConcert, deleteConcert, type UpdateConcertInput } from "@/lib/concerts";
+import { getOrCreateFestival } from "@/lib/festivals";
 
 export async function GET(
   request: NextRequest,
@@ -35,13 +36,28 @@ export async function PUT(
   try {
     const body = await request.json();
 
+    // Resolve festival: use provided ID, create from name, or clear
+    let resolvedFestivalId: string | null | undefined = body.festivalId
+    if (body.isFestival && body.festivalName && !body.festivalId) {
+      const festival = await getOrCreateFestival(body.festivalName)
+      resolvedFestivalId = festival.id
+    } else if (body.isFestival === false) {
+      resolvedFestivalId = null
+    }
+
     const input: UpdateConcertInput = {
       date: body.date ? new Date(body.date) : undefined,
       latitude: body.latitude,
       longitude: body.longitude,
       venue: body.venue,
       isFestival: body.isFestival,
-      festivalId: body.festivalId,
+      festivalId: resolvedFestivalId,
+      cost:
+        body.cost !== undefined
+          ? body.cost !== null && body.cost !== ""
+            ? parseFloat(body.cost)
+            : null
+          : undefined,
       bandIds: body.bandIds,
     };
 

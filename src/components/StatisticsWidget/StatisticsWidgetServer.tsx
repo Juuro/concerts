@@ -5,10 +5,12 @@ import "./statisticsWidget.scss"
 
 interface StatisticsWidgetServerProps {
   statistics: ConcertStatistics
+  hideCityChart?: boolean
 }
 
 const StatisticsWidgetServer: React.FC<StatisticsWidgetServerProps> = ({
   statistics,
+  hideCityChart = false,
 }) => {
   return (
     <div className="card statistics-widget">
@@ -24,12 +26,14 @@ const StatisticsWidgetServer: React.FC<StatisticsWidgetServerProps> = ({
         title="most concerts per band"
         category="band"
       />
-      <BarChart
-        data={statistics.cityCounts}
-        max={statistics.maxCityCount}
-        title="most concerts per city"
-        category="city"
-      />
+      {!hideCityChart && (
+        <BarChart
+          data={statistics.cityCounts}
+          max={statistics.maxCityCount}
+          title="most concerts per city"
+          category="city"
+        />
+      )}
     </div>
   )
 }

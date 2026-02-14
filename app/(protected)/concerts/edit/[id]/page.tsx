@@ -45,22 +45,32 @@ export default async function EditConcertPage({
     notFound();
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { currency: true },
+  });
+
   return (
     <div className="edit-concert">
       <h1>Edit Concert</h1>
       <p className="edit-concert__subtitle">Update concert details</p>
       <ConcertForm
         mode="edit"
+        currency={user?.currency || "EUR"}
         concert={{
           id: concert.id,
           date: concert.date.toISOString(),
           latitude: concert.latitude,
           longitude: concert.longitude,
+          venue: concert.venue,
+          cost: concert.cost?.toString() ?? null,
           isFestival: concert.isFestival,
           festivalId: concert.festivalId,
+          festivalName: concert.festival?.name ?? null,
           bands: concert.bands.map((cb) => ({
             bandId: cb.band.id,
             name: cb.band.name,
+            slug: cb.band.slug,
             isHeadliner: cb.isHeadliner,
           })),
         }}

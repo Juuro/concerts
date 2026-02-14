@@ -22,6 +22,9 @@ model User {
   image         String?
   username      String?   @unique
   isPublic      Boolean   @default(false)
+  currency      String    @default("EUR")
+  hideLocationPublic Boolean @default(true)
+  hideCostPublic     Boolean @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -95,6 +98,7 @@ model Concert {
   normalizedCity  String?
   isFestival      Boolean  @default(false)
   festivalId String?
+  cost       Decimal?  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -114,7 +118,8 @@ model Band {
   slug      String   @unique
   imageUrl  String?
   // Last.fm cached data
-  lastfmUrl String?
+  lastfmUrl  String?
+  websiteUrl String?
   genres    String[] // Array of genre strings
   bio       String?
   createdAt DateTime @default(now())

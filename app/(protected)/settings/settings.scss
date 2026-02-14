@@ -82,7 +82,8 @@
     }
 
     input[type="text"],
-    input[type="email"] {
+    input[type="email"],
+    select {
       background-color: #f9f9f9;
       border: 1px solid #ddd;
       border-radius: 6px;
@@ -203,6 +204,39 @@
       border-color: #28a745;
       color: #28a745;
     }
+  }
+
+  &__privacy-options {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows variables.$transition-duration variables.$transition-easing-accelerate,
+      opacity variables.$transition-duration variables.$transition-easing-accelerate;
+
+    &--visible {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      transition:
+        grid-template-rows variables.$transition-duration variables.$transition-easing-decelerate,
+        opacity variables.$transition-duration variables.$transition-easing-decelerate;
+    }
+  }
+
+  &__privacy-options-inner {
+    overflow: hidden;
+    padding-top: 0.5rem;
+  }
+
+  &__info-warning {
+    background-color: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    color: #6d5b00;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    padding: 0.625rem 0.75rem;
   }
 
   &__checkbox {

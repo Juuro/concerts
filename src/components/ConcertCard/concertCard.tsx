@@ -12,6 +12,9 @@ interface ConcertCardProps {
   showEditButton?: boolean
   currentUserId?: string
   animated?: boolean
+  currency?: string
+  hideLocation?: boolean
+  hideCost?: boolean
 }
 
 const ConcertCard: React.FC<ConcertCardProps> = ({
@@ -19,6 +22,9 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
   showEditButton = false,
   currentUserId,
   animated = false,
+  currency = "EUR",
+  hideLocation = false,
+  hideCost = false,
 }) => {
   const heading = () => {
     if (concert.isFestival) {
@@ -102,19 +108,26 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
       </div>
       <div className="concert-card-body">
         <h3 className="card-title">{heading()}</h3>
-        <span>{getDate()}</span>
+        {!(hideLocation && isInTheFuture()) && <span>{getDate()}</span>}
         {bands() && <div className="bands">{bands()}</div>}
       </div>
       <div className="concert-card-location">
         <div>
-          <div className="venue">{concert.venue}</div>
-          <div className="city">
-            <Link
-              href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
-            >
-              {extractCityName(concert.fields.geocoderAddressFields)}
-            </Link>
-          </div>
+          {!hideLocation && (
+            <>
+              <div className="venue">{concert.venue}</div>
+              <div className="city">
+                <Link
+                  href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
+                >
+                  {extractCityName(concert.fields.geocoderAddressFields)}
+                </Link>
+              </div>
+            </>
+          )}
+          {!hideCost && concert.cost && (
+            <div className="concert-card-cost">{concert.cost} {currency}</div>
+          )}
         </div>
         {showEditButton && currentUserId === concert.userId && (
           <Link href={`/concerts/edit/${concert.id}`} className="concert-card-edit-btn">

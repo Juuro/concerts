@@ -8,7 +8,9 @@ import {
   type CreateConcertInput,
   type ConcertFilters,
 } from "@/lib/concerts"
+import { getOrCreateFestival } from "@/lib/festivals"
 import { prisma } from "@/lib/prisma"
+import type { GeocodingData } from "@/types/geocoding"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -43,20 +45,21 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle username filter (convert to userId, requires public profile)
+  let publicProfileUser: { id: string; isPublic: boolean; hideLocationPublic: boolean; hideCostPublic: boolean } | null = null
   if (username) {
-    const user = await prisma.user.findUnique({
+    publicProfileUser = await prisma.user.findUnique({
       where: { username },
-      select: { id: true, isPublic: true },
+      select: { id: true, isPublic: true, hideLocationPublic: true, hideCostPublic: true },
     })
 
-    if (!user || !user.isPublic) {
+    if (!publicProfileUser || !publicProfileUser.isPublic) {
       return NextResponse.json(
         { error: "User not found or not public" },
         { status: 404 }
       )
     }
 
-    filters.userId = user.id
+    filters.userId = publicProfileUser.id
     filters.isPublic = true
   }
 
@@ -84,6 +87,22 @@ export async function GET(request: NextRequest) {
 
   // Fetch paginated results with filters
   const result = await getConcertsPaginated(cursor, limit, direction, filters)
+
+  // Strip hidden data from public profile responses (defense in depth)
+  if (publicProfileUser) {
+    const now = new Date().toISOString()
+    result.items = result.items.map((item) => ({
+      ...item,
+      ...(publicProfileUser!.hideLocationPublic && {
+        venue: null,
+        city: { lat: 0, lon: 0 },
+        fields: { geocoderAddressFields: { _normalized_city: "" } as GeocodingData },
+        ...(item.date > now && { date: "" }),
+      }),
+      ...(publicProfileUser!.hideCostPublic && { cost: null }),
+    }))
+  }
+
   return NextResponse.json(result)
 }
 
@@ -107,6 +126,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Resolve festival: use provided ID or create from name
+    let resolvedFestivalId = body.festivalId
+    if (body.isFestival && body.festivalName && !body.festivalId) {
+      const festival = await getOrCreateFestival(body.festivalName)
+      resolvedFestivalId = festival.id
+    }
+
     const input: CreateConcertInput = {
       userId: session.user.id,
       date: new Date(body.date),
@@ -114,7 +140,11 @@ export async function POST(request: NextRequest) {
       longitude: body.longitude,
       venue: body.venue,
       isFestival: body.isFestival || false,
-      festivalId: body.festivalId,
+      festivalId: resolvedFestivalId,
+      cost:
+        body.cost !== undefined && body.cost !== null && body.cost !== ""
+          ? parseFloat(body.cost)
+          : undefined,
       bandIds: body.bandIds || [],
     }
 

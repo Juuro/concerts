@@ -186,6 +186,11 @@ h2 {
   display: inline;
   margin: 0 0.4em 0.4em 0;
   padding: 0.1em 0.5em;
+  transition: background-color variables.$transition-duration ease;
+
+  &:hover {
+    color: variables.$color-white;
+  }
 
   &:has(.badge) {
     padding-left: 0;
@@ -201,6 +206,19 @@ h2 {
 
 .bg-primary {
   background-color: variables.$color-primary;
+
+  &:hover {
+    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background-color: color.adjust(variables.$color-primary, $lightness: -15%);
+  }
 }
 
 @media screen and (min-width: 768px) {

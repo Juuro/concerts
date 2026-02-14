@@ -7,8 +7,11 @@ import {
   getAllCities,
   getConcertsPaginated,
   getConcertCounts,
+  getUserTotalSpent,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import type { Metadata } from "next"
 
@@ -51,9 +54,11 @@ export default async function CityPage({
     notFound()
   }
 
+  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
+
   const now = new Date()
 
-  const [concertCounts, initialData, pastCount, futureCount] = await Promise.all([
+  const [concertCounts, initialData, pastCount, futureCount, citySpent] = await Promise.all([
     getConcertCounts(),
     getConcertsPaginated(cursor, 20, "forward", { city: cityName }),
     prisma.concert.count({
@@ -62,6 +67,9 @@ export default async function CityPage({
     prisma.concert.count({
       where: { normalizedCity: cityName, date: { gte: now } },
     }),
+    session?.user
+      ? getUserTotalSpent(session.user.id, { city: cityName })
+      : Promise.resolve(null),
   ])
 
   const cityConcertCounts = {
@@ -77,6 +85,11 @@ export default async function CityPage({
             {cityName}
             <ConcertCount counts={cityConcertCounts} />
           </h2>
+          {citySpent && citySpent.total > 0 && (
+            <p style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.55)', margin: '4px 0 16px' }}>
+              {citySpent.total.toFixed(2)} {citySpent.currency} spent
+            </p>
+          )}
 
           <ConcertListInfinite
             initialConcerts={initialData.items}

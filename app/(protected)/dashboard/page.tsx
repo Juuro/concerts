@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { getConcertsPaginated } from "@/lib/concerts"
+import { getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import "./dashboard.scss"
@@ -39,7 +39,7 @@ export default async function DashboardPage({
   )
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData] = await Promise.all([
+  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, totalSpent] = await Promise.all([
     prisma.concert.count({
       where: { userId: session.user.id }
     }),
@@ -57,7 +57,8 @@ export default async function DashboardPage({
     prisma.concert.findMany({
       where: { userId: session.user.id },
       select: { date: true }
-    })
+    }),
+    getUserTotalSpent(session.user.id),
   ])
 
   const uniqueBands = uniqueBandsData.length
@@ -95,6 +96,12 @@ export default async function DashboardPage({
           <span className="stat-card__value">{years.size}</span>
           <span className="stat-card__label">Years</span>
         </div>
+        {totalSpent.total > 0 && (
+          <div className="stat-card">
+            <span className="stat-card__value">{Math.round(totalSpent.total)}</span>
+            <span className="stat-card__label">{totalSpent.currency}</span>
+          </div>
+        )}
       </div>
 
       {initialData.items.length === 0 && !cursor ? (
