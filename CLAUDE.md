@@ -156,7 +156,7 @@ The app uses subtle, purposeful micro animations to provide feedback and guide a
 - `$transition-easing-decelerate: cubic-bezier(0, 0, 0.2, 1)` -- for elements entering the screen (cards, dropdowns, tags)
 - `$transition-easing-accelerate: cubic-bezier(0.4, 0, 1, 1)` -- for elements leaving the screen (toast dismiss)
 
-Existing animation patterns:
+Existing animation patterns :
 
 - **Card fade-in** (`card-fade-in`) -- concert cards fade + slide up on load with staggered delay via `animation-delay`
 - **Dropdown fade-in** (`dropdown-fade-in`) -- search dropdowns scale + fade in from top
