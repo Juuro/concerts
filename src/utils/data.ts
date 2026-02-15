@@ -121,11 +121,6 @@ let geocodingQueue: Promise<void> = Promise.resolve();
 const pendingGeocodingRequests = new Map<string, Promise<GeocodingData | null>>();
 
 async function fetchPhotonReverseGeocoding(lat: number, lon: number): Promise<GeocodingData | null> {
-  // Avoid external calls outside development; build should rely on prefetch cache.
-  if (process.env.NODE_ENV !== "development") {
-    return null;
-  }
-
   if (Date.now() < geocodingGlobalRateLimitUntil) {
     return null;
   }
