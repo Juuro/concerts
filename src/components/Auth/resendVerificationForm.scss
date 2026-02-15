@@ -1,8 +1,35 @@
 @use "../../styles/variables.scss";
 @use "../../styles/buttons.scss" as buttons;
 
-.email-form {
+.resend-form {
   text-align: left;
+
+  &__sent {
+    text-align: center;
+
+    h2 {
+      font-family: variables.$font-family-heading;
+      font-size: 1.25rem;
+      margin: 0 0 0.75rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      margin: 0 0 1.5rem;
+    }
+  }
+
+  &__back {
+    color: variables.$color-primary;
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
   &__error {
     background-color: #fee;
@@ -14,20 +41,8 @@
     padding: 0.75rem 1rem;
   }
 
-  &__resend-link {
-    color: variables.$color-primary;
-    display: block;
-    font-weight: 500;
-    margin-top: 0.5rem;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
   &__field {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 
     label {
       display: block;
@@ -49,21 +64,6 @@
       &:focus {
         border-color: variables.$color-primary;
         outline: none;
-      }
-    }
-  }
-
-  &__forgot {
-    margin-bottom: 1.5rem;
-    text-align: right;
-
-    a {
-      color: variables.$color-primary;
-      font-size: 0.875rem;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
       }
     }
   }

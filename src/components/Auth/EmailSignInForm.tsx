@@ -38,7 +38,16 @@ export default function EmailSignInForm({ callbackUrl = "/dashboard" }: EmailSig
 
   return (
     <form className="email-form" onSubmit={handleSubmit}>
-      {error && <div className="email-form__error">{error}</div>}
+      {error && (
+        <div className="email-form__error">
+          {error}
+          {error.toLowerCase().includes("email not verified") && (
+            <Link href="/resend-verification" className="email-form__resend-link">
+              Resend verification email
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="email-form__field">
         <label htmlFor="signin-email">Email</label>

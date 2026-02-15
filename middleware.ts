@@ -5,7 +5,7 @@ import { getSessionCookie } from "better-auth/cookies";
 const protectedRoutes = ["/dashboard", "/concerts/new", "/concerts/edit", "/settings"];
 
 // Routes that should redirect to dashboard if already authenticated
-const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
+const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/resend-verification"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -45,5 +45,6 @@ export const config = {
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/resend-verification",
   ],
 };
