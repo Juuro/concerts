@@ -1,12 +1,12 @@
 import React from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
 import {
   getAllCities,
   getConcertsPaginated,
-  getConcertCounts,
+  getUserConcertCounts,
   getUserTotalSpent,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
@@ -56,20 +56,23 @@ export default async function CityPage({
 
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
 
+  if (!session?.user) {
+    redirect("/login")
+  }
+
+  const userId = session.user.id
   const now = new Date()
 
-  const [concertCounts, initialData, pastCount, futureCount, citySpent] = await Promise.all([
-    getConcertCounts(),
-    getConcertsPaginated(cursor, 20, "forward", { city: cityName }),
+  const [userCounts, initialData, pastCount, futureCount, citySpent] = await Promise.all([
+    getUserConcertCounts(userId),
+    getConcertsPaginated(cursor, 20, "forward", { city: cityName, userId }),
     prisma.concert.count({
-      where: { normalizedCity: cityName, date: { lt: now } },
+      where: { userId, normalizedCity: cityName, date: { lt: now } },
     }),
     prisma.concert.count({
-      where: { normalizedCity: cityName, date: { gte: now } },
+      where: { userId, normalizedCity: cityName, date: { gte: now } },
     }),
-    session?.user
-      ? getUserTotalSpent(session.user.id, { city: cityName })
-      : Promise.resolve(null),
+    getUserTotalSpent(userId, { city: cityName }),
   ])
 
   const cityConcertCounts = {
@@ -78,14 +81,14 @@ export default async function CityPage({
   }
 
   return (
-    <Layout concertCounts={concertCounts}>
+    <Layout concertCounts={userCounts}>
       <main>
         <div className="container">
           <h2>
             {cityName}
             <ConcertCount counts={cityConcertCounts} />
           </h2>
-          {citySpent && citySpent.total > 0 && (
+          {citySpent.total > 0 && (
             <p style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.55)', margin: '4px 0 16px' }}>
               {citySpent.total.toFixed(2)} {citySpent.currency} spent
             </p>
@@ -96,7 +99,7 @@ export default async function CityPage({
             initialNextCursor={initialData.nextCursor}
             initialHasMore={initialData.hasMore}
             initialHasPrevious={initialData.hasPrevious}
-            filterParams={{ city: cityName }}
+            filterParams={{ city: cityName, userOnly: 'true' }}
           />
         </div>
       </main>

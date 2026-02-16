@@ -1,7 +1,9 @@
 import React from "react"
 import Layout from "../../src/components/layout-client"
 import MapClient from "../../src/components/MapClient"
-import { getAllConcerts, getConcertCounts } from "@/lib/concerts"
+import { getAllConcerts, getUserConcertCounts } from "@/lib/concerts"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
@@ -12,9 +14,13 @@ export const metadata: Metadata = {
 }
 
 export default async function MapPage() {
-  const [concerts, concertCounts] = await Promise.all([
+  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
+
+  const [concerts, userCounts] = await Promise.all([
     getAllConcerts(),
-    getConcertCounts(),
+    session?.user
+      ? getUserConcertCounts(session.user.id)
+      : Promise.resolve(undefined),
   ])
 
   // Transform for map
@@ -37,7 +43,7 @@ export default async function MapPage() {
   }))
 
   return (
-    <Layout concertCounts={concertCounts}>
+    <Layout concertCounts={userCounts}>
       <MapClient concerts={concertsFormatted} />
     </Layout>
   )

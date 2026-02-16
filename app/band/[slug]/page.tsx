@@ -1,9 +1,9 @@
 import React from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getConcertCounts, getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
+import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
 import { getBandBySlug, getAllBandSlugs } from "@/lib/bands"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
@@ -42,35 +42,37 @@ export default async function BandPage({
   const { slug } = await params
   const { cursor } = await searchParams
 
-  const [band, concertCounts, session] = await Promise.all([
+  const [band, session] = await Promise.all([
     getBandBySlug(slug),
-    getConcertCounts(),
     auth.api.getSession({ headers: await headers() }).catch(() => null),
   ])
+
+  if (!session?.user) {
+    redirect("/login")
+  }
 
   if (!band) {
     notFound()
   }
 
-  // Fetch initial paginated concerts and spending for this band
-  const [initialData, bandSpent] = await Promise.all([
-    getConcertsPaginated(cursor, 20, "forward", { bandSlug: slug }),
-    session?.user
-      ? getUserTotalSpent(session.user.id, { bandSlug: slug })
-      : Promise.resolve(null),
-  ])
+  const userId = session.user.id
 
-  // Calculate past/future counts for this band's concerts
+  // Fetch user-scoped data for this band
   const now = new Date()
-  const [pastCount, futureCount] = await Promise.all([
+  const [userCounts, initialData, bandSpent, pastCount, futureCount] = await Promise.all([
+    getUserConcertCounts(userId),
+    getConcertsPaginated(cursor, 20, "forward", { bandSlug: slug, userId }),
+    getUserTotalSpent(userId, { bandSlug: slug }),
     prisma.concert.count({
       where: {
+        userId,
         bands: { some: { band: { slug } } },
         date: { lt: now },
       },
     }),
     prisma.concert.count({
       where: {
+        userId,
         bands: { some: { band: { slug } } },
         date: { gte: now },
       },
@@ -87,7 +89,7 @@ export default async function BandPage({
   const hasWebsiteUrl = Boolean(band.websiteUrl)
 
   return (
-    <Layout concertCounts={concertCounts}>
+    <Layout concertCounts={userCounts}>
       <main>
         <div className="container">
           <div className={styles.headerRow}>
@@ -96,8 +98,7 @@ export default async function BandPage({
                 {band.name}
                 <ConcertCount counts={bandConcertCounts} />
               </h2>
-              {(hasGenres || hasLastfmUrl || hasWebsiteUrl || session?.user) && (
-                <div className={styles.metaRow}>
+              <div className={styles.metaRow}>
                   {hasGenres && (
                     <span className={styles.genreBadges}>
                       {band.lastfm!.genres!.slice(0, 5).map((genre) => (
@@ -175,8 +176,7 @@ export default async function BandPage({
                       </svg>
                     </a>
                   )}
-                  {session?.user && (
-                    <BandEditToggle
+                  <BandEditToggle
                       band={{
                         slug: band.slug,
                         name: band.name,
@@ -184,10 +184,8 @@ export default async function BandPage({
                         websiteUrl: band.websiteUrl ?? undefined,
                       }}
                     />
-                  )}
                 </div>
-              )}
-              {bandSpent && bandSpent.total > 0 && (
+              {bandSpent.total > 0 && (
                 <p className={styles.spendingStat}>
                   {bandSpent.total.toFixed(2)} {bandSpent.currency} spent
                 </p>
@@ -200,7 +198,7 @@ export default async function BandPage({
             initialNextCursor={initialData.nextCursor}
             initialHasMore={initialData.hasMore}
             initialHasPrevious={initialData.hasPrevious}
-            filterParams={{ bandSlug: slug }}
+            filterParams={{ bandSlug: slug, userOnly: 'true' }}
           />
         </div>
       </main>

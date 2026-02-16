@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
+import { getConcertsPaginated, getUserTotalSpent, getUserConcertStatistics } from "@/lib/concerts"
+import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"
 import { prisma } from "@/lib/prisma"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import "./dashboard.scss"
@@ -39,7 +40,7 @@ export default async function DashboardPage({
   )
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, totalSpent] = await Promise.all([
+  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, totalSpent, userStats] = await Promise.all([
     prisma.concert.count({
       where: { userId: session.user.id }
     }),
@@ -59,6 +60,7 @@ export default async function DashboardPage({
       select: { date: true }
     }),
     getUserTotalSpent(session.user.id),
+    getUserConcertStatistics(session.user.id),
   ])
 
   const uniqueBands = uniqueBandsData.length
@@ -78,6 +80,8 @@ export default async function DashboardPage({
           + Add Concert
         </Link>
       </div>
+
+      {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
       <div className="dashboard__stats">
         <div className="stat-card">
