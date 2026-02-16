@@ -52,7 +52,8 @@
     "db:studio": "prisma studio",
     "migrate:contentful": "tsx -r tsconfig-paths/register scripts/migrate-contentful.ts",
     "migrate:venues": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/migrate-venue-data.ts",
-    "backfill:city": "tsx -r tsconfig-paths/register scripts/backfill-city.ts"
+    "backfill:city": "tsx -r tsconfig-paths/register scripts/backfill-city.ts",
+    "backfill:images": "tsx -r tsconfig-paths/register scripts/backfill-band-images.ts"
   },
   "repository": {
     "type": "git",

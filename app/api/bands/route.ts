@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createBand, updateBandLastfm, type CreateBandInput } from "@/lib/bands";
 import { getArtistInfo } from "@/utils/lastfm";
+import { getArtistImageUrl } from "@/utils/musicbrainz";
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({
@@ -31,7 +32,6 @@ export async function POST(request: NextRequest) {
     const input: CreateBandInput = {
       name: body.name,
       slug,
-      imageUrl: body.imageUrl,
       websiteUrl: body.websiteUrl,
       lastfmUrl: body.lastfmUrl,
       genres: body.genres,
@@ -40,24 +40,31 @@ export async function POST(request: NextRequest) {
 
     const band = await createBand(input);
 
-    // Fire-and-forget Last.fm enrichment
-    getArtistInfo(band.name)
-      .then(async (lastfmData) => {
-        if (!lastfmData) return;
+    // Fire-and-forget enrichment (Last.fm metadata + MusicBrainz/Wikimedia image)
+    (async () => {
+      try {
+        const [lastfmData, musicbrainzImageUrl] = await Promise.all([
+          getArtistInfo(band.name),
+          getArtistImageUrl(band.name),
+        ]);
+
+        if (!lastfmData && !musicbrainzImageUrl) return;
+
         await updateBandLastfm(band.id, {
-          lastfmUrl: lastfmData.url || undefined,
-          genres: lastfmData.genres || [],
-          bio: lastfmData.bio || undefined,
+          lastfmUrl: lastfmData?.url || undefined,
+          genres: lastfmData?.genres || [],
+          bio: lastfmData?.bio || undefined,
           imageUrl:
-            lastfmData.images.extralarge ||
-            lastfmData.images.large ||
-            lastfmData.images.medium ||
+            musicbrainzImageUrl ||
+            lastfmData?.images.extralarge ||
+            lastfmData?.images.large ||
+            lastfmData?.images.medium ||
             undefined,
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(`Background enrichment failed for ${band.name}:`, err);
-      });
+      }
+    })();
 
     return NextResponse.json(band, { status: 201 });
   } catch (error: any) {

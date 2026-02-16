@@ -10,7 +10,6 @@ interface BandEditToggleProps {
   band: {
     slug: string
     name: string
-    imageUrl?: string
     websiteUrl?: string
   }
 }

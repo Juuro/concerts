@@ -7,16 +7,14 @@ interface BandEditFormProps {
   band: {
     slug: string
     name: string
-    imageUrl?: string | null
     websiteUrl?: string | null
   }
-  onSave?: (updatedBand: { name: string; imageUrl?: string | null; websiteUrl?: string | null }) => void
+  onSave?: (updatedBand: { name: string; websiteUrl?: string | null }) => void
   onCancel?: () => void
 }
 
 export default function BandEditForm({ band, onSave, onCancel }: BandEditFormProps) {
   const [name, setName] = useState(band.name)
-  const [imageUrl, setImageUrl] = useState(band.imageUrl || "")
   const [websiteUrl, setWebsiteUrl] = useState(band.websiteUrl || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +30,6 @@ export default function BandEditForm({ band, onSave, onCancel }: BandEditFormPro
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          imageUrl: imageUrl || null,
           websiteUrl: websiteUrl || null,
         }),
       })
@@ -41,7 +38,6 @@ export default function BandEditForm({ band, onSave, onCancel }: BandEditFormPro
         const updated = await res.json()
         onSave?.({
           name: updated.name,
-          imageUrl: updated.imageUrl,
           websiteUrl: updated.websiteUrl,
         })
       } else {
@@ -68,17 +64,6 @@ export default function BandEditForm({ band, onSave, onCancel }: BandEditFormPro
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-          />
-        </div>
-
-        <div className="band-edit-form__field">
-          <label htmlFor={`band-image-${band.slug}`}>Image URL</label>
-          <input
-            type="url"
-            id={`band-image-${band.slug}`}
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
           />
         </div>
 

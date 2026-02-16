@@ -22,7 +22,6 @@ export async function PUT(
 
     const updated = await updateBand(slug, {
       name: body.name,
-      imageUrl: body.imageUrl,
       websiteUrl: body.websiteUrl,
     })
 

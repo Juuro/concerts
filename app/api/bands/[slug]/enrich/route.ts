@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { getArtistInfo } from "@/utils/lastfm"
+import { getArtistImageUrl } from "@/utils/musicbrainz"
 
 export async function GET(
   request: NextRequest,
@@ -28,28 +29,32 @@ export async function GET(
       return NextResponse.json({ error: "Band not found" }, { status: 404 })
     }
 
-    // Fetch Last.fm data
-    const lastfmData = await getArtistInfo(band.name)
+    // Fetch Last.fm data and MusicBrainz image in parallel
+    const [lastfmData, musicbrainzImageUrl] = await Promise.all([
+      getArtistInfo(band.name),
+      getArtistImageUrl(band.name),
+    ])
 
-    if (!lastfmData) {
+    if (!lastfmData && !musicbrainzImageUrl) {
       return NextResponse.json(
-        { message: "No Last.fm data available" },
+        { message: "No enrichment data available" },
         { status: 200 }
       )
     }
 
-    // Update band with Last.fm data
+    // Update band — MusicBrainz CC-licensed image takes priority
     const updatedBand = await prisma.band.update({
       where: { id: band.id },
       data: {
-        lastfmUrl: lastfmData.url || undefined,
-        genres: lastfmData.genres || [],
-        bio: lastfmData.bio || undefined,
+        lastfmUrl: lastfmData?.url || undefined,
+        genres: lastfmData?.genres || [],
+        bio: lastfmData?.bio || undefined,
         imageUrl:
+          musicbrainzImageUrl ||
+          lastfmData?.images.extralarge ||
+          lastfmData?.images.large ||
+          lastfmData?.images.medium ||
           band.imageUrl ||
-          lastfmData.images.extralarge ||
-          lastfmData.images.large ||
-          lastfmData.images.medium ||
           undefined,
       },
     })

@@ -180,7 +180,6 @@ export default async function BandPage({
                       band={{
                         slug: band.slug,
                         name: band.name,
-                        imageUrl: band.imageUrl ?? undefined,
                         websiteUrl: band.websiteUrl ?? undefined,
                       }}
                     />

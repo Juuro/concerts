@@ -105,7 +105,6 @@ export async function searchBands(query: string, limit = 10): Promise<Omit<Trans
 export interface CreateBandInput {
   name: string;
   slug: string;
-  imageUrl?: string;
   websiteUrl?: string;
   lastfmUrl?: string;
   genres?: string[];
@@ -117,7 +116,6 @@ export async function createBand(input: CreateBandInput): Promise<Omit<Transform
     data: {
       name: input.name,
       slug: input.slug,
-      imageUrl: input.imageUrl,
       websiteUrl: input.websiteUrl,
       lastfmUrl: input.lastfmUrl,
       genres: input.genres || [],
@@ -174,7 +172,6 @@ export async function getOrCreateBand(name: string): Promise<Omit<TransformedBan
 // Update a band's editable fields
 export interface UpdateBandInput {
   name?: string;
-  imageUrl?: string | null;
   websiteUrl?: string | null;
 }
 
@@ -189,7 +186,6 @@ export async function updateBand(
     where: { slug },
     data: {
       ...(data.name !== undefined && { name: data.name }),
-      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
       ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
     },
   });
