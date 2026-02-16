@@ -9,13 +9,13 @@ import {
   getConcertsPaginated,
   getUserConcertStatistics,
   getUserConcertCounts,
+  getUserTotalSpent,
   getGlobalAppStats,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
-import "./u/[username]/profile.scss"
 import "./home.scss"
 
 export const dynamic = "force-dynamic"
@@ -55,6 +55,7 @@ async function LoggedInHome({
     uniqueYearsData,
     userStats,
     userCounts,
+    totalSpent,
   ] = await Promise.all([
     getConcertsPaginated(cursor, 20, "forward", { userId }),
     prisma.concert.count({
@@ -75,6 +76,7 @@ async function LoggedInHome({
     }),
     getUserConcertStatistics(userId),
     getUserConcertCounts(userId),
+    getUserTotalSpent(userId),
   ])
 
   const uniqueBands = uniqueBandsData.length
@@ -87,31 +89,45 @@ async function LoggedInHome({
     <Layout concertCounts={userCounts}>
       <main>
         <div className="container">
-          <div className="public-profile">
+          <div className="dashboard">
+            <div className="dashboard__header">
+              <h2 className="dashboard__title">My Concerts</h2>
+              <Link href="/concerts/new" className="dashboard__add-btn">
+                + Add Concert
+              </Link>
+            </div>
+
             {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
-            <div className="public-profile__stats">
+            <div className="dashboard__stats">
               <StatCard value={totalConcerts} label="Concerts" />
               <StatCard value={uniqueBands} label="Bands" />
               <StatCard value={uniqueCities} label="Cities" />
               <StatCard value={years.size} label="Years" />
+              {totalSpent.total > 0 && (
+                <StatCard value={Math.round(totalSpent.total)} label={totalSpent.currency} />
+              )}
             </div>
 
             {initialData.items.length === 0 && !cursor ? (
-              <div className="public-profile__empty">
-                <p>No concerts to show yet.</p>
+              <div className="dashboard__empty">
+                <h2>No concerts yet</h2>
+                <p>Start building your concert collection by adding your first concert.</p>
+                <Link href="/concerts/new" className="dashboard__add-btn">
+                  Add Your First Concert
+                </Link>
               </div>
             ) : (
-              <div className="public-profile__concerts">
-                <h2 className="public-profile__section-title">
-                  Concert History
-                </h2>
+              <div className="dashboard__concerts">
+                <h2 className="dashboard__section-title">Recent Concerts</h2>
                 <ConcertListInfinite
                   initialConcerts={initialData.items}
                   initialNextCursor={initialData.nextCursor}
                   initialHasMore={initialData.hasMore}
                   initialHasPrevious={initialData.hasPrevious}
                   filterParams={{ userOnly: "true" }}
+                  showEditButtons={true}
+                  currentUserId={userId}
                 />
               </div>
             )}

@@ -1,7 +1,8 @@
 import React from "react"
+import { redirect } from "next/navigation"
 import Layout from "../../src/components/layout-client"
 import MapClient from "../../src/components/MapClient"
-import { getAllConcerts, getUserConcertCounts } from "@/lib/concerts"
+import { getUserConcerts, getUserConcertCounts } from "@/lib/concerts"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
@@ -16,11 +17,15 @@ export const metadata: Metadata = {
 export default async function MapPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
 
+  if (!session?.user) {
+    redirect("/login")
+  }
+
+  const userId = session.user.id
+
   const [concerts, userCounts] = await Promise.all([
-    getAllConcerts(),
-    session?.user
-      ? getUserConcertCounts(session.user.id)
-      : Promise.resolve(undefined),
+    getUserConcerts(userId),
+    getUserConcertCounts(userId),
   ])
 
   // Transform for map

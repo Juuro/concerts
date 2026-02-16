@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/concerts/new", "/concerts/edit", "/settings"];
+const protectedRoutes = ["/concerts/new", "/concerts/edit", "/settings", "/map"];
 
-// Routes that should redirect to dashboard if already authenticated
+// Routes that should redirect to home if already authenticated
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/resend-verification"];
 
 export async function middleware(request: NextRequest) {
@@ -17,12 +17,12 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users away from auth routes
   if (authRoutes.some((route) => pathname.startsWith(route))) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  // Protect dashboard and other protected routes
+  // Protect routes that require authentication
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
@@ -36,10 +36,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
     "/concerts/new",
     "/concerts/edit/:path*",
     "/settings/:path*",
+    "/map",
     "/login",
     "/register",
     "/forgot-password",

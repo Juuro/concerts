@@ -10,7 +10,7 @@ interface EmailSignInFormProps {
   callbackUrl?: string
 }
 
-export default function EmailSignInForm({ callbackUrl = "/dashboard" }: EmailSignInFormProps) {
+export default function EmailSignInForm({ callbackUrl = "/" }: EmailSignInFormProps) {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

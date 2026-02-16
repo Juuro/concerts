@@ -375,7 +375,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
       })
 
       if (res.ok) {
-        router.push("/dashboard")
+        router.push("/")
         router.refresh()
       } else {
         const data = await res.json()
@@ -401,7 +401,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
         method: "DELETE",
       })
       if (res.ok) {
-        router.push("/dashboard")
+        router.push("/")
         router.refresh()
       } else {
         setError("Failed to delete concert")

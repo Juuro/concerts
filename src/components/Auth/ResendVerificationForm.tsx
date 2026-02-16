@@ -19,7 +19,7 @@ export default function ResendVerificationForm() {
     try {
       await sendVerificationEmail({
         email,
-        callbackURL: "/dashboard",
+        callbackURL: "/",
       })
       setSent(true)
     } catch {

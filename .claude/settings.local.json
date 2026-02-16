@@ -17,7 +17,8 @@
       "Bash(find:*)",
       "Bash(cat:*)",
       "Bash(ls:*)",
-      "WebFetch(domain:api.setlist.fm)"
+      "WebFetch(domain:api.setlist.fm)",
+      "Bash(wc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -9,7 +9,7 @@ interface EmailSignUpFormProps {
   callbackUrl?: string
 }
 
-export default function EmailSignUpForm({ callbackUrl = "/dashboard" }: EmailSignUpFormProps) {
+export default function EmailSignUpForm({ callbackUrl = "/" }: EmailSignUpFormProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

@@ -13,7 +13,7 @@ const providerLabels: Record<string, string> = {
   google: "Google",
 };
 
-export default function AuthButton({ provider, callbackUrl = "/dashboard" }: AuthButtonProps) {
+export default function AuthButton({ provider, callbackUrl = "/" }: AuthButtonProps) {
   const handleSignIn = async () => {
     await signIn.social({
       provider,
