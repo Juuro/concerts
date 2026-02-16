@@ -1,6 +1,7 @@
 @use "../../styles/variables.scss";
 
 .concert-list-infinite {
+  width: 100%;
   &__load-earlier {
     display: flex;
     justify-content: center;

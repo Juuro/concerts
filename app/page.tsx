@@ -89,49 +89,44 @@ async function LoggedInHome({
     <Layout concertCounts={userCounts}>
       <main>
         <div className="container">
-          <div className="dashboard">
-            <div className="dashboard__header">
-              <h2 className="dashboard__title">My Concerts</h2>
-              <Link href="/concerts/new" className="dashboard__add-btn">
-                + Add Concert
-              </Link>
-            </div>
+          <div className="home-header">
+            <h2>My Concerts</h2>
+            <Link href="/concerts/new" className="home-btn">
+              + Add Concert
+            </Link>
+          </div>
 
-            {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
+          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
-            <div className="dashboard__stats">
-              <StatCard value={totalConcerts} label="Concerts" />
-              <StatCard value={uniqueBands} label="Bands" />
-              <StatCard value={uniqueCities} label="Cities" />
-              <StatCard value={years.size} label="Years" />
-              {totalSpent.total > 0 && (
-                <StatCard value={Math.round(totalSpent.total)} label={totalSpent.currency} />
-              )}
-            </div>
-
-            {initialData.items.length === 0 && !cursor ? (
-              <div className="dashboard__empty">
-                <h2>No concerts yet</h2>
-                <p>Start building your concert collection by adding your first concert.</p>
-                <Link href="/concerts/new" className="dashboard__add-btn">
-                  Add Your First Concert
-                </Link>
-              </div>
-            ) : (
-              <div className="dashboard__concerts">
-                <h2 className="dashboard__section-title">Recent Concerts</h2>
-                <ConcertListInfinite
-                  initialConcerts={initialData.items}
-                  initialNextCursor={initialData.nextCursor}
-                  initialHasMore={initialData.hasMore}
-                  initialHasPrevious={initialData.hasPrevious}
-                  filterParams={{ userOnly: "true" }}
-                  showEditButtons={true}
-                  currentUserId={userId}
-                />
-              </div>
+          <div className="home-dashboard-stats">
+            <StatCard value={totalConcerts} label="Concerts" />
+            <StatCard value={uniqueBands} label="Bands" />
+            <StatCard value={uniqueCities} label="Cities" />
+            <StatCard value={years.size} label="Years" />
+            {totalSpent.total > 0 && (
+              <StatCard value={Math.round(totalSpent.total)} label={totalSpent.currency} />
             )}
           </div>
+
+          {initialData.items.length === 0 && !cursor ? (
+            <div className="home-empty">
+              <h2>No concerts yet</h2>
+              <p>Start building your concert collection by adding your first concert.</p>
+              <Link href="/concerts/new" className="home-btn">
+                Add Your First Concert
+              </Link>
+            </div>
+          ) : (
+            <ConcertListInfinite
+              initialConcerts={initialData.items}
+              initialNextCursor={initialData.nextCursor}
+              initialHasMore={initialData.hasMore}
+              initialHasPrevious={initialData.hasPrevious}
+              filterParams={{ userOnly: "true" }}
+              showEditButtons={true}
+              currentUserId={userId}
+            />
+          )}
         </div>
       </main>
     </Layout>
@@ -192,10 +187,10 @@ async function LandingPage() {
           <section className="home-cta">
             <h3>Ready to start tracking?</h3>
             <p>
-              Sign in with GitHub to begin building your concert collection.
+              Create a free account to begin building your concert collection.
             </p>
             <Link href="/login" className="home-btn">
-              Sign in with GitHub
+              Get Started
             </Link>
           </section>
         </div>
