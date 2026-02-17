@@ -4,7 +4,8 @@ import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
 import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
-import { getBandBySlug, getAllBandSlugs } from "@/lib/bands"
+import { getBandBySlug, getAllBandSlugs, enrichBandData } from "@/lib/bands"
+import { after } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -53,6 +54,12 @@ export default async function BandPage({
 
   if (!band) {
     notFound()
+  }
+
+  // Lazy image enrichment: fetch from MusicBrainz in the background
+  // if no image exists and no previous enrichment was attempted
+  if (!band.imageUrl && !band.imageEnrichedAt) {
+    after(() => enrichBandData(band.id, band.name, { imageOnly: true }))
   }
 
   const userId = session.user.id

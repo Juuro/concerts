@@ -116,7 +116,8 @@ model Band {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
-  imageUrl  String?
+  imageUrl        String?
+  imageEnrichedAt DateTime?
   // Last.fm cached data
   lastfmUrl  String?
   websiteUrl String?

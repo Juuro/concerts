@@ -1,6 +1,8 @@
 import { prisma } from "./prisma";
 import type { Band as PrismaBand } from "@/generated/prisma/client";
 import { getConcertsByBand, type TransformedConcert } from "./concerts";
+import { getArtistInfo } from "@/utils/lastfm";
+import { getArtistImageUrl } from "@/utils/musicbrainz";
 
 export interface TransformedBand {
   id: string;
@@ -8,6 +10,7 @@ export interface TransformedBand {
   slug: string;
   url: string;
   imageUrl?: string | null;
+  imageEnrichedAt?: Date | null;
   websiteUrl?: string | null;
   lastfm?: {
     url?: string | null;
@@ -24,6 +27,7 @@ function transformBand(band: PrismaBand): Omit<TransformedBand, "concert"> {
     slug: band.slug,
     url: `/band/${band.slug}/`,
     imageUrl: band.imageUrl,
+    imageEnrichedAt: band.imageEnrichedAt,
     websiteUrl: band.websiteUrl,
     lastfm: band.lastfmUrl
       ? {
@@ -199,4 +203,60 @@ export async function getAllBandSlugs(): Promise<string[]> {
   });
 
   return bands.map((b) => b.slug);
+}
+
+// Enrich a band with external metadata (Last.fm + MusicBrainz image)
+export interface EnrichBandOptions {
+  imageOnly?: boolean;
+}
+
+export async function enrichBandData(
+  bandId: string,
+  bandName: string,
+  options: EnrichBandOptions = {}
+): Promise<void> {
+  try {
+    const { imageOnly = false } = options;
+
+    const [lastfmData, musicbrainzImageUrl] = await Promise.all([
+      imageOnly ? Promise.resolve(null) : getArtistInfo(bandName),
+      getArtistImageUrl(bandName),
+    ]);
+
+    if (!lastfmData && !musicbrainzImageUrl) {
+      await prisma.band.update({
+        where: { id: bandId },
+        data: { imageEnrichedAt: new Date() },
+      });
+      return;
+    }
+
+    const imageUrl =
+      musicbrainzImageUrl ||
+      lastfmData?.images.extralarge ||
+      lastfmData?.images.large ||
+      lastfmData?.images.medium ||
+      undefined;
+
+    const updateData: Record<string, unknown> = {
+      imageEnrichedAt: new Date(),
+    };
+
+    if (imageUrl) {
+      updateData.imageUrl = imageUrl;
+    }
+
+    if (!imageOnly && lastfmData) {
+      updateData.lastfmUrl = lastfmData.url || undefined;
+      updateData.genres = lastfmData.genres || [];
+      updateData.bio = lastfmData.bio || undefined;
+    }
+
+    await prisma.band.update({
+      where: { id: bandId },
+      data: updateData,
+    });
+  } catch (err) {
+    console.error(`Background enrichment failed for "${bandName}":`, err);
+  }
 }

@@ -36,6 +36,10 @@ export async function GET(
     ])
 
     if (!lastfmData && !musicbrainzImageUrl) {
+      await prisma.band.update({
+        where: { id: band.id },
+        data: { imageEnrichedAt: new Date() },
+      })
       return NextResponse.json(
         { message: "No enrichment data available" },
         { status: 200 }
@@ -56,6 +60,7 @@ export async function GET(
           lastfmData?.images.medium ||
           band.imageUrl ||
           undefined,
+        imageEnrichedAt: new Date(),
       },
     })
 
