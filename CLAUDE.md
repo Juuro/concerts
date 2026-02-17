@@ -32,6 +32,10 @@ yarn db:studio        # Open Prisma Studio
 # Migration scripts (one-time)
 yarn migrate:contentful  # Import data from Contentful to PostgreSQL
 yarn migrate:venues      # Backfill venue/normalizedCity data
+
+# Remote database commands (requires POSTGRES_PRISMA_URL env var with Prisma Accelerate URL)
+npx prisma db push --url "$POSTGRES_PRISMA_URL"            # Sync local schema to remote database
+npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL against remote database (pipe SQL via stdin)
 ```
 
 ## Architecture
@@ -196,6 +200,7 @@ Optional:
 
 - `LASTFM_API_KEY` and `LASTFM_SECRET` - For band data enrichment
 - `NEXT_PUBLIC_MAP_STYLE_URL` - Custom MapLibre style URL (default: OpenFreeMap liberty)
+- `POSTGRES_PRISMA_URL` - Prisma Accelerate connection string for remote database operations
 
 ## Authentication
 
