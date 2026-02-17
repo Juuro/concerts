@@ -25,6 +25,10 @@ model User {
   currency      String    @default("EUR")
   hideLocationPublic Boolean @default(true)
   hideCostPublic     Boolean @default(true)
+  role          String    @default("user")
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -34,6 +38,12 @@ model User {
 
   // Concert relations
   concerts Concert[]
+
+  // Audit relations
+  bandsCreated     Band[]     @relation("bandsCreated")
+  bandsUpdated     Band[]     @relation("bandsUpdated")
+  festivalsCreated Festival[] @relation("festivalsCreated")
+  festivalsUpdated Festival[] @relation("festivalsUpdated")
 
   @@map("user")
 }
@@ -123,10 +133,14 @@ model Band {
   websiteUrl String?
   genres    String[] // Array of genre strings
   bio       String?
+  createdById String?
+  updatedById String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  concerts ConcertBand[]
+  concerts  ConcertBand[]
+  createdBy User?  @relation("bandsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?  @relation("bandsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@index([name])
   @@map("band")
@@ -137,10 +151,14 @@ model Festival {
   name      String
   slug      String   @unique
   url       String?
+  createdById String?
+  updatedById String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  concerts Concert[]
+  concerts  Concert[]
+  createdBy User?  @relation("festivalsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?  @relation("festivalsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("festival")
 }

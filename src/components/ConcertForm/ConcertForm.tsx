@@ -35,9 +35,29 @@ interface ConcertFormProps {
   }
   mode: "create" | "edit"
   currency?: string
+  canEditBandName?: boolean
 }
 
-export default function ConcertForm({ concert, mode, currency = "EUR" }: ConcertFormProps) {
+interface ValidationResult {
+  found: boolean
+  name?: string
+  correctedName?: string
+  source?: string
+}
+
+type BandValidationState =
+  | { type: "idle" }
+  | { type: "validating" }
+  | { type: "not-found"; name: string }
+  | { type: "corrected"; original: string; correctedName: string }
+
+type FestivalValidationState =
+  | { type: "idle" }
+  | { type: "validating" }
+  | { type: "not-found"; name: string }
+  | { type: "corrected"; original: string; correctedName: string }
+
+export default function ConcertForm({ concert, mode, currency = "EUR", canEditBandName = false }: ConcertFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -85,6 +105,14 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
   )
   const [isFestivalSearching, setIsFestivalSearching] = useState(false)
   const [festivalHighlightedIndex, setFestivalHighlightedIndex] = useState(-1)
+
+  // Band validation state
+  const [bandValidation, setBandValidation] = useState<BandValidationState>({ type: "idle" })
+  const [pendingBandName, setPendingBandName] = useState("")
+
+  // Festival validation state
+  const [festivalValidation, setFestivalValidation] = useState<FestivalValidationState>({ type: "idle" })
+  const [pendingFestivalName, setPendingFestivalName] = useState("")
 
   // Debounced band search
   useEffect(() => {
@@ -189,14 +217,12 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
     setFestivalHighlightedIndex(-1)
   }, [])
 
-  const handleCreateBand = async () => {
-    if (!bandSearch.trim()) return
-
+  const doCreateBand = async (name: string) => {
     try {
       const res = await fetch("/api/bands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: bandSearch.trim() }),
+        body: JSON.stringify({ name }),
       })
 
       if (res.ok) {
@@ -212,6 +238,57 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
     } catch (err) {
       console.error("Create band error:", err)
     }
+  }
+
+  const handleCreateBand = async () => {
+    const name = bandSearch.trim()
+    if (!name) return
+
+    setPendingBandName(name)
+    setBandValidation({ type: "validating" })
+
+    try {
+      const res = await fetch(`/api/bands/validate?name=${encodeURIComponent(name)}`)
+      if (!res.ok) {
+        // Validation endpoint failed -- proceed without blocking
+        await doCreateBand(name)
+        setBandValidation({ type: "idle" })
+        return
+      }
+
+      const data: ValidationResult = await res.json()
+
+      if (data.found && data.correctedName && data.correctedName.toLowerCase() !== name.toLowerCase()) {
+        // Found with a different name -- suggest correction
+        setBandValidation({ type: "corrected", original: name, correctedName: data.correctedName })
+      } else if (data.found) {
+        // Exact match found -- proceed directly
+        await doCreateBand(data.name || name)
+        setBandValidation({ type: "idle" })
+      } else {
+        // Not found -- warn the user
+        setBandValidation({ type: "not-found", name })
+      }
+    } catch (err) {
+      console.error("Band validation error:", err)
+      // On error, proceed without blocking
+      await doCreateBand(name)
+      setBandValidation({ type: "idle" })
+    }
+  }
+
+  const handleBandValidationConfirm = async (useCorrectedName?: boolean) => {
+    const name = useCorrectedName && bandValidation.type === "corrected"
+      ? bandValidation.correctedName
+      : pendingBandName
+    setBandValidation({ type: "idle" })
+    setPendingBandName("")
+    await doCreateBand(name)
+  }
+
+  const handleBandValidationCancel = () => {
+    setBandValidation({ type: "idle" })
+    setPendingBandName("")
   }
 
   const handleBandKeyDown = (e: React.KeyboardEvent) => {
@@ -334,18 +411,16 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
     setVenueSelected(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const doSubmit = async (festivalNameOverride?: string) => {
     setIsSubmitting(true)
     setError(null)
 
-    if (!venueSelected || !latitude || !longitude) {
-      setError("Please select a venue from the search results")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
+      const newFestivalName = festivalNameOverride ??
+        (isFestival && !selectedFestival && festivalSearch.trim()
+          ? festivalSearch.trim()
+          : undefined)
+
       const payload = {
         date,
         latitude,
@@ -353,10 +428,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
         venue,
         isFestival,
         festivalId: isFestival && selectedFestival ? selectedFestival.id : undefined,
-        festivalName:
-          isFestival && !selectedFestival && festivalSearch.trim()
-            ? festivalSearch.trim()
-            : undefined,
+        festivalName: newFestivalName,
         cost: cost ? parseFloat(cost) : null,
         bandIds: selectedBands.map((b) => ({
           bandId: b.bandId,
@@ -386,6 +458,70 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!venueSelected || !latitude || !longitude) {
+      setError("Please select a venue from the search results")
+      return
+    }
+
+    // If a new festival name is being created, validate first
+    const newFestivalName = isFestival && !selectedFestival && festivalSearch.trim()
+      ? festivalSearch.trim()
+      : null
+
+    if (newFestivalName) {
+      setPendingFestivalName(newFestivalName)
+      setFestivalValidation({ type: "validating" })
+
+      try {
+        const res = await fetch(`/api/festivals/validate?name=${encodeURIComponent(newFestivalName)}`)
+        if (!res.ok) {
+          await doSubmit()
+          setFestivalValidation({ type: "idle" })
+          return
+        }
+
+        const data: ValidationResult = await res.json()
+
+        if (data.found && data.correctedName && data.correctedName.toLowerCase() !== newFestivalName.toLowerCase()) {
+          setFestivalValidation({ type: "corrected", original: newFestivalName, correctedName: data.correctedName })
+          return
+        } else if (data.found) {
+          await doSubmit(data.name || newFestivalName)
+          setFestivalValidation({ type: "idle" })
+          return
+        } else {
+          setFestivalValidation({ type: "not-found", name: newFestivalName })
+          return
+        }
+      } catch (err) {
+        console.error("Festival validation error:", err)
+        await doSubmit()
+        setFestivalValidation({ type: "idle" })
+        return
+      }
+    }
+
+    await doSubmit()
+  }
+
+  const handleFestivalValidationConfirm = async (useCorrectedName?: boolean) => {
+    const name = useCorrectedName && festivalValidation.type === "corrected"
+      ? festivalValidation.correctedName
+      : pendingFestivalName
+    setFestivalValidation({ type: "idle" })
+    setPendingFestivalName("")
+    await doSubmit(name)
+  }
+
+  const handleFestivalValidationCancel = () => {
+    setFestivalValidation({ type: "idle" })
+    setPendingFestivalName("")
   }
 
   const handleDelete = async () => {
@@ -782,6 +918,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
         >
           <BandEditForm
             band={{ slug: band.slug, name: band.name }}
+            canEditName={canEditBandName}
             onSave={(updated) => {
               setSelectedBands((prev) =>
                 prev.map((b) =>
@@ -796,6 +933,100 @@ export default function ConcertForm({ concert, mode, currency = "EUR" }: Concert
           />
         </Dialog>
       ))}
+
+    {/* Band validation dialog */}
+    <Dialog
+      open={bandValidation.type === "not-found" || bandValidation.type === "corrected"}
+      onClose={handleBandValidationCancel}
+      title="Verify band name"
+    >
+      {bandValidation.type === "not-found" && (
+        <div className="concert-form__validation-dialog">
+          <p>
+            &quot;{bandValidation.name}&quot; was not found on MusicBrainz or Last.fm. Are you sure the name is correct?
+          </p>
+          <div className="concert-form__validation-actions">
+            <button type="button" onClick={handleBandValidationCancel}>
+              Cancel
+            </button>
+            <button type="button" onClick={() => handleBandValidationConfirm()}>
+              Create anyway
+            </button>
+          </div>
+        </div>
+      )}
+      {bandValidation.type === "corrected" && (
+        <div className="concert-form__validation-dialog">
+          <p>
+            Did you mean &quot;{bandValidation.correctedName}&quot;?
+          </p>
+          <div className="concert-form__validation-actions">
+            <button type="button" onClick={handleBandValidationCancel}>
+              Cancel
+            </button>
+            <button type="button" onClick={() => handleBandValidationConfirm(false)}>
+              Create as &quot;{bandValidation.original}&quot;
+            </button>
+            <button type="button" onClick={() => handleBandValidationConfirm(true)}>
+              Use &quot;{bandValidation.correctedName}&quot;
+            </button>
+          </div>
+        </div>
+      )}
+    </Dialog>
+
+    {/* Festival validation dialog */}
+    <Dialog
+      open={festivalValidation.type === "not-found" || festivalValidation.type === "corrected"}
+      onClose={handleFestivalValidationCancel}
+      title="Verify festival name"
+    >
+      {festivalValidation.type === "not-found" && (
+        <div className="concert-form__validation-dialog">
+          <p>
+            &quot;{festivalValidation.name}&quot; was not found on MusicBrainz. Are you sure the name is correct?
+          </p>
+          <div className="concert-form__validation-actions">
+            <button type="button" onClick={handleFestivalValidationCancel}>
+              Cancel
+            </button>
+            <button type="button" onClick={() => handleFestivalValidationConfirm()}>
+              Create anyway
+            </button>
+          </div>
+        </div>
+      )}
+      {festivalValidation.type === "corrected" && (
+        <div className="concert-form__validation-dialog">
+          <p>
+            Did you mean &quot;{festivalValidation.correctedName}&quot;?
+          </p>
+          <div className="concert-form__validation-actions">
+            <button type="button" onClick={handleFestivalValidationCancel}>
+              Cancel
+            </button>
+            <button type="button" onClick={() => handleFestivalValidationConfirm(false)}>
+              Create as &quot;{festivalValidation.original}&quot;
+            </button>
+            <button type="button" onClick={() => handleFestivalValidationConfirm(true)}>
+              Use &quot;{festivalValidation.correctedName}&quot;
+            </button>
+          </div>
+        </div>
+      )}
+    </Dialog>
+
+    {/* Band validating loading indicator */}
+    {bandValidation.type === "validating" && (
+      <div className="concert-form__validating" aria-live="polite">
+        Checking band name...
+      </div>
+    )}
+    {festivalValidation.type === "validating" && (
+      <div className="concert-form__validating" aria-live="polite">
+        Checking festival name...
+      </div>
+    )}
     </>
   )
 }

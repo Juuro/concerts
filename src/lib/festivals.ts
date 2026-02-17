@@ -67,6 +67,7 @@ export interface CreateFestivalInput {
   name: string;
   slug: string;
   url?: string;
+  createdById?: string;
 }
 
 export async function createFestival(input: CreateFestivalInput): Promise<TransformedFestival> {
@@ -75,6 +76,7 @@ export async function createFestival(input: CreateFestivalInput): Promise<Transf
       name: input.name,
       slug: input.slug,
       url: input.url,
+      createdById: input.createdById,
     },
   });
 
@@ -82,7 +84,7 @@ export async function createFestival(input: CreateFestivalInput): Promise<Transf
 }
 
 // Get or create festival by name
-export async function getOrCreateFestival(name: string, url?: string): Promise<TransformedFestival> {
+export async function getOrCreateFestival(name: string, url?: string, createdById?: string): Promise<TransformedFestival> {
   const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -94,7 +96,7 @@ export async function getOrCreateFestival(name: string, url?: string): Promise<T
 
   if (!festival) {
     festival = await prisma.festival.create({
-      data: { name, slug, url },
+      data: { name, slug, url, createdById },
     });
   }
 

@@ -19,10 +19,20 @@ export async function PUT(
 
   try {
     const body = await request.json()
+    const userIsAdmin = session.user.role === "admin"
+
+    // Non-admins cannot change band name
+    if (body.name !== undefined && !userIsAdmin) {
+      return NextResponse.json(
+        { error: "Only admins can edit band names" },
+        { status: 403 }
+      )
+    }
 
     const updated = await updateBand(slug, {
-      name: body.name,
-      websiteUrl: body.websiteUrl,
+      ...(userIsAdmin && body.name !== undefined && { name: body.name }),
+      ...(body.websiteUrl !== undefined && { websiteUrl: body.websiteUrl }),
+      updatedById: session.user.id,
     })
 
     if (!updated) {

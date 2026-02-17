@@ -12,9 +12,10 @@ interface BandEditToggleProps {
     name: string
     websiteUrl?: string
   }
+  canEditName?: boolean
 }
 
-export default function BandEditToggle({ band }: BandEditToggleProps) {
+export default function BandEditToggle({ band, canEditName }: BandEditToggleProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -49,6 +50,7 @@ export default function BandEditToggle({ band }: BandEditToggleProps) {
       <Dialog open={open} onClose={() => setOpen(false)} title="Edit Band">
         <BandEditForm
           band={band}
+          canEditName={canEditName}
           onSave={() => {
             setOpen(false)
             router.refresh()

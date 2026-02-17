@@ -57,6 +57,7 @@ export default async function EditConcertPage({
       <ConcertForm
         mode="edit"
         currency={user?.currency || "EUR"}
+        canEditBandName={session.user.role === "admin"}
         concert={{
           id: concert.id,
           date: concert.date.toISOString(),

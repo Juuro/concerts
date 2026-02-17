@@ -46,7 +46,19 @@
         border-color: variables.$color-primary;
         outline: none;
       }
+
+      &:read-only {
+        background-color: #f0f0f0;
+        color: #999;
+        cursor: not-allowed;
+      }
     }
+  }
+
+  &__hint {
+    color: #999;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
   }
 
   &__actions {

@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     // Resolve festival: use provided ID or create from name
     let resolvedFestivalId = body.festivalId
     if (body.isFestival && body.festivalName && !body.festivalId) {
-      const festival = await getOrCreateFestival(body.festivalName)
+      const festival = await getOrCreateFestival(body.festivalName, undefined, session.user.id)
       resolvedFestivalId = festival.id
     }
 

@@ -10,6 +10,7 @@ import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags";
 import type {
   MusicBrainzArtistSearchResponse,
   MusicBrainzArtistLookupResponse,
+  MusicBrainzEventSearchResponse,
   WikidataEntitiesResponse,
   WikimediaCommonsQueryResponse,
 } from "../types/musicbrainz";
@@ -66,11 +67,11 @@ async function waitForNextRequestWindow(): Promise<void> {
 }
 
 /**
- * Step 1: Search MusicBrainz for the artist and return the MBID.
+ * Step 1: Search MusicBrainz for the artist and return the MBID and matched name.
  */
-async function searchMusicBrainzArtist(
+export async function searchMusicBrainzArtist(
   artistName: string
-): Promise<{ mbid: string } | null> {
+): Promise<{ mbid: string; name: string } | null> {
   const encoded = encodeURIComponent(artistName);
   const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=5`;
 
@@ -100,7 +101,58 @@ async function searchMusicBrainzArtist(
   );
   const bestMatch = exactMatch || artists[0];
 
-  return { mbid: bestMatch.id };
+  return { mbid: bestMatch.id, name: bestMatch.name };
+}
+
+/**
+ * Search MusicBrainz for an event (festival) by name.
+ * Returns the matched event name or null if not found.
+ */
+export async function searchMusicBrainzEvent(
+  eventName: string
+): Promise<{ name: string } | null> {
+  if (!eventName.trim()) return null;
+
+  // Check global circuit breaker
+  if (Date.now() < globalRateLimitUntil) return null;
+
+  const encoded = encodeURIComponent(eventName);
+  const url = `https://musicbrainz.org/ws/2/event?query=${encoded}&fmt=json&limit=5`;
+
+  await waitForNextRequestWindow();
+
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": USER_AGENT,
+      Accept: "application/json",
+    },
+  });
+
+  if (response.status === 503) {
+    globalRateLimitUntil = Math.max(
+      globalRateLimitUntil,
+      Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
+    );
+    return null;
+  }
+
+  if (!response.ok) {
+    console.error(`MusicBrainz event search failed: ${response.status}`);
+    return null;
+  }
+
+  const data: MusicBrainzEventSearchResponse = await response.json();
+  const events = data.events || [];
+
+  if (events.length === 0) return null;
+
+  // Prefer exact case-insensitive name match, fall back to highest score
+  const exactMatch = events.find(
+    (e) => e.name.toLowerCase() === eventName.toLowerCase()
+  );
+  const bestMatch = exactMatch || events[0];
+
+  return { name: bestMatch.name };
 }
 
 /**

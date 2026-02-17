@@ -113,6 +113,7 @@ export interface CreateBandInput {
   lastfmUrl?: string;
   genres?: string[];
   bio?: string;
+  createdById?: string;
 }
 
 export async function createBand(input: CreateBandInput): Promise<Omit<TransformedBand, "concert">> {
@@ -124,6 +125,7 @@ export async function createBand(input: CreateBandInput): Promise<Omit<Transform
       lastfmUrl: input.lastfmUrl,
       genres: input.genres || [],
       bio: input.bio,
+      createdById: input.createdById,
     },
   });
 
@@ -154,7 +156,7 @@ export async function updateBandLastfm(
 }
 
 // Get or create band by name
-export async function getOrCreateBand(name: string): Promise<Omit<TransformedBand, "concert">> {
+export async function getOrCreateBand(name: string, createdById?: string): Promise<Omit<TransformedBand, "concert">> {
   const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -166,7 +168,7 @@ export async function getOrCreateBand(name: string): Promise<Omit<TransformedBan
 
   if (!band) {
     band = await prisma.band.create({
-      data: { name, slug },
+      data: { name, slug, createdById },
     });
   }
 
@@ -177,6 +179,7 @@ export async function getOrCreateBand(name: string): Promise<Omit<TransformedBan
 export interface UpdateBandInput {
   name?: string;
   websiteUrl?: string | null;
+  updatedById?: string;
 }
 
 export async function updateBand(
@@ -191,6 +194,7 @@ export async function updateBand(
     data: {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+      ...(data.updatedById && { updatedById: data.updatedById }),
     },
   });
   return transformBand(band);

@@ -29,6 +29,21 @@ export interface MusicBrainzRelation {
   };
 }
 
+export interface MusicBrainzEventSearchResponse {
+  created: string;
+  count: number;
+  offset: number;
+  events: MusicBrainzEventSearchResult[];
+}
+
+export interface MusicBrainzEventSearchResult {
+  id: string; // MBID
+  name: string;
+  score: number; // relevance score 0-100
+  type?: string; // "Festival", "Concert", etc.
+  disambiguation?: string;
+}
+
 // Wikidata API types
 
 export interface WikidataEntitiesResponse {

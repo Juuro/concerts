@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       lastfmUrl: body.lastfmUrl,
       genres: body.genres,
       bio: body.bio,
+      createdById: session.user.id,
     };
 
     const band = await createBand(input);

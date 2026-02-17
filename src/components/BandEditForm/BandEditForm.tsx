@@ -9,11 +9,12 @@ interface BandEditFormProps {
     name: string
     websiteUrl?: string | null
   }
+  canEditName?: boolean
   onSave?: (updatedBand: { name: string; websiteUrl?: string | null }) => void
   onCancel?: () => void
 }
 
-export default function BandEditForm({ band, onSave, onCancel }: BandEditFormProps) {
+export default function BandEditForm({ band, canEditName = false, onSave, onCancel }: BandEditFormProps) {
   const [name, setName] = useState(band.name)
   const [websiteUrl, setWebsiteUrl] = useState(band.websiteUrl || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -25,13 +26,19 @@ export default function BandEditForm({ band, onSave, onCancel }: BandEditFormPro
     setError(null)
 
     try {
+      const body: Record<string, unknown> = {
+        websiteUrl: websiteUrl || null,
+      }
+
+      // Only include name if user has permission to edit it
+      if (canEditName) {
+        body.name = name
+      }
+
       const res = await fetch(`/api/bands/${band.slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          websiteUrl: websiteUrl || null,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (res.ok) {
@@ -62,9 +69,13 @@ export default function BandEditForm({ band, onSave, onCancel }: BandEditFormPro
             type="text"
             id={`band-name-${band.slug}`}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => canEditName && setName(e.target.value)}
+            readOnly={!canEditName}
             required
           />
+          {!canEditName && (
+            <p className="band-edit-form__hint">Only admins can edit band names</p>
+          )}
         </div>
 
         <div className="band-edit-form__field">

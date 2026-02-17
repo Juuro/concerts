@@ -63,6 +63,7 @@ export default async function BandPage({
   }
 
   const userId = session.user.id
+  const isAdmin = session.user.role === "admin"
 
   // Fetch user-scoped data for this band
   const now = new Date()
@@ -189,6 +190,7 @@ export default async function BandPage({
                         name: band.name,
                         websiteUrl: band.websiteUrl ?? undefined,
                       }}
+                      canEditName={isAdmin}
                     />
                 </div>
               {bandSpent.total > 0 && (
