@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { getArtistInfo } from "@/utils/lastfm"
-import { getArtistImageUrl } from "@/utils/musicbrainz"
+import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz"
+import { validateWebsiteUrl } from "@/utils/validation"
 
 export async function GET(
   request: NextRequest,
@@ -29,13 +30,15 @@ export async function GET(
       return NextResponse.json({ error: "Band not found" }, { status: 404 })
     }
 
-    // Fetch Last.fm data and MusicBrainz image in parallel
-    const [lastfmData, musicbrainzImageUrl] = await Promise.all([
-      getArtistInfo(band.name),
-      getArtistImageUrl(band.name),
-    ])
+    // Fetch Last.fm data, MusicBrainz image, and website URL in parallel
+    const [lastfmData, musicbrainzImageUrl, musicbrainzWebsiteUrl] =
+      await Promise.all([
+        getArtistInfo(band.name),
+        getArtistImageUrl(band.name),
+        getArtistWebsiteUrl(band.name),
+      ])
 
-    if (!lastfmData && !musicbrainzImageUrl) {
+    if (!lastfmData && !musicbrainzImageUrl && !musicbrainzWebsiteUrl) {
       await prisma.band.update({
         where: { id: band.id },
         data: { imageEnrichedAt: new Date() },
@@ -45,6 +48,13 @@ export async function GET(
         { status: 200 }
       )
     }
+
+    // Determine website URL: preserve existing (admin-set), else use MusicBrainz
+    const websiteUrl =
+      band.websiteUrl ||
+      (musicbrainzWebsiteUrl
+        ? validateWebsiteUrl(musicbrainzWebsiteUrl)
+        : undefined)
 
     // Update band — MusicBrainz CC-licensed image takes priority
     const updatedBand = await prisma.band.update({
@@ -60,6 +70,7 @@ export async function GET(
           lastfmData?.images.medium ||
           band.imageUrl ||
           undefined,
+        websiteUrl,
         imageEnrichedAt: new Date(),
       },
     })
@@ -70,6 +81,7 @@ export async function GET(
       slug: updatedBand.slug,
       url: `/band/${updatedBand.slug}/`,
       imageUrl: updatedBand.imageUrl,
+      websiteUrl: updatedBand.websiteUrl,
       lastfm: {
         url: updatedBand.lastfmUrl,
         genres: updatedBand.genres,

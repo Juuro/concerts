@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { updateBand } from "@/lib/bands"
+import { validateWebsiteUrl } from "@/utils/validation"
 
 export async function PUT(
   request: NextRequest,
@@ -15,23 +16,61 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  // Only admins can edit band data
+  if (session.user.role !== "admin") {
+    return NextResponse.json(
+      { error: "Only admins can edit band data" },
+      { status: 403 }
+    )
+  }
+
   const { slug } = await params
 
   try {
     const body = await request.json()
-    const userIsAdmin = session.user.role === "admin"
 
-    // Non-admins cannot change band name
-    if (body.name !== undefined && !userIsAdmin) {
-      return NextResponse.json(
-        { error: "Only admins can edit band names" },
-        { status: 403 }
-      )
+    // Validate websiteUrl if provided
+    if (body.websiteUrl !== undefined) {
+      if (body.websiteUrl === "" || body.websiteUrl === null) {
+        body.websiteUrl = null // Allow clearing
+      } else {
+        const validatedUrl = validateWebsiteUrl(body.websiteUrl)
+        if (!validatedUrl) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid website URL. Must be a valid http:// or https:// URL.",
+            },
+            { status: 400 }
+          )
+        }
+        body.websiteUrl = validatedUrl
+      }
+    }
+
+    // Validate imageUrl if provided
+    if (body.imageUrl !== undefined) {
+      if (body.imageUrl === "" || body.imageUrl === null) {
+        body.imageUrl = null // Allow clearing
+      } else {
+        const validatedUrl = validateWebsiteUrl(body.imageUrl)
+        if (!validatedUrl) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid image URL. Must be a valid http:// or https:// URL.",
+            },
+            { status: 400 }
+          )
+        }
+        body.imageUrl = validatedUrl
+      }
     }
 
     const updated = await updateBand(slug, {
-      ...(userIsAdmin && body.name !== undefined && { name: body.name }),
+      ...(body.name !== undefined && { name: body.name }),
       ...(body.websiteUrl !== undefined && { websiteUrl: body.websiteUrl }),
+      ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
       updatedById: session.user.id,
     })
 
@@ -40,10 +79,15 @@ export async function PUT(
     }
 
     return NextResponse.json(updated)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating band:", error)
 
-    if (error.code === "P2002") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
         { error: "A band with this name already exists" },
         { status: 409 }

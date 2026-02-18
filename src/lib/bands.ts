@@ -2,7 +2,8 @@ import { prisma } from "./prisma";
 import type { Band as PrismaBand } from "@/generated/prisma/client";
 import { getConcertsByBand, type TransformedConcert } from "./concerts";
 import { getArtistInfo } from "@/utils/lastfm";
-import { getArtistImageUrl } from "@/utils/musicbrainz";
+import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz";
+import { validateWebsiteUrl } from "@/utils/validation";
 
 export interface TransformedBand {
   id: string;
@@ -175,10 +176,11 @@ export async function getOrCreateBand(name: string, createdById?: string): Promi
   return transformBand(band);
 }
 
-// Update a band's editable fields
+// Update a band's editable fields (admin-only)
 export interface UpdateBandInput {
   name?: string;
   websiteUrl?: string | null;
+  imageUrl?: string | null;
   updatedById?: string;
 }
 
@@ -194,6 +196,7 @@ export async function updateBand(
     data: {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
       ...(data.updatedById && { updatedById: data.updatedById }),
     },
   });
@@ -222,12 +225,20 @@ export async function enrichBandData(
   try {
     const { imageOnly = false } = options;
 
-    const [lastfmData, musicbrainzImageUrl] = await Promise.all([
-      imageOnly ? Promise.resolve(null) : getArtistInfo(bandName),
-      getArtistImageUrl(bandName),
-    ]);
+    // Fetch existing band data to preserve admin-set values
+    const existingBand = await prisma.band.findUnique({
+      where: { id: bandId },
+      select: { websiteUrl: true },
+    });
 
-    if (!lastfmData && !musicbrainzImageUrl) {
+    const [lastfmData, musicbrainzImageUrl, musicbrainzWebsiteUrl] =
+      await Promise.all([
+        imageOnly ? Promise.resolve(null) : getArtistInfo(bandName),
+        getArtistImageUrl(bandName),
+        getArtistWebsiteUrl(bandName),
+      ]);
+
+    if (!lastfmData && !musicbrainzImageUrl && !musicbrainzWebsiteUrl) {
       await prisma.band.update({
         where: { id: bandId },
         data: { imageEnrichedAt: new Date() },
@@ -248,6 +259,15 @@ export async function enrichBandData(
 
     if (imageUrl) {
       updateData.imageUrl = imageUrl;
+    }
+
+    // Only update websiteUrl if band doesn't already have one
+    // (preserves admin-set values, auto-populates for new bands)
+    if (musicbrainzWebsiteUrl && !existingBand?.websiteUrl) {
+      const validatedUrl = validateWebsiteUrl(musicbrainzWebsiteUrl);
+      if (validatedUrl) {
+        updateData.websiteUrl = validatedUrl;
+      }
     }
 
     if (!imageOnly && lastfmData) {

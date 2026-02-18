@@ -30,6 +30,18 @@ const imageCache = new Map<string, string | null>();
 // Track pending requests to prevent duplicate concurrent calls
 const pendingRequests = new Map<string, Promise<string | null>>();
 
+// Separate caches for website URL lookups
+const websiteCache = new Map<string, string | null>();
+const websitePendingRequests = new Map<string, Promise<string | null>>();
+
+/**
+ * Data returned from MusicBrainz artist lookup.
+ */
+interface MusicBrainzArtistData {
+  wikidataId: string | null;
+  officialHomepage: string | null;
+}
+
 let globalRateLimitUntil = 0;
 let lastGlobalRateLimitLogAt = 0;
 
@@ -156,11 +168,11 @@ export async function searchMusicBrainzEvent(
 }
 
 /**
- * Step 2: Look up the artist by MBID to get URL relations (including Wikidata link).
+ * Step 2: Look up the artist by MBID to get URL relations (including Wikidata link and official homepage).
  */
 async function lookupMusicBrainzArtist(
   mbid: string
-): Promise<string | null> {
+): Promise<MusicBrainzArtistData> {
   await waitForNextRequestWindow();
 
   const url = `https://musicbrainz.org/ws/2/artist/${mbid}?fmt=json&inc=url-rels`;
@@ -183,14 +195,23 @@ async function lookupMusicBrainzArtist(
   const data: MusicBrainzArtistLookupResponse = await response.json();
   const relations = data.relations || [];
 
+  // Extract Wikidata ID
   const wikidataRelation = relations.find((r) => r.type === "wikidata");
-  if (!wikidataRelation) return null;
+  let wikidataId: string | null = null;
+  if (wikidataRelation) {
+    // Extract entity ID from URL like "https://www.wikidata.org/wiki/Q483"
+    const wikidataUrl = wikidataRelation.url.resource;
+    const entityId = wikidataUrl.split("/").pop();
+    wikidataId = entityId && entityId.startsWith("Q") ? entityId : null;
+  }
 
-  // Extract entity ID from URL like "https://www.wikidata.org/wiki/Q483"
-  const wikidataUrl = wikidataRelation.url.resource;
-  const entityId = wikidataUrl.split("/").pop();
+  // Extract official homepage URL
+  const homepageRelation = relations.find(
+    (r) => r.type === "official homepage"
+  );
+  const officialHomepage = homepageRelation?.url.resource || null;
 
-  return entityId && entityId.startsWith("Q") ? entityId : null;
+  return { wikidataId, officialHomepage };
 }
 
 /**
@@ -309,14 +330,14 @@ export async function getArtistImageUrl(
       }
 
       // Step 2: Look up relations to find Wikidata ID
-      const wikidataId = await lookupMusicBrainzArtist(searchResult.mbid);
-      if (!wikidataId) {
+      const artistData = await lookupMusicBrainzArtist(searchResult.mbid);
+      if (!artistData.wikidataId) {
         imageCache.set(cacheKey, null);
         return null;
       }
 
       // Step 3: Get image filename from Wikidata
-      const filename = await getWikidataImageFilename(wikidataId);
+      const filename = await getWikidataImageFilename(artistData.wikidataId);
       if (!filename) {
         imageCache.set(cacheKey, null);
         return null;
@@ -399,5 +420,142 @@ export async function getArtistImageUrl(
   })();
 
   pendingRequests.set(cacheKey, requestPromise);
+  return requestPromise;
+}
+
+/**
+ * Fetch an artist's official website URL via MusicBrainz.
+ *
+ * Returns the official homepage URL or null if not found.
+ */
+export async function getArtistWebsiteUrl(
+  artistName: string,
+  retryCount = 0
+): Promise<string | null> {
+  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ_IMAGES, false)) {
+    return null;
+  }
+
+  if (!artistName.trim()) {
+    return null;
+  }
+
+  // Global circuit breaker
+  if (Date.now() < globalRateLimitUntil) {
+    if (Date.now() - lastGlobalRateLimitLogAt > 10_000) {
+      lastGlobalRateLimitLogAt = Date.now();
+      console.warn(
+        `MusicBrainz calls paused due to recent rate limiting (cooldown ends in ${Math.max(0, globalRateLimitUntil - Date.now())}ms)`
+      );
+    }
+    return null;
+  }
+
+  const cacheKey = artistName.toLowerCase().trim();
+
+  // Return cached result
+  if (websiteCache.has(cacheKey)) {
+    return websiteCache.get(cacheKey) ?? null;
+  }
+
+  // Return pending request
+  if (websitePendingRequests.has(cacheKey)) {
+    return websitePendingRequests.get(cacheKey)!;
+  }
+
+  const requestPromise = (async (): Promise<string | null> => {
+    await acquireRequestSlot();
+    try {
+      // Re-check circuit breaker inside slot
+      if (Date.now() < globalRateLimitUntil) {
+        return null;
+      }
+
+      await waitForNextRequestWindow();
+
+      // Step 1: Search MusicBrainz for the artist
+      const searchResult = await searchMusicBrainzArtist(artistName);
+      if (!searchResult) {
+        websiteCache.set(cacheKey, null);
+        return null;
+      }
+
+      // Step 2: Look up relations to find official homepage
+      const artistData = await lookupMusicBrainzArtist(searchResult.mbid);
+      websiteCache.set(cacheKey, artistData.officialHomepage);
+      return artistData.officialHomepage;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+
+      // Handle MusicBrainz rate limiting (HTTP 503)
+      if (/rate limit|503/i.test(message)) {
+        globalRateLimitUntil = Math.max(
+          globalRateLimitUntil,
+          Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
+        );
+
+        if (retryCount < MAX_RATE_LIMIT_RETRIES) {
+          const backoffDelay = Math.min(
+            RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount),
+            60_000
+          );
+          console.warn(
+            `MusicBrainz rate limit for "${artistName}" (website). Retrying after ${backoffDelay}ms...`
+          );
+
+          websitePendingRequests.delete(cacheKey);
+          await sleep(backoffDelay);
+          globalRateLimitUntil = Math.max(
+            globalRateLimitUntil,
+            Date.now() + backoffDelay
+          );
+
+          return getArtistWebsiteUrl(artistName, retryCount + 1);
+        }
+
+        console.warn(
+          `MusicBrainz rate limit for "${artistName}" (website). Skipping.`
+        );
+        websiteCache.set(cacheKey, null);
+        return null;
+      }
+
+      // Handle timeouts
+      if (
+        /timeout|timed out|aborterror/i.test(message) ||
+        (error instanceof Error && error.name === "AbortError")
+      ) {
+        if (retryCount < MAX_TIMEOUT_RETRIES) {
+          const retryDelay = 1000 * (retryCount + 1);
+          console.warn(
+            `MusicBrainz timeout for "${artistName}" (website). Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_TIMEOUT_RETRIES})`
+          );
+
+          websitePendingRequests.delete(cacheKey);
+          await sleep(retryDelay);
+          return getArtistWebsiteUrl(artistName, retryCount + 1);
+        }
+
+        console.error(
+          `MusicBrainz timeout for "${artistName}" (website) after ${MAX_TIMEOUT_RETRIES} retries. Giving up.`
+        );
+        websiteCache.set(cacheKey, null);
+        return null;
+      }
+
+      console.error(
+        `Error fetching MusicBrainz website for "${artistName}":`,
+        error
+      );
+      websiteCache.set(cacheKey, null);
+      return null;
+    } finally {
+      websitePendingRequests.delete(cacheKey);
+      releaseRequestSlot();
+    }
+  })();
+
+  websitePendingRequests.set(cacheKey, requestPromise);
   return requestPromise;
 }

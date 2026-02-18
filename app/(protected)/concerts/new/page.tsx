@@ -30,7 +30,7 @@ export default async function NewConcertPage() {
     <div className="new-concert">
       <h1>Add Concert</h1>
       <p className="new-concert__subtitle">Record a concert you attended</p>
-      <ConcertForm mode="create" currency={user?.currency || "EUR"} canEditBandName={session.user.role === "admin"} />
+      <ConcertForm mode="create" currency={user?.currency || "EUR"} isAdmin={session.user.role === "admin"} />
     </div>
   );
 }

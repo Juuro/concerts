@@ -35,7 +35,7 @@ interface ConcertFormProps {
   }
   mode: "create" | "edit"
   currency?: string
-  canEditBandName?: boolean
+  isAdmin?: boolean
 }
 
 interface ValidationResult {
@@ -57,7 +57,7 @@ type FestivalValidationState =
   | { type: "not-found"; name: string }
   | { type: "corrected"; original: string; correctedName: string }
 
-export default function ConcertForm({ concert, mode, currency = "EUR", canEditBandName = false }: ConcertFormProps) {
+export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin = false }: ConcertFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -688,7 +688,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR", canEditBa
                   />
                   Headliner
                 </label>
-                {band.slug && (
+                {isAdmin && band.slug && (
                   <button
                     type="button"
                     className="concert-form__band-edit"
@@ -907,32 +907,30 @@ export default function ConcertForm({ concert, mode, currency = "EUR", canEditBa
       </div>
     </form>
 
-    {selectedBands
-      .filter((band) => band.slug)
-      .map((band) => (
-        <Dialog
-          key={band.bandId}
-          open={editingBandSlug === band.slug}
-          onClose={() => setEditingBandSlug(null)}
-          title={`Edit ${band.name}`}
-        >
-          <BandEditForm
-            band={{ slug: band.slug, name: band.name }}
-            canEditName={canEditBandName}
-            onSave={(updated) => {
-              setSelectedBands((prev) =>
-                prev.map((b) =>
-                  b.slug === band.slug
-                    ? { ...b, name: updated.name }
-                    : b
+    {isAdmin &&
+      selectedBands
+        .filter((band) => band.slug)
+        .map((band) => (
+          <Dialog
+            key={band.bandId}
+            open={editingBandSlug === band.slug}
+            onClose={() => setEditingBandSlug(null)}
+            title={`Edit ${band.name}`}
+          >
+            <BandEditForm
+              band={{ slug: band.slug, name: band.name }}
+              onSave={(updated) => {
+                setSelectedBands((prev) =>
+                  prev.map((b) =>
+                    b.slug === band.slug ? { ...b, name: updated.name } : b
+                  )
                 )
-              )
-              setEditingBandSlug(null)
-            }}
-            onCancel={() => setEditingBandSlug(null)}
-          />
-        </Dialog>
-      ))}
+                setEditingBandSlug(null)
+              }}
+              onCancel={() => setEditingBandSlug(null)}
+            />
+          </Dialog>
+        ))}
 
     {/* Band validation dialog */}
     <Dialog

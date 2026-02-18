@@ -8,15 +8,24 @@ interface BandEditFormProps {
     slug: string
     name: string
     websiteUrl?: string | null
+    imageUrl?: string | null
   }
-  canEditName?: boolean
-  onSave?: (updatedBand: { name: string; websiteUrl?: string | null }) => void
+  onSave?: (updatedBand: {
+    name: string
+    websiteUrl?: string | null
+    imageUrl?: string | null
+  }) => void
   onCancel?: () => void
 }
 
-export default function BandEditForm({ band, canEditName = false, onSave, onCancel }: BandEditFormProps) {
+export default function BandEditForm({
+  band,
+  onSave,
+  onCancel,
+}: BandEditFormProps) {
   const [name, setName] = useState(band.name)
   const [websiteUrl, setWebsiteUrl] = useState(band.websiteUrl || "")
+  const [imageUrl, setImageUrl] = useState(band.imageUrl || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,12 +36,9 @@ export default function BandEditForm({ band, canEditName = false, onSave, onCanc
 
     try {
       const body: Record<string, unknown> = {
+        name,
         websiteUrl: websiteUrl || null,
-      }
-
-      // Only include name if user has permission to edit it
-      if (canEditName) {
-        body.name = name
+        imageUrl: imageUrl || null,
       }
 
       const res = await fetch(`/api/bands/${band.slug}`, {
@@ -46,6 +52,7 @@ export default function BandEditForm({ band, canEditName = false, onSave, onCanc
         onSave?.({
           name: updated.name,
           websiteUrl: updated.websiteUrl,
+          imageUrl: updated.imageUrl,
         })
       } else {
         const data = await res.json()
@@ -69,13 +76,9 @@ export default function BandEditForm({ band, canEditName = false, onSave, onCanc
             type="text"
             id={`band-name-${band.slug}`}
             value={name}
-            onChange={(e) => canEditName && setName(e.target.value)}
-            readOnly={!canEditName}
+            onChange={(e) => setName(e.target.value)}
             required
           />
-          {!canEditName && (
-            <p className="band-edit-form__hint">Only admins can edit band names</p>
-          )}
         </div>
 
         <div className="band-edit-form__field">
@@ -85,6 +88,17 @@ export default function BandEditForm({ band, canEditName = false, onSave, onCanc
             id={`band-website-${band.slug}`}
             value={websiteUrl}
             onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+
+        <div className="band-edit-form__field">
+          <label htmlFor={`band-image-${band.slug}`}>Image URL</label>
+          <input
+            type="url"
+            id={`band-image-${band.slug}`}
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://..."
           />
         </div>

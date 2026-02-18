@@ -184,14 +184,16 @@ export default async function BandPage({
                       </svg>
                     </a>
                   )}
-                  <BandEditToggle
+                  {isAdmin && (
+                    <BandEditToggle
                       band={{
                         slug: band.slug,
                         name: band.name,
                         websiteUrl: band.websiteUrl ?? undefined,
+                        imageUrl: band.imageUrl ?? undefined,
                       }}
-                      canEditName={isAdmin}
                     />
+                  )}
                 </div>
               {bandSpent.total > 0 && (
                 <p className={styles.spendingStat}>

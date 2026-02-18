@@ -11,11 +11,11 @@ interface BandEditToggleProps {
     slug: string
     name: string
     websiteUrl?: string
+    imageUrl?: string
   }
-  canEditName?: boolean
 }
 
-export default function BandEditToggle({ band, canEditName }: BandEditToggleProps) {
+export default function BandEditToggle({ band }: BandEditToggleProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -50,7 +50,6 @@ export default function BandEditToggle({ band, canEditName }: BandEditToggleProp
       <Dialog open={open} onClose={() => setOpen(false)} title="Edit Band">
         <BandEditForm
           band={band}
-          canEditName={canEditName}
           onSave={() => {
             setOpen(false)
             router.refresh()
