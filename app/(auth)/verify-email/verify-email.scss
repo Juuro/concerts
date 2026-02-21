@@ -1,0 +1,14 @@
+@use "../../../src/styles/variables.scss";
+@use "../../../src/styles/buttons.scss" as buttons;
+
+.verify-email {
+  &__actions {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  &__link {
+    @include buttons.btn-primary;
+    display: inline-block;
+  }
+}

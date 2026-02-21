@@ -1,0 +1,67 @@
+@use "../../styles/variables.scss";
+
+.dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 480px;
+  width: calc(100% - 2rem);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: variables.$font-family-text;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  &__content {
+    padding: 1.25rem;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-family: variables.$font-family-heading;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: background variables.$transition-duration ease,
+      color variables.$transition-duration ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: rgba(0, 0, 0, 0.8);
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__body {
+    // Reset BandEditForm background/border when inside dialog
+    .band-edit-form {
+      background: none;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+    }
+  }
+}

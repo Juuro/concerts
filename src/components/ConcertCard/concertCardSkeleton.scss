@@ -1,0 +1,101 @@
+@use "../../styles/variables.scss";
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: rgba(68, 68, 68, 0.1);
+  border-radius: 4px;
+}
+
+.concert-card-skeleton {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "image body"
+    "image location";
+  overflow: hidden;
+  margin-bottom: 1rem;
+
+  .concert-card-skeleton-image {
+    grid-area: image;
+    aspect-ratio: 1;
+    background: rgba(68, 68, 68, 0.08);
+  }
+
+  .concert-card-skeleton-body {
+    grid-area: body;
+    padding: 1em 1em 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .skeleton-title {
+      height: 2rem;
+      width: 70%;
+    }
+
+    .skeleton-date {
+      height: 1rem;
+      width: 40%;
+    }
+
+    .skeleton-badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5em;
+    }
+
+    .skeleton-badge {
+      height: 1.5rem;
+      width: 4rem;
+      border-radius: 1rem;
+    }
+  }
+
+  .concert-card-skeleton-location {
+    grid-area: location;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 1em 1em 0;
+    gap: 0.25rem;
+
+    .skeleton-club {
+      height: 1rem;
+      width: 60%;
+    }
+
+    .skeleton-city {
+      height: 1rem;
+      width: 40%;
+    }
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .concert-card-skeleton {
+    grid-template-areas: "image body body location";
+    grid-template-columns: 1fr 2fr 2fr 2fr;
+
+    .concert-card-skeleton-body {
+      padding: 1rem 0;
+
+      .skeleton-title {
+        height: 2.5rem;
+      }
+    }
+  }
+}

@@ -30,7 +30,7 @@ export interface Concert {
     lat: number;
     lon: number;
   };
-  club?: string;
+  venue?: string | null;
   bands: Band[];
   isFestival: boolean;
   festival: Festival | null;

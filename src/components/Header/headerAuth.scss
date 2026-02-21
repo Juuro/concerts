@@ -1,0 +1,30 @@
+@use "../../styles/variables.scss";
+@use "../../styles/buttons.scss" as buttons;
+
+.header-auth {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+
+  &--loading {
+    height: 36px;
+    width: 100px;
+  }
+
+  &__link {
+    color: variables.$color-black;
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__login {
+    @include buttons.btn-primary;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+}

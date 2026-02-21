@@ -1,4 +1,12 @@
 @use "../../styles/variables.scss";
+@use "../../styles/buttons.scss" as buttons;
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
 
 .concert-card {
   display: grid;
@@ -10,6 +18,10 @@
     "image location";
   overflow: hidden;
   margin-bottom: 1rem;
+
+  &--animated {
+    animation: card-fade-in 250ms variables.$transition-easing-decelerate both;
+  }
 
   &.future {
     background-image: repeating-linear-gradient(
@@ -71,11 +83,29 @@
     grid-area: location;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 1em 1em 0;
+    gap: 1rem;
+
+    .venue {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .city {
+      font-size: 0.875rem;
+      color: #666;
+    }
 
     .club {
-      font-weight: bold;
+      font-weight: bold;  // Keep for backward compat
     }
+  }
+
+  .concert-card-cost {
+    color: #666;
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
   }
 }
 
@@ -92,4 +122,13 @@
       }
     }
   }
+}
+
+.concert-card-edit-btn {
+  @include buttons.btn-secondary;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
 }

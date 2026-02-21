@@ -66,7 +66,9 @@ a {
   text-decoration: none;
   transition: color variables.$transition-duration ease-out;
 
-  // TODO: Fix hover colour for tags.
+  // This hover color applies to text links only.
+  // Button-styled links override this via btn-primary/btn-secondary mixins
+  // which explicitly set color on hover.
   &:hover {
     color: variables.$color-black;
   }
@@ -116,6 +118,40 @@ main {
   flex-wrap: wrap;
 }
 
+.map-wrapper {
+  position: relative;
+
+  &--fullscreen {
+    background: variables.$color-white;
+    inset: 0;
+    position: fixed;
+    z-index: 9999;
+
+    .mapid {
+      border-radius: 0;
+      height: 100vh;
+    }
+  }
+
+  &__fullscreen-btn {
+    background: variables.$color-white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 0.4rem 0.75rem;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 10000;
+
+    &:hover {
+      background: #f0f0f0;
+    }
+  }
+}
+
 .mapid {
   display: flex;
   height: calc(100vh - 162px);
@@ -150,6 +186,11 @@ h2 {
   display: inline;
   margin: 0 0.4em 0.4em 0;
   padding: 0.1em 0.5em;
+  transition: background-color variables.$transition-duration ease;
+
+  &:hover {
+    color: variables.$color-white;
+  }
 
   &:has(.badge) {
     padding-left: 0;
@@ -165,11 +206,35 @@ h2 {
 
 .bg-primary {
   background-color: variables.$color-primary;
+
+  &:hover {
+    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background-color: color.adjust(variables.$color-primary, $lightness: -15%);
+  }
 }
 
 @media screen and (min-width: 768px) {
   main {
     margin: 0 auto;
     width: 55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

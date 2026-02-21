@@ -5,25 +5,17 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.ctfassets.net',
+        hostname: 'upload.wikimedia.org',
       },
       {
         protocol: 'https',
         hostname: 'lastfm.freetls.fastly.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
     ],
-  },
-  webpack: (config, { isServer }) => {
-    // Handle leaflet on client-side only
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    return config;
   },
   sassOptions: {
     includePaths: ['./src/styles'],

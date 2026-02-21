@@ -41,4 +41,5 @@ export function isFeatureEnabled(flagName: string, defaultValue = false): boolea
 export const FEATURE_FLAGS = {
   ENABLE_LASTFM: 'ENABLE_LASTFM',
   ENABLE_GEOCODING: 'ENABLE_GEOCODING',
+  ENABLE_MUSICBRAINZ_IMAGES: 'ENABLE_MUSICBRAINZ_IMAGES',
 } as const;

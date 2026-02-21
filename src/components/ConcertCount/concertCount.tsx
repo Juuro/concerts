@@ -1,31 +1,25 @@
 import React from "react";
-import type { ConcertsFormatted } from "../../types/concert";
 
 interface ConcertCountProps {
-  concerts: ConcertsFormatted;
+  counts: {
+    past: number;
+    future: number;
+  };
 }
 
-const ConcertCount: React.FC<ConcertCountProps> = ({ concerts }) => {
-  const now = new Date();
-
-  const concertsInPast = () =>
-    concerts.edges.filter(({ node }) => new Date(node.date) < now);
-
-  const concertsInFuture = () =>
-    concerts.edges.filter(({ node }) => new Date(node.date) > now);
-
+const ConcertCount: React.FC<ConcertCountProps> = ({ counts }) => {
   return (
     <span
       className="badge rounded-pill"
-      title={`${concertsInFuture().length} concerts planned`}
+      title={`${counts.future} concerts planned`}
     >
       <span
         className="past badge bg-primary rounded-pill"
-        title={`${concertsInPast().length} concerts visited`}
+        title={`${counts.past} concerts visited`}
       >
-        {concertsInPast().length}
+        {counts.past}
       </span>
-      {concertsInFuture().length}
+      {counts.future}
     </span>
   );
 };

@@ -1,19 +1,21 @@
 import React from 'react';
 import Header from './Header/header';
-import type { Concert } from '../types/concert';
 import '../styles/layout.scss';
 
 interface LayoutProps {
   children: React.ReactNode;
-  concerts?: Concert[];
+  concertCounts?: {
+    past: number;
+    future: number;
+  };
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, concerts }) => {
+const Layout: React.FC<LayoutProps> = ({ children, concertCounts }) => {
   return (
     <>
       <Header
         siteTitle="Concerts"
-        concerts={concerts}
+        concertCounts={concertCounts}
       />
 
       {children}

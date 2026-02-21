@@ -1,0 +1,17 @@
+@use "../../../../../src/styles/variables.scss";
+
+.edit-concert {
+  padding: 2rem 1rem;
+  width: 100%;
+
+  h1 {
+    font-family: variables.$font-family-heading;
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  &__subtitle {
+    color: #666;
+    margin: 0 0 2rem;
+  }
+}
