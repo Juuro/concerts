@@ -125,6 +125,7 @@ async function LoggedInHome({
               filterParams={{ userOnly: "true" }}
               showEditButtons={true}
               currentUserId={userId}
+              currency={totalSpent.currency}
             />
           )}
         </div>

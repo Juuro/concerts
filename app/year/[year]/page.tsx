@@ -109,6 +109,7 @@ export default async function YearPage({
             initialHasMore={initialData.hasMore}
             initialHasPrevious={initialData.hasPrevious}
             filterParams={{ year, userOnly: 'true' }}
+            currency={yearSpent.currency}
           />
         </div>
       </main>
