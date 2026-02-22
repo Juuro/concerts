@@ -12,6 +12,7 @@ import { headers } from "next/headers"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
 import BandEditToggle from "./BandEditToggle"
+import RetryEnrichButton from "./RetryEnrichButton"
 
 export const dynamic = "force-dynamic"
 
@@ -193,6 +194,9 @@ export default async function BandPage({
                         imageUrl: band.imageUrl ?? undefined,
                       }}
                     />
+                  )}
+                  {isAdmin && !band.imageUrl && (
+                    <RetryEnrichButton slug={band.slug} />
                   )}
                 </div>
               {bandSpent.total > 0 && (

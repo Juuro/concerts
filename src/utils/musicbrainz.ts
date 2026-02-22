@@ -21,9 +21,10 @@ const IMAGE_THUMBNAIL_WIDTH = 500;
 // Rate limiting infrastructure (MusicBrainz: max 1 req/sec)
 const MIN_REQUEST_INTERVAL = 1100; // slightly over 1s to stay safe
 const GLOBAL_RATE_LIMIT_COOLDOWN = 120_000; // 2 minutes
-const MAX_TIMEOUT_RETRIES = 1;
+const MAX_NETWORK_RETRIES = 2;
 const MAX_RATE_LIMIT_RETRIES = 1;
 const RATE_LIMIT_RETRY_DELAY = 15_000;
+const FETCH_TIMEOUT = 10_000; // 10 seconds
 
 // Build-time cache to prevent duplicate API calls during static generation
 const imageCache = new Map<string, string | null>();
@@ -53,6 +54,42 @@ let nextAllowedRequestAt = 0;
 async function sleep(ms: number): Promise<void> {
   if (ms <= 0) return;
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Check if an error is a transient network error that should be retried.
+ */
+function isRetryableNetworkError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  const code = (error as NodeJS.ErrnoException)?.code;
+  const name = error instanceof Error ? error.name : "";
+
+  return (
+    name === "AbortError" ||
+    /timeout|timed out|econnreset|econnrefused|socket hang up|fetch failed/i.test(
+      message
+    ) ||
+    ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "ENOTFOUND"].includes(
+      code || ""
+    )
+  );
+}
+
+/**
+ * Fetch with timeout to prevent hanging requests.
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function acquireRequestSlot(): Promise<void> {
@@ -87,7 +124,7 @@ export async function searchMusicBrainzArtist(
   const encoded = encodeURIComponent(artistName);
   const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=5`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
@@ -133,7 +170,7 @@ export async function searchMusicBrainzEvent(
 
   await waitForNextRequestWindow();
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
@@ -177,7 +214,7 @@ async function lookupMusicBrainzArtist(
 
   const url = `https://musicbrainz.org/ws/2/artist/${mbid}?fmt=json&inc=url-rels`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
@@ -222,7 +259,7 @@ async function getWikidataImageFilename(
 ): Promise<string | null> {
   const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidataId}&props=claims&format=json`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { Accept: "application/json" },
   });
 
@@ -250,7 +287,7 @@ async function getWikimediaCommonsUrl(
   const encoded = encodeURIComponent(filename);
   const url = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encoded}&prop=imageinfo&iiprop=url&iiurlwidth=${width}&format=json`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { Accept: "application/json" },
   });
 
@@ -384,15 +421,12 @@ export async function getArtistImageUrl(
         return null;
       }
 
-      // Handle timeouts
-      if (
-        /timeout|timed out|aborterror/i.test(message) ||
-        (error instanceof Error && error.name === "AbortError")
-      ) {
-        if (retryCount < MAX_TIMEOUT_RETRIES) {
-          const retryDelay = 1000 * (retryCount + 1);
+      // Handle transient network errors (ECONNRESET, timeouts, etc.)
+      if (isRetryableNetworkError(error)) {
+        if (retryCount < MAX_NETWORK_RETRIES) {
+          const retryDelay = 1000 * Math.pow(2, retryCount); // 1s, 2s, 4s
           console.warn(
-            `MusicBrainz timeout for "${artistName}". Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_TIMEOUT_RETRIES})`
+            `MusicBrainz network error for "${artistName}". Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_NETWORK_RETRIES})`
           );
 
           pendingRequests.delete(cacheKey);
@@ -401,9 +435,9 @@ export async function getArtistImageUrl(
         }
 
         console.error(
-          `MusicBrainz timeout for "${artistName}" after ${MAX_TIMEOUT_RETRIES} retries. Giving up.`
+          `MusicBrainz network error for "${artistName}" after ${MAX_NETWORK_RETRIES} retries. Giving up.`
         );
-        imageCache.set(cacheKey, null);
+        // Don't cache transient errors - allow retry on next page visit
         return null;
       }
 
@@ -411,7 +445,10 @@ export async function getArtistImageUrl(
         `Error fetching MusicBrainz image for "${artistName}":`,
         error
       );
-      imageCache.set(cacheKey, null);
+      // Only cache permanent errors (non-network failures)
+      if (!isRetryableNetworkError(error)) {
+        imageCache.set(cacheKey, null);
+      }
       return null;
     } finally {
       pendingRequests.delete(cacheKey);
@@ -521,15 +558,12 @@ export async function getArtistWebsiteUrl(
         return null;
       }
 
-      // Handle timeouts
-      if (
-        /timeout|timed out|aborterror/i.test(message) ||
-        (error instanceof Error && error.name === "AbortError")
-      ) {
-        if (retryCount < MAX_TIMEOUT_RETRIES) {
-          const retryDelay = 1000 * (retryCount + 1);
+      // Handle transient network errors (ECONNRESET, timeouts, etc.)
+      if (isRetryableNetworkError(error)) {
+        if (retryCount < MAX_NETWORK_RETRIES) {
+          const retryDelay = 1000 * Math.pow(2, retryCount); // 1s, 2s, 4s
           console.warn(
-            `MusicBrainz timeout for "${artistName}" (website). Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_TIMEOUT_RETRIES})`
+            `MusicBrainz network error for "${artistName}" (website). Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_NETWORK_RETRIES})`
           );
 
           websitePendingRequests.delete(cacheKey);
@@ -538,9 +572,9 @@ export async function getArtistWebsiteUrl(
         }
 
         console.error(
-          `MusicBrainz timeout for "${artistName}" (website) after ${MAX_TIMEOUT_RETRIES} retries. Giving up.`
+          `MusicBrainz network error for "${artistName}" (website) after ${MAX_NETWORK_RETRIES} retries. Giving up.`
         );
-        websiteCache.set(cacheKey, null);
+        // Don't cache transient errors - allow retry on next page visit
         return null;
       }
 
@@ -548,7 +582,10 @@ export async function getArtistWebsiteUrl(
         `Error fetching MusicBrainz website for "${artistName}":`,
         error
       );
-      websiteCache.set(cacheKey, null);
+      // Only cache permanent errors (non-network failures)
+      if (!isRetryableNetworkError(error)) {
+        websiteCache.set(cacheKey, null);
+      }
       return null;
     } finally {
       websitePendingRequests.delete(cacheKey);
