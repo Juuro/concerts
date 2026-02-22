@@ -28,8 +28,8 @@ export default function RetryEnrichButton({ slug }: RetryEnrichButtonProps) {
       className={styles.retryIcon}
       onClick={handleRetry}
       disabled={loading}
-      aria-label="Retry fetching band image"
-      title="Retry fetching band image"
+      aria-label="Retry fetching band data"
+      title="Retry fetching band data"
     >
       <svg
         aria-hidden="true"

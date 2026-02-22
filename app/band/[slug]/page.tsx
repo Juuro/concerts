@@ -195,7 +195,7 @@ export default async function BandPage({
                       }}
                     />
                   )}
-                  {isAdmin && !band.imageUrl && (
+                  {isAdmin && (!band.imageUrl || !hasLastfmUrl) && (
                     <RetryEnrichButton slug={band.slug} />
                   )}
                 </div>
