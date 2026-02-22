@@ -114,7 +114,7 @@ Environment-controlled in `.env`:
 
 All pages that display concert lists use infinite scrolling with cursor-based pagination:
 
-- **Pages**: Homepage, Dashboard (My Concerts), Band pages, City pages, Year pages, Public user profiles
+- **Pages**: Homepage, Band pages, City pages, Year pages, Public user profiles
 - **Component**: `ConcertListInfinite` (uses IntersectionObserver for automatic loading)
 - **Backend**: `getConcertsPaginated()` function in `src/lib/concerts.ts` with `ConcertFilters` interface
 - **API**: `/api/concerts` endpoint supports filter parameters (userId, username, bandSlug, city, year)

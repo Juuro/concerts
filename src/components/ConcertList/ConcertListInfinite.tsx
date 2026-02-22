@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import ConcertCard from "../ConcertCard/concertCard"
 import ConcertCardSkeleton from "../ConcertCard/ConcertCardSkeleton"
 import { useToast } from "../Toast"
+import { useSession } from "@/lib/auth-client"
 import type { TransformedConcert } from "@/lib/concerts"
 import "./concertListInfinite.scss"
 
@@ -16,6 +17,7 @@ interface ConcertListInfiniteProps {
   filterParams?: Record<string, string>
   showEditButtons?: boolean
   currentUserId?: string
+  profileUserId?: string // For public profile pages - enables edit buttons if viewer owns this profile
   hideLocation?: boolean
   hideCost?: boolean
   currency?: string
@@ -29,6 +31,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   filterParams = {},
   showEditButtons = false,
   currentUserId,
+  profileUserId,
   hideLocation = false,
   hideCost = false,
   currency,
@@ -36,6 +39,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   const router = useRouter()
   const searchParams = useSearchParams()
   const { showToast } = useToast()
+  const { data: session } = useSession()
+
+  // For public profile pages, enable edit buttons if the viewer owns the profile
+  const isViewingOwnProfile = Boolean(profileUserId && session?.user?.id === profileUserId)
+  const shouldShowEditButtons = showEditButtons || isViewingOwnProfile
+  const effectiveUserId = currentUserId || session?.user?.id
 
   const [concerts, setConcerts] =
     useState<TransformedConcert[]>(initialConcerts)
@@ -241,8 +250,8 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
           <ConcertCard
             key={concert.id}
             concert={concert}
-            showEditButton={showEditButtons}
-            currentUserId={currentUserId}
+            showEditButton={shouldShowEditButtons}
+            currentUserId={effectiveUserId}
             animated={!initialIdsRef.current.has(concert.id)}
             hideLocation={hideLocation}
             hideCost={hideCost}

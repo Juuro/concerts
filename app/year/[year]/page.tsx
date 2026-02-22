@@ -110,6 +110,8 @@ export default async function YearPage({
             initialHasPrevious={initialData.hasPrevious}
             filterParams={{ year, userOnly: 'true' }}
             currency={yearSpent.currency}
+            showEditButtons={true}
+            currentUserId={userId}
           />
         </div>
       </main>

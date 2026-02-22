@@ -214,6 +214,8 @@ export default async function BandPage({
             initialHasPrevious={initialData.hasPrevious}
             filterParams={{ bandSlug: slug, userOnly: 'true' }}
             currency={bandSpent.currency}
+            showEditButtons={true}
+            currentUserId={userId}
           />
         </div>
       </main>

@@ -69,7 +69,10 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
   }
 
   const isInTheFuture = () => {
-    if (concert.date > new Date().toISOString()) {
+    const concertDate = concert.date.slice(0, 10) // "YYYY-MM-DD"
+    const today = new Date().toISOString().slice(0, 10) // "YYYY-MM-DD"
+
+    if (concertDate >= today) {
       return "future"
     }
     return ""

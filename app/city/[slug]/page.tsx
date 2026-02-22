@@ -101,6 +101,8 @@ export default async function CityPage({
             initialHasPrevious={initialData.hasPrevious}
             filterParams={{ city: cityName, userOnly: 'true' }}
             currency={citySpent.currency}
+            showEditButtons={true}
+            currentUserId={userId}
           />
         </div>
       </main>

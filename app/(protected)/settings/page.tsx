@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useSession } from "@/lib/auth-client"
@@ -24,6 +24,16 @@ export default function SettingsPage() {
     text: string
   } | null>(null)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (session?.user) {
+      setUsername(session.user.username || "")
+      setIsPublic(session.user.isPublic || false)
+      setCurrency(session.user.currency || "EUR")
+      setHideLocationPublic(session.user.hideLocationPublic ?? true)
+      setHideCostPublic(session.user.hideCostPublic ?? true)
+    }
+  }, [session?.user])
 
   if (isPending) {
     return (

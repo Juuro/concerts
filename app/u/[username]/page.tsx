@@ -182,6 +182,7 @@ export default async function PublicProfilePage({
                 hideLocation={hideLocation}
                 hideCost={hideCost}
                 currency={hideCost ? undefined : user.currency}
+                profileUserId={user.id}
               />
             </div>
           )}
