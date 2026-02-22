@@ -97,9 +97,9 @@ async function fetchPhotonSearch(
     url.searchParams.set("lon", String(params.lon))
   }
 
-  // Filter by OSM tag if provided
-  if (params.osm_tag) {
-    url.searchParams.set("osm_tag", params.osm_tag)
+  // Filter by OSM tags if provided (multiple tags act as OR)
+  if (params.osm_tags?.length) {
+    params.osm_tags.forEach((tag) => url.searchParams.append("osm_tag", tag))
   }
 
   // Fetch results with timeout
@@ -166,33 +166,66 @@ async function fetchPhotonSearch(
 }
 
 /**
+ * Default OSM tags for event venues
+ * These tags filter results to concert halls, theatres, stadiums, etc.
+ */
+const DEFAULT_VENUE_TAGS = [
+  "amenity:theatre",
+  "amenity:concert_hall",
+  "amenity:arts_centre",
+  "amenity:events_venue",
+  "amenity:nightclub",
+  "amenity:community_centre",
+  "leisure:stadium",
+]
+
+/**
  * Search for venues using Photon API
- * Includes request deduplication and rate limiting
+ * Includes request deduplication, rate limiting, and venue-specific filtering
  *
  * @param query Search query string (minimum 3 characters)
- * @param options Optional lat/lon to bias results
+ * @param options Optional lat/lon to bias results, osm_tags to filter by
  * @returns Promise resolving to array of venue search results
  */
 export async function searchVenues(
   query: string,
-  options?: { lat?: number; lon?: number }
+  options?: { lat?: number; lon?: number; osm_tags?: string[] }
 ): Promise<PhotonSearchResult[]> {
   // Require minimum 3 characters
   if (query.length < 3) return []
 
+  const osm_tags = options?.osm_tags ?? DEFAULT_VENUE_TAGS
+
   // Check for pending request with same parameters
-  const cacheKey = `${query}:${options?.lat || ""}:${options?.lon || ""}`
+  const cacheKey = `${query}:${options?.lat || ""}:${options?.lon || ""}:${osm_tags.join(",")}`
   const existing = pendingPhotonRequests.get(cacheKey)
   if (existing) return existing
 
-  // Create new request
-  const promise = withPhotonQueue(() =>
-    fetchPhotonSearch({
+  // Create new request with venue filtering
+  const promise = withPhotonQueue(async () => {
+    // First, try with venue-specific tags
+    const filteredResults = await fetchPhotonSearch({
       q: query,
       limit: 10,
-      ...options,
+      lat: options?.lat,
+      lon: options?.lon,
+      osm_tags,
     })
-  )
+
+    // If we got results, return them
+    if (filteredResults.length > 0) {
+      return filteredResults
+    }
+
+    // Fallback: if no tagged venues found, search without tag filtering
+    // This catches venues that exist in OSM but aren't properly tagged
+    return fetchPhotonSearch({
+      q: query,
+      limit: 10,
+      lat: options?.lat,
+      lon: options?.lon,
+    })
+  })
 
   // Store pending request for deduplication
   pendingPhotonRequests.set(cacheKey, promise)

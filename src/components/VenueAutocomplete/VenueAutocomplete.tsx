@@ -30,6 +30,7 @@ export default function VenueAutocomplete({
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const userIsTypingRef = useRef(false)
 
   // Debounced search (300ms)
   useEffect(() => {
@@ -52,7 +53,9 @@ export default function VenueAutocomplete({
         if (res.ok) {
           const data = await res.json()
           setResults(data)
-          setIsOpen(data.length > 0)
+          if (userIsTypingRef.current) {
+            setIsOpen(data.length > 0)
+          }
         }
       } catch (err) {
         console.error("Venue search error:", err)
@@ -64,8 +67,9 @@ export default function VenueAutocomplete({
     return () => clearTimeout(timer)
   }, [searchTerm, latitude, longitude])
 
-  // Update search term when value prop changes
+  // Update search term when value prop changes (from external source)
   useEffect(() => {
+    userIsTypingRef.current = false
     setSearchTerm(value)
   }, [value])
 
@@ -165,7 +169,10 @@ export default function VenueAutocomplete({
           aria-autocomplete="list"
           aria-haspopup="listbox"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            userIsTypingRef.current = true
+            setSearchTerm(e.target.value)
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Search for a venue (min 3 characters)..."
           disabled={disabled}

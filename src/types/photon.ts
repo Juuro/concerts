@@ -8,7 +8,7 @@ export interface PhotonSearchParams {
   limit?: number     // Max results (default 10)
   lat?: number       // Bias results near this latitude
   lon?: number       // Bias results near this longitude
-  osm_tag?: string   // Filter by OSM tag (e.g., "amenity")
+  osm_tags?: string[] // Filter by OSM tags (e.g., ["amenity:theatre", "leisure:stadium"])
 }
 
 export interface PhotonSearchFeature {

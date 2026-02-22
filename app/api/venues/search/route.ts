@@ -3,7 +3,10 @@ import { searchVenues } from "@/utils/photon"
 
 /**
  * GET /api/venues/search
- * Search for venues using Photon API
+ * Search for event venues using Photon API
+ *
+ * By default, filters results to event venues (theatres, concert halls,
+ * stadiums, etc.). Falls back to unfiltered search if no tagged venues found.
  *
  * Query parameters:
  * - q: Search query (required, min 3 characters)
