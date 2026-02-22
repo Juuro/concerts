@@ -8,6 +8,7 @@ import {
   getConcertsPaginated,
   getUserConcertCounts,
   getUserTotalSpent,
+  getStartOfToday,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
@@ -61,7 +62,7 @@ export default async function CityPage({
   }
 
   const userId = session.user.id
-  const now = new Date()
+  const now = getStartOfToday()
 
   const [userCounts, initialData, pastCount, futureCount, citySpent] = await Promise.all([
     getUserConcertCounts(userId),

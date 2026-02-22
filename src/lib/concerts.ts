@@ -10,6 +10,17 @@ import { cityToSlug } from "@/utils/helpers"
 import { getGeocodingData } from "@/utils/data"
 import type { GeocodingData } from "@/types/geocoding"
 
+/**
+ * Returns today's date at UTC midnight (00:00:00.000Z).
+ * Used for date comparisons to ensure concerts on "today" are treated as future, not past.
+ * Uses UTC to match how dates are stored in the database.
+ */
+export function getStartOfToday(): Date {
+  const now = new Date()
+  now.setUTCHours(0, 0, 0, 0)
+  return now
+}
+
 // Types matching the existing app structure
 export interface TransformedBand {
   id: string
@@ -527,7 +538,7 @@ export interface ConcertCounts {
 }
 
 export async function getConcertCounts(): Promise<ConcertCounts> {
-  const now = new Date()
+  const now = getStartOfToday()
   const [past, future] = await Promise.all([
     prisma.concert.count({ where: { date: { lt: now } } }),
     prisma.concert.count({ where: { date: { gte: now } } }),
@@ -551,7 +562,7 @@ export interface ConcertStatistics {
 }
 
 async function computeConcertStatistics(): Promise<ConcertStatistics> {
-  const now = new Date()
+  const now = getStartOfToday()
 
   // Use Prisma aggregations for efficient queries
   const [yearStats, cityStats, bandStats, pastCount, futureCount] =
@@ -667,7 +678,7 @@ export const getConcertStatistics = unstable_cache(
 async function computeUserConcertStatistics(
   userId: string
 ): Promise<ConcertStatistics> {
-  const now = new Date()
+  const now = getStartOfToday()
 
   const [yearStats, cityStats, bandStats, pastCount, futureCount] =
     await Promise.all([
@@ -772,7 +783,7 @@ export const getUserConcertStatistics = unstable_cache(
 export async function getUserConcertCounts(
   userId: string
 ): Promise<ConcertCounts> {
-  const now = new Date()
+  const now = getStartOfToday()
   const [past, future] = await Promise.all([
     prisma.concert.count({ where: { userId, date: { lt: now } } }),
     prisma.concert.count({ where: { userId, date: { gte: now } } }),
@@ -781,7 +792,7 @@ export async function getUserConcertCounts(
 }
 
 export async function getGlobalAppStats() {
-  const now = new Date()
+  const now = getStartOfToday()
   const [concertCount, bandCount, userCount] = await Promise.all([
     prisma.concert.count({ where: { date: { lt: now } } }),
     prisma.band.count(),

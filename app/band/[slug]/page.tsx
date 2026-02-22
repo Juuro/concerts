@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent } from "@/lib/concerts"
+import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent, getStartOfToday } from "@/lib/concerts"
 import { getBandBySlug, getAllBandSlugs, enrichBandData } from "@/lib/bands"
 import { after } from "next/server"
 import { prisma } from "@/lib/prisma"
@@ -67,7 +67,7 @@ export default async function BandPage({
   const isAdmin = session.user.role === "admin"
 
   // Fetch user-scoped data for this band
-  const now = new Date()
+  const now = getStartOfToday()
   const [userCounts, initialData, bandSpent, pastCount, futureCount] = await Promise.all([
     getUserConcertCounts(userId),
     getConcertsPaginated(cursor, 20, "forward", { bandSlug: slug, userId }),

@@ -7,6 +7,7 @@ import {
   getConcertsPaginated,
   getUserConcertCounts,
   getUserTotalSpent,
+  getStartOfToday,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
@@ -55,7 +56,7 @@ export default async function YearPage({
   const userId = session.user.id
 
   // Fetch user-scoped data for this year
-  const now = new Date()
+  const now = getStartOfToday()
   const yearStart = new Date(yearNum, 0, 1)
   const yearEnd = new Date(yearNum, 11, 31, 23, 59, 59, 999)
 
