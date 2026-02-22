@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
 
     // Revalidate statistics cache
     revalidateTag("concert-statistics")
+    revalidateTag("user-concert-statistics")
 
     return NextResponse.json(concert, { status: 201 })
   } catch (error) {
