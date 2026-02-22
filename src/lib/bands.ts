@@ -246,12 +246,7 @@ export async function enrichBandData(
       return;
     }
 
-    const imageUrl =
-      musicbrainzImageUrl ||
-      lastfmData?.images.extralarge ||
-      lastfmData?.images.large ||
-      lastfmData?.images.medium ||
-      undefined;
+    const imageUrl = musicbrainzImageUrl || undefined;
 
     const updateData: Record<string, unknown> = {
       imageEnrichedAt: new Date(),

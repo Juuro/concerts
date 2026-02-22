@@ -63,13 +63,7 @@ export async function GET(
         lastfmUrl: lastfmData?.url || undefined,
         genres: lastfmData?.genres || [],
         bio: lastfmData?.bio || undefined,
-        imageUrl:
-          musicbrainzImageUrl ||
-          lastfmData?.images.extralarge ||
-          lastfmData?.images.large ||
-          lastfmData?.images.medium ||
-          band.imageUrl ||
-          undefined,
+        imageUrl: musicbrainzImageUrl || band.imageUrl || undefined,
         websiteUrl,
         imageEnrichedAt: new Date(),
       },
