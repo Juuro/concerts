@@ -4,6 +4,7 @@ import { getConcertsByBand, type TransformedConcert } from "./concerts";
 import { getArtistInfo } from "@/utils/lastfm";
 import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz";
 import { validateWebsiteUrl } from "@/utils/validation";
+import { slugify } from "@/utils/helpers";
 
 export interface TransformedBand {
   id: string;
@@ -158,10 +159,7 @@ export async function updateBandLastfm(
 
 // Get or create band by name
 export async function getOrCreateBand(name: string, createdById?: string): Promise<Omit<TransformedBand, "concert">> {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  const slug = slugify(name);
 
   let band = await prisma.band.findUnique({
     where: { slug },

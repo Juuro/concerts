@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createBand, enrichBandData, type CreateBandInput } from "@/lib/bands";
+import { slugify } from "@/utils/helpers";
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({
@@ -20,12 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate slug from name if not provided
-    const slug =
-      body.slug ||
-      body.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+    const slug = body.slug || slugify(body.name);
 
     const input: CreateBandInput = {
       name: body.name,
