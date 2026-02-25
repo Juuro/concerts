@@ -306,6 +306,15 @@ export async function getAllCities(): Promise<string[]> {
 // ============================================
 
 /**
+ * Get the headliner band from a list of concert bands.
+ */
+function getHeadliner(
+  bands: { bandId: string; isHeadliner: boolean }[]
+): { bandId: string; isHeadliner: boolean } | undefined {
+  return bands.find((b) => b.isHeadliner)
+}
+
+/**
  * Find an existing concert matching the given criteria.
  * A match requires: same date, location within tolerance, at least one overlapping band.
  */
@@ -457,6 +466,144 @@ export interface UpdateConcertInput {
   notes?: string | null
 }
 
+/**
+ * Fork a concert for a user when they edit fork-triggering fields
+ * on a multi-attendee concert. This creates a new concert with the
+ * edited data and links only the editing user to it, leaving the
+ * original concert unchanged for other attendees.
+ */
+async function forkConcertForUser(
+  originalConcert: ConcertWithRelations,
+  userId: string,
+  input: UpdateConcertInput,
+  currentAttendance: { cost: any; notes: string | null }
+): Promise<TransformedConcert> {
+  // Get geocoding data for the new location
+  const latitude = input.latitude ?? originalConcert.latitude
+  const longitude = input.longitude ?? originalConcert.longitude
+  const geocodingData = await getGeocodingData(latitude, longitude)
+  const normalizedCity =
+    geocodingData?._normalized_city && !geocodingData._is_coordinates
+      ? geocodingData._normalized_city
+      : null
+
+  // Prepare band data (use input bands or copy from original)
+  const bandsToCreate =
+    input.bandIds ??
+    originalConcert.bands.map((cb) => ({
+      bandId: cb.bandId,
+      isHeadliner: cb.isHeadliner,
+    }))
+
+  // Use transaction for atomicity
+  const result = await prisma.$transaction(async (tx) => {
+    // 1. Remove user from original concert
+    await tx.userConcert.delete({
+      where: {
+        userId_concertId: { userId, concertId: originalConcert.id },
+      },
+    })
+
+    // 2. Create new concert with edited data
+    const newConcert = await tx.concert.create({
+      data: {
+        date: input.date ?? originalConcert.date,
+        latitude,
+        longitude,
+        venue: input.venue ?? originalConcert.venue,
+        normalizedCity,
+        isFestival: input.isFestival ?? originalConcert.isFestival,
+        festivalId: input.festivalId ?? originalConcert.festivalId,
+        createdById: userId,
+        bands: {
+          create: bandsToCreate.map((b, index) => ({
+            bandId: b.bandId,
+            isHeadliner: b.isHeadliner || false,
+            sortOrder: index,
+          })),
+        },
+        attendees: {
+          create: {
+            userId,
+            cost: input.cost !== undefined ? input.cost : currentAttendance.cost,
+            notes:
+              input.notes !== undefined ? input.notes : currentAttendance.notes,
+          },
+        },
+      },
+      include: {
+        bands: {
+          include: { band: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        festival: true,
+        attendees: { where: { userId } },
+        _count: { select: { attendees: true } },
+      },
+    })
+
+    return newConcert
+  })
+
+  // 3. Check if new concert matches an existing one (merge logic)
+  const newBandIds = result.bands.map((b) => b.bandId)
+  const matchingConcert = await findMatchingConcert(
+    result.date,
+    result.latitude,
+    result.longitude,
+    newBandIds,
+    result.id // Exclude the just-created concert
+  )
+
+  if (matchingConcert) {
+    // Check if user already attends the matching concert
+    const existingAttendance = await prisma.userConcert.findUnique({
+      where: {
+        userId_concertId: { userId, concertId: matchingConcert.id },
+      },
+    })
+
+    if (!existingAttendance) {
+      // Migrate attendance to matching concert (preserve cost/notes)
+      const userAttendance = result.attendees[0]
+      await prisma.userConcert.create({
+        data: {
+          userId,
+          concertId: matchingConcert.id,
+          cost: userAttendance.cost,
+          notes: userAttendance.notes,
+        },
+      })
+    }
+
+    // Remove from newly created concert and delete it
+    await prisma.userConcert.delete({
+      where: { id: result.attendees[0].id },
+    })
+    await prisma.concert.delete({ where: { id: result.id } })
+
+    // Return the matching concert
+    const finalConcert = await prisma.concert.findUnique({
+      where: { id: matchingConcert.id },
+      include: {
+        bands: {
+          include: { band: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        festival: true,
+        attendees: { where: { userId } },
+        _count: { select: { attendees: true } },
+      },
+    })
+
+    if (finalConcert) {
+      return await transformConcert(finalConcert, finalConcert.attendees[0])
+    }
+  }
+
+  return await transformConcert(result, result.attendees[0])
+}
+
 export async function updateConcert(
   id: string,
   userId: string,
@@ -471,16 +618,49 @@ export async function updateConcert(
     return null
   }
 
+  // Fetch existing concert with bands (needed for fork detection)
   const existing = await prisma.concert.findUnique({
     where: { id },
-    select: { id: true, latitude: true, longitude: true },
+    include: {
+      bands: {
+        include: { band: true },
+        orderBy: { sortOrder: "asc" },
+      },
+      festival: true,
+      _count: { select: { attendees: true } },
+    },
   })
 
   if (!existing) {
     return null
   }
 
-  // Update user-specific attendance data
+  // Check if fork-triggering fields changed (date, venue/location, headliner)
+  // Only headliner changes trigger fork, not supporting act changes
+  const existingHeadlinerId = getHeadliner(existing.bands)?.bandId
+  const inputHeadlinerId = input.bandIds
+    ? getHeadliner(input.bandIds.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner || false })))?.bandId
+    : undefined
+  const headlinerChanged =
+    input.bandIds !== undefined && inputHeadlinerId !== existingHeadlinerId
+
+  const forkTriggerFieldsChanged =
+    (input.date !== undefined &&
+      input.date.getTime() !== existing.date.getTime()) ||
+    (input.latitude !== undefined && input.latitude !== existing.latitude) ||
+    (input.longitude !== undefined && input.longitude !== existing.longitude) ||
+    (input.venue !== undefined && input.venue !== existing.venue) ||
+    headlinerChanged
+
+  // Fork if multiple attendees AND fork-triggering fields changed
+  if (existing._count.attendees > 1 && forkTriggerFieldsChanged) {
+    return await forkConcertForUser(existing, userId, input, {
+      cost: attendance.cost,
+      notes: attendance.notes,
+    })
+  }
+
+  // Update user-specific attendance data (only if not forking)
   if (input.cost !== undefined || input.notes !== undefined) {
     await prisma.userConcert.update({
       where: { id: attendance.id },
@@ -491,7 +671,7 @@ export async function updateConcert(
     })
   }
 
-  // Update shared concert data (any attendee can edit)
+  // Update shared concert data (any attendee can edit - only when not forking)
   const hasSharedUpdates =
     input.date !== undefined ||
     input.latitude !== undefined ||
