@@ -21,7 +21,13 @@
       "Bash(wc:*)",
       "WebFetch(domain:photon.komoot.io)",
       "Bash(npx tsc:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__vercel__list_deployments",
+      "mcp__vercel__get_deployment",
+      "Bash(git show:*)",
+      "Bash(git log:*)",
+      "Bash(npx tsx:*)",
+      "mcp__prisma-remote__list_prisma_postgres_databases"
     ]
   },
   "enableAllProjectMcpServers": true,

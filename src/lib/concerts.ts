@@ -313,7 +313,8 @@ export async function findMatchingConcert(
   date: Date,
   latitude: number,
   longitude: number,
-  bandIds: string[]
+  bandIds: string[],
+  excludeId?: string
 ): Promise<PrismaConcert | null> {
   // Normalize date to start of day for comparison
   const dateStart = new Date(date)
@@ -326,6 +327,7 @@ export async function findMatchingConcert(
       date: { gte: dateStart, lte: dateEnd },
       latitude: { gte: latitude - COORD_TOLERANCE, lte: latitude + COORD_TOLERANCE },
       longitude: { gte: longitude - COORD_TOLERANCE, lte: longitude + COORD_TOLERANCE },
+      ...(excludeId && { id: { not: excludeId } }),
     },
     include: { bands: { select: { bandId: true } } },
   })
@@ -541,6 +543,85 @@ export async function updateConcert(
         }),
       },
     })
+
+    // Check if the updated concert now matches a different existing concert
+    const updatedConcert = await prisma.concert.findUnique({
+      where: { id },
+      include: { bands: { select: { bandId: true } } },
+    })
+
+    if (updatedConcert) {
+      const bandIds = updatedConcert.bands.map((b) => b.bandId)
+
+      if (bandIds.length > 0) {
+        const matchingConcert = await findMatchingConcert(
+          updatedConcert.date,
+          updatedConcert.latitude,
+          updatedConcert.longitude,
+          bandIds,
+          id // Exclude the concert being edited
+        )
+
+        // If we found a matching concert, migrate the user
+        if (matchingConcert) {
+          // Re-fetch attendance to get current cost/notes values
+          const currentAttendance = await prisma.userConcert.findUnique({
+            where: { userId_concertId: { userId, concertId: id } },
+          })
+
+          // Check if user already attends the matching concert
+          const existingAttendance = await prisma.userConcert.findUnique({
+            where: {
+              userId_concertId: { userId, concertId: matchingConcert.id },
+            },
+          })
+
+          if (!existingAttendance && currentAttendance) {
+            // Migrate attendance to matching concert (preserve cost/notes)
+            await prisma.userConcert.create({
+              data: {
+                userId,
+                concertId: matchingConcert.id,
+                cost: currentAttendance.cost,
+                notes: currentAttendance.notes,
+              },
+            })
+          }
+
+          // Remove old attendance link
+          await prisma.userConcert.delete({
+            where: { id: attendance.id },
+          })
+
+          // Delete orphaned concert if no other attendees
+          const remainingAttendees = await prisma.userConcert.count({
+            where: { concertId: id },
+          })
+
+          if (remainingAttendees === 0) {
+            await prisma.concert.delete({ where: { id } })
+          }
+
+          // Return the matching concert instead
+          const finalConcert = await prisma.concert.findUnique({
+            where: { id: matchingConcert.id },
+            include: {
+              bands: {
+                include: { band: true },
+                orderBy: { sortOrder: "asc" },
+              },
+              festival: true,
+              attendees: { where: { userId } },
+              _count: { select: { attendees: true } },
+            },
+          })
+
+          if (finalConcert) {
+            return await transformConcert(finalConcert, finalConcert.attendees[0])
+          }
+        }
+      }
+    }
   }
 
   // Fetch updated concert with relations

@@ -27,11 +27,23 @@ export default async function EditConcertPage({
 
   const { id } = await params;
 
-  const concert = await prisma.concert.findFirst({
+  // Verify user has attendance (is linked to this concert via UserConcert junction)
+  const attendance = await prisma.userConcert.findUnique({
     where: {
-      id,
-      userId: session.user.id,
+      userId_concertId: {
+        userId: session.user.id,
+        concertId: id,
+      },
     },
+  });
+
+  if (!attendance) {
+    notFound();
+  }
+
+  // Fetch the shared concert data
+  const concert = await prisma.concert.findUnique({
+    where: { id },
     include: {
       bands: {
         include: { band: true },
@@ -64,7 +76,7 @@ export default async function EditConcertPage({
           latitude: concert.latitude,
           longitude: concert.longitude,
           venue: concert.venue,
-          cost: concert.cost?.toString() ?? null,
+          cost: attendance.cost?.toString() ?? null,
           isFestival: concert.isFestival,
           festivalId: concert.festivalId,
           festivalName: concert.festival?.name ?? null,
