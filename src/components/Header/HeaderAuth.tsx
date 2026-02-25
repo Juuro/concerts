@@ -25,6 +25,11 @@ export default function HeaderAuth() {
       <Link href="/map" className="header-auth__link">
         Map
       </Link>
+      {session.user.role === "admin" && (
+        <Link href="/admin" className="header-auth__link">
+          Admin
+        </Link>
+      )}
       <UserMenu />
     </div>
   );

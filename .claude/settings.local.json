@@ -20,7 +20,8 @@
       "WebFetch(domain:api.setlist.fm)",
       "Bash(wc:*)",
       "WebFetch(domain:photon.komoot.io)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

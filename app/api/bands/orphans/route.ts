@@ -3,6 +3,72 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  if (session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const searchParams = request.nextUrl.searchParams
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
+  const offset = parseInt(searchParams.get("offset") || "0")
+
+  try {
+    const [bands, total] = await Promise.all([
+      prisma.band.findMany({
+        where: {
+          concerts: { none: {} },
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          imageUrl: true,
+          createdAt: true,
+          createdBy: {
+            select: { name: true, email: true },
+          },
+        },
+        orderBy: { name: "asc" },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.band.count({
+        where: {
+          concerts: { none: {} },
+        },
+      }),
+    ])
+
+    return NextResponse.json({
+      bands: bands.map((band) => ({
+        id: band.id,
+        name: band.name,
+        slug: band.slug,
+        imageUrl: band.imageUrl,
+        createdAt: band.createdAt,
+        createdBy: band.createdBy?.name || band.createdBy?.email || null,
+      })),
+      total,
+      limit,
+      offset,
+    })
+  } catch (error) {
+    console.error("Error fetching orphaned bands:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch orphaned bands" },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),

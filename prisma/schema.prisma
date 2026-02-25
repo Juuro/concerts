@@ -44,6 +44,7 @@ model User {
   bandsUpdated     Band[]     @relation("bandsUpdated")
   festivalsCreated Festival[] @relation("festivalsCreated")
   festivalsUpdated Festival[] @relation("festivalsUpdated")
+  adminActivities  AdminActivity[]
 
   @@map("user")
 }
@@ -175,4 +176,20 @@ model ConcertBand {
 
   @@unique([concertId, bandId])
   @@map("concert_band")
+}
+
+model AdminActivity {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // "band_enrich", "band_delete", "band_merge", "user_ban", etc.
+  targetType String   // "band", "concert", "user", "festival"
+  targetId   String
+  details    Json?    // Additional context (e.g., { bandName: "..." })
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("admin_activity")
 }
