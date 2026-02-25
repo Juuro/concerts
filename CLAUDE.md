@@ -43,8 +43,8 @@ npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL agains
 ### Data Flow
 
 1. **Authentication**: Better Auth handles OAuth (GitHub) and session management
-2. **Database**: Prisma ORM with PostgreSQL (Vercel Postgres in production)
-3. **Runtime**: Server components fetch from PostgreSQL via Prisma
+2. **Database**: Prisma ORM with PostgreSQL (Prisma Postgres in production)
+3. **Runtime**: Server components running on Vercel fetch from PostgreSQL via Prisma
 4. **Dynamic rendering**: Protected routes use `force-dynamic`
 
 ### Key Directories

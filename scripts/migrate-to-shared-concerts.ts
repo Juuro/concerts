@@ -7,17 +7,29 @@
  * 3. Finds and merges duplicate concerts (same date + location + overlapping bands)
  *
  * Run AFTER the Prisma migration creates the UserConcert table.
+ *
+ * Usage (requires DIRECT postgres URL, not Prisma Accelerate):
+ *   DATABASE_URL="postgres://..." npx tsx scripts/migrate-to-shared-concerts.ts
+ *
+ * For Vercel Postgres, use POSTGRES_URL_NON_POOLING from your dashboard.
  */
 
 import { PrismaClient, Prisma } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
-const connectionString = process.env["POSTGRES_PRISMA_URL"] || process.env["DATABASE_URL"];
+const connectionString = process.env["DATABASE_URL"];
 
 if (!connectionString) {
-  console.error("Error: DATABASE_URL or POSTGRES_PRISMA_URL environment variable not set");
-  console.error("Run with: tsx --env-file=.env scripts/migrate-to-shared-concerts.ts");
+  console.error("Error: DATABASE_URL environment variable not set");
+  console.error('Usage: DATABASE_URL="postgres://..." npx tsx scripts/migrate-to-shared-concerts.ts');
+  process.exit(1);
+}
+
+if (connectionString.startsWith("prisma://")) {
+  console.error("Error: Prisma Accelerate URLs (prisma://...) are not supported.");
+  console.error("Please use a direct PostgreSQL connection string (postgres://...)");
+  console.error("\nFor Vercel Postgres, use POSTGRES_URL_NON_POOLING from your dashboard.");
   process.exit(1);
 }
 
@@ -43,15 +55,25 @@ const COORD_TOLERANCE = 0.001;
 async function migrateUserConcerts() {
   console.log("Step 1: Creating UserConcert records from existing Concert data...\n");
 
+  // Get IDs of concerts that already have UserConcert records
+  const existingLinks = await prisma.userConcert.findMany({
+    select: { concertId: true },
+  });
+  const linkedConcertIds = new Set(existingLinks.map((l) => l.concertId));
+
   // Get all concerts with their current userId and cost
-  const concerts = await prisma.$queryRaw<
-    { id: string; userId: string; cost: Prisma.Decimal | null }[]
-  >`
-    SELECT id, "userId", cost FROM concert
-    WHERE NOT EXISTS (
-      SELECT 1 FROM user_concert WHERE user_concert."concertId" = concert.id
-    )
-  `;
+  const allConcerts = await prisma.concert.findMany({
+    select: {
+      id: true,
+      userId: true,
+      cost: true,
+    },
+  });
+
+  // Filter to concerts without UserConcert records and with userId
+  const concerts = allConcerts.filter(
+    (c) => c.userId && !linkedConcertIds.has(c.id)
+  );
 
   console.log(`Found ${concerts.length} concerts to migrate`);
 
@@ -66,7 +88,7 @@ async function migrateUserConcerts() {
     const batch = concerts.slice(i, i + batchSize);
     await prisma.userConcert.createMany({
       data: batch.map((c) => ({
-        userId: c.userId,
+        userId: c.userId!,
         concertId: c.id,
         cost: c.cost,
       })),
@@ -81,14 +103,35 @@ async function migrateUserConcerts() {
 async function setCreatedByIds() {
   console.log("Step 2: Setting createdById on concerts...\n");
 
-  // Set createdById to the original userId for audit trail
-  const result = await prisma.$executeRaw`
-    UPDATE concert
-    SET "createdById" = "userId"
-    WHERE "createdById" IS NULL AND "userId" IS NOT NULL
-  `;
+  // Get concerts that need createdById set
+  const concertsToUpdate = await prisma.concert.findMany({
+    where: {
+      createdById: null,
+      userId: { not: null },
+    },
+    select: { id: true, userId: true },
+  });
 
-  console.log(`Updated ${result} concerts with createdById\n`);
+  console.log(`Found ${concertsToUpdate.length} concerts needing createdById`);
+
+  // Update in batches
+  const batchSize = 100;
+  let updated = 0;
+  for (let i = 0; i < concertsToUpdate.length; i += batchSize) {
+    const batch = concertsToUpdate.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map((c) =>
+        prisma.concert.update({
+          where: { id: c.id },
+          data: { createdById: c.userId },
+        })
+      )
+    );
+    updated += batch.length;
+    console.log(`Updated ${updated}/${concertsToUpdate.length}`);
+  }
+
+  console.log(`Updated ${updated} concerts with createdById\n`);
 }
 
 async function findDuplicateGroups(): Promise<ConcertWithBands[][]> {
@@ -125,7 +168,7 @@ async function findDuplicateGroups(): Promise<ConcertWithBands[][]> {
   const duplicateGroups: ConcertWithBands[][] = [];
 
   // Within each date, find concerts at same location with overlapping bands
-  for (const [dateKey, dateConcerts] of byDate) {
+  for (const [_dateKey, dateConcerts] of byDate) {
     if (dateConcerts.length < 2) continue;
 
     const processed = new Set<string>();
