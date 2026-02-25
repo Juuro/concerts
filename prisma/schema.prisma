@@ -36,8 +36,11 @@ model User {
   sessions Session[]
   accounts Account[]
 
-  // Concert relations
-  concerts Concert[]
+  // Concert relations (via UserConcert junction table)
+  attendedConcerts   UserConcert[]
+  concertsCreated    Concert[]      @relation("concertsCreated")
+  concertsUpdated    Concert[]      @relation("concertsUpdated")
+  deprecatedConcerts Concert[]      @relation("deprecatedConcerts") // DEPRECATED: Remove after migration
 
   // Audit relations
   bandsCreated     Band[]     @relation("bandsCreated")
@@ -100,27 +103,57 @@ model Verification {
 // ============================================
 
 model Concert {
-  id         String   @id @default(cuid())
-  userId     String
-  date       DateTime
-  latitude   Float
-  longitude  Float
-  venue           String?
-  normalizedCity  String?
-  isFestival      Boolean  @default(false)
-  festivalId String?
-  cost       Decimal?  @db.Decimal(10, 2)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  date           DateTime
+  latitude       Float
+  longitude      Float
+  venue          String?
+  normalizedCity String?
+  isFestival     Boolean  @default(false)
+  festivalId     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  festival Festival?    @relation(fields: [festivalId], references: [id])
-  bands    ConcertBand[]
+  // DEPRECATED: These fields are being migrated to UserConcert
+  // Will be removed after data migration is complete
+  userId String?
+  cost   Decimal? @db.Decimal(10, 2)
+  user   User?    @relation("deprecatedConcerts", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Audit fields for shared entity
+  createdById String?
+  updatedById String?
+
+  // Relations
+  festival  Festival?     @relation(fields: [festivalId], references: [id])
+  bands     ConcertBand[]
+  attendees UserConcert[]
+  createdBy User?         @relation("concertsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?         @relation("concertsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([date])
   @@index([normalizedCity])
   @@map("concert")
+}
+
+// Junction table for user attendance with user-specific data
+model UserConcert {
+  id        String   @id @default(cuid())
+  userId    String
+  concertId String
+  cost      Decimal? @db.Decimal(10, 2) // User-specific ticket cost
+  notes     String?                      // User-specific notes (future)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  concert Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, concertId]) // One attendance per user per concert
+  @@index([userId])
+  @@index([concertId])
+  @@map("user_concert")
 }
 
 model Band {

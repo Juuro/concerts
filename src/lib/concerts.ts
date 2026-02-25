@@ -5,10 +5,14 @@ import type {
   Band as PrismaBand,
   Festival as PrismaFestival,
   ConcertBand,
+  UserConcert,
 } from "@/generated/prisma/client"
 import { cityToSlug } from "@/utils/helpers"
 import { getGeocodingData } from "@/utils/data"
 import type { GeocodingData } from "@/types/geocoding"
+
+// Coordinate tolerance for matching concerts (~100m)
+const COORD_TOLERANCE = 0.001
 
 /**
  * Returns today's date at UTC midnight (00:00:00.000Z).
@@ -38,14 +42,12 @@ export interface TransformedBand {
 
 export interface TransformedConcert {
   id: string
-  userId: string
   date: string
   city: {
     lat: number
     lon: number
   }
   venue?: string | null
-  cost?: string | null
   bands: TransformedBand[]
   isFestival: boolean
   festival: {
@@ -57,27 +59,50 @@ export interface TransformedConcert {
   fields: {
     geocoderAddressFields: GeocodingData
   }
+  // User-specific attendance data (included when filtering by user)
+  attendance?: {
+    id: string
+    userId: string
+    cost?: string | null
+    notes?: string | null
+  }
+  // For social features
+  attendeeCount?: number
+  // DEPRECATED: For backward compatibility during transition
+  userId?: string
+  cost?: string | null
 }
 
 type ConcertWithRelations = PrismaConcert & {
   bands: (ConcertBand & { band: PrismaBand })[]
   festival: PrismaFestival | null
+  attendees?: UserConcert[]
+  _count?: { attendees: number }
 }
 
-async function transformConcert(concert: ConcertWithRelations): Promise<TransformedConcert> {
+// Type for concert with a specific user's attendance
+type ConcertWithAttendance = ConcertWithRelations & {
+  userAttendance?: UserConcert | null
+}
+
+async function transformConcert(
+  concert: ConcertWithAttendance,
+  userAttendance?: UserConcert | null
+): Promise<TransformedConcert> {
   // Use reverse geocoding to get real city name from coordinates
   const geocodingData = await getGeocodingData(concert.latitude, concert.longitude)
 
-  return {
+  // Get attendance from parameter or from concert object
+  const attendance = userAttendance ?? concert.userAttendance
+
+  const transformed: TransformedConcert = {
     id: concert.id,
-    userId: concert.userId,
     date: concert.date.toISOString(),
     city: {
       lat: concert.latitude,
       lon: concert.longitude,
     },
     venue: concert.venue,
-    cost: concert.cost ? concert.cost.toString() : null,
     bands: concert.bands
       .sort(
         (
@@ -113,25 +138,52 @@ async function transformConcert(concert: ConcertWithRelations): Promise<Transfor
       geocoderAddressFields: geocodingData,
     },
   }
+
+  // Add attendance data if available
+  if (attendance) {
+    transformed.attendance = {
+      id: attendance.id,
+      userId: attendance.userId,
+      cost: attendance.cost ? attendance.cost.toString() : null,
+      notes: attendance.notes,
+    }
+    // Backward compatibility: populate deprecated fields
+    transformed.userId = attendance.userId
+    transformed.cost = attendance.cost ? attendance.cost.toString() : null
+  }
+
+  // Add attendee count if available
+  if (concert._count?.attendees !== undefined) {
+    transformed.attendeeCount = concert._count.attendees
+  }
+
+  return transformed
 }
 
-// Get all concerts for a user
+// Get all concerts for a user (via UserConcert junction)
 export async function getUserConcerts(
   userId: string
 ): Promise<TransformedConcert[]> {
-  const concerts = await prisma.concert.findMany({
+  const userConcerts = await prisma.userConcert.findMany({
     where: { userId },
     include: {
-      bands: {
-        include: { band: true },
-        orderBy: { sortOrder: "asc" },
+      concert: {
+        include: {
+          bands: {
+            include: { band: true },
+            orderBy: { sortOrder: "asc" },
+          },
+          festival: true,
+          _count: { select: { attendees: true } },
+        },
       },
-      festival: true,
     },
-    orderBy: { date: "desc" },
+    orderBy: { concert: { date: "desc" } },
   })
 
-  return Promise.all(concerts.map(transformConcert))
+  return Promise.all(
+    userConcerts.map((uc) => transformConcert(uc.concert, uc))
+  )
 }
 
 // Get all concerts (public, for global views)
@@ -147,7 +199,7 @@ export async function getAllConcerts(): Promise<TransformedConcert[]> {
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map(transformConcert))
+  return Promise.all(concerts.map((c) => transformConcert(c)))
 }
 
 // Get concerts by band slug
@@ -172,7 +224,7 @@ export async function getConcertsByBand(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map(transformConcert))
+  return Promise.all(concerts.map((c) => transformConcert(c)))
 }
 
 // Get concerts by year
@@ -200,7 +252,7 @@ export async function getConcertsByYear(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map(transformConcert))
+  return Promise.all(concerts.map((c) => transformConcert(c)))
 }
 
 // Get concerts by city (from normalizedCity column)
@@ -219,7 +271,7 @@ export async function getConcertsByCity(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map(transformConcert))
+  return Promise.all(concerts.map((c) => transformConcert(c)))
 }
 
 // Get all unique years
@@ -249,7 +301,46 @@ export async function getAllCities(): Promise<string[]> {
   return results.map((r) => r.normalizedCity!).sort()
 }
 
+// ============================================
+// Concert Matching (for shared concerts)
+// ============================================
+
+/**
+ * Find an existing concert matching the given criteria.
+ * A match requires: same date, location within tolerance, at least one overlapping band.
+ */
+export async function findMatchingConcert(
+  date: Date,
+  latitude: number,
+  longitude: number,
+  bandIds: string[]
+): Promise<PrismaConcert | null> {
+  // Normalize date to start of day for comparison
+  const dateStart = new Date(date)
+  dateStart.setUTCHours(0, 0, 0, 0)
+  const dateEnd = new Date(date)
+  dateEnd.setUTCHours(23, 59, 59, 999)
+
+  const candidates = await prisma.concert.findMany({
+    where: {
+      date: { gte: dateStart, lte: dateEnd },
+      latitude: { gte: latitude - COORD_TOLERANCE, lte: latitude + COORD_TOLERANCE },
+      longitude: { gte: longitude - COORD_TOLERANCE, lte: longitude + COORD_TOLERANCE },
+    },
+    include: { bands: { select: { bandId: true } } },
+  })
+
+  // Find a candidate with at least one overlapping band
+  const bandIdSet = new Set(bandIds)
+  return (
+    candidates.find((c) => c.bands.some((cb) => bandIdSet.has(cb.bandId))) ??
+    null
+  )
+}
+
+// ============================================
 // Concert CRUD operations
+// ============================================
 
 export interface CreateConcertInput {
   userId: string
@@ -266,100 +357,59 @@ export interface CreateConcertInput {
 export async function createConcert(
   input: CreateConcertInput
 ): Promise<TransformedConcert> {
-  const geocodingData = await getGeocodingData(input.latitude, input.longitude)
-  const normalizedCity =
-    geocodingData?._normalized_city && !geocodingData._is_coordinates
-      ? geocodingData._normalized_city
-      : null
+  const bandIds = input.bandIds.map((b) => b.bandId)
 
-  const concert = await prisma.concert.create({
-    data: {
-      userId: input.userId,
-      date: input.date,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      venue: input.venue,
-      normalizedCity,
-      isFestival: input.isFestival || false,
-      festivalId: input.festivalId,
-      cost: input.cost !== undefined ? input.cost : undefined,
-      bands: {
-        create: input.bandIds.map((b, index) => ({
-          bandId: b.bandId,
-          isHeadliner: b.isHeadliner || false,
-          sortOrder: index,
-        })),
+  // Try to find an existing matching concert
+  const existingConcert = await findMatchingConcert(
+    input.date,
+    input.latitude,
+    input.longitude,
+    bandIds
+  )
+
+  let concert: ConcertWithRelations
+  let userConcert: UserConcert
+
+  if (existingConcert) {
+    // Link user to existing concert
+    userConcert = await prisma.userConcert.create({
+      data: {
+        userId: input.userId,
+        concertId: existingConcert.id,
+        cost: input.cost !== undefined ? input.cost : undefined,
       },
-    },
-    include: {
-      bands: {
-        include: { band: true },
-        orderBy: { sortOrder: "asc" },
-      },
-      festival: true,
-    },
-  })
-
-  return await transformConcert(concert)
-}
-
-export interface UpdateConcertInput {
-  date?: Date
-  latitude?: number
-  longitude?: number
-  venue?: string
-  isFestival?: boolean
-  festivalId?: string | null
-  cost?: number | null
-  bandIds?: { bandId: string; isHeadliner?: boolean }[]
-}
-
-export async function updateConcert(
-  id: string,
-  userId: string,
-  input: UpdateConcertInput
-): Promise<TransformedConcert | null> {
-  // Verify ownership
-  const existing = await prisma.concert.findFirst({
-    where: { id, userId },
-    select: { id: true, latitude: true, longitude: true },
-  })
-
-  if (!existing) {
-    return null
-  }
-
-  // If updating bands, delete existing and create new
-  if (input.bandIds) {
-    await prisma.concertBand.deleteMany({
-      where: { concertId: id },
     })
-  }
 
-  let normalizedCity: string | null | undefined = undefined
-  if (input.latitude !== undefined && input.longitude !== undefined) {
-    const geocodingData = await getGeocodingData(
-      input.latitude ?? existing.latitude,
-      input.longitude ?? existing.longitude
-    )
-    normalizedCity =
+    // Fetch the full concert with relations
+    concert = (await prisma.concert.findUnique({
+      where: { id: existingConcert.id },
+      include: {
+        bands: {
+          include: { band: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        festival: true,
+        _count: { select: { attendees: true } },
+      },
+    }))!
+  } else {
+    // Create new concert and link user
+    const geocodingData = await getGeocodingData(input.latitude, input.longitude)
+    const normalizedCity =
       geocodingData?._normalized_city && !geocodingData._is_coordinates
         ? geocodingData._normalized_city
         : null
-  }
 
-  const concert = await prisma.concert.update({
-    where: { id },
-    data: {
-      date: input.date,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      venue: input.venue,
-      normalizedCity,
-      isFestival: input.isFestival,
-      festivalId: input.festivalId,
-      ...(input.cost !== undefined && { cost: input.cost }),
-      ...(input.bandIds && {
+    concert = await prisma.concert.create({
+      data: {
+        date: input.date,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        venue: input.venue,
+        normalizedCity,
+        isFestival: input.isFestival || false,
+        festivalId: input.festivalId,
+        createdById: input.userId,
         bands: {
           create: input.bandIds.map((b, index) => ({
             bandId: b.bandId,
@@ -367,41 +417,187 @@ export async function updateConcert(
             sortOrder: index,
           })),
         },
-      }),
-    },
+        attendees: {
+          create: {
+            userId: input.userId,
+            cost: input.cost !== undefined ? input.cost : undefined,
+          },
+        },
+      },
+      include: {
+        bands: {
+          include: { band: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        festival: true,
+        attendees: { where: { userId: input.userId } },
+        _count: { select: { attendees: true } },
+      },
+    })
+
+    userConcert = concert.attendees![0]
+  }
+
+  return await transformConcert(concert, userConcert)
+}
+
+export interface UpdateConcertInput {
+  // Shared concert data (any attendee can update)
+  date?: Date
+  latitude?: number
+  longitude?: number
+  venue?: string
+  isFestival?: boolean
+  festivalId?: string | null
+  bandIds?: { bandId: string; isHeadliner?: boolean }[]
+  // User-specific attendance data
+  cost?: number | null
+  notes?: string | null
+}
+
+export async function updateConcert(
+  id: string,
+  userId: string,
+  input: UpdateConcertInput
+): Promise<TransformedConcert | null> {
+  // Verify user has attendance (is linked to this concert)
+  const attendance = await prisma.userConcert.findUnique({
+    where: { userId_concertId: { userId, concertId: id } },
+  })
+
+  if (!attendance) {
+    return null
+  }
+
+  const existing = await prisma.concert.findUnique({
+    where: { id },
+    select: { id: true, latitude: true, longitude: true },
+  })
+
+  if (!existing) {
+    return null
+  }
+
+  // Update user-specific attendance data
+  if (input.cost !== undefined || input.notes !== undefined) {
+    await prisma.userConcert.update({
+      where: { id: attendance.id },
+      data: {
+        ...(input.cost !== undefined && { cost: input.cost }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+      },
+    })
+  }
+
+  // Update shared concert data (any attendee can edit)
+  const hasSharedUpdates =
+    input.date !== undefined ||
+    input.latitude !== undefined ||
+    input.longitude !== undefined ||
+    input.venue !== undefined ||
+    input.isFestival !== undefined ||
+    input.festivalId !== undefined ||
+    input.bandIds !== undefined
+
+  if (hasSharedUpdates) {
+    // If updating bands, delete existing and create new
+    if (input.bandIds) {
+      await prisma.concertBand.deleteMany({
+        where: { concertId: id },
+      })
+    }
+
+    let normalizedCity: string | null | undefined = undefined
+    if (input.latitude !== undefined || input.longitude !== undefined) {
+      const geocodingData = await getGeocodingData(
+        input.latitude ?? existing.latitude,
+        input.longitude ?? existing.longitude
+      )
+      normalizedCity =
+        geocodingData?._normalized_city && !geocodingData._is_coordinates
+          ? geocodingData._normalized_city
+          : null
+    }
+
+    await prisma.concert.update({
+      where: { id },
+      data: {
+        date: input.date,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        venue: input.venue,
+        normalizedCity,
+        isFestival: input.isFestival,
+        festivalId: input.festivalId,
+        updatedById: userId,
+        ...(input.bandIds && {
+          bands: {
+            create: input.bandIds.map((b, index) => ({
+              bandId: b.bandId,
+              isHeadliner: b.isHeadliner || false,
+              sortOrder: index,
+            })),
+          },
+        }),
+      },
+    })
+  }
+
+  // Fetch updated concert with relations
+  const concert = await prisma.concert.findUnique({
+    where: { id },
     include: {
       bands: {
         include: { band: true },
         orderBy: { sortOrder: "asc" },
       },
       festival: true,
+      attendees: { where: { userId } },
+      _count: { select: { attendees: true } },
     },
   })
 
-  return await transformConcert(concert)
+  if (!concert) return null
+
+  return await transformConcert(concert, concert.attendees[0])
 }
 
 export async function deleteConcert(
   id: string,
   userId: string
 ): Promise<boolean> {
-  const existing = await prisma.concert.findFirst({
-    where: { id, userId },
+  // Verify user has attendance
+  const attendance = await prisma.userConcert.findUnique({
+    where: { userId_concertId: { userId, concertId: id } },
   })
 
-  if (!existing) {
+  if (!attendance) {
     return false
   }
 
-  await prisma.concert.delete({
-    where: { id },
+  // Delete the user's attendance (unlink from concert)
+  await prisma.userConcert.delete({
+    where: { id: attendance.id },
   })
+
+  // Check if concert is now orphaned (no remaining attendees)
+  const remainingAttendees = await prisma.userConcert.count({
+    where: { concertId: id },
+  })
+
+  if (remainingAttendees === 0) {
+    // Delete orphaned concert
+    await prisma.concert.delete({
+      where: { id },
+    })
+  }
 
   return true
 }
 
 export async function getConcertById(
-  id: string
+  id: string,
+  userId?: string
 ): Promise<TransformedConcert | null> {
   const concert = await prisma.concert.findUnique({
     where: { id },
@@ -411,11 +607,15 @@ export async function getConcertById(
         orderBy: { sortOrder: "asc" },
       },
       festival: true,
+      ...(userId && { attendees: { where: { userId } } }),
+      _count: { select: { attendees: true } },
     },
   })
 
   if (!concert) return null
-  return await transformConcert(concert)
+
+  const attendance = userId ? (concert as any).attendees?.[0] : undefined
+  return await transformConcert(concert, attendance)
 }
 
 // ============================================
@@ -446,12 +646,13 @@ export async function getConcertsPaginated(
 ): Promise<PaginatedConcerts> {
   const take = direction === "forward" ? limit + 1 : -(limit + 1)
 
-  // Build where clause based on filters
-  const where: any = {}
-
+  // When filtering by userId, we query through UserConcert
   if (filters?.userId) {
-    where.userId = filters.userId
+    return getConcertsPaginatedForUser(cursor, limit, direction, filters)
   }
+
+  // Build where clause for concerts without user filter
+  const where: any = {}
 
   if (filters?.bandSlug) {
     where.bands = {
@@ -474,9 +675,12 @@ export async function getConcertsPaginated(
     where.normalizedCity = filters.city
   }
 
+  // For public filter without userId, filter by concerts that have at least one public attendee
   if (filters?.isPublic !== undefined) {
-    where.user = {
-      isPublic: filters.isPublic,
+    where.attendees = {
+      some: {
+        user: { isPublic: filters.isPublic },
+      },
     }
   }
 
@@ -490,9 +694,7 @@ export async function getConcertsPaginated(
         orderBy: { sortOrder: "asc" },
       },
       festival: true,
-      ...(filters?.isPublic !== undefined && {
-        user: { select: { isPublic: true } },
-      }),
+      _count: { select: { attendees: true } },
     },
     orderBy: [{ date: "desc" }, { id: "desc" }],
   })
@@ -510,7 +712,107 @@ export async function getConcertsPaginated(
     : concerts
 
   return {
-    items: await Promise.all(items.map(transformConcert)),
+    items: await Promise.all(items.map((c) => transformConcert(c))),
+    nextCursor:
+      direction === "forward" && hasExtra
+        ? items[items.length - 1].id
+        : direction === "backward"
+          ? (items[items.length - 1]?.id ?? null)
+          : null,
+    prevCursor:
+      direction === "backward" && hasExtra
+        ? items[0].id
+        : direction === "forward" && cursor
+          ? (items[0]?.id ?? null)
+          : null,
+    hasMore: direction === "forward" ? hasExtra : true,
+    hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
+  }
+}
+
+// Helper for user-filtered pagination (queries via UserConcert)
+async function getConcertsPaginatedForUser(
+  cursor: string | undefined,
+  limit: number,
+  direction: "forward" | "backward",
+  filters: ConcertFilters
+): Promise<PaginatedConcerts> {
+  const take = direction === "forward" ? limit + 1 : -(limit + 1)
+
+  // Build where clause for the concert relation
+  const concertWhere: any = {}
+
+  if (filters.bandSlug) {
+    concertWhere.bands = {
+      some: {
+        band: { slug: filters.bandSlug },
+      },
+    }
+  }
+
+  if (filters.year) {
+    const yearStart = new Date(filters.year, 0, 1)
+    const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999)
+    concertWhere.date = {
+      gte: yearStart,
+      lte: yearEnd,
+    }
+  }
+
+  if (filters.city) {
+    concertWhere.normalizedCity = filters.city
+  }
+
+  // Build where for UserConcert
+  const where: any = {
+    userId: filters.userId,
+    ...(Object.keys(concertWhere).length > 0 && { concert: concertWhere }),
+  }
+
+  // Also filter by public user if requested
+  if (filters.isPublic !== undefined) {
+    where.user = { isPublic: filters.isPublic }
+  }
+
+  // Query UserConcert to get user's attended concerts
+  const userConcerts = await prisma.userConcert.findMany({
+    take,
+    ...(cursor && {
+      cursor: { id: cursor },
+      skip: 1,
+    }),
+    where,
+    include: {
+      concert: {
+        include: {
+          bands: {
+            include: { band: true },
+            orderBy: { sortOrder: "asc" },
+          },
+          festival: true,
+          _count: { select: { attendees: true } },
+        },
+      },
+    },
+    orderBy: [{ concert: { date: "desc" } }, { id: "desc" }],
+  })
+
+  // For backward direction, reverse to maintain consistent order
+  if (direction === "backward") {
+    userConcerts.reverse()
+  }
+
+  const hasExtra = userConcerts.length > limit
+  const items = hasExtra
+    ? direction === "forward"
+      ? userConcerts.slice(0, -1)
+      : userConcerts.slice(1)
+    : userConcerts
+
+  return {
+    items: await Promise.all(
+      items.map((uc) => transformConcert(uc.concert, uc))
+    ),
     nextCursor:
       direction === "forward" && hasExtra
         ? items[items.length - 1].id
@@ -680,12 +982,20 @@ async function computeUserConcertStatistics(
 ): Promise<ConcertStatistics> {
   const now = getStartOfToday()
 
+  // Get user's attended concerts via UserConcert
+  const userConcertIds = await prisma.userConcert.findMany({
+    where: { userId },
+    select: { concertId: true },
+  })
+  const concertIds = userConcertIds.map((uc) => uc.concertId)
+
   const [yearStats, cityStats, bandStats, pastCount, futureCount] =
     await Promise.all([
+      // Year counts for user's attended concerts
       prisma.concert
         .groupBy({
           by: ["date"],
-          where: { userId, date: { lt: now } },
+          where: { id: { in: concertIds }, date: { lt: now } },
           _count: true,
         })
         .then((results) => {
@@ -702,10 +1012,15 @@ async function computeUserConcertStatistics(
             )
         }),
 
+      // City counts for user's attended concerts
       prisma.concert
         .groupBy({
           by: ["normalizedCity"],
-          where: { userId, date: { lt: now }, normalizedCity: { not: null } },
+          where: {
+            id: { in: concertIds },
+            date: { lt: now },
+            normalizedCity: { not: null },
+          },
           _count: true,
           orderBy: { _count: { normalizedCity: "desc" } },
           take: 5,
@@ -721,10 +1036,11 @@ async function computeUserConcertStatistics(
           )
         ),
 
+      // Most seen bands for user's attended concerts
       prisma.concertBand
         .groupBy({
           by: ["bandId"],
-          where: { concert: { userId } },
+          where: { concertId: { in: concertIds } },
           _count: true,
           orderBy: { _count: { bandId: "desc" } },
           take: 10,
@@ -741,7 +1057,8 @@ async function computeUserConcertStatistics(
               const count = await prisma.concertBand.count({
                 where: {
                   bandId,
-                  concert: { userId, date: { lt: now } },
+                  concertId: { in: concertIds },
+                  concert: { date: { lt: now } },
                 },
               })
               const band = bands.find((b) => b.id === bandId)
@@ -758,8 +1075,14 @@ async function computeUserConcertStatistics(
             .map((b) => [b.name, b.count, b.slug] as [string, number, string])
         }),
 
-      prisma.concert.count({ where: { userId, date: { lt: now } } }),
-      prisma.concert.count({ where: { userId, date: { gte: now } } }),
+      // Count user's past concerts
+      prisma.userConcert.count({
+        where: { userId, concert: { date: { lt: now } } },
+      }),
+      // Count user's future concerts
+      prisma.userConcert.count({
+        where: { userId, concert: { date: { gte: now } } },
+      }),
     ])
 
   return {
@@ -785,8 +1108,12 @@ export async function getUserConcertCounts(
 ): Promise<ConcertCounts> {
   const now = getStartOfToday()
   const [past, future] = await Promise.all([
-    prisma.concert.count({ where: { userId, date: { lt: now } } }),
-    prisma.concert.count({ where: { userId, date: { gte: now } } }),
+    prisma.userConcert.count({
+      where: { userId, concert: { date: { lt: now } } },
+    }),
+    prisma.userConcert.count({
+      where: { userId, concert: { date: { gte: now } } },
+    }),
   ])
   return { past, future }
 }
@@ -809,22 +1136,30 @@ export async function getUserTotalSpent(
   userId: string,
   filters?: { bandSlug?: string; city?: string; year?: number }
 ): Promise<{ total: number; currency: string }> {
-  const where: any = { userId, cost: { not: null } }
+  // Build concert filter conditions
+  const concertWhere: any = {}
 
   if (filters?.bandSlug) {
-    where.bands = { some: { band: { slug: filters.bandSlug } } }
+    concertWhere.bands = { some: { band: { slug: filters.bandSlug } } }
   }
   if (filters?.city) {
-    where.normalizedCity = filters.city
+    concertWhere.normalizedCity = filters.city
   }
   if (filters?.year) {
     const yearStart = new Date(filters.year, 0, 1)
     const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999)
-    where.date = { gte: yearStart, lte: yearEnd }
+    concertWhere.date = { gte: yearStart, lte: yearEnd }
+  }
+
+  // Query UserConcert for user's costs
+  const where: any = {
+    userId,
+    cost: { not: null },
+    ...(Object.keys(concertWhere).length > 0 && { concert: concertWhere }),
   }
 
   const [result, user] = await Promise.all([
-    prisma.concert.aggregate({
+    prisma.userConcert.aggregate({
       where,
       _sum: { cost: true },
     }),

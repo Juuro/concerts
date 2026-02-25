@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
           longitude: true,
           date: true,
           createdAt: true,
-          user: {
+          createdBy: {
             select: { name: true, email: true },
           },
         },
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         longitude: concert.longitude,
         date: concert.date,
         createdAt: concert.createdAt,
-        user: concert.user.name || concert.user.email,
+        user: concert.createdBy?.name || concert.createdBy?.email || "Unknown",
       })),
       total,
       limit,

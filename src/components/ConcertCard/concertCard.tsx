@@ -132,10 +132,15 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
             <div className="concert-card-cost">{concert.cost} {currency}</div>
           )}
         </div>
-        {showEditButton && currentUserId === concert.userId && (
+        {showEditButton && (concert.attendance?.userId === currentUserId || concert.userId === currentUserId) && (
           <Link href={`/concerts/edit/${concert.id}`} className="concert-card-edit-btn">
             Edit
           </Link>
+        )}
+        {concert.attendeeCount && concert.attendeeCount > 1 && (
+          <span className="concert-card-attendees" title={`${concert.attendeeCount} people attended`}>
+            {concert.attendeeCount} attended
+          </span>
         )}
       </div>
     </li>

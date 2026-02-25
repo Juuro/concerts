@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           banExpires: true,
           createdAt: true,
           _count: {
-            select: { concerts: true },
+            select: { attendedConcerts: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         banReason: user.banReason,
         banExpires: user.banExpires,
         createdAt: user.createdAt,
-        concertCount: user._count.concerts,
+        concertCount: user._count.attendedConcerts,
       })),
       total,
       limit,

@@ -10,7 +10,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const concert = await getConcertById(id);
+
+  // Optionally include user's attendance data if authenticated
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const userId = session?.user?.id;
+
+  const concert = await getConcertById(id, userId);
 
   if (!concert) {
     return NextResponse.json({ error: "Concert not found" }, { status: 404 });
