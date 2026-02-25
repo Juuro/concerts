@@ -74,6 +74,13 @@
         0 -1px variables.$color-white;
     }
 
+    .concert-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     .bands {
       margin-top: 0.5em;
     }

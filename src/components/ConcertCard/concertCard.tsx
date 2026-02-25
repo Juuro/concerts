@@ -111,7 +111,14 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
       </div>
       <div className="concert-card-body">
         <h3 className="card-title">{heading()}</h3>
-        {!(hideLocation && isInTheFuture()) && <span>{getDate()}</span>}
+        <div className="concert-card-meta">
+          {!(hideLocation && isInTheFuture()) && <span>{getDate()}</span>}
+          {concert.attendeeCount && concert.attendeeCount > 1 && (
+            <span className="concert-card-attendees" title={`${concert.attendeeCount} people attended`}>
+              {concert.attendeeCount} attended
+            </span>
+          )}
+        </div>
         {bands() && <div className="bands">{bands()}</div>}
       </div>
       <div className="concert-card-location">
@@ -136,11 +143,6 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
           <Link href={`/concerts/edit/${concert.id}`} className="concert-card-edit-btn">
             Edit
           </Link>
-        )}
-        {concert.attendeeCount && concert.attendeeCount > 1 && (
-          <span className="concert-card-attendees" title={`${concert.attendeeCount} people attended`}>
-            {concert.attendeeCount} attended
-          </span>
         )}
       </div>
     </li>
