@@ -10,3 +10,43 @@ $transition-duration: 200ms;
 $transition-duration-slow: 300ms;
 $transition-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
 $transition-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+// Admin Dashboard - Light Theme Tokens
+// =====================================
+
+// Light foundation
+$admin-bg-secondary: #ffffff;
+$admin-bg-tertiary: #f1f3f5;
+
+// Glass effects (light)
+$admin-glass-bg: rgba(255, 255, 255, 0.8);
+$admin-glass-border: rgba(0, 0, 0, 0.06);
+$admin-glass-blur: 12px;
+
+// Text hierarchy (light theme)
+$admin-text-primary: $color-black;
+$admin-text-secondary: rgba(0, 0, 0, 0.7);
+$admin-text-tertiary: rgba(0, 0, 0, 0.45);
+
+// Aurora gradients (signature visual)
+$admin-gradient-aurora: linear-gradient(135deg, #ff0666 0%, #7c3aed 50%, #06b6d4 100%);
+$admin-gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+$admin-gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+$admin-gradient-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+
+// Section accent colors
+$admin-color-stats: $color-primary;
+$admin-color-activity: #3b82f6;
+$admin-color-bands: #8b5cf6;
+$admin-color-merge: #ec4899;
+$admin-color-festivals: #f59e0b;
+$admin-color-concerts: #10b981;
+$admin-color-users: #6366f1;
+
+// Subtle shadow effects (light theme)
+$admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+$admin-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+$admin-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+// Typography for admin
+$admin-font-mono: "JetBrains Mono", "Fira Code", "SF Mono", monospace;

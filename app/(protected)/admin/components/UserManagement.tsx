@@ -50,8 +50,25 @@ export default function UserManagement() {
     }
   }, [filter, showToast])
 
+  // Cleanup expired bans on initial load, then fetch users
   useEffect(() => {
-    fetchUsers()
+    const init = async () => {
+      // Auto-unban expired users before fetching
+      try {
+        const response = await fetch("/api/admin/users/cleanup-expired-bans", { method: "POST" })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.unbannedCount > 0) {
+            // Notify attention cards to refresh
+            window.dispatchEvent(new CustomEvent("admin-data-changed"))
+          }
+        }
+      } catch {
+        // Silently ignore cleanup errors
+      }
+      fetchUsers()
+    }
+    init()
   }, [fetchUsers])
 
   const openBanDialog = (user: User) => {
@@ -105,6 +122,9 @@ export default function UserManagement() {
             : u
         )
       )
+
+      // Notify other components (e.g., AdminAttention) to refresh
+      window.dispatchEvent(new CustomEvent("admin-data-changed"))
     } catch (error) {
       console.error("Error banning user:", error)
       showToast({
@@ -144,6 +164,9 @@ export default function UserManagement() {
             : u
         )
       )
+
+      // Notify other components (e.g., AdminAttention) to refresh
+      window.dispatchEvent(new CustomEvent("admin-data-changed"))
     } catch (error) {
       console.error("Error unbanning user:", error)
       showToast({
@@ -157,6 +180,17 @@ export default function UserManagement() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
   if (loading) {
@@ -223,13 +257,32 @@ export default function UserManagement() {
                   {user.email} • {user.concertCount} concerts • Joined{" "}
                   {formatDate(user.createdAt)}
                 </p>
-                {user.banned && user.banReason && (
-                  <p
-                    className="admin-list__meta"
-                    style={{ color: "#721c24", marginTop: 4 }}
-                  >
-                    Ban reason: {user.banReason}
-                  </p>
+                {user.banned && (
+                  <>
+                    {user.banReason && (
+                      <p
+                        className="admin-list__meta"
+                        style={{ color: "#721c24", marginTop: 4 }}
+                      >
+                        Reason: {user.banReason}
+                      </p>
+                    )}
+                    {user.banExpires ? (
+                      <p
+                        className="admin-list__meta"
+                        style={{ color: "#856404", marginTop: 4 }}
+                      >
+                        Expires: {formatDateTime(user.banExpires)}
+                      </p>
+                    ) : (
+                      <p
+                        className="admin-list__meta"
+                        style={{ color: "#721c24", marginTop: 4 }}
+                      >
+                        Permanent ban
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
               <div className="admin-list__actions">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { enrichBandData } from "@/lib/bands"
@@ -9,9 +9,7 @@ const MAX_BANDS_PER_REQUEST = 10
 const DELAY_BETWEEN_BANDS_MS = 2000
 
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const session = await getSession(await headers())
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

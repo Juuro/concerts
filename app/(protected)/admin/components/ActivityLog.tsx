@@ -23,20 +23,22 @@ const ACTION_LABELS: Record<string, string> = {
   concert_bulk_geocode: "Bulk geocoded concerts",
   user_ban: "Banned user",
   user_unban: "Unbanned user",
+  user_auto_unban: "Auto-unbanned user",
 }
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
+  const diffSecs = Math.floor(diffMs / 1000)
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
 
-  if (diffMins < 1) return "Just now"
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffSecs < 60) return `${diffSecs}s`
+  if (diffMins < 60) return `${diffMins}m`
+  if (diffHours < 24) return `${diffHours}h`
+  if (diffDays < 7) return `${diffDays}d`
   return date.toLocaleDateString()
 }
 
@@ -47,41 +49,35 @@ function getTargetInfo(
 ): { href: string | null; label: string } | null {
   switch (targetType) {
     case "band": {
-      // band_merge: show "SourceBand → TargetBand"
       if (action === "band_merge" && details?.sourceBand && details?.targetBand) {
         const source = details.sourceBand as { name: string }
         const target = details.targetBand as { name: string }
         return { href: null, label: `${source.name} → ${target.name}` }
       }
-      // band_bulk_enrich: show count
       if (
         action === "band_bulk_enrich" &&
         typeof details?.bandCount === "number"
       ) {
         return { href: null, label: `${details.bandCount} bands` }
       }
-      // band_enrich, band_delete: show name
       if (details?.bandName) {
         return { href: null, label: details.bandName as string }
       }
       return null
     }
     case "festival": {
-      // festival_bulk_delete: show count
       if (typeof details?.count === "number") {
         return { href: null, label: `${details.count} festivals` }
       }
       return null
     }
     case "concert": {
-      // concert_bulk_geocode: show count
       if (
         action === "concert_bulk_geocode" &&
         typeof details?.count === "number"
       ) {
         return { href: null, label: `${details.count} concerts` }
       }
-      // concert_geocode: show venue
       if (details?.venue) {
         return { href: null, label: details.venue as string }
       }
@@ -125,52 +121,63 @@ export default function ActivityLog() {
 
   if (loading) {
     return (
-      <div className="admin-list">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="admin-list__skeleton" style={{ height: 40 }} />
-        ))}
+      <div className="admin-activity">
+        <div className="admin-activity__header">
+          <span className="admin-activity__live-indicator">Live</span>
+        </div>
+        <div className="admin-activity__list">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="admin-list__skeleton" style={{ height: 40 }} />
+          ))}
+        </div>
       </div>
     )
   }
 
   if (activities.length === 0) {
-    return <div className="admin-list__empty">No recent activity</div>
+    return (
+      <div className="admin-activity">
+        <div className="admin-activity__header">
+          <span className="admin-activity__live-indicator">Live</span>
+        </div>
+        <div className="admin-list__empty">No recent activity</div>
+      </div>
+    )
   }
 
   return (
     <div className="admin-activity">
-      {activities.map((activity) => {
-        const actionLabel = ACTION_LABELS[activity.action] || activity.action
-        const targetInfo = getTargetInfo(
-          activity.action,
-          activity.targetType,
-          activity.details
-        )
+      <div className="admin-activity__header">
+        <span className="admin-activity__live-indicator">Live</span>
+      </div>
+      <div className="admin-activity__list">
+        {activities.map((activity) => {
+          const actionLabel = ACTION_LABELS[activity.action] || activity.action
+          const targetInfo = getTargetInfo(
+            activity.action,
+            activity.targetType,
+            activity.details
+          )
 
-        return (
-          <div key={activity.id} className="admin-activity__item">
-            <span className="admin-activity__time">
-              {formatTimeAgo(activity.createdAt)}
-            </span>
-            <span className="admin-activity__user">{activity.user}</span>
-            <span className="admin-activity__action">{actionLabel}</span>
-            {targetInfo && targetInfo.href ? (
-              <Link href={targetInfo.href} className="admin-activity__target">
-                {targetInfo.label}
-              </Link>
-            ) : targetInfo ? (
-              <span className="admin-activity__label">{targetInfo.label}</span>
-            ) : null}
-            {activity.details &&
-              typeof activity.details.count === "number" &&
-              activity.details.count > 1 && (
-                <span style={{ opacity: 0.6, fontSize: "0.75rem" }}>
-                  ({activity.details.count} items)
-                </span>
-              )}
-          </div>
-        )
-      })}
+          return (
+            <div key={activity.id} className="admin-activity__item">
+              <span className="admin-activity__time">
+                {formatTimeAgo(activity.createdAt)}
+              </span>
+              <div className="admin-activity__content">
+                <span className="admin-activity__action">{actionLabel}: </span>
+                {targetInfo && targetInfo.href ? (
+                  <Link href={targetInfo.href} className="admin-activity__target">
+                    {targetInfo.label}
+                  </Link>
+                ) : targetInfo ? (
+                  <span className="admin-activity__target">{targetInfo.label}</span>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

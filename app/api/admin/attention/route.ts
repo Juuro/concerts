@@ -1,18 +1,15 @@
+import { NextResponse } from "next/server"
+import { auth, getSession } from "@/lib/auth"
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
-import AdminAttentionClient from "./AdminAttentionClient"
 
-export interface AttentionStats {
-  bandsWithoutImages: number
-  totalBands: number
-  concertsWithoutCity: number
-  totalConcerts: number
-  orphanedFestivals: number
-  totalFestivals: number
-  bannedUsers: number
-  totalUsers: number
-}
+export async function GET() {
+  const session = await getSession(await headers())
 
-async function getAttentionStats(): Promise<AttentionStats> {
+  if (!session?.user || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const [
     bandsWithoutImages,
     totalBands,
@@ -39,7 +36,7 @@ async function getAttentionStats(): Promise<AttentionStats> {
     prisma.user.count(),
   ])
 
-  return {
+  return NextResponse.json({
     bandsWithoutImages,
     totalBands,
     concertsWithoutCity,
@@ -48,10 +45,5 @@ async function getAttentionStats(): Promise<AttentionStats> {
     totalFestivals,
     bannedUsers,
     totalUsers,
-  }
-}
-
-export default async function AdminAttention() {
-  const initialStats = await getAttentionStats()
-  return <AdminAttentionClient initialStats={initialStats} />
+  })
 }

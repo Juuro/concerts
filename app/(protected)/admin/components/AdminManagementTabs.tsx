@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import BandManagement from "./BandManagement"
 import ConcertManagement from "./ConcertManagement"
 import FestivalManagement from "./FestivalManagement"
@@ -84,13 +85,23 @@ interface AdminManagementTabsProps {
   defaultTab?: TabType
 }
 
+const VALID_TABS: TabType[] = ["enrichment", "cleanup", "users"]
+
 export default function AdminManagementTabs({
   defaultTab = "enrichment",
 }: AdminManagementTabsProps) {
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab)
 
+  useEffect(() => {
+    const tabParam = searchParams.get("tab")
+    if (tabParam && VALID_TABS.includes(tabParam as TabType)) {
+      setActiveTab(tabParam as TabType)
+    }
+  }, [searchParams])
+
   return (
-    <div className="admin-management">
+    <div id="management" className="admin-management">
       <div
         className="admin-management-tabs"
         role="tablist"

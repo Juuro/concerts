@@ -31,7 +31,8 @@
       "mcp__page-design-guide-mcp__get_layout_patterns",
       "mcp__page-design-guide-mcp__get_design_principles",
       "mcp__page-design-guide-mcp__get_component_guidance",
-      "mcp__page-design-guide-mcp__get_modern_trends"
+      "mcp__page-design-guide-mcp__get_modern_trends",
+      "Bash(grep -l \"session.user.role\" /Users/g125260/repos/concerts/app/api/**/*.ts)"
     ]
   },
   "enableAllProjectMcpServers": true,

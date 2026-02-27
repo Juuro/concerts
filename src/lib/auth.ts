@@ -1,8 +1,9 @@
-import { betterAuth } from "better-auth"
+import { betterAuth, APIError } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { admin } from "better-auth/plugins/admin"
 import { prisma } from "./prisma"
 import { sendVerificationEmail, sendPasswordResetEmail } from "./email"
+import { checkUserBan } from "./ban"
 
 function getBaseURL() {
   if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
@@ -49,6 +50,21 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes
     },
   },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const banStatus = await checkUserBan(session.userId)
+          if (banStatus.banned) {
+            throw new APIError("FORBIDDEN", {
+              message: "Your account has been suspended",
+            })
+          }
+          // Return void to proceed with session creation
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       username: {
@@ -76,8 +92,41 @@ export const auth = betterAuth({
         required: false,
         defaultValue: true,
       },
+      // Added by admin plugin, declared here for TypeScript inference
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "user",
+      },
     },
   },
 })
 
-export type Session = typeof auth.$Infer.Session
+// Base session type from Better Auth
+type BaseSession = typeof auth.$Infer.Session
+
+// Extended user fields from additionalFields config and admin plugin
+interface ExtendedUserFields {
+  role?: string
+  username?: string | null
+  isPublic?: boolean
+  currency?: string
+  hideLocationPublic?: boolean
+  hideCostPublic?: boolean
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | null
+}
+
+// Extended session type including all custom user fields
+export type Session = Omit<BaseSession, "user"> & {
+  user: BaseSession["user"] & ExtendedUserFields
+}
+
+/**
+ * Get session with proper typing for role field (added by admin plugin)
+ */
+export async function getSession(headers: Headers): Promise<Session | null> {
+  const session = await auth.api.getSession({ headers })
+  return session as Session | null
+}

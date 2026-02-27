@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useSession } from "@/lib/auth-client"
+import { useTypedSession } from "@/lib/auth-client"
 import "./settings.scss"
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending } = useTypedSession()
   const [username, setUsername] = useState(session?.user?.username || "")
   const [isPublic, setIsPublic] = useState(session?.user?.isPublic || false)
   const [hideLocationPublic, setHideLocationPublic] = useState(

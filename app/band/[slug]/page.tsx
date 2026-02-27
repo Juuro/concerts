@@ -7,7 +7,7 @@ import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent, getStart
 import { getBandBySlug, getAllBandSlugs, enrichBandData } from "@/lib/bands"
 import { after } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
@@ -46,7 +46,7 @@ export default async function BandPage({
 
   const [band, session] = await Promise.all([
     getBandBySlug(slug),
-    auth.api.getSession({ headers: await headers() }).catch(() => null),
+    getSession(await headers()).catch(() => null),
   ])
 
   if (!session?.user) {

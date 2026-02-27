@@ -1,0 +1,112 @@
+@use "@/styles/variables";
+
+.banned-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background: variables.$admin-bg-tertiary;
+
+  &__card {
+    max-width: 420px;
+    padding: 2.5rem;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: variables.$admin-shadow-lg;
+    text-align: center;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.5rem;
+    background: #fee2e2;
+    border-radius: 50%;
+    color: #dc2626;
+
+    svg {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  &__title {
+    margin: 0 0 1rem;
+    font-family: variables.$font-family-heading;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: variables.$color-black;
+  }
+
+  &__message {
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+    color: rgba(0, 0, 0, 0.7);
+    line-height: 1.5;
+  }
+
+  &__reason {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #92400e;
+    text-align: left;
+
+    strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  &__expiry {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #dbeafe;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #1e40af;
+    text-align: left;
+
+    strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  &__permanent {
+    margin: 0 0 1.5rem;
+    font-size: 0.8125rem;
+    color: rgba(0, 0, 0, 0.5);
+    line-height: 1.5;
+  }
+
+  &__logout {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: variables.$color-black;
+    border: none;
+    border-radius: 8px;
+    font-family: variables.$font-family-text;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color variables.$transition-duration
+      variables.$transition-easing-decelerate;
+
+    &:hover {
+      background: #333;
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-primary;
+      outline-offset: 2px;
+    }
+  }
+}

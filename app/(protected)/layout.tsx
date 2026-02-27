@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Header from "@/components/Header/header";
 import { getUserConcertCounts } from "@/lib/concerts";
+import { checkUserBan } from "@/lib/ban";
 
 export default async function ProtectedLayout({
   children,
@@ -15,6 +16,12 @@ export default async function ProtectedLayout({
 
   if (!session?.user) {
     redirect("/login");
+  }
+
+  // Check if user is banned
+  const banStatus = await checkUserBan(session.user.id);
+  if (banStatus.banned) {
+    redirect("/banned");
   }
 
   const userCounts = await getUserConcertCounts(session.user.id);
