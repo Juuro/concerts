@@ -50,11 +50,37 @@ $section-color-users: #6366f1;
     margin-bottom: 1.5rem;
   }
 
+  // Bento grid layout for monitoring zone
+  &__bento-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__bento-item {
+    &--wide {
+      grid-column: span 2;
+    }
+
+    &--tall {
+      grid-row: span 2;
+    }
+  }
+
+  // Bottom row with Activity Log + Quick Actions
+  &__bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+
   &__section {
     margin-bottom: 1.5rem;
     background: #fff;
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     overflow: hidden;
     border-top: 3px solid transparent;
@@ -169,8 +195,14 @@ $section-color-users: #6366f1;
 @media (max-width: 900px) {
   .admin-dashboard {
     &__top-grid,
-    &__management-grid {
+    &__management-grid,
+    &__bento-grid,
+    &__bottom-row {
       grid-template-columns: 1fr;
+    }
+
+    &__bento-item--wide {
+      grid-column: span 1;
     }
 
     &__section--stats,
@@ -349,6 +381,126 @@ $section-color-users: #6366f1;
   }
 }
 
+// Attention clusters (grouped layout)
+.admin-attention-cluster {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+
+  &__group {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    &--band-quality {
+      border-top: 3px solid $section-color-bands;
+    }
+
+    &--data-quality {
+      border-top: 3px solid $section-color-concerts;
+    }
+
+    &--users {
+      border-top: 3px solid $section-color-users;
+    }
+  }
+
+  &__group-title {
+    font-family: variables.$font-family-heading;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: variables.$color-black;
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.6;
+    }
+  }
+
+  &__items {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__stat {
+    flex: 1;
+    min-width: 80px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    transition: transform variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      box-shadow variables.$transition-duration
+        variables.$transition-easing-decelerate;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    &--warning {
+      background: #fff3cd;
+
+      .admin-attention-cluster__value {
+        color: #856404;
+      }
+    }
+
+    &--danger {
+      background: #f8d7da;
+
+      .admin-attention-cluster__value {
+        color: #721c24;
+      }
+    }
+
+    &--success {
+      background: #d4edda;
+
+      .admin-attention-cluster__value {
+        color: #155724;
+      }
+    }
+
+    &--needs-attention {
+      animation: attention-pulse 2s ease-in-out infinite;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        border-left: 3px solid #f59e0b;
+      }
+    }
+  }
+
+  &__value {
+    font-family: variables.$font-family-heading;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: variables.$color-black;
+    line-height: 1.2;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    color: rgba(0, 0, 0, 0.55);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
 // Activity chart
 .activity-chart {
   &__header {
@@ -429,6 +581,166 @@ $section-color-users: #6366f1;
       color: variables.$color-primary;
       border-bottom-color: variables.$color-primary;
       font-weight: 600;
+    }
+  }
+}
+
+// Management tabs (top-level tabs for management areas)
+.admin-management-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+
+  &__tab {
+    padding: 0.875rem 1.25rem;
+    border: none;
+    background: transparent;
+    font-family: variables.$font-family-text;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      border-color variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      background-color variables.$transition-duration
+        variables.$transition-easing-decelerate;
+
+    &:hover {
+      color: variables.$color-black;
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-primary;
+      outline-offset: -2px;
+    }
+
+    &--active {
+      color: variables.$color-primary;
+      border-bottom-color: variables.$color-primary;
+      font-weight: 600;
+    }
+
+    // Tab color variants
+    &--enrichment.admin-management-tabs__tab--active {
+      border-bottom-color: $section-color-bands;
+      color: $section-color-bands;
+    }
+
+    &--cleanup.admin-management-tabs__tab--active {
+      border-bottom-color: $section-color-festivals;
+      color: $section-color-festivals;
+    }
+
+    &--users.admin-management-tabs__tab--active {
+      border-bottom-color: $section-color-users;
+      color: $section-color-users;
+    }
+  }
+
+  &__panel {
+    animation: card-fade-in variables.$transition-duration-slow
+      variables.$transition-easing-decelerate;
+  }
+
+  &__content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Quick actions panel
+.admin-quick-actions {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-top: 3px solid variables.$color-primary;
+
+  &__title {
+    font-family: variables.$font-family-heading;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: variables.$color-black;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: variables.$font-family-text;
+    font-size: 0.875rem;
+    color: variables.$color-black;
+    text-align: left;
+    transition: background-color variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      transform variables.$transition-duration
+        variables.$transition-easing-decelerate;
+
+    &:hover {
+      background: #f0f0f0;
+      transform: translateX(4px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &--warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    &--danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    &--success {
+      background: #d4edda;
+      color: #155724;
     }
   }
 }
@@ -674,6 +986,10 @@ $section-color-users: #6366f1;
       text-decoration: underline;
     }
   }
+
+  &__label {
+    color: rgba(0, 0, 0, 0.7);
+  }
 }
 
 // Band merge comparison
@@ -840,5 +1156,16 @@ $section-color-users: #6366f1;
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+// Pulse animation for attention items needing action
+@keyframes attention-pulse {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
   }
 }

@@ -145,6 +145,7 @@ All pages that display concert lists use infinite scrolling with cursor-based pa
 - Public routes may use ISR with `revalidate`
 - TypeScript strict mode enabled
 - SCSS files (not modules) co-located with components
+- Do not use `!important` in CSS and SCSS
 - Absolute imports via `@/*` path alias
 - Use `<Image />` from `next/image` instead of `<img>`
 - Debounced API calls (300ms) for search/autocomplete inputs

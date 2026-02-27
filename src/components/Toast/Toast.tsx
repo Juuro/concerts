@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import "./toast.scss"
 
 export interface ToastProps {
@@ -89,17 +89,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
-  const showToast = (props: Omit<ToastProps, "onClose">) => {
+  const showToast = useCallback((props: Omit<ToastProps, "onClose">) => {
     const id = Math.random().toString(36).substring(2, 9)
     setToasts((prev) => [...prev, { ...props, id }])
-  }
+  }, [])
 
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
-  }
+  }, [])
+
+  const contextValue = useMemo(() => ({ showToast }), [showToast])
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <div className="toast-container">
         {toasts.map((toast) => (

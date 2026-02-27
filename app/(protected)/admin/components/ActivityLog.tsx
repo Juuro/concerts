@@ -40,30 +40,58 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-function getTargetLink(
+function getTargetInfo(
+  action: string,
   targetType: string,
-  targetId: string,
   details: Record<string, unknown> | null
-): { href: string; label: string } | null {
+): { href: string | null; label: string } | null {
   switch (targetType) {
-    case "band":
-      if (details && typeof details.bandSlug === "string") {
-        return {
-          href: `/band/${details.bandSlug}/`,
-          label: (details.bandName as string) || targetId,
-        }
+    case "band": {
+      // band_merge: show "SourceBand → TargetBand"
+      if (action === "band_merge" && details?.sourceBand && details?.targetBand) {
+        const source = details.sourceBand as { name: string }
+        const target = details.targetBand as { name: string }
+        return { href: null, label: `${source.name} → ${target.name}` }
+      }
+      // band_bulk_enrich: show count
+      if (
+        action === "band_bulk_enrich" &&
+        typeof details?.bandCount === "number"
+      ) {
+        return { href: null, label: `${details.bandCount} bands` }
+      }
+      // band_enrich, band_delete: show name
+      if (details?.bandName) {
+        return { href: null, label: details.bandName as string }
       }
       return null
+    }
+    case "festival": {
+      // festival_bulk_delete: show count
+      if (typeof details?.count === "number") {
+        return { href: null, label: `${details.count} festivals` }
+      }
+      return null
+    }
+    case "concert": {
+      // concert_bulk_geocode: show count
+      if (
+        action === "concert_bulk_geocode" &&
+        typeof details?.count === "number"
+      ) {
+        return { href: null, label: `${details.count} concerts` }
+      }
+      // concert_geocode: show venue
+      if (details?.venue) {
+        return { href: null, label: details.venue as string }
+      }
+      return null
+    }
     case "user":
-      return {
-        href: "#",
-        label: (details?.userName as string) || targetId,
+      if (details?.userName) {
+        return { href: null, label: details.userName as string }
       }
-    case "concert":
-      return {
-        href: "#",
-        label: (details?.venue as string) || targetId,
-      }
+      return null
     default:
       return null
   }
@@ -113,9 +141,9 @@ export default function ActivityLog() {
     <div className="admin-activity">
       {activities.map((activity) => {
         const actionLabel = ACTION_LABELS[activity.action] || activity.action
-        const targetLink = getTargetLink(
+        const targetInfo = getTargetInfo(
+          activity.action,
           activity.targetType,
-          activity.targetId,
           activity.details
         )
 
@@ -126,12 +154,12 @@ export default function ActivityLog() {
             </span>
             <span className="admin-activity__user">{activity.user}</span>
             <span className="admin-activity__action">{actionLabel}</span>
-            {targetLink && targetLink.href !== "#" ? (
-              <Link href={targetLink.href} className="admin-activity__target">
-                {targetLink.label}
+            {targetInfo && targetInfo.href ? (
+              <Link href={targetInfo.href} className="admin-activity__target">
+                {targetInfo.label}
               </Link>
-            ) : targetLink ? (
-              <span className="admin-activity__target">{targetLink.label}</span>
+            ) : targetInfo ? (
+              <span className="admin-activity__label">{targetInfo.label}</span>
             ) : null}
             {activity.details &&
               typeof activity.details.count === "number" &&
