@@ -45,12 +45,17 @@ export default async function HealthScore() {
   const health = await calculateHealthScore()
 
   // SVG parameters for the ring
-  const size = 140
-  const strokeWidth = 8
+  const size = 180
+  const strokeWidth = 12
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const progress = (health.overall / 100) * circumference
   const offset = circumference - progress
+
+  // Determine gradient colors based on health level
+  // High health (80+): pink gradient, Medium (50-79): amber, Low (<50): red
+  const gradientStart = health.overall >= 80 ? "#ff0666" : health.overall >= 50 ? "#f59e0b" : "#ef4444"
+  const gradientEnd = health.overall >= 80 ? "#ff6ba3" : health.overall >= 50 ? "#fbbf24" : "#f87171"
 
   return (
     <div className="health-score">
@@ -62,9 +67,9 @@ export default async function HealthScore() {
           viewBox={`0 0 ${size} ${size}`}
         >
           <defs>
-            <linearGradient id="health-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#34d399" />
+            <linearGradient id="health-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={gradientStart} />
+              <stop offset="100%" stopColor={gradientEnd} />
             </linearGradient>
           </defs>
           <circle

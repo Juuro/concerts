@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Fragment } from "react"
 import Link from "next/link"
 import { useToast } from "@/components/Toast/Toast"
 
@@ -228,20 +228,25 @@ export default function BandManagement() {
 
   return (
     <div>
-      <div className="admin-tabs" role="tablist" aria-label="Band management tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-controls={`panel-${tab.id}`}
-            className={`admin-tabs__tab ${activeTab === tab.id ? "admin-tabs__tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
+      <nav className="admin-inline-filters" aria-label="Filter bands by type">
+        {TABS.map((tab, index) => (
+          <Fragment key={tab.id}>
+            {index > 0 && (
+              <span className="admin-inline-filters__separator" aria-hidden="true">
+                ·
+              </span>
+            )}
+            <button
+              type="button"
+              className={`admin-inline-filter ${activeTab === tab.id ? "admin-inline-filter--active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+              aria-pressed={activeTab === tab.id}
+            >
+              {tab.label}
+            </button>
+          </Fragment>
         ))}
-      </div>
+      </nav>
 
       {selectedIds.size > 0 && (
         <div className="admin-bulk-actions">
@@ -268,11 +273,7 @@ export default function BandManagement() {
         </div>
       )}
 
-      <div
-        id={`panel-${activeTab}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-      >
+      <div>
         {loading ? (
           <div className="admin-list">
             {[1, 2, 3].map((i) => (

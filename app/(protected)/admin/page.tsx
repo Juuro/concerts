@@ -122,6 +122,7 @@ export default async function AdminPage() {
               <div>
                 <h2 id="log-heading" className="admin-dashboard__section-title">
                   Live Pulse
+                  <span className="activity-log__live-badge">Live</span>
                 </h2>
                 <p className="admin-dashboard__section-desc">
                   Real-time admin activity stream

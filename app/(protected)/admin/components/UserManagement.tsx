@@ -237,20 +237,19 @@ export default function UserManagement() {
                 <p className="admin-list__name">
                   {user.name || "No name"}
                   {user.username && (
-                    <span style={{ opacity: 0.6 }}> @{user.username}</span>
+                    <span className="admin-list__username">@{user.username}</span>
                   )}
-                  {user.role === "admin" && (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontSize: "0.75rem",
-                        background: "#e7f3ff",
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                      }}
-                    >
-                      Admin
+                  <span
+                    className={`admin-status-dot ${user.banned ? "admin-status-dot--banned" : "admin-status-dot--active"}`}
+                    role="status"
+                    aria-label={user.banned ? "Account status: Banned" : "Account status: Active"}
+                  >
+                    <span className="visually-hidden">
+                      {user.banned ? "Banned" : "Active"}
                     </span>
+                  </span>
+                  {user.role === "admin" && (
+                    <span className="admin-badge">Admin</span>
                   )}
                 </p>
                 <p className="admin-list__meta">
@@ -287,37 +286,25 @@ export default function UserManagement() {
               </div>
               <div className="admin-list__actions">
                 {user.banned ? (
-                  <>
-                    <span className="admin-status admin-status--banned">
-                      <span className="admin-status__dot" />
-                      Banned
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--secondary"
-                      onClick={() => handleUnban(user)}
-                      disabled={processingId === user.id}
-                      aria-label={`Unban ${user.name || user.email}`}
-                    >
-                      {processingId === user.id ? "..." : "Unban"}
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    onClick={() => handleUnban(user)}
+                    disabled={processingId === user.id}
+                    aria-label={`Unban ${user.name || user.email}`}
+                  >
+                    {processingId === user.id ? "..." : "Unban"}
+                  </button>
                 ) : (
-                  <>
-                    <span className="admin-status admin-status--active">
-                      <span className="admin-status__dot" />
-                      Active
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger"
-                      onClick={() => openBanDialog(user)}
-                      disabled={processingId === user.id}
-                      aria-label={`Ban ${user.name || user.email}`}
-                    >
-                      Ban
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger"
+                    onClick={() => openBanDialog(user)}
+                    disabled={processingId === user.id}
+                    aria-label={`Ban ${user.name || user.email}`}
+                  >
+                    Ban
+                  </button>
                 )}
               </div>
             </li>

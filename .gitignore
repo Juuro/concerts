@@ -86,3 +86,4 @@ yarn-error.log
 .env*.*.local
 
 /src/generated/prisma
+/temporary screenshots

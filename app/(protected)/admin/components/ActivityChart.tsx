@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma"
-import BarChart from "@/components/BarChart/barchart"
 
 function getStartOfDay(date: Date): Date {
   const result = new Date(date)
@@ -56,23 +55,26 @@ async function getActivityStats() {
 export default async function ActivityChart() {
   const stats = await getActivityStats()
 
-  const data: [string, number][] = [
-    ["Today", stats.concertsToday],
-    ["This Week", stats.concertsThisWeek],
-    ["This Month", stats.concertsThisMonth],
-    ["This Year", stats.concertsThisYear],
-  ]
-
-  const maxValue = Math.max(...data.map((d) => d[1]), 1)
-
   return (
-    <div className="activity-chart">
-      <BarChart
-        data={data}
-        max={maxValue}
-        title="Concerts Added"
-        category="activity"
-      />
+    <div className="activity-compact">
+      <div className="activity-compact__primary">
+        <span className="activity-compact__value">{stats.concertsThisYear}</span>
+        <span className="activity-compact__label">This Year</span>
+      </div>
+      <div className="activity-compact__secondary">
+        <div className="activity-compact__item">
+          <span className="activity-compact__item-value">{stats.concertsToday}</span>
+          <span className="activity-compact__item-label">Today</span>
+        </div>
+        <div className="activity-compact__item">
+          <span className="activity-compact__item-value">{stats.concertsThisWeek}</span>
+          <span className="activity-compact__item-label">Week</span>
+        </div>
+        <div className="activity-compact__item">
+          <span className="activity-compact__item-value">{stats.concertsThisMonth}</span>
+          <span className="activity-compact__item-label">Month</span>
+        </div>
+      </div>
     </div>
   )
 }

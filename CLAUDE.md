@@ -230,3 +230,37 @@ GET    /api/festivals/search      - Search festivals (for autocomplete)
 GET    /api/venues/search         - Search venues via Photon API
 PUT    /api/user/profile          - Update user profile (auth required)
 ```
+
+
+## Screenshot Workflow
+- Puppeteer is installed as devDependency
+Before you start a new dev server with `yarn dev`check if there is already a dev server running, don't start a second dev seerver
+- **Always screenshot from localhost:** `node screenshot.mjs http://localhost:3000`
+- Screenshots are saved automatically to `./temporary screenshots/screenshot-N.png` (auto-incremented, never overwritten)
+- Optional label suffix: `node screenshot.mjs http://localhost:3000 label` → saves as `screenshot-N-label.png`
+- `screenshot.mjs` lives in the project root. Use it as-is.
+- After screenshotting, read the PNG from `temporary screenshots/` with the Read tool - Claude can see and analyze the image directly
+- When comparing, be specific: "heading is 32px but reference shows ~24px", "card gap is 16px but should be 24px"
+- Check: spacing/padding, font size/weight/line-height, colors (exact hex), alignment, border-radius, shadows, image sizing
+
+### Scrolling & Full Page Options
+- `scroll=N` — scroll down N pixels before capture: `node screenshot.mjs http://localhost:3000 scroll=500`
+- `scroll=#id` or `scroll=.class` — scroll to CSS selector: `node screenshot.mjs http://localhost:3000 scroll=#stats-section`
+- `full` — capture entire page height: `node screenshot.mjs http://localhost:3000 full`
+- Options can be combined with labels: `node screenshot.mjs http://localhost:3000 scroll=800 my-label`
+
+### Authenticated Screenshots (Protected Routes)
+For pages behind auth (`/settings`, `/map`, `/concerts/new`, `/concerts/edit/*`, `/admin/*`):
+
+1. Set `DEV_USER_EMAIL` in `.env.local` to an existing user's email
+2. The script auto-detects protected routes and authenticates via `/api/dev/login`
+3. This dev endpoint **only works locally** (`NODE_ENV=development`)
+
+Example:
+```bash
+# Public page - no auth needed
+node screenshot.mjs http://localhost:3000/band/radiohead
+
+# Protected page - auto-authenticates using DEV_USER_EMAIL
+node screenshot.mjs http://localhost:3000/settings my-settings
+```

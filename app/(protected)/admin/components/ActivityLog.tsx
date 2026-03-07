@@ -121,36 +121,33 @@ export default function ActivityLog() {
 
   if (loading) {
     return (
-      <div className="admin-activity">
-        <div className="admin-activity__header">
-          <span className="admin-activity__live-indicator">Live</span>
-        </div>
-        <div className="admin-activity__list">
+      <div className="activity-log">
+        <ul className="activity-log__list">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="admin-list__skeleton" style={{ height: 40 }} />
+            <li key={i} className="activity-log__item activity-log__item--skeleton">
+              <span className="activity-log__dot" aria-hidden="true" />
+              <div className="activity-log__content">
+                <span className="admin-list__skeleton" style={{ width: 40, height: 14 }} />
+                <span className="admin-list__skeleton" style={{ width: 120, height: 14 }} />
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     )
   }
 
   if (activities.length === 0) {
     return (
-      <div className="admin-activity">
-        <div className="admin-activity__header">
-          <span className="admin-activity__live-indicator">Live</span>
-        </div>
+      <div className="activity-log">
         <div className="admin-list__empty">No recent activity</div>
       </div>
     )
   }
 
   return (
-    <div className="admin-activity">
-      <div className="admin-activity__header">
-        <span className="admin-activity__live-indicator">Live</span>
-      </div>
-      <div className="admin-activity__list">
+    <div className="activity-log">
+      <ul className="activity-log__list">
         {activities.map((activity) => {
           const actionLabel = ACTION_LABELS[activity.action] || activity.action
           const targetInfo = getTargetInfo(
@@ -160,24 +157,28 @@ export default function ActivityLog() {
           )
 
           return (
-            <div key={activity.id} className="admin-activity__item">
-              <span className="admin-activity__time">
-                {formatTimeAgo(activity.createdAt)}
-              </span>
-              <div className="admin-activity__content">
-                <span className="admin-activity__action">{actionLabel}: </span>
+            <li key={activity.id} className="activity-log__item">
+              <span className="activity-log__dot" aria-hidden="true" />
+              <div className="activity-log__content">
+                <span className="activity-log__time">
+                  {formatTimeAgo(activity.createdAt)}
+                </span>
+                <span className="activity-log__separator" aria-hidden="true">
+                  ·
+                </span>
+                <span className="activity-log__action">{actionLabel}</span>
                 {targetInfo && targetInfo.href ? (
-                  <Link href={targetInfo.href} className="admin-activity__target">
+                  <Link href={targetInfo.href} className="activity-log__target">
                     {targetInfo.label}
                   </Link>
                 ) : targetInfo ? (
-                  <span className="admin-activity__target">{targetInfo.label}</span>
+                  <span className="activity-log__target">{targetInfo.label}</span>
                 ) : null}
               </div>
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ul>
     </div>
   )
 }

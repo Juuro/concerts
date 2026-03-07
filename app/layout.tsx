@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Concerts',
   description: "List of all concerts and festivals I've visited. Including pages for every band I ever saw.",
   authors: [{ name: '@juuro' }],
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({

@@ -101,13 +101,13 @@ export default function AdminManagementTabs({
   }, [searchParams])
 
   return (
-    <div id="management" className="admin-management">
+    <div id="management" className="admin-management admin-management--connected">
       <div
         className="admin-management-tabs"
         role="tablist"
         aria-label="Admin management sections"
       >
-        {TABS.map((tab) => (
+        {TABS.map((tab, index) => (
           <button
             key={tab.id}
             role="tab"
@@ -117,6 +117,7 @@ export default function AdminManagementTabs({
             className={`admin-management-tabs__tab admin-management-tabs__tab--${tab.id} ${
               activeTab === tab.id ? "admin-management-tabs__tab--active" : ""
             }`}
+            data-position={index === 0 ? "first" : index === TABS.length - 1 ? "last" : "middle"}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.icon}
@@ -130,6 +131,7 @@ export default function AdminManagementTabs({
         role="tabpanel"
         aria-labelledby={`management-tab-${activeTab}`}
         className="admin-management-tabs__panel"
+        data-active-tab={activeTab}
       >
         {activeTab === "enrichment" && (
           <div className="admin-management-tabs__content-grid">

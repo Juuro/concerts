@@ -29,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.1.4",
     "prettier": "^3.5.3",
+    "puppeteer": "^24.38.0",
     "sass": "^1.86.0",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.21.0",

@@ -18,45 +18,38 @@ interface AttentionItem {
 
 function AttentionCard({
   value,
-  total,
   label,
   priority,
   icon,
   manageHref,
   manageLabel,
 }: AttentionItem) {
-  const progressPercent = total > 0 ? Math.round(((total - value) / total) * 100) : 100
   const needsAction = priority !== "success" && value > 0
 
   return (
     <div className={`admin-attention-card admin-attention-card--${priority}`}>
-      <div className="admin-attention-card__header">
-        <div className="admin-attention-card__icon">{icon}</div>
-        {needsAction && <div className="admin-attention-card__pulse" />}
-      </div>
+      <div className="admin-attention-card__icon">{icon}</div>
       <div className="admin-attention-card__value">{value.toLocaleString()}</div>
       <div className="admin-attention-card__label">{label}</div>
-      <div className="admin-attention-card__progress">
-        <div
-          className="admin-attention-card__progress-bar"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
       <div className="admin-attention-card__actions">
         {needsAction ? (
           <Link href={manageHref} className="admin-btn admin-btn--primary">
             {manageLabel}
           </Link>
         ) : (
-          <span
-            style={{
-              fontSize: "0.6875rem",
-              color: "rgba(0,0,0,0.4)",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            All clear
+          <span className="admin-attention-card__all-clear">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            All Clear
           </span>
         )}
       </div>
@@ -82,6 +75,8 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          width="20"
+          height="20"
         >
           <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
           <circle cx="9" cy="9" r="2" />
@@ -105,6 +100,8 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          width="20"
+          height="20"
         >
           <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
           <circle cx="12" cy="10" r="3" />
@@ -127,6 +124,8 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          width="20"
+          height="20"
         >
           <path d="M4 12a8 8 0 0 1 16 0" />
           <path d="M12 4v4" />
@@ -154,6 +153,8 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          width="20"
+          height="20"
         >
           <circle cx="12" cy="12" r="10" />
           <path d="m4.9 4.9 14.2 14.2" />

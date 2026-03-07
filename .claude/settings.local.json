@@ -32,7 +32,15 @@
       "mcp__page-design-guide-mcp__get_design_principles",
       "mcp__page-design-guide-mcp__get_component_guidance",
       "mcp__page-design-guide-mcp__get_modern_trends",
-      "Bash(grep -l \"session.user.role\" /Users/g125260/repos/concerts/app/api/**/*.ts)"
+      "Bash(grep -l \"session.user.role\" /Users/g125260/repos/concerts/app/api/**/*.ts)",
+      "mcp__next-devtools__browser_eval",
+      "mcp__next-devtools__nextjs_docs",
+      "Bash(node screenshot.mjs http://localhost:3000*)",
+      "Bash(lsof -i :3000)",
+      "Read(//Users/g125260/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.0.1/**)",
+      "Bash(python3 scripts/search.py \"admin dashboard nested tabs navigation sidebar filter\" --design-system -p \"Admin Dashboard\")",
+      "Bash(python3 src/ui-ux-pro-max/scripts/search.py*)",
+      "Bash(curl -X POST http://localhost:3000/api/dev/login)"
     ]
   },
   "enableAllProjectMcpServers": true,
