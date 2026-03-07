@@ -75,23 +75,26 @@ export default async function PublicProfilePage({
 
   // Calculate statistics using separate count/aggregation queries
   const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
-    prisma.concert.count({
-      where: { userId: user.id }
+    prisma.userConcert.count({
+      where: { userId: user.id },
     }),
     prisma.concertBand.groupBy({
-      by: ['bandId'],
-      where: { concert: { userId: user.id } }
+      by: ["bandId"],
+      where: { concert: { attendees: { some: { userId: user.id } } } },
     }),
     hideLocation
       ? Promise.resolve([])
       : prisma.concert.findMany({
-          where: { userId: user.id, normalizedCity: { not: null } },
+          where: {
+            attendees: { some: { userId: user.id } },
+            normalizedCity: { not: null },
+          },
           select: { normalizedCity: true },
           distinct: ["normalizedCity"],
         }),
     prisma.concert.findMany({
-      where: { userId: user.id },
-      select: { date: true }
+      where: { attendees: { some: { userId: user.id } } },
+      select: { date: true },
     }),
     getUserConcertStatistics(user.id),
     getUserConcertCounts(user.id),

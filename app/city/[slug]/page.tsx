@@ -67,11 +67,17 @@ export default async function CityPage({
   const [userCounts, initialData, pastCount, futureCount, citySpent] = await Promise.all([
     getUserConcertCounts(userId),
     getConcertsPaginated(cursor, 20, "forward", { city: cityName, userId }),
-    prisma.concert.count({
-      where: { userId, normalizedCity: cityName, date: { lt: now } },
+    prisma.userConcert.count({
+      where: {
+        userId,
+        concert: { normalizedCity: cityName, date: { lt: now } },
+      },
     }),
-    prisma.concert.count({
-      where: { userId, normalizedCity: cityName, date: { gte: now } },
+    prisma.userConcert.count({
+      where: {
+        userId,
+        concert: { normalizedCity: cityName, date: { gte: now } },
+      },
     }),
     getUserTotalSpent(userId, { city: cityName }),
   ])

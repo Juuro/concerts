@@ -58,20 +58,23 @@ async function LoggedInHome({
     totalSpent,
   ] = await Promise.all([
     getConcertsPaginated(cursor, 20, "forward", { userId }),
-    prisma.concert.count({
+    prisma.userConcert.count({
       where: { userId },
     }),
     prisma.concertBand.groupBy({
       by: ["bandId"],
-      where: { concert: { userId } },
+      where: { concert: { attendees: { some: { userId } } } },
     }),
     prisma.concert.findMany({
-      where: { userId, normalizedCity: { not: null } },
+      where: {
+        attendees: { some: { userId } },
+        normalizedCity: { not: null },
+      },
       select: { normalizedCity: true },
       distinct: ["normalizedCity"],
     }),
     prisma.concert.findMany({
-      where: { userId },
+      where: { attendees: { some: { userId } } },
       select: { date: true },
     }),
     getUserConcertStatistics(userId),

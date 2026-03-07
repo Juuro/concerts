@@ -30,8 +30,9 @@ yarn db:push          # Push schema to database (no migration)
 yarn db:studio        # Open Prisma Studio
 
 # Migration scripts (one-time)
-yarn migrate:contentful  # Import data from Contentful to PostgreSQL
-yarn migrate:venues      # Backfill venue/normalizedCity data
+yarn migrate:contentful       # Import data from Contentful to PostgreSQL
+yarn migrate:venues           # Backfill venue/normalizedCity data
+yarn migrate:shared-concerts  # Migrate deprecated Concert.userId/cost to UserConcert
 
 # Remote database commands (requires POSTGRES_PRISMA_URL env var with Prisma Accelerate URL)
 npx prisma db push --url "$POSTGRES_PRISMA_URL"            # Sync local schema to remote database
@@ -50,14 +51,16 @@ npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL agains
 ### Key Directories
 
 - `app/` - Next.js 15 App Router pages
-  - `(auth)/` - Authentication pages (login)
-  - `(protected)/` - Protected routes requiring auth (dashboard, settings, concert CRUD)
+  - `(auth)/` - Authentication pages (login, register, banned)
+  - `(protected)/` - Protected routes requiring auth (dashboard, settings, concert CRUD, admin)
+  - `(protected)/admin/` - Admin dashboard (role-gated; requires `user.role === "admin"`)
   - `u/[username]/` - Public user profiles (ISR, 1-hour revalidation)
   - `band/[slug]/` - Public band pages with inline edit toggle
   - `city/[slug]/` - City-specific concert listing pages
   - `year/[year]/` - Year-specific concert listing pages
   - `map/` - Global concert map view
   - `api/` - API routes for CRUD operations
+  - `api/admin/` - Admin-only API routes (stats, bands, festivals, concerts, users, activity)
 - `src/components/` - React components with `.scss` co-located styles
 - `src/lib/` - Core libraries
   - `prisma.ts` - Prisma client singleton
@@ -77,18 +80,30 @@ npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL agains
 
 ### Database Schema
 
-- **User**: id, email, name, username, isPublic, currency (default "EUR"), hideLocationPublic, hideCostPublic -- Better Auth managed
-- **Concert**: id, userId, date, latitude, longitude, venue, normalizedCity, isFestival, festivalId, cost (Decimal)
-- **Band**: id, name, slug, imageUrl, websiteUrl, lastfmUrl, genres[], bio
-- **Festival**: id, name, slug, url
+- **User**: id, email, name, username, isPublic, currency (default "EUR"), hideLocationPublic, hideCostPublic, role (default "user"), banned, banReason, banExpires -- Better Auth managed (admin plugin adds role)
+- **Concert**: id, date, latitude, longitude, venue, normalizedCity, isFestival, festivalId, createdById, updatedById -- shared entity; deprecated userId/cost being migrated to UserConcert
+- **UserConcert**: id, userId, concertId, cost, notes (junction: user attendance with user-specific cost)
+- **Band**: id, name, slug, imageUrl, imageEnrichedAt, lastfmUrl, websiteUrl, genres[], bio, createdById, updatedById
+- **Festival**: id, name, slug, url, createdById, updatedById
 - **ConcertBand**: concertId, bandId, isHeadliner, sortOrder (junction table)
+- **AdminActivity**: id, userId, action, targetType, targetId, details (JSON), createdAt -- audit log for admin actions
 - **Session/Account/Verification**: Better Auth tables
 
 ### Multi-Tenancy
 
-- **Concerts** are scoped per-user via `userId` foreign key. All CRUD operations verify ownership.
-- **Bands and Festivals** are shared globally across all users.
+- **Concerts** are shared entities; attendance is tracked via **UserConcert** (userId + concertId). Legacy `Concert.userId` is deprecated; migration via `yarn migrate:shared-concerts`.
+- **Bands and Festivals** are shared globally across all users with audit fields (createdById, updatedById).
 - **Public profiles** are opt-in: users set `isPublic: true` and a `username` in Settings to enable `/u/[username]`.
+
+### Admin Dashboard
+
+- **Route**: `/admin` (role-gated; layout redirects non-admins to `/`)
+- **Auth**: Better Auth `admin` plugin with `adminRoles: ["admin"]`
+- **Layout**: `AdminSidebar` (Overview, Bands, Festivals, Concerts, Users, Activity Log)
+- **Overview**: Stats, Activity Chart, Attention clusters (needs action), Live Pulse (activity stream), Health Score, Management tabs
+- **Management pages**: Bands (data quality, merge duplicates), Festivals (orphaned), Concerts (missing geocoding), Users (list, ban), Activity Log
+- **API**: `/api/admin/*` — stats, attention, activity, bands (enrich, merge, duplicates, orphans), festivals (orphans), concerts (missing-city, geocode), users (list, ban, cleanup-expired-bans)
+- **Audit**: `AdminActivity` records band enrich/merge, user ban, festival delete, etc.
 
 ### Public Profiles
 
@@ -128,6 +143,7 @@ All pages that display concert lists use infinite scrolling with cursor-based pa
 
 ### Key Components
 
+- **Admin**: `AdminSidebar`, `AdminStats`, `AdminAttention`, `AdminAttentionClient`, `ActivityLog`, `ActivityChart`, `HealthScore`, `AdminManagementTabs`, `BandManagement`, `BandMerge`, `ConcertManagement`, `FestivalManagement`, `UserManagement`
 - `Dialog/` - Accessible HTML5 `<dialog>` wrapper with `aria-labelledby`, backdrop click to close, Escape key support
 - `BandEditForm/` - Band metadata editing form (name, imageUrl, websiteUrl), submits PUT to `/api/bands/[slug]`
 - `BandEditToggle` (in `app/band/[slug]/`) - Opens BandEditForm in a Dialog modal, refreshes page on save
@@ -210,8 +226,11 @@ Better Auth handles:
 - GitHub OAuth login
 - Session management with cookies (7-day expiry, 5-minute cookie cache)
 - Route protection via middleware
+- Admin plugin: `user.role` (e.g. `"admin"`), set via database; admin layout enforces role
+- Banned users: `user.banned`, `banReason`, `banExpires`; redirected to `/banned`
 
 Protected routes are in `app/(protected)/` and require authentication.
+Admin routes (`/admin/*`) additionally require `session.user.role === "admin"`.
 The middleware at `middleware.ts` handles redirects for unauthenticated users.
 
 ## API Routes
@@ -224,11 +243,31 @@ PUT    /api/concerts/[id]         - Update concert (auth required, ownership ver
 DELETE /api/concerts/[id]         - Delete concert (auth required, ownership verified)
 GET    /api/bands/search          - Search bands (for autocomplete)
 POST   /api/bands                 - Create new band (auth required)
-PUT    /api/bands/[slug]          - Update band info (auth required)
+PUT    /api/bands/[slug]          - Update band info (admin only)
 GET    /api/bands/[slug]/enrich   - Fetch Last.fm data (auth required)
 GET    /api/festivals/search      - Search festivals (for autocomplete)
 GET    /api/venues/search         - Search venues via Photon API
 PUT    /api/user/profile          - Update user profile (auth required)
+
+# Admin (require user.role === "admin")
+GET    /api/admin/stats                     - Dashboard statistics
+GET    /api/admin/attention                 - Needs-attention counts
+GET    /api/admin/activity                  - Activity log
+GET    /api/admin/users                     - List users
+POST   /api/admin/users/[id]/ban            - Ban user
+POST   /api/admin/users/cleanup-expired-bans - Remove expired bans
+GET    /api/admin/bands/missing-lastfm      - Bands missing Last.fm URL
+GET    /api/admin/bands/missing-images      - Bands missing image
+GET    /api/admin/bands/enrichment-failed   - Bands with failed enrichment
+GET    /api/admin/bands/duplicates          - Potential duplicate bands
+POST   /api/admin/bands/[id]/enrich         - Enrich single band
+POST   /api/admin/bands/bulk-enrich         - Bulk enrich bands
+DELETE /api/admin/bands/[id]                - Delete orphaned band
+POST   /api/admin/bands/merge               - Merge duplicate bands
+GET/DELETE /api/admin/festivals/orphans     - List or delete orphaned festivals
+GET    /api/admin/concerts/missing-city     - Concerts missing normalizedCity
+POST   /api/admin/concerts/bulk-geocode     - Bulk geocode concerts
+POST   /api/admin/concerts/[id]/geocode     - Geocode single concert
 ```
 
 

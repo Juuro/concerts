@@ -1,0 +1,567 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "OvCard",
+      "x": 0,
+      "y": 4,
+      "name": "Overview Card",
+      "clip": true,
+      "width": 466,
+      "height": 273,
+      "fill": "#ffffff",
+      "cornerRadius": 16,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "#000000"
+      },
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "OvAccent",
+          "name": "accent-bar",
+          "fill": "#ff0666",
+          "width": "fill_container",
+          "height": 3
+        },
+        {
+          "type": "frame",
+          "id": "OvHeader",
+          "name": "section-header",
+          "width": "fill_container",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "rgba(0,0,0,0.06)"
+          },
+          "gap": 12,
+          "padding": [
+            24,
+            24,
+            16,
+            24
+          ],
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "OvIcon",
+              "name": "chart-icon",
+              "width": 24,
+              "height": 24,
+              "iconFontName": "chart-column",
+              "iconFontFamily": "lucide",
+              "fill": "#ff0666"
+            },
+            {
+              "type": "frame",
+              "id": "OvTitleWrap",
+              "name": "title-wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OvTitle",
+                  "name": "title",
+                  "fill": "#444",
+                  "content": "Overview",
+                  "fontFamily": "Rubik",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OvDesc",
+                  "name": "description",
+                  "fill": "#000000",
+                  "content": "System-wide statistics at a glance",
+                  "fontFamily": "OpenSans",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OvStatsGrid",
+          "name": "stats-grid",
+          "width": "fill_container",
+          "gap": 16,
+          "padding": [
+            0,
+            24,
+            24,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "OvCard1",
+              "name": "stat-users",
+              "width": "fill_container",
+              "fill": "#f1f3f5",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "rgba(0,0,0,0.04)"
+              },
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "OvI1",
+                  "name": "icon",
+                  "opacity": 0.6,
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "users",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "OvV1",
+                  "name": "value",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#ff0666",
+                        "position": 0
+                      },
+                      {
+                        "color": "#7c3aed",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#06b6d4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "content": "5",
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OvL1",
+                  "name": "label",
+                  "fill": "#000000",
+                  "content": "USERS",
+                  "textAlign": "center",
+                  "fontFamily": "OpenSans",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 0.75
+                },
+                {
+                  "type": "frame",
+                  "id": "OvU1",
+                  "name": "underline-wrap",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "OvU1bar",
+                      "name": "underline",
+                      "opacity": 0.6,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 90,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#ff0666",
+                            "position": 0
+                          },
+                          {
+                            "color": "#7c3aed",
+                            "position": 0.5
+                          },
+                          {
+                            "color": "#06b6d4",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 60,
+                      "height": 3
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OvCard2",
+              "name": "stat-concerts",
+              "width": "fill_container",
+              "fill": "#f1f3f5",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "rgba(0,0,0,0.04)"
+              },
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "OvI2",
+                  "opacity": 0.6,
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "ticket",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "OvV2",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#ff0666",
+                        "position": 0
+                      },
+                      {
+                        "color": "#7c3aed",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#06b6d4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "content": "198",
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OvL2",
+                  "fill": "#000000",
+                  "content": "CONCERTS",
+                  "textAlign": "center",
+                  "fontFamily": "OpenSans",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 0.75
+                },
+                {
+                  "type": "frame",
+                  "id": "OvU2",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "OvU2bar",
+                      "opacity": 0.6,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 90,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#ff0666",
+                            "position": 0
+                          },
+                          {
+                            "color": "#7c3aed",
+                            "position": 0.5
+                          },
+                          {
+                            "color": "#06b6d4",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 60,
+                      "height": 3
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OvCard3",
+              "name": "stat-bands",
+              "width": "fill_container",
+              "fill": "#f1f3f5",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "rgba(0,0,0,0.04)"
+              },
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "OvI3",
+                  "opacity": 0.6,
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "music",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "OvV3",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#ff0666",
+                        "position": 0
+                      },
+                      {
+                        "color": "#7c3aed",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#06b6d4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "content": "270",
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OvL3",
+                  "fill": "#000000",
+                  "content": "BANDS",
+                  "textAlign": "center",
+                  "fontFamily": "OpenSans",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 0.75
+                },
+                {
+                  "type": "frame",
+                  "id": "OvU3",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "OvU3bar",
+                      "opacity": 0.6,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 90,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#ff0666",
+                            "position": 0
+                          },
+                          {
+                            "color": "#7c3aed",
+                            "position": 0.5
+                          },
+                          {
+                            "color": "#06b6d4",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 60,
+                      "height": 3
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OvCard4",
+              "name": "stat-festivals",
+              "width": "fill_container",
+              "fill": "#f1f3f5",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#0000000a"
+              },
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "OvI4",
+                  "opacity": 0.6,
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "tent",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "OvV4",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#ff0666",
+                        "position": 0
+                      },
+                      {
+                        "color": "#7c3aed",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#06b6d4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "content": "19",
+                  "textAlign": "center",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OvL4",
+                  "fill": "#000000",
+                  "content": "FESTIVALS",
+                  "textAlign": "center",
+                  "fontFamily": "OpenSans",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 0.75
+                },
+                {
+                  "type": "frame",
+                  "id": "OvU4",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "OvU4bar",
+                      "opacity": 0.6,
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 90,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#ff0666",
+                            "position": 0
+                          },
+                          {
+                            "color": "#7c3aed",
+                            "position": 0.5
+                          },
+                          {
+                            "color": "#06b6d4",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 60,
+                      "height": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
