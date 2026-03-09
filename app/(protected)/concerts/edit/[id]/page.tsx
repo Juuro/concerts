@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getEffectiveBandsForForm } from "@/lib/concerts";
 import { ConcertForm } from "@/components/ConcertForm";
 import "./edit-concert.scss";
 
@@ -60,6 +61,8 @@ export default async function EditConcertPage({
     select: { currency: true },
   });
 
+  const effectiveBands = await getEffectiveBandsForForm(concert, attendance);
+
   return (
     <div className="edit-concert">
       <h1>Edit Concert</h1>
@@ -78,12 +81,7 @@ export default async function EditConcertPage({
           isFestival: concert.isFestival,
           festivalId: concert.festivalId,
           festivalName: concert.festival?.name ?? null,
-          bands: concert.bands.map((cb) => ({
-            bandId: cb.band.id,
-            name: cb.band.name,
-            slug: cb.band.slug,
-            isHeadliner: cb.isHeadliner,
-          })),
+          bands: effectiveBands,
         }}
       />
     </div>
