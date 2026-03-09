@@ -241,17 +241,80 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   background: variables.$admin-pink-gradient;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
+  // Dynamic typography: scale down for longer numbers to prevent overflow
+  &[data-value-length="3"] {
+    font-size: 2.75rem;
+  }
+
+  &[data-value-length="4"] {
+    font-size: 2.25rem;
+  }
+
+  &[data-value-length="5"] {
+    font-size: 1.875rem;
+  }
+
+  &[data-value-length="6"] {
+    font-size: 1.5rem;
+  }
+
+  &[data-value-length="7"],
+  &[data-value-length="8"],
+  &[data-value-length="9"],
+  &[data-value-length="10"] {
+    font-size: 1.25rem;
+  }
+
   @media screen and (max-width: 768px) {
     font-size: 2.75rem;
+
+    &[data-value-length="3"] {
+      font-size: 2.25rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="5"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
   }
 
   @media screen and (max-width: 480px) {
     font-size: 2.25rem;
+
+    &[data-value-length="3"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="5"],
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
   }
 }
 
@@ -507,17 +570,80 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   background: variables.$admin-pink-gradient;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
+  // Dynamic typography: scale down for longer numbers to prevent overflow
+  &[data-value-length="3"] {
+    font-size: 2.75rem;
+  }
+
+  &[data-value-length="4"] {
+    font-size: 2.25rem;
+  }
+
+  &[data-value-length="5"] {
+    font-size: 1.875rem;
+  }
+
+  &[data-value-length="6"] {
+    font-size: 1.5rem;
+  }
+
+  &[data-value-length="7"],
+  &[data-value-length="8"],
+  &[data-value-length="9"],
+  &[data-value-length="10"] {
+    font-size: 1.25rem;
+  }
+
   @media screen and (max-width: 768px) {
     font-size: 2.75rem;
+
+    &[data-value-length="3"] {
+      font-size: 2.25rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="5"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
   }
 
   @media screen and (max-width: 480px) {
     font-size: 2.25rem;
+
+    &[data-value-length="3"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="5"],
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
   }
 }
 
@@ -566,6 +692,7 @@
   font-weight: 700;
   color: variables.$admin-text;
   line-height: 1;
+  white-space: nowrap;
 
   @media screen and (max-width: 480px) {
     font-size: 1.5rem;

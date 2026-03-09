@@ -29,14 +29,20 @@ export default async function AdminStats() {
   return (
     <div className="admin-stats">
       <div className="admin-stats__row">
-        {items.map((stat) => (
-          <div key={stat.label} className="admin-stats__item">
-            <span className="admin-stats__value">
-              {stat.value.toLocaleString()}
-            </span>
-            <span className="admin-stats__label">{stat.label}</span>
-          </div>
-        ))}
+        {items.map((stat) => {
+          const displayValue = stat.value.toLocaleString()
+          return (
+            <div key={stat.label} className="admin-stats__item">
+              <span
+                className="admin-stats__value"
+                data-value-length={displayValue.length}
+              >
+                {displayValue}
+              </span>
+              <span className="admin-stats__label">{stat.label}</span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

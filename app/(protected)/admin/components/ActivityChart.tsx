@@ -52,26 +52,56 @@ async function getActivityStats() {
   }
 }
 
+function StatValue({
+  value,
+  className,
+}: {
+  value: number
+  className: string
+}) {
+  const displayValue = value.toLocaleString()
+  return (
+    <span
+      className={className}
+      data-value-length={displayValue.length}
+    >
+      {displayValue}
+    </span>
+  )
+}
+
 export default async function ActivityChart() {
   const stats = await getActivityStats()
 
   return (
     <div className="activity-compact">
       <div className="activity-compact__primary">
-        <span className="activity-compact__value">{stats.concertsThisYear}</span>
+        <StatValue
+          value={stats.concertsThisYear}
+          className="activity-compact__value"
+        />
         <span className="activity-compact__label">This Year</span>
       </div>
       <div className="activity-compact__secondary">
         <div className="activity-compact__item">
-          <span className="activity-compact__item-value">{stats.concertsToday}</span>
+          <StatValue
+            value={stats.concertsToday}
+            className="activity-compact__item-value"
+          />
           <span className="activity-compact__item-label">Today</span>
         </div>
         <div className="activity-compact__item">
-          <span className="activity-compact__item-value">{stats.concertsThisWeek}</span>
+          <StatValue
+            value={stats.concertsThisWeek}
+            className="activity-compact__item-value"
+          />
           <span className="activity-compact__item-label">Week</span>
         </div>
         <div className="activity-compact__item">
-          <span className="activity-compact__item-value">{stats.concertsThisMonth}</span>
+          <StatValue
+            value={stats.concertsThisMonth}
+            className="activity-compact__item-value"
+          />
           <span className="activity-compact__item-label">Month</span>
         </div>
       </div>

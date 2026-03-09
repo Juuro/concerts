@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
+import { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
@@ -112,6 +113,29 @@ export async function POST(request: NextRequest) {
       await tx.concertBand.deleteMany({
         where: { bandId: sourceId },
       })
+
+      // Update UserConcert.bandOverrideIds: replace source band ID with target in any override arrays
+      const userConcertsWithOverrides = await tx.userConcert.findMany({
+        where: { bandOverrideIds: { not: Prisma.DbNull } },
+        select: { id: true, bandOverrideIds: true },
+      })
+      for (const uc of userConcertsWithOverrides) {
+        const raw = uc.bandOverrideIds
+        if (raw == null || !Array.isArray(raw)) continue
+        const arr = raw as { bandId?: string; sortOrder?: number }[]
+        const hasSource = arr.some((item) => item.bandId === sourceId)
+        if (!hasSource) continue
+        const updated = arr
+          .map((item) => {
+            if (item.bandId === sourceId) return { ...item, bandId: targetId }
+            return item
+          })
+          .filter((item, i, a) => a.findIndex((x) => x.bandId === item.bandId) === i) // dedupe by bandId
+        await tx.userConcert.update({
+          where: { id: uc.id },
+          data: { bandOverrideIds: updated },
+        })
+      }
 
       // Merge metadata: fill gaps in target with source data
       const updateData: Record<string, unknown> = {}
