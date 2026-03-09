@@ -17,9 +17,13 @@ const COORD_TOLERANCE = 0.001
 /** User-specific support act override: bandId + sortOrder. Headliner always comes from core. */
 export type BandOverrideItem = { bandId: string; sortOrder: number }
 
-function parseBandOverrideIds(
-  raw: unknown
-): BandOverrideItem[] | null {
+/**
+ * Parses bandOverrideIds from UserConcert.
+ * - Returns null when field is missing/invalid: use core concert bands.
+ * - Returns [] when user explicitly has no support acts: show headliner only.
+ * - Returns [...] when user has specific support acts: show headliner + these.
+ */
+function parseBandOverrideIds(raw: unknown): BandOverrideItem[] | null {
   if (raw == null || !Array.isArray(raw)) return null
   const arr = raw as unknown[]
   const out: BandOverrideItem[] = []
@@ -31,7 +35,7 @@ function parseBandOverrideIds(
       }
     }
   }
-  return out.length > 0 ? out.sort((a, b) => a.sortOrder - b.sortOrder) : null
+  return out.sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
 /**
