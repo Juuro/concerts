@@ -57,7 +57,6 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const initialIdsRef = useRef<Set<string>>(new Set(initialConcerts.map((c) => c.id)))
 
   // Build query string from filter params
   const buildQueryString = useCallback(
@@ -252,7 +251,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
             concert={concert}
             showEditButton={shouldShowEditButtons}
             currentUserId={effectiveUserId}
-            animated={!initialIdsRef.current.has(concert.id)}
+            animated
             hideLocation={hideLocation}
             hideCost={hideCost}
             currency={currency}

@@ -40,7 +40,8 @@
       "Read(//Users/g125260/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.0.1/**)",
       "Bash(python3 scripts/search.py \"admin dashboard nested tabs navigation sidebar filter\" --design-system -p \"Admin Dashboard\")",
       "Bash(python3 src/ui-ux-pro-max/scripts/search.py*)",
-      "Bash(curl -X POST http://localhost:3000/api/dev/login)"
+      "Bash(curl -X POST http://localhost:3000/api/dev/login)",
+      "mcp__page-design-guide-mcp__get_animation_guidance"
     ]
   },
   "enableAllProjectMcpServers": true,

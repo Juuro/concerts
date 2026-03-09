@@ -25,7 +25,7 @@ import fs from "fs"
 import path from "path"
 
 const SCREENSHOT_DIR = "./temporary screenshots"
-const PROTECTED_ROUTES = ["/concerts/new", "/concerts/edit", "/settings", "/map", "/admin"]
+const PROTECTED_ROUTES = ["/concerts/new", "/concerts/edit", "/settings", "/map", "/admin", "/band", "/city", "/year"]
 
 async function getNextScreenshotNumber() {
   if (!fs.existsSync(SCREENSHOT_DIR)) {
