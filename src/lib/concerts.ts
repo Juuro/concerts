@@ -457,30 +457,17 @@ export async function createConcert(
       })
       if (!existingWithBands) throw new Error("Concert not found")
 
-      const coreHeadlinerId = getHeadliner(existingWithBands.bands.map((cb) => ({ bandId: cb.bandId, isHeadliner: cb.isHeadliner })))?.bandId
-      const coreSupportActIds = existingWithBands.bands
-        .filter((cb) => cb.bandId !== coreHeadlinerId)
-        .map((cb) => cb.bandId)
-      const inputSupportActIds = input.bandIds
+      // Always set bandOverrideIds for linkers so they never see core support acts
+      const bandOverrideIds: BandOverrideItem[] = input.bandIds
         .filter((b) => b.bandId !== headlinerBandId)
-        .map((b) => b.bandId)
-
-      const supportActsDiffer =
-        coreSupportActIds.length !== inputSupportActIds.length ||
-        coreSupportActIds.some((id, i) => id !== inputSupportActIds[i])
-
-      const bandOverrideIds: BandOverrideItem[] | undefined = supportActsDiffer
-        ? input.bandIds
-            .filter((b) => b.bandId !== headlinerBandId)
-            .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
-        : undefined
+        .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
       userConcert = await prisma.userConcert.create({
         data: {
           userId: input.userId,
           concertId: existingConcert.id,
           cost: input.cost !== undefined ? input.cost : undefined,
-          bandOverrideIds: bandOverrideIds ?? undefined,
+          bandOverrideIds,
         },
       })
 
@@ -662,14 +649,21 @@ async function forkConcertForUser(
     })
 
     if (!existingAttendance) {
-      // Migrate attendance to matching concert (preserve cost/notes)
+      // Migrate attendance to matching concert (preserve cost/notes/bandOverrideIds)
       const userAttendance = result.attendees[0]
+      const headlinerId = getHeadliner(
+        result.bands.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner }))
+      )?.bandId
+      const bandOverrideIds: BandOverrideItem[] = result.bands
+        .filter((b) => b.bandId !== headlinerId)
+        .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
       await prisma.userConcert.create({
         data: {
           userId,
           concertId: matchingConcert.id,
           cost: userAttendance.cost,
           notes: userAttendance.notes,
+          bandOverrideIds,
         },
       })
     }
@@ -759,15 +753,19 @@ export async function updateConcert(
   }
 
   // Support-act-only edit: same headliner, no core field change → update only UserConcert.bandOverrideIds
+  const noCoreFieldChanged =
+    (input.date === undefined ||
+      input.date.getTime() === existing.date.getTime()) &&
+    (input.latitude === undefined || input.latitude === existing.latitude) &&
+    (input.longitude === undefined || input.longitude === existing.longitude) &&
+    (input.venue === undefined || input.venue === existing.venue) &&
+    (input.isFestival === undefined ||
+      input.isFestival === existing.isFestival) &&
+    (input.festivalId === undefined ||
+      (input.festivalId ?? null) === (existing.festivalId ?? null))
+
   const onlyBandsChanged =
-    input.bandIds !== undefined &&
-    !headlinerChanged &&
-    input.date === undefined &&
-    input.latitude === undefined &&
-    input.longitude === undefined &&
-    input.venue === undefined &&
-    input.isFestival === undefined &&
-    input.festivalId === undefined
+    input.bandIds !== undefined && !headlinerChanged && noCoreFieldChanged
   if (onlyBandsChanged) {
     const supportActOverrides: BandOverrideItem[] = input.bandIds!
       .filter((b) => b.bandId !== inputHeadlinerId)
@@ -893,13 +891,14 @@ export async function updateConcert(
           })
 
           if (!existingAttendance && currentAttendance) {
-            // Migrate attendance to matching concert (preserve cost/notes)
+            // Migrate attendance to matching concert (preserve cost/notes/bandOverrideIds)
             await prisma.userConcert.create({
               data: {
                 userId,
                 concertId: matchingConcert.id,
                 cost: currentAttendance.cost,
                 notes: currentAttendance.notes,
+                bandOverrideIds: currentAttendance.bandOverrideIds ?? undefined,
               },
             })
           }
