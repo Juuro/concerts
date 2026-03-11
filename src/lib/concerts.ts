@@ -794,6 +794,21 @@ export async function updateConcert(
     return await transformConcert(concert, updatedAttendance ?? attendance)
   }
 
+  // Hard guard: for multi-attendee concerts, band changes must always be per-user.
+  // This prevents core ConcertBand corruption if noCoreFieldChanged comparison fails
+  // (e.g. floating-point precision, date representation, null vs empty-string).
+  if (existing._count.attendees > 1 && input.bandIds && !headlinerChanged) {
+    const headlinerId = inputHeadlinerId ?? existingHeadlinerId
+    const supportActOverrides: BandOverrideItem[] = input.bandIds
+      .filter((b) => b.bandId !== headlinerId)
+      .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
+    await prisma.userConcert.update({
+      where: { id: attendance.id },
+      data: { bandOverrideIds: supportActOverrides },
+    })
+    input = { ...input, bandIds: undefined }
+  }
+
   // Update user-specific attendance data (only if not forking)
   if (input.cost !== undefined || input.notes !== undefined) {
     await prisma.userConcert.update({
