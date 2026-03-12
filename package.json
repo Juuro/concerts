@@ -51,7 +51,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "migrate:shared-concerts": "tsx --env-file=.env scripts/migrate-to-shared-concerts.ts"
+    "migrate:shared-concerts": "tsx --env-file=.env scripts/migrate-to-shared-concerts.ts",
+    "migrate:supporting-acts": "tsx --env-file=.env scripts/migrate-supporting-acts.ts"
   },
   "resolutions": {
     "lodash": "^4.17.23",

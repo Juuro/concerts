@@ -114,13 +114,13 @@ export async function POST(request: NextRequest) {
         where: { bandId: sourceId },
       })
 
-      // Update UserConcert.bandOverrideIds: replace source band ID with target in any override arrays
-      const userConcertsWithOverrides = await tx.userConcert.findMany({
-        where: { bandOverrideIds: { not: Prisma.DbNull } },
-        select: { id: true, bandOverrideIds: true },
+      // Update UserConcert.supportingActIds: replace source band ID with target in any support act arrays
+      const userConcertsWithSupportingActs = await tx.userConcert.findMany({
+        where: { supportingActIds: { not: Prisma.DbNull } },
+        select: { id: true, supportingActIds: true },
       })
-      for (const uc of userConcertsWithOverrides) {
-        const raw = uc.bandOverrideIds
+      for (const uc of userConcertsWithSupportingActs) {
+        const raw = uc.supportingActIds
         if (raw == null || !Array.isArray(raw)) continue
         const arr = raw as { bandId?: string; sortOrder?: number }[]
         const hasSource = arr.some((item) => item.bandId === sourceId)
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
           .filter((item, i, a) => a.findIndex((x) => x.bandId === item.bandId) === i) // dedupe by bandId
         await tx.userConcert.update({
           where: { id: uc.id },
-          data: { bandOverrideIds: updated },
+          data: { supportingActIds: updated },
         })
       }
 

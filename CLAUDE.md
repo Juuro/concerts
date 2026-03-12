@@ -82,11 +82,19 @@ npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL agains
 
 - **User**: id, email, name, username, isPublic, currency (default "EUR"), hideLocationPublic, hideCostPublic, role (default "user"), banned, banReason, banExpires -- Better Auth managed (admin plugin adds role)
 - **Concert**: id, date, latitude, longitude, venue, normalizedCity, isFestival, festivalId, createdById, updatedById -- shared entity; deprecated userId/cost being migrated to UserConcert
-- **UserConcert**: id, userId, concertId, cost, notes (junction: user attendance with user-specific cost)
+- **UserConcert**: id, userId, concertId, cost, notes, supportingActIds (junction: user attendance with per-user cost and support acts)
 - **Band**: id, name, slug, imageUrl, imageEnrichedAt, lastfmUrl, websiteUrl, genres[], bio, createdById, updatedById
 - **Festival**: id, name, slug, url, createdById, updatedById
-- **ConcertBand**: concertId, bandId, isHeadliner, sortOrder (junction table)
+- **ConcertBand**: concertId, bandId, isHeadliner, sortOrder -- headliner only (shared); support acts are per-user in UserConcert.supportingActIds
 - **AdminActivity**: id, userId, action, targetType, targetId, details (JSON), createdAt -- audit log for admin actions
+
+### Band Data Architecture
+
+Concerts use a split storage model for bands:
+- **Headliner** (shared): Stored in `ConcertBand` with `isHeadliner=true`. All attendees see the same headliner.
+- **Support acts** (per-user): Stored in `UserConcert.supportingActIds` as JSON array `[{bandId, sortOrder}]`. Each user has their own list.
+
+This design allows multiple users to attend the same concert while tracking their individual support act selections.
 - **Session/Account/Verification**: Better Auth tables
 
 ### Multi-Tenancy
