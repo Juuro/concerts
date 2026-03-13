@@ -38,13 +38,19 @@ export default function PrivacyPage() {
               contact us at{" "}
               <a href="mailto:privacy@example.com">[privacy@example.com]</a>.
             </p>
+            <p>
+              We are currently not obliged to appoint a data protection officer
+              under the GDPR; therefore, no data protection officer has been
+              designated. If this changes, we will update this privacy policy
+              with the relevant contact details.
+            </p>
           </section>
 
           <section aria-labelledby="purposes-heading">
             <h2 id="purposes-heading">2. Purposes and Legal Basis of Processing</h2>
             <p>
-              We process your personal data for the following purposes and
-              legal bases (Art. 6 GDPR):
+              We process your personal data for the following purposes and legal
+              bases (Art. 6 GDPR):
             </p>
             <ul>
               <li>
@@ -75,13 +81,23 @@ export default function PrivacyPage() {
               <li>
                 <strong>Session cookies:</strong> Session cookies are used to
                 keep you logged in. <em>Legal basis:</em> Legitimate interest in
-                secure authentication (Art. 6(1)(f) GDPR).
+                secure and reliable authentication (Art. 6(1)(f) GDPR).
               </li>
               <li>
                 <strong>Admin functions and audit logs:</strong> For
                 administrative and security purposes, we may log actions (e.g.
-                band edits, user bans). <em>Legal basis:</em> Legitimate interest
-                (Art. 6(1)(f) GDPR).
+                band edits, user bans) to ensure security, abuse prevention, and
+                accountability. <em>Legal basis:</em> Legitimate interest (Art.
+                6(1)(f) GDPR).
+              </li>
+              <li>
+                <strong>Technical logs and security monitoring:</strong> Our
+                hosting and infrastructure providers temporarily process IP
+                addresses, timestamps, User-Agent information, requested URLs,
+                and error logs to detect misuse, defend against attacks, and
+                ensure the stability of the service.{" "}
+                <em>Legal basis:</em> Legitimate interest in security, fraud
+                prevention, and service reliability (Art. 6(1)(f) GDPR).
               </li>
             </ul>
           </section>
@@ -90,7 +106,9 @@ export default function PrivacyPage() {
             <h2 id="recipients-heading">3. Recipients and Processors</h2>
             <p>
               Your data may be processed by or shared with the following
-              categories of processors:
+              categories of processors. All processors act on our instructions
+              under data processing agreements (DPAs) in accordance with Art. 28
+              GDPR.
             </p>
             <ul>
               <li>
@@ -148,7 +166,8 @@ export default function PrivacyPage() {
               Some processors (e.g. Vercel, Resend, GitHub) may process data in
               the USA or other non‑EEA countries. We ensure appropriate
               safeguards such as adequacy decisions, Standard Contractual
-              Clauses, or the EU-US Data Privacy Framework where applicable.
+              Clauses, or the EU-US Data Privacy Framework where applicable, in
+              addition to the data processing agreements mentioned above.
             </p>
           </section>
 
@@ -162,8 +181,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Account data:</strong> Retained until you delete your
-                account. After account deletion, data is removed within a
-                reasonable period, subject to legal retention requirements.
+                account. After account deletion, data is removed within 30 days,
+                subject to legal retention requirements.
               </li>
               <li>
                 <strong>Concert and band data:</strong> Retained as long as
@@ -171,7 +190,17 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Admin audit logs:</strong> Retained as needed for
-                security and legal compliance, typically for a limited period.
+                security and legal compliance, typically for 12 months and no
+                longer than 24 months where necessary for the establishment,
+                exercise, or defence of legal claims or for the investigation of
+                security incidents.
+              </li>
+              <li>
+                <strong>Technical logs and IP data:</strong> Log files (such as
+                IP address, timestamps, request URLs, and User-Agent
+                information) are generally retained for 7–30 days, unless a
+                longer retention period is required in the context of specific
+                security incidents or legal obligations.
               </li>
             </ul>
           </section>
@@ -261,7 +290,11 @@ export default function PrivacyPage() {
               cookies). These are required for the service to function and do
               not require separate consent. Session cookies typically expire
               after 7 days of inactivity. We do not use advertising or
-              third-party analytics cookies by default.
+              third-party analytics cookies by default. The use of cookies is
+              carried out in accordance with the GDPR and the German
+              Telekommunikation-Telemedien-Datenschutz-Gesetz (TTDSG); strictly
+              necessary cookies such as session cookies do not require consent
+              under § 25(2) TTDSG.
             </p>
           </section>
 
