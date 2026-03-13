@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Next.js 15 multi-tenant web application for tracking personal concert attendance. Features user authentication via Better Auth, PostgreSQL database via Prisma, MapLibre GL for interactive maps, and Last.fm API integration for band metadata enrichment.
 
+## Busines
+
+This app will have a premium tier and operate as a German GBR.
+
 ## Accessibility, Security & Privacy
 
 These principles must always be respected when building or editing features:
@@ -91,10 +95,12 @@ npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL agains
 ### Band Data Architecture
 
 Concerts use a split storage model for bands:
+
 - **Headliner** (shared): Stored in `ConcertBand` with `isHeadliner=true`. All attendees see the same headliner.
 - **Support acts** (per-user): Stored in `UserConcert.supportingActIds` as JSON array `[{bandId, sortOrder}]`. Each user has their own list.
 
 This design allows multiple users to attend the same concert while tracking their individual support act selections.
+
 - **Session/Account/Verification**: Better Auth tables
 
 ### Multi-Tenancy
@@ -278,10 +284,10 @@ POST   /api/admin/concerts/bulk-geocode     - Bulk geocode concerts
 POST   /api/admin/concerts/[id]/geocode     - Geocode single concert
 ```
 
-
 ## Screenshot Workflow
+
 - Puppeteer is installed as devDependency
-Before you start a new dev server with `yarn dev`check if there is already a dev server running, don't start a second dev seerver
+  Before you start a new dev server with `yarn dev`check if there is already a dev server running, don't start a second dev seerver
 - **Always screenshot from localhost:** `node screenshot.mjs http://localhost:3000`
 - Screenshots are saved automatically to `./temporary screenshots/screenshot-N.png` (auto-incremented, never overwritten)
 - Optional label suffix: `node screenshot.mjs http://localhost:3000 label` → saves as `screenshot-N-label.png`
@@ -291,12 +297,14 @@ Before you start a new dev server with `yarn dev`check if there is already a dev
 - Check: spacing/padding, font size/weight/line-height, colors (exact hex), alignment, border-radius, shadows, image sizing
 
 ### Scrolling & Full Page Options
+
 - `scroll=N` — scroll down N pixels before capture: `node screenshot.mjs http://localhost:3000 scroll=500`
 - `scroll=#id` or `scroll=.class` — scroll to CSS selector: `node screenshot.mjs http://localhost:3000 scroll=#stats-section`
 - `full` — capture entire page height: `node screenshot.mjs http://localhost:3000 full`
 - Options can be combined with labels: `node screenshot.mjs http://localhost:3000 scroll=800 my-label`
 
 ### Authenticated Screenshots (Protected Routes)
+
 For pages behind auth (`/settings`, `/map`, `/concerts/new`, `/concerts/edit/*`, `/admin/*`):
 
 1. Set `DEV_USER_EMAIL` in `.env.local` to an existing user's email
@@ -304,6 +312,7 @@ For pages behind auth (`/settings`, `/map`, `/concerts/new`, `/concerts/edit/*`,
 3. This dev endpoint **only works locally** (`NODE_ENV=development`)
 
 Example:
+
 ```bash
 # Public page - no auth needed
 node screenshot.mjs http://localhost:3000/band/radiohead

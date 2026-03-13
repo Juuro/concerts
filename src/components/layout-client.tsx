@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header/header';
+import Footer from './Footer/Footer';
 import '../styles/layout.scss';
 
 interface LayoutProps {
@@ -20,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, concertCounts }) => {
 
       {children}
 
-      <footer>© {new Date().getFullYear()} · Built with ❤️ on 🌍! 🤟🏳️‍🌈</footer>
+      <Footer />
     </>
   );
 };
