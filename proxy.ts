@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 // Routes that require authentication
@@ -7,8 +7,9 @@ const protectedRoutes = ["/concerts/new", "/concerts/edit", "/settings", "/map"]
 // Routes that should redirect to home if already authenticated
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/resend-verification"];
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export async function proxy(request: Request) {
+  const url = new URL(request.url);
+  const { pathname } = url;
 
   // Check if session cookie exists
   const sessionCookie = getSessionCookie(request);

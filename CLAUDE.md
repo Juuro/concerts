@@ -8,7 +8,7 @@ A Next.js 15 multi-tenant web application for tracking personal concert attendan
 
 ## Busines
 
-This app will have a premium tier and operate as a German GBR.
+This app will have a premium tier and operate as a German GbR.
 
 ## Accessibility, Security & Privacy
 

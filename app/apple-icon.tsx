@@ -2,7 +2,6 @@ import { ImageResponse } from 'next/og';
 
 import { TicketIcon } from './_icons/TicketIcon';
 
-export const runtime = 'edge';
 export const contentType = 'image/png';
 
 export const size = {

@@ -75,8 +75,8 @@ export async function PUT(
     }
 
     // Revalidate statistics cache
-    revalidateTag("concert-statistics");
-    revalidateTag("user-concert-statistics");
+    revalidateTag("concert-statistics", "max");
+    revalidateTag("user-concert-statistics", "max");
 
     return NextResponse.json(concert);
   } catch (error) {
@@ -106,8 +106,8 @@ export async function DELETE(
   }
 
   // Revalidate statistics cache
-  revalidateTag("concert-statistics");
-  revalidateTag("user-concert-statistics");
+  revalidateTag("concert-statistics", "max");
+  revalidateTag("user-concert-statistics", "max");
 
   return NextResponse.json({ success: true });
 }

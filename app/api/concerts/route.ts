@@ -151,8 +151,8 @@ export async function POST(request: NextRequest) {
     const concert = await createConcert(input)
 
     // Revalidate statistics cache
-    revalidateTag("concert-statistics")
-    revalidateTag("user-concert-statistics")
+    revalidateTag("concert-statistics", "max")
+    revalidateTag("user-concert-statistics", "max")
 
     return NextResponse.json(concert, { status: 201 })
   } catch (error) {
