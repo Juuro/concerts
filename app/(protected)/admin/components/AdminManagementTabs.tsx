@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import BandManagement from "./BandManagement"
 import ConcertManagement from "./ConcertManagement"
 import FestivalManagement from "./FestivalManagement"
@@ -91,14 +90,19 @@ export default function AdminManagementTabs({
   defaultTab = "enrichment",
 }: AdminManagementTabsProps) {
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<TabType>(defaultTab)
+  const router = useRouter()
+  const pathname = usePathname()
+  const tabParam = searchParams.get("tab")
+  const activeTab =
+    tabParam && VALID_TABS.includes(tabParam as TabType)
+      ? (tabParam as TabType)
+      : defaultTab
 
-  useEffect(() => {
-    const tabParam = searchParams.get("tab")
-    if (tabParam && VALID_TABS.includes(tabParam as TabType)) {
-      setActiveTab(tabParam as TabType)
-    }
-  }, [searchParams])
+  const handleTabClick = (tabId: TabType) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", tabId)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   return (
     <div id="management" className="admin-management admin-management--connected">
@@ -118,7 +122,7 @@ export default function AdminManagementTabs({
               activeTab === tab.id ? "admin-management-tabs__tab--active" : ""
             }`}
             data-position={index === 0 ? "first" : index === TABS.length - 1 ? "last" : "middle"}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabClick(tab.id)}
           >
             {tab.icon}
             {tab.label}

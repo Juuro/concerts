@@ -43,6 +43,10 @@ npx prisma db push --url "$POSTGRES_PRISMA_URL"            # Sync local schema t
 npx prisma db execute --url "$POSTGRES_PRISMA_URL" --stdin  # Execute SQL against remote database (pipe SQL via stdin)
 ```
 
+## Warnings when code changes
+
+- Can you warn me if the code changes in a way so that we need a cookie banner according to GDPR or DSGVO?
+
 ## Architecture
 
 ### Data Flow

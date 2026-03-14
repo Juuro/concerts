@@ -1,4 +1,6 @@
-import React from "react"
+"use client"
+
+import React, { useState } from "react"
 import Link from "next/link"
 import Layout from "../src/components/layout-client"
 import FeatureCard from "@/components/FeatureCard/FeatureCard"
@@ -38,7 +40,9 @@ const messages = [
 ]
 
 export default function NotFound() {
-  const message = messages[Math.floor(Math.random() * messages.length)]
+  const [message] = useState(() =>
+    messages[Math.floor(Math.random() * messages.length)]
+  )
 
   return (
     <Layout>
