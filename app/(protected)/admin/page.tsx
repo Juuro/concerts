@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { Metadata } from "next"
 import AdminStats from "./components/AdminStats"
 import AdminAttention from "./components/AdminAttention"
@@ -12,9 +13,8 @@ export const metadata: Metadata = {
   description: "Admin dashboard for managing bands, concerts, and users",
 }
 
-export const dynamic = "force-dynamic"
-
 export default async function AdminPage() {
+  await connection()
   return (
     <div className="admin-page">
       <div className="admin-dashboard">

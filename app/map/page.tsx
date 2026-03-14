@@ -7,8 +7,6 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 
-export const dynamic = "force-dynamic"
-
 export const metadata: Metadata = {
   title: "Map | Concerts",
   description: "Map of all concerts",

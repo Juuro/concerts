@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AuthButton, EmailSignInForm } from "@/components/Auth";
 import Link from "next/link";
 import "./login.scss";
@@ -7,13 +8,12 @@ export const metadata = {
   description: "Sign in to track your concert attendance",
 };
 
-export default async function LoginPage({
+async function LoginContent({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
   const { callbackUrl } = await searchParams;
-
   return (
     <div className="login-page">
       <div className="login-card">
@@ -33,5 +33,17 @@ export default async function LoginPage({
         </p>
       </div>
     </div>
+  );
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  return (
+    <Suspense fallback={<div className="login-page"><div className="login-card"><p>Loading...</p></div></div>}>
+      <LoginContent searchParams={searchParams} />
+    </Suspense>
   );
 }

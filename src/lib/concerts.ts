@@ -1,11 +1,12 @@
 import { prisma } from "./prisma"
-import { unstable_cache } from "next/cache"
-import type {
-  Concert as PrismaConcert,
-  Band as PrismaBand,
-  Festival as PrismaFestival,
-  ConcertBand,
-  UserConcert,
+import { cacheLife, cacheTag } from "next/cache"
+import {
+  Prisma,
+  type Concert as PrismaConcert,
+  type Band as PrismaBand,
+  type Festival as PrismaFestival,
+  type ConcertBand,
+  type UserConcert,
 } from "@/generated/prisma/client"
 import { cityToSlug } from "@/utils/helpers"
 import { getGeocodingData } from "@/utils/data"
@@ -1206,6 +1207,137 @@ export async function getConcertsPaginated(
   }
 }
 
+/**
+ * Band-filtered pagination: headliner OR supporting act.
+ * Uses raw SQL because supportingActIds is JSON and Prisma cannot filter it.
+ */
+async function getConcertsPaginatedForUserByBand(
+  cursor: string | undefined,
+  limit: number,
+  direction: "forward" | "backward",
+  filters: ConcertFilters,
+  bandId: string
+): Promise<PaginatedConcerts> {
+  const take = limit + 1
+  type Row = { id: string }
+
+  // Get cursor's concert date for keyset pagination
+  let cursorDate: Date | null = null
+  if (cursor) {
+    const uc = await prisma.userConcert.findUnique({
+      where: { id: cursor, userId: filters.userId! },
+      select: { concert: { select: { date: true } } },
+    })
+    cursorDate = uc?.concert?.date ?? null
+  }
+
+  const yearClause =
+    filters.year != null
+      ? Prisma.sql`AND c."date" >= ${new Date(filters.year, 0, 1)} AND c."date" <= ${new Date(filters.year, 11, 31, 23, 59, 59, 999)}`
+      : Prisma.empty
+  const cityClause =
+    filters.city != null
+      ? Prisma.sql`AND c."normalizedCity" = ${filters.city}`
+      : Prisma.empty
+
+  const isForward = direction === "forward"
+  const cursorClause =
+    cursor && cursorDate
+      ? isForward
+        ? Prisma.sql`AND (c."date", uc.id) < (${cursorDate}, ${cursor})`
+        : Prisma.sql`AND (c."date", uc.id) > (${cursorDate}, ${cursor})`
+      : Prisma.empty
+  const orderClause = isForward
+    ? Prisma.sql`ORDER BY c."date" DESC, uc.id DESC`
+    : Prisma.sql`ORDER BY c."date" ASC, uc.id ASC`
+
+  const rows = await prisma.$queryRaw<Row[]>`
+    SELECT uc.id
+    FROM user_concert uc
+    JOIN concert c ON c.id = uc."concertId"
+    WHERE uc."userId" = ${filters.userId}
+      AND (
+        EXISTS (
+          SELECT 1 FROM concert_band cb
+          WHERE cb."concertId" = c.id AND cb."bandId" = ${bandId}
+        )
+        OR (
+          uc."supportingActIds" IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(uc."supportingActIds") AS elem
+            WHERE (elem->>'bandId') = ${bandId}
+          )
+        )
+      )
+      ${yearClause}
+      ${cityClause}
+      ${cursorClause}
+    ${orderClause}
+    LIMIT ${take}
+  `
+
+  const ids = rows.map((r) => r.id)
+  if (ids.length === 0) {
+    return {
+      items: [],
+      nextCursor: null,
+      prevCursor: cursor ?? null,
+      hasMore: false,
+      hasPrevious: Boolean(cursor),
+    }
+  }
+
+  const userConcerts = await prisma.userConcert.findMany({
+    where: { id: { in: ids } },
+    include: {
+      concert: {
+        include: {
+          bands: {
+            include: { band: true },
+            orderBy: { sortOrder: "asc" as const },
+          },
+          festival: true,
+          _count: { select: { attendees: true } },
+        },
+      },
+    },
+  })
+
+  const orderMap = new Map(ids.map((id, i) => [id, i]))
+  userConcerts.sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!)
+
+  const hasExtra = userConcerts.length > limit
+  const items = hasExtra ? userConcerts.slice(0, limit) : userConcerts
+
+  if (direction === "backward") {
+    items.reverse()
+  }
+
+  return {
+    items: await Promise.all(
+      items.map((uc) => transformConcert(uc.concert, uc))
+    ),
+    nextCursor:
+      direction === "forward"
+        ? hasExtra
+          ? items[items.length - 1].id
+          : null
+        : cursor
+          ? items[items.length - 1]?.id ?? null
+          : null,
+    prevCursor:
+      direction === "forward"
+        ? cursor
+          ? items[0]?.id ?? null
+          : null
+        : hasExtra
+          ? items[0]?.id ?? null
+          : null,
+    hasMore: direction === "forward" ? hasExtra : Boolean(cursor),
+    hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
+  }
+}
+
 // Helper for user-filtered pagination (queries via UserConcert)
 async function getConcertsPaginatedForUser(
   cursor: string | undefined,
@@ -1213,6 +1345,23 @@ async function getConcertsPaginatedForUser(
   direction: "forward" | "backward",
   filters: ConcertFilters
 ): Promise<PaginatedConcerts> {
+  // Band filter requires raw SQL (headliner OR supportingActIds)
+  if (filters.bandSlug && filters.userId) {
+    const band = await prisma.band.findUnique({
+      where: { slug: filters.bandSlug },
+      select: { id: true },
+    })
+    if (band) {
+      return getConcertsPaginatedForUserByBand(
+        cursor,
+        limit,
+        direction,
+        filters,
+        band.id
+      )
+    }
+  }
+
   const take = direction === "forward" ? limit + 1 : -(limit + 1)
 
   // Build where clause for the concert relation
@@ -1322,6 +1471,48 @@ export async function getConcertCounts(): Promise<ConcertCounts> {
     prisma.concert.count({ where: { date: { gte: now } } }),
   ])
   return { past, future }
+}
+
+/**
+ * Count user's concerts for a band (headliner or supporting act).
+ * Includes both ConcertBand (headliner) and UserConcert.supportingActIds.
+ */
+export async function getUserBandConcertCounts(
+  userId: string,
+  bandId: string,
+  now: Date
+): Promise<ConcertCounts> {
+  type Row = { past_count: bigint; future_count: bigint }
+  const rows = await prisma.$queryRaw<Row[]>`
+    WITH band_matches AS (
+      SELECT uc.id, c."date"
+      FROM user_concert uc
+      JOIN concert c ON c.id = uc."concertId"
+      WHERE uc."userId" = ${userId}
+        AND (
+          EXISTS (
+            SELECT 1 FROM concert_band cb
+            WHERE cb."concertId" = c.id AND cb."bandId" = ${bandId}
+          )
+          OR (
+            uc."supportingActIds" IS NOT NULL
+            AND EXISTS (
+              SELECT 1 FROM jsonb_array_elements(uc."supportingActIds") AS elem
+              WHERE (elem->>'bandId') = ${bandId}
+            )
+          )
+        )
+    )
+    SELECT
+      COUNT(*) FILTER (WHERE "date" < ${now})::bigint AS past_count,
+      COUNT(*) FILTER (WHERE "date" >= ${now})::bigint AS future_count
+    FROM band_matches
+  `
+  const r = rows[0]
+  return {
+    past: r ? Number(r.past_count) : 0,
+    future: r ? Number(r.future_count) : 0,
+  }
 }
 
 // ============================================
@@ -1442,12 +1633,12 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
   }
 }
 
-// Cached version with 1-hour revalidation
-export const getConcertStatistics = unstable_cache(
-  computeConcertStatistics,
-  ["concert-statistics"],
-  { revalidate: 3600, tags: ["concert-statistics"] }
-)
+export async function getConcertStatistics() {
+  "use cache"
+  cacheTag("concert-statistics")
+  cacheLife("hours")
+  return computeConcertStatistics()
+}
 
 // ============================================
 // Per-user statistics
@@ -1620,11 +1811,12 @@ async function computeUserConcertStatistics(
   }
 }
 
-export const getUserConcertStatistics = unstable_cache(
-  async (userId: string) => computeUserConcertStatistics(userId),
-  ["user-concert-statistics"],
-  { revalidate: 3600, tags: ["user-concert-statistics"] }
-)
+export async function getUserConcertStatistics(userId: string) {
+  "use cache"
+  cacheTag("user-concert-statistics")
+  cacheLife("hours")
+  return computeUserConcertStatistics(userId)
+}
 
 export async function getUserConcertCounts(
   userId: string
@@ -1639,6 +1831,47 @@ export async function getUserConcertCounts(
     }),
   ])
   return { past, future }
+}
+
+/**
+ * Counts distinct bands (headliners + supporting acts) for a user's concerts.
+ * Includes all user concerts (past and future).
+ */
+export async function getUserUniqueBandCount(userId: string): Promise<number> {
+  type Row = { cnt: bigint }
+  try {
+    const rows = await prisma.$queryRaw<Row[]>`
+      WITH user_concerts AS (
+        SELECT uc."concertId", uc."supportingActIds"
+        FROM user_concert uc
+        WHERE uc."userId" = ${userId}
+      ),
+      effective_bands AS (
+        SELECT cb."bandId" AS band_id
+        FROM user_concerts uc
+        JOIN concert_band cb ON cb."concertId" = uc."concertId"
+        WHERE uc."supportingActIds" IS NULL
+        UNION
+        SELECT cb."bandId" AS band_id
+        FROM user_concerts uc
+        JOIN concert_band cb ON cb."concertId" = uc."concertId" AND cb."isHeadliner" = true
+        WHERE uc."supportingActIds" IS NOT NULL
+        UNION
+        SELECT (elem->>'bandId')::text AS band_id
+        FROM user_concerts uc, jsonb_array_elements(uc."supportingActIds") AS elem
+        WHERE uc."supportingActIds" IS NOT NULL
+      )
+      SELECT COUNT(*)::bigint AS cnt
+      FROM (SELECT DISTINCT band_id FROM effective_bands WHERE band_id IS NOT NULL) AS unique_bands
+    `
+    return Number(rows[0]?.cnt ?? 0)
+  } catch {
+    const results = await prisma.concertBand.groupBy({
+      by: ["bandId"],
+      where: { concert: { attendees: { some: { userId } } } },
+    })
+    return results.length
+  }
 }
 
 export async function getGlobalAppStats() {
@@ -1657,14 +1890,69 @@ export async function getGlobalAppStats() {
 
 export async function getUserTotalSpent(
   userId: string,
-  filters?: { bandSlug?: string; city?: string; year?: number }
-): Promise<{ total: number; currency: string }> {
-  // Build concert filter conditions
-  const concertWhere: any = {}
-
-  if (filters?.bandSlug) {
-    concertWhere.bands = { some: { band: { slug: filters.bandSlug } } }
+  filters?: {
+    bandSlug?: string
+    city?: string
+    year?: number
+    pastOnly?: boolean
   }
+): Promise<{ total: number; currency: string }> {
+  const now = getStartOfToday()
+
+  // Band filter requires raw SQL (headliner OR supportingActIds)
+  if (filters?.bandSlug) {
+    const band = await prisma.band.findUnique({
+      where: { slug: filters.bandSlug },
+      select: { id: true },
+    })
+    if (band) {
+      type Row = { total: number | null }
+      const yearClause =
+        filters.year != null
+          ? Prisma.sql`AND c."date" >= ${new Date(filters.year, 0, 1)} AND c."date" <= ${new Date(filters.year, 11, 31, 23, 59, 59, 999)}`
+          : Prisma.empty
+      const cityClause =
+        filters.city != null
+          ? Prisma.sql`AND c."normalizedCity" = ${filters.city}`
+          : Prisma.empty
+      const pastClause = filters.pastOnly ? Prisma.sql`AND c."date" < ${now}` : Prisma.empty
+
+      const rows = await prisma.$queryRaw<Row[]>`
+        SELECT COALESCE(SUM(uc.cost), 0)::float AS total
+        FROM user_concert uc
+        JOIN concert c ON c.id = uc."concertId"
+        WHERE uc."userId" = ${userId}
+          AND uc.cost IS NOT NULL
+          ${pastClause}
+          AND (
+            EXISTS (
+              SELECT 1 FROM concert_band cb
+              WHERE cb."concertId" = c.id AND cb."bandId" = ${band.id}
+            )
+            OR (
+              uc."supportingActIds" IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM jsonb_array_elements(uc."supportingActIds") AS elem
+                WHERE (elem->>'bandId') = ${band.id}
+              )
+            )
+          )
+          ${yearClause}
+          ${cityClause}
+      `
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { currency: true },
+      })
+      return {
+        total: Number(rows[0]?.total ?? 0),
+        currency: user?.currency || "EUR",
+      }
+    }
+  }
+
+  // Build concert filter conditions (Prisma path)
+  const concertWhere: any = {}
   if (filters?.city) {
     concertWhere.normalizedCity = filters.city
   }
@@ -1673,8 +1961,12 @@ export async function getUserTotalSpent(
     const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999)
     concertWhere.date = { gte: yearStart, lte: yearEnd }
   }
+  if (filters?.pastOnly) {
+    concertWhere.date = concertWhere.date
+      ? { ...concertWhere.date, lt: now }
+      : { lt: now }
+  }
 
-  // Query UserConcert for user's costs
   const where: any = {
     userId,
     cost: { not: null },

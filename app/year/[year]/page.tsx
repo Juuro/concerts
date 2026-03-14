@@ -3,7 +3,6 @@ import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
 import {
-  getAllYears,
   getConcertsPaginated,
   getUserConcertCounts,
   getUserTotalSpent,
@@ -14,15 +13,6 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Metadata } from "next"
-
-export const dynamic = "force-dynamic"
-
-export async function generateStaticParams() {
-  const years = await getAllYears()
-  return years.map((year) => ({
-    year: year,
-  }))
-}
 
 export async function generateMetadata({
   params,
@@ -64,22 +54,26 @@ export default async function YearPage({
     getUserConcertCounts(userId),
     getConcertsPaginated(cursor, 20, "forward", { year: yearNum, userId }),
     getUserTotalSpent(userId, { year: yearNum }),
-    prisma.concert.count({
+    prisma.userConcert.count({
       where: {
         userId,
-        date: {
-          gte: yearStart,
-          lte: yearEnd,
-          lt: now,
+        concert: {
+          date: {
+            gte: yearStart,
+            lte: yearEnd,
+            lt: now,
+          },
         },
       },
     }),
-    prisma.concert.count({
+    prisma.userConcert.count({
       where: {
         userId,
-        date: {
-          gte: now,
-          lte: yearEnd,
+        concert: {
+          date: {
+            gte: now,
+            lte: yearEnd,
+          },
         },
       },
     }),

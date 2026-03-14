@@ -20,11 +20,7 @@ export default function PrivacyPage() {
             your personal data when you use Concerts. It complies with the EU
             General Data Protection Regulation (GDPR) and the German Federal
             Data Protection Act (BDSG). Last updated:{" "}
-            {new Date().toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            14 March 2025
             .
           </p>
 

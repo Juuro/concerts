@@ -40,9 +40,7 @@ const messages = [
 ]
 
 export default function NotFound() {
-  const [message] = useState(() =>
-    messages[Math.floor(Math.random() * messages.length)]
-  )
+  const [message] = useState(() => messages[0])
 
   return (
     <Layout>

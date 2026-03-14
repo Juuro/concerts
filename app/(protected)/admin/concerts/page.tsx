@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   description: "Manage concert data quality and geocoding",
 }
 
-export const dynamic = "force-dynamic"
-
 export default function ConcertsAdminPage() {
   return (
     <>

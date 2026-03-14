@@ -7,8 +7,6 @@ export const metadata: Metadata = {
   description: "Manage bands, enrich data, and merge duplicates",
 }
 
-export const dynamic = "force-dynamic"
-
 export default function BandsAdminPage() {
   return (
     <>

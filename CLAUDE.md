@@ -225,7 +225,7 @@ Copy `.env.example` to `.env.local` with:
 
 Required:
 
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - PostgreSQL connection string. Use `sslmode=verify-full` in the URL to avoid pg deprecation warnings and future-proof for pg v9 (e.g. `postgresql://...?sslmode=verify-full`).
 - `BETTER_AUTH_SECRET` - Random secret for auth
 - `BETTER_AUTH_URL` - App URL (http://localhost:3000 for dev)
 - `NEXT_PUBLIC_APP_URL` - Public app URL (http://localhost:3000 for dev)

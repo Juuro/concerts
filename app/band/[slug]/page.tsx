@@ -3,23 +3,21 @@ import { notFound, redirect } from "next/navigation"
 import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
-import { getUserConcertCounts, getConcertsPaginated, getUserTotalSpent, getStartOfToday } from "@/lib/concerts"
-import { getBandBySlug, getAllBandSlugs, enrichBandData } from "@/lib/bands"
+import {
+  getUserConcertCounts,
+  getConcertsPaginated,
+  getUserTotalSpent,
+  getStartOfToday,
+  getUserBandConcertCounts,
+} from "@/lib/concerts"
+import { getBandBySlug, enrichBandData } from "@/lib/bands"
 import { after } from "next/server"
-import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 import styles from "./page.module.scss"
 import BandEditToggle from "./BandEditToggle"
 import RetryEnrichButton from "./RetryEnrichButton"
-
-export const dynamic = "force-dynamic"
-
-export async function generateStaticParams() {
-  const slugs = await getAllBandSlugs()
-  return slugs.map((slug) => ({ slug }))
-}
 
 export async function generateMetadata({
   params,
@@ -68,30 +66,12 @@ export default async function BandPage({
 
   // Fetch user-scoped data for this band
   const now = getStartOfToday()
-  const [userCounts, initialData, bandSpent, pastCount, futureCount] = await Promise.all([
+  const [userCounts, initialData, bandSpent, bandConcertCounts] = await Promise.all([
     getUserConcertCounts(userId),
     getConcertsPaginated(cursor, 20, "forward", { bandSlug: slug, userId }),
     getUserTotalSpent(userId, { bandSlug: slug }),
-    prisma.concert.count({
-      where: {
-        userId,
-        bands: { some: { band: { slug } } },
-        date: { lt: now },
-      },
-    }),
-    prisma.concert.count({
-      where: {
-        userId,
-        bands: { some: { band: { slug } } },
-        date: { gte: now },
-      },
-    }),
+    getUserBandConcertCounts(userId, band.id, now),
   ])
-
-  const bandConcertCounts = {
-    past: pastCount,
-    future: futureCount,
-  }
 
   const hasGenres = band.lastfm?.genres && band.lastfm.genres.length > 0
   const hasLastfmUrl = Boolean(band.lastfm?.url)

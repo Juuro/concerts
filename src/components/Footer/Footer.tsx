@@ -3,7 +3,7 @@ import Link from "next/link"
 import styles from "./Footer.module.scss"
 
 export default function Footer() {
-  const year = new Date().getFullYear()
+  const year = 2025
 
   return (
     <footer className={styles.footer}>

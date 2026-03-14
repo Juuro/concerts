@@ -16,15 +16,6 @@ import { headers } from "next/headers"
 import { cityToSlug, findCityBySlug } from "../../../src/utils/helpers"
 import type { Metadata } from "next"
 
-export const dynamic = "force-dynamic"
-
-export async function generateStaticParams() {
-  const cities = await getAllCities()
-  return cities.map((city) => ({
-    slug: cityToSlug(city),
-  }))
-}
-
 export async function generateMetadata({
   params,
 }: {

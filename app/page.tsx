@@ -11,14 +11,13 @@ import {
   getUserConcertCounts,
   getUserTotalSpent,
   getGlobalAppStats,
+  getUserUniqueBandCount,
 } from "@/lib/concerts"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 import "./home.scss"
-
-export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Concerts",
@@ -49,8 +48,7 @@ async function LoggedInHome({
 }) {
   const [
     initialData,
-    totalConcerts,
-    uniqueBandsData,
+    uniqueBands,
     userConcertCoords,
     uniqueYearsData,
     userStats,
@@ -58,13 +56,7 @@ async function LoggedInHome({
     totalSpent,
   ] = await Promise.all([
     getConcertsPaginated(cursor, 20, "forward", { userId }),
-    prisma.userConcert.count({
-      where: { userId },
-    }),
-    prisma.concertBand.groupBy({
-      by: ["bandId"],
-      where: { concert: { attendees: { some: { userId } } } },
-    }),
+    getUserUniqueBandCount(userId),
     prisma.concert.findMany({
       where: {
         attendees: { some: { userId } },
@@ -79,10 +71,9 @@ async function LoggedInHome({
     }),
     getUserConcertStatistics(userId),
     getUserConcertCounts(userId),
-    getUserTotalSpent(userId),
+    getUserTotalSpent(userId, { pastOnly: true }),
   ])
 
-  const uniqueBands = uniqueBandsData.length
   const uniqueCities = userConcertCoords.length
   const years = new Set(
     uniqueYearsData.map((c) => new Date(c.date).getFullYear())
@@ -102,7 +93,7 @@ async function LoggedInHome({
           {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
 
           <div className="home-dashboard-stats">
-            <StatCard value={totalConcerts} label="Concerts" />
+            <StatCard value={userCounts.past} label="Concerts" />
             <StatCard value={uniqueBands} label="Bands" />
             <StatCard value={uniqueCities} label="Cities" />
             <StatCard value={years.size} label="Years" />

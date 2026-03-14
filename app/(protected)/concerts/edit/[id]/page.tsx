@@ -6,8 +6,6 @@ import { getEffectiveBandsForForm } from "@/lib/concerts";
 import { ConcertForm } from "@/components/ConcertForm";
 import "./edit-concert.scss";
 
-export const dynamic = "force-dynamic";
-
 export const metadata = {
   title: "Edit Concert - My Concerts",
   description: "Edit concert details",

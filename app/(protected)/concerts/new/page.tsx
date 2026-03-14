@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { ConcertForm } from "@/components/ConcertForm";
 import "./new-concert.scss";
 
-export const dynamic = "force-dynamic";
-
 export const metadata = {
   title: "Add Concert - My Concerts",
   description: "Add a new concert to your collection",

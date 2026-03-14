@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getConcertsPaginated, getUserConcerts, getUserConcertStatistics, getUserConcertCounts } from "@/lib/concerts"
+import { getConcertsPaginated, getUserConcerts, getUserConcertStatistics, getUserConcertCounts, getUserUniqueBandCount } from "@/lib/concerts"
 import Header from "@/components/Header/header"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"
@@ -9,8 +9,6 @@ import ConcertCount from "@/components/ConcertCount/concertCount"
 import MapClient from "@/components/MapClient"
 import "./profile.scss"
 import Image from "next/image"
-
-export const revalidate = 3600 // Revalidate every hour
 
 export async function generateMetadata({
   params,
@@ -74,14 +72,8 @@ export default async function PublicProfilePage({
   const hideCost = user.hideCostPublic
 
   // Calculate statistics using separate count/aggregation queries
-  const [totalConcerts, uniqueBandsData, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
-    prisma.userConcert.count({
-      where: { userId: user.id },
-    }),
-    prisma.concertBand.groupBy({
-      by: ["bandId"],
-      where: { concert: { attendees: { some: { userId: user.id } } } },
-    }),
+  const [uniqueBands, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
+    getUserUniqueBandCount(user.id),
     hideLocation
       ? Promise.resolve([])
       : prisma.concert.findMany({
@@ -103,7 +95,6 @@ export default async function PublicProfilePage({
       : getUserConcerts(user.id),
   ])
 
-  const uniqueBands = uniqueBandsData.length
   const uniqueCities = userConcertCoords.length
   const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
 
@@ -156,7 +147,7 @@ export default async function PublicProfilePage({
           {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} hideCityChart={hideLocation} />}
 
           <div className="public-profile__stats">
-            <StatCard value={totalConcerts} label="Concerts" />
+            <StatCard value={userCounts.past} label="Concerts" />
             <StatCard value={uniqueBands} label="Bands" />
             {!hideLocation && <StatCard value={uniqueCities} label="Cities" />}
             <StatCard value={years.size} label="Years" />

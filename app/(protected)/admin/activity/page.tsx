@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   description: "Track admin actions across the system",
 }
 
-export const dynamic = "force-dynamic"
-
 export default function ActivityAdminPage() {
   return (
     <>

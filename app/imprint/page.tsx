@@ -84,7 +84,7 @@ export default function ImprintPage() {
           <section aria-labelledby="copyright-heading">
             <h2 id="copyright-heading">Copyright</h2>
             <p>
-              © {new Date().getFullYear()} [Business Name]. All rights reserved.
+              © 2025 [Business Name]. All rights reserved.
             </p>
           </section>
         </article>

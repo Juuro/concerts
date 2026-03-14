@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   description: "Manage festivals and clean up orphaned entries",
 }
 
-export const dynamic = "force-dynamic"
-
 export default function FestivalsAdminPage() {
   return (
     <>

@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   description: "View users and manage account bans",
 }
 
-export const dynamic = "force-dynamic"
-
 export default function UsersAdminPage() {
   return (
     <>
