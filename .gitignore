@@ -87,3 +87,5 @@ yarn-error.log
 
 /src/generated/prisma
 /temporary screenshots
+# Sentry Config File
+.env.sentry-build-plugin
