@@ -155,6 +155,9 @@ export async function POST(request: NextRequest) {
     revalidateTag("concert-statistics", "max")
     revalidateTag("user-concert-statistics", "max")
     revalidateTag(`user-concert-counts-${session.user.id}`, "max")
+    revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
+    revalidateTag(`user-unique-bands-${session.user.id}`, "max")
+    revalidateTag(`user-total-spent-${session.user.id}`, "max")
 
     return NextResponse.json(concert, { status: 201 })
   } catch (error) {

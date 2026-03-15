@@ -78,6 +78,9 @@ export async function PUT(
     revalidateTag("concert-statistics", "max");
     revalidateTag("user-concert-statistics", "max");
     revalidateTag(`user-concert-counts-${session.user.id}`, "max");
+    revalidateTag(`user-dashboard-counts-${session.user.id}`, "max");
+    revalidateTag(`user-unique-bands-${session.user.id}`, "max");
+    revalidateTag(`user-total-spent-${session.user.id}`, "max");
 
     return NextResponse.json(concert);
   } catch (error) {
@@ -110,6 +113,9 @@ export async function DELETE(
   revalidateTag("concert-statistics", "max");
   revalidateTag("user-concert-statistics", "max");
   revalidateTag(`user-concert-counts-${session.user.id}`, "max");
+  revalidateTag(`user-dashboard-counts-${session.user.id}`, "max");
+  revalidateTag(`user-unique-bands-${session.user.id}`, "max");
+  revalidateTag(`user-total-spent-${session.user.id}`, "max");
 
   return NextResponse.json({ success: true });
 }

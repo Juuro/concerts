@@ -9,11 +9,11 @@ import {
   getConcertsPaginated,
   getUserConcertStatistics,
   getUserConcertCounts,
-  getUserTotalSpent,
+  getUserTotalSpentCached,
   getGlobalAppStats,
   getUserUniqueBandCount,
+  getUserDashboardCounts,
 } from "@/lib/concerts"
-import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
@@ -49,35 +49,18 @@ async function LoggedInHome({
   const [
     initialData,
     uniqueBands,
-    userConcertCoords,
-    uniqueYearsData,
+    dashboardCounts,
     userStats,
     userCounts,
     totalSpent,
   ] = await Promise.all([
     getConcertsPaginated(cursor, 20, "forward", { userId }),
     getUserUniqueBandCount(userId),
-    prisma.concert.findMany({
-      where: {
-        attendees: { some: { userId } },
-        normalizedCity: { not: null },
-      },
-      select: { normalizedCity: true },
-      distinct: ["normalizedCity"],
-    }),
-    prisma.concert.findMany({
-      where: { attendees: { some: { userId } } },
-      select: { date: true },
-    }),
+    getUserDashboardCounts(userId),
     getUserConcertStatistics(userId),
     getUserConcertCounts(userId),
-    getUserTotalSpent(userId, { pastOnly: true }),
+    getUserTotalSpentCached(userId),
   ])
-
-  const uniqueCities = userConcertCoords.length
-  const years = new Set(
-    uniqueYearsData.map((c) => new Date(c.date).getFullYear())
-  )
 
   return (
     <Layout concertCounts={userCounts}>
@@ -95,8 +78,8 @@ async function LoggedInHome({
           <div className="home-dashboard-stats">
             <StatCard value={userCounts.past} label="Concerts" />
             <StatCard value={uniqueBands} label="Bands" />
-            <StatCard value={uniqueCities} label="Cities" />
-            <StatCard value={years.size} label="Years" />
+            <StatCard value={dashboardCounts.uniqueCities} label="Cities" />
+            <StatCard value={dashboardCounts.uniqueYears} label="Years" />
             {totalSpent.total > 0 && (
               <StatCard value={Math.round(totalSpent.total)} label={totalSpent.currency} />
             )}

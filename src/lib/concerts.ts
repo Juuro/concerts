@@ -138,17 +138,29 @@ function bandToTransformed(band: PrismaBand, isHeadliner?: boolean): Transformed
   }
 }
 
-async function transformConcert(
-  concert: ConcertWithAttendance,
-  userAttendance?: UserConcert | null
-): Promise<TransformedConcert> {
-  // Use reverse geocoding to get real city name from coordinates
-  const geocodingData = await getGeocodingData(concert.latitude, concert.longitude)
+function buildGeocodingFromConcert(concert: ConcertWithAttendance): GeocodingData {
+  if (concert.normalizedCity) {
+    return { _normalized_city: concert.normalizedCity }
+  }
+  return {
+    _normalized_city: `${concert.latitude.toFixed(3)}, ${concert.longitude.toFixed(3)}`,
+    _is_coordinates: true,
+  }
+}
 
-  // Get attendance from parameter or from concert object
+/**
+ * Transform a single concert. Accepts an optional pre-fetched band map
+ * to avoid per-concert DB queries for supporting acts.
+ */
+function transformConcertSync(
+  concert: ConcertWithAttendance,
+  userAttendance: UserConcert | null | undefined,
+  prefetchedBands: Map<string, PrismaBand>,
+): TransformedConcert {
+  const geocodingData = buildGeocodingFromConcert(concert)
+
   const attendance = userAttendance ?? concert.userAttendance
 
-  // Headliner always comes from ConcertBand (shared)
   const coreBands = concert.bands.sort(
     (a: ConcertBand & { band: PrismaBand }, b: ConcertBand & { band: PrismaBand }) => a.sortOrder - b.sortOrder
   )
@@ -157,15 +169,9 @@ async function transformConcert(
     ? bandToTransformed(headliner.band, true)
     : null
 
-  // Support acts always come from UserConcert.supportingActIds (per-user)
   const supportingActs = attendance ? parseSupportingActIds((attendance as { supportingActIds?: unknown }).supportingActIds) : null
-  const supportingActBandIds = supportingActs?.map((o) => o.bandId) ?? []
-  const bandsById =
-    supportingActBandIds.length > 0
-      ? await prisma.band.findMany({ where: { id: { in: supportingActBandIds } } }).then((list) => new Map(list.map((b) => [b.id, b])))
-      : new Map<string, PrismaBand>()
   const supportingActBands = (supportingActs ?? [])
-    .map((o) => bandsById.get(o.bandId))
+    .map((o) => prefetchedBands.get(o.bandId))
     .filter((b): b is PrismaBand => b != null)
 
   const bands: TransformedBand[] = [
@@ -196,7 +202,6 @@ async function transformConcert(
     },
   }
 
-  // Add attendance data if available
   if (attendance) {
     transformed.attendance = {
       id: attendance.id,
@@ -204,17 +209,62 @@ async function transformConcert(
       cost: attendance.cost ? attendance.cost.toString() : null,
       notes: attendance.notes,
     }
-    // Backward compatibility: populate deprecated fields
     transformed.userId = attendance.userId
     transformed.cost = attendance.cost ? attendance.cost.toString() : null
   }
 
-  // Add attendee count if available
   if (concert._count?.attendees !== undefined) {
     transformed.attendeeCount = concert._count.attendees
   }
 
   return transformed
+}
+
+/**
+ * Batch-transform concerts: collects all supporting act band IDs,
+ * fetches them in ONE query, then transforms synchronously.
+ */
+async function transformConcertsBatch(
+  items: Array<{ concert: ConcertWithAttendance; attendance?: UserConcert | null }>,
+): Promise<TransformedConcert[]> {
+  const allBandIds = new Set<string>()
+  for (const { concert, attendance: att } of items) {
+    const uc = att ?? concert.userAttendance
+    if (uc) {
+      const acts = parseSupportingActIds((uc as { supportingActIds?: unknown }).supportingActIds)
+      if (acts) {
+        for (const a of acts) allBandIds.add(a.bandId)
+      }
+    }
+  }
+
+  const prefetchedBands: Map<string, PrismaBand> =
+    allBandIds.size > 0
+      ? new Map(
+          (await prisma.band.findMany({ where: { id: { in: [...allBandIds] } } }))
+            .map((b) => [b.id, b])
+        )
+      : new Map()
+
+  return items.map(({ concert, attendance }) =>
+    transformConcertSync(concert, attendance ?? null, prefetchedBands)
+  )
+}
+
+/** Legacy single-concert transform (still needed by createConcert/updateConcert). */
+async function transformConcert(
+  concert: ConcertWithAttendance,
+  userAttendance?: UserConcert | null
+): Promise<TransformedConcert> {
+  const supportingActs = (userAttendance ?? concert.userAttendance)
+    ? parseSupportingActIds(((userAttendance ?? concert.userAttendance) as { supportingActIds?: unknown }).supportingActIds)
+    : null
+  const bandIds = supportingActs?.map((o) => o.bandId) ?? []
+  const prefetchedBands: Map<string, PrismaBand> =
+    bandIds.length > 0
+      ? new Map((await prisma.band.findMany({ where: { id: { in: bandIds } } })).map((b) => [b.id, b]))
+      : new Map()
+  return transformConcertSync(concert, userAttendance ?? null, prefetchedBands)
 }
 
 // Get all concerts for a user (via UserConcert junction)
@@ -238,8 +288,8 @@ export async function getUserConcerts(
     orderBy: { concert: { date: "desc" } },
   })
 
-  return Promise.all(
-    userConcerts.map((uc) => transformConcert(uc.concert, uc))
+  return transformConcertsBatch(
+    userConcerts.map((uc) => ({ concert: uc.concert, attendance: uc }))
   )
 }
 
@@ -256,7 +306,7 @@ export async function getAllConcerts(): Promise<TransformedConcert[]> {
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map((c) => transformConcert(c)))
+  return transformConcertsBatch(concerts.map((c) => ({ concert: c })))
 }
 
 // Get concerts by band slug
@@ -281,7 +331,7 @@ export async function getConcertsByBand(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map((c) => transformConcert(c)))
+  return transformConcertsBatch(concerts.map((c) => ({ concert: c })))
 }
 
 // Get concerts by year
@@ -309,7 +359,7 @@ export async function getConcertsByYear(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map((c) => transformConcert(c)))
+  return transformConcertsBatch(concerts.map((c) => ({ concert: c })))
 }
 
 // Get concerts by city (from normalizedCity column)
@@ -328,7 +378,7 @@ export async function getConcertsByCity(
     orderBy: { date: "desc" },
   })
 
-  return Promise.all(concerts.map((c) => transformConcert(c)))
+  return transformConcertsBatch(concerts.map((c) => ({ concert: c })))
 }
 
 // Get all unique years
@@ -1207,7 +1257,7 @@ export async function getConcertsPaginated(
     : concerts
 
   return {
-    items: await Promise.all(items.map((c) => transformConcert(c))),
+    items: await transformConcertsBatch(items.map((c) => ({ concert: c }))),
     nextCursor:
       direction === "forward" && hasExtra
         ? items[items.length - 1].id
@@ -1332,8 +1382,8 @@ async function getConcertsPaginatedForUserByBand(
   }
 
   return {
-    items: await Promise.all(
-      items.map((uc) => transformConcert(uc.concert, uc))
+    items: await transformConcertsBatch(
+      items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
     nextCursor:
       direction === "forward"
@@ -1453,8 +1503,8 @@ async function getConcertsPaginatedForUser(
     : userConcerts
 
   return {
-    items: await Promise.all(
-      items.map((uc) => transformConcert(uc.concert, uc))
+    items: await transformConcertsBatch(
+      items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
     nextCursor:
       direction === "forward" && hasExtra
@@ -1854,11 +1904,35 @@ export async function getUserConcertCounts(
   return { past, future }
 }
 
+/** Efficient aggregate: unique cities + unique years for the homepage dashboard. */
+export async function getUserDashboardCounts(userId: string) {
+  "use cache"
+  cacheTag(`user-dashboard-counts-${userId}`)
+  cacheLife("minutes")
+  type Row = { unique_cities: bigint; unique_years: bigint }
+  const rows = await prisma.$queryRaw<Row[]>`
+    SELECT
+      COUNT(DISTINCT c."normalizedCity") FILTER (WHERE c."normalizedCity" IS NOT NULL)::bigint AS unique_cities,
+      COUNT(DISTINCT EXTRACT(YEAR FROM c.date))::bigint AS unique_years
+    FROM concert c
+    WHERE EXISTS (
+      SELECT 1 FROM user_concert uc WHERE uc."concertId" = c.id AND uc."userId" = ${userId}
+    )
+  `
+  return {
+    uniqueCities: Number(rows[0]?.unique_cities ?? 0),
+    uniqueYears: Number(rows[0]?.unique_years ?? 0),
+  }
+}
+
 /**
  * Counts distinct bands (headliners + supporting acts) for a user's concerts.
  * Includes all user concerts (past and future).
  */
 export async function getUserUniqueBandCount(userId: string): Promise<number> {
+  "use cache"
+  cacheTag(`user-unique-bands-${userId}`)
+  cacheLife("minutes")
   type Row = { cnt: bigint }
   try {
     const rows = await prisma.$queryRaw<Row[]>`
@@ -2012,4 +2086,14 @@ export async function getUserTotalSpent(
     total: result._sum.cost ? Number(result._sum.cost) : 0,
     currency: user?.currency || "EUR",
   }
+}
+
+/** Cached variant: total past spending for homepage dashboard. */
+export async function getUserTotalSpentCached(
+  userId: string
+): Promise<{ total: number; currency: string }> {
+  "use cache"
+  cacheTag(`user-total-spent-${userId}`)
+  cacheLife("minutes")
+  return getUserTotalSpent(userId, { pastOnly: true })
 }
