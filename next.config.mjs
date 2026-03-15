@@ -3,7 +3,6 @@ import { withSentryConfig } from "@sentry/nextjs"
 const nextConfig = {
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
-  cacheComponents: true,
   images: {
     remotePatterns: [
       {

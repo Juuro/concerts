@@ -1,5 +1,4 @@
 import { prisma } from "./prisma"
-import { cacheLife, cacheTag } from "next/cache"
 import {
   Prisma,
   type Concert as PrismaConcert,
@@ -1702,9 +1701,6 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
 }
 
 export async function getConcertStatistics() {
-  "use cache"
-  cacheTag("concert-statistics")
-  cacheLife("hours")
   return computeConcertStatistics()
 }
 
@@ -1880,18 +1876,12 @@ async function computeUserConcertStatistics(
 }
 
 export async function getUserConcertStatistics(userId: string) {
-  "use cache"
-  cacheTag("user-concert-statistics")
-  cacheLife("hours")
   return computeUserConcertStatistics(userId)
 }
 
 export async function getUserConcertCounts(
   userId: string
 ): Promise<ConcertCounts> {
-  "use cache"
-  cacheTag(`user-concert-counts-${userId}`)
-  cacheLife("minutes")
   const now = getStartOfToday()
   const [past, future] = await Promise.all([
     prisma.userConcert.count({
@@ -1906,9 +1896,6 @@ export async function getUserConcertCounts(
 
 /** Efficient aggregate: unique cities + unique years for the homepage dashboard. */
 export async function getUserDashboardCounts(userId: string) {
-  "use cache"
-  cacheTag(`user-dashboard-counts-${userId}`)
-  cacheLife("minutes")
   type Row = { unique_cities: bigint; unique_years: bigint }
   const rows = await prisma.$queryRaw<Row[]>`
     SELECT
@@ -1930,9 +1917,6 @@ export async function getUserDashboardCounts(userId: string) {
  * Includes all user concerts (past and future).
  */
 export async function getUserUniqueBandCount(userId: string): Promise<number> {
-  "use cache"
-  cacheTag(`user-unique-bands-${userId}`)
-  cacheLife("minutes")
   type Row = { cnt: bigint }
   try {
     const rows = await prisma.$queryRaw<Row[]>`
@@ -1970,9 +1954,6 @@ export async function getUserUniqueBandCount(userId: string): Promise<number> {
 }
 
 export async function getGlobalAppStats() {
-  "use cache"
-  cacheTag("global-app-stats")
-  cacheLife("hours")
   const now = getStartOfToday()
   const [concertCount, bandCount, userCount] = await Promise.all([
     prisma.concert.count({ where: { date: { lt: now } } }),
@@ -2088,12 +2069,8 @@ export async function getUserTotalSpent(
   }
 }
 
-/** Cached variant: total past spending for homepage dashboard. */
 export async function getUserTotalSpentCached(
   userId: string
 ): Promise<{ total: number; currency: string }> {
-  "use cache"
-  cacheTag(`user-total-spent-${userId}`)
-  cacheLife("minutes")
   return getUserTotalSpent(userId, { pastOnly: true })
 }
