@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest) {
       offset,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error fetching concerts without city:", error)
     return NextResponse.json(
       { error: "Failed to fetch concerts" },

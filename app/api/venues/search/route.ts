@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { searchVenues } from "@/utils/photon"
 
@@ -40,6 +41,7 @@ export async function GET(request: NextRequest) {
     const results = await searchVenues(query, options)
     return NextResponse.json(results)
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Venue search error:", error)
     return NextResponse.json(
       { error: "Failed to search venues" },

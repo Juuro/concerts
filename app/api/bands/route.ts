@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(band, { status: 201 });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("Error creating band:", error);
 
     // Handle unique constraint violation

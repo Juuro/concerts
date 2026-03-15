@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -55,6 +56,7 @@ export async function POST(
       bandName: band.name,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error triggering band enrichment:", error)
     return NextResponse.json(
       { error: "Failed to trigger enrichment" },

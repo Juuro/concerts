@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { revalidateTag } from "next/cache"
 import { auth } from "@/lib/auth"
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
+    Sentry.captureException(error)
     console.error("Error creating concert:", error)
     return NextResponse.json(
       { error: "Failed to create concert" },

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -36,6 +37,7 @@ export async function POST() {
       unbannedCount: result.count,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error cleaning up expired bans:", error)
     return NextResponse.json(
       { error: "Failed to cleanup expired bans" },

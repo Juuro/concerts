@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, getSession } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -98,6 +99,7 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Migration failed:", error);
     return NextResponse.json({
       success: false,

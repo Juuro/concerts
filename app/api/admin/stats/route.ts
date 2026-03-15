@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -142,6 +143,7 @@ export async function GET() {
 
     return NextResponse.json(stats)
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error fetching admin stats:", error)
     return NextResponse.json(
       { error: "Failed to fetch admin statistics" },

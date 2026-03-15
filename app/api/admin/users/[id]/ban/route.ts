@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -94,6 +95,7 @@ export async function POST(
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error banning user:", error)
     return NextResponse.json(
       { error: "Failed to ban user" },
@@ -171,6 +173,7 @@ export async function DELETE(
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error unbanning user:", error)
     return NextResponse.json(
       { error: "Failed to unban user" },

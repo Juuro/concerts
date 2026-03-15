@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -84,6 +85,7 @@ export async function DELETE(
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error deleting band:", error)
     return NextResponse.json(
       { error: "Failed to delete band" },

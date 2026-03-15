@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
@@ -84,6 +85,7 @@ export async function PUT(
 
     return NextResponse.json(concert);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error updating concert:", error);
     return NextResponse.json({ error: "Failed to update concert" }, { status: 500 });
   }

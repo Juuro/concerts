@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -148,6 +149,7 @@ export async function GET(request: NextRequest) {
       total: duplicates.length,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error finding duplicate bands:", error)
     return NextResponse.json(
       { error: "Failed to find duplicates" },

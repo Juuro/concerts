@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -72,6 +73,7 @@ export async function PUT(request: NextRequest) {
       hideCostPublic: updatedUser.hideCostPublic,
     });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("Error updating profile:", error);
 
     if (error.code === "P2002") {

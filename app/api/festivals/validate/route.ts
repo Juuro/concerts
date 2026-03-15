@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ found: false })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error validating festival name:", error)
     return NextResponse.json({ found: false })
   }

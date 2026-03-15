@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -82,6 +83,7 @@ export async function POST(
       normalizedCity,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error geocoding concert:", error)
     return NextResponse.json(
       { error: "Failed to geocode concert" },

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
     // Not found in either source
     return NextResponse.json({ found: false })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error validating band name:", error)
     // On validation error, don't block the user -- return as not found
     return NextResponse.json({ found: false })

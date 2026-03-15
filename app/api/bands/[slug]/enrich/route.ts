@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -83,6 +84,7 @@ export async function GET(
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error enriching band:", error)
     return NextResponse.json(
       { error: "Failed to enrich band data" },

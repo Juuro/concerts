@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { auth, getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
       offset,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error fetching bands without Last.fm:", error)
     return NextResponse.json(
       { error: "Failed to fetch bands" },

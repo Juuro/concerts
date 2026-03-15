@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
       offset,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error fetching orphaned bands:", error)
     return NextResponse.json(
       { error: "Failed to fetch orphaned bands" },
@@ -126,6 +128,7 @@ export async function DELETE(request: NextRequest) {
       })),
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Error cleaning up orphaned bands:", error)
     return NextResponse.json(
       { error: "Failed to clean up orphaned bands" },

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -78,6 +79,7 @@ export async function PUT(
 
     return NextResponse.json(updated)
   } catch (error: unknown) {
+    Sentry.captureException(error);
     console.error("Error updating band:", error)
 
     if (

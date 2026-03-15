@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { randomBytes, createHmac } from "crypto"
@@ -87,6 +88,7 @@ export async function POST() {
 
     return response
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Dev login error:", error)
     return NextResponse.json(
       { error: "Failed to create dev session" },
