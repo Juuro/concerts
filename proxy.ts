@@ -1,6 +1,33 @@
 import { NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
+/**
+ * Build Sentry security report URL from DSN for CSP report-uri / report-to.
+ * Parsed once at module load. Returns null if DSN is missing or invalid.
+ */
+function getSentryCspReportUrl(): string | null {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn || typeof dsn !== "string") return null;
+  try {
+    const url = new URL(dsn);
+    const key = url.username;
+    const host = url.hostname;
+    const projectId = url.pathname.replace(/^\//, "").replace(/\/$/, "");
+    if (!key || !host || !projectId) return null;
+    const reportUrl = new URL(`https://${host}/api/${projectId}/security/`);
+    reportUrl.searchParams.set("sentry_key", decodeURIComponent(key));
+    const env = process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV;
+    if (env) reportUrl.searchParams.set("sentry_environment", env);
+    const release = process.env.SENTRY_RELEASE;
+    if (release) reportUrl.searchParams.set("sentry_release", release);
+    return reportUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
+const sentryCspReportUrl = getSentryCspReportUrl();
+
 const protectedRoutes = ["/concerts/new", "/concerts/edit", "/settings", "/map"];
 
 const authRoutes = [
@@ -15,7 +42,7 @@ const authRoutes = [
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === "development";
 
-  return [
+  const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
@@ -27,7 +54,27 @@ function buildCsp(nonce: string): string {
     "form-action 'self'",
     "frame-ancestors 'none'",
     "worker-src 'self' blob:",
-  ].join("; ");
+  ];
+
+  if (sentryCspReportUrl) {
+    directives.push(`report-uri ${sentryCspReportUrl}`, "report-to csp-endpoint");
+  }
+
+  return directives.join("; ");
+}
+
+function setCspReportingHeaders(res: NextResponse): void {
+  if (!sentryCspReportUrl) return;
+  res.headers.set(
+    "Report-To",
+    JSON.stringify({
+      group: "csp-endpoint",
+      max_age: 10886400,
+      endpoints: [{ url: sentryCspReportUrl }],
+      include_subdomains: true,
+    }),
+  );
+  res.headers.set("Reporting-Endpoints", `csp-endpoint="${sentryCspReportUrl}"`);
 }
 
 export async function proxy(request: Request) {
@@ -48,10 +95,12 @@ export async function proxy(request: Request) {
     if (isAuthenticated) {
       const res = NextResponse.redirect(new URL("/", request.url));
       res.headers.set("Content-Security-Policy", csp);
+      setCspReportingHeaders(res);
       return res;
     }
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set("Content-Security-Policy", csp);
+    setCspReportingHeaders(res);
     return res;
   }
 
@@ -61,12 +110,14 @@ export async function proxy(request: Request) {
       loginUrl.searchParams.set("callbackUrl", pathname);
       const res = NextResponse.redirect(loginUrl);
       res.headers.set("Content-Security-Policy", csp);
+      setCspReportingHeaders(res);
       return res;
     }
   }
 
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("Content-Security-Policy", csp);
+  setCspReportingHeaders(res);
   return res;
 }
 
