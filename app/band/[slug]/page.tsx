@@ -10,7 +10,7 @@ import {
   getStartOfToday,
   getUserBandConcertCounts,
 } from "@/lib/concerts"
-import { getBandBySlug, enrichBandData } from "@/lib/bands"
+import { getBandBySlugLight, enrichBandData } from "@/lib/bands"
 import { after } from "next/server"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -25,7 +25,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const band = await getBandBySlug(slug)
+  const band = await getBandBySlugLight(slug)
 
   return {
     title: `${band?.name || slug} | Concerts`,
@@ -43,7 +43,7 @@ export default async function BandPage({
   const { cursor } = await searchParams
 
   const [band, session] = await Promise.all([
-    getBandBySlug(slug),
+    getBandBySlugLight(slug),
     getSession(await headers()).catch(() => null),
   ])
 

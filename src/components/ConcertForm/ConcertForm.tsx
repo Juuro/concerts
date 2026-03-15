@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import VenueAutocomplete from "@/components/VenueAutocomplete/VenueAutocomplete"
 import BandEditForm from "@/components/BandEditForm/BandEditForm"
 import Dialog from "@/components/Dialog/Dialog"
@@ -61,6 +62,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [alreadyExistsEditPath, setAlreadyExistsEditPath] = useState<string | null>(null)
 
   // Form state
   const [date, setDate] = useState(concert?.date?.split("T")[0] || "")
@@ -414,6 +416,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
   const doSubmit = async (festivalNameOverride?: string) => {
     setIsSubmitting(true)
     setError(null)
+    setAlreadyExistsEditPath(null)
 
     try {
       const newFestivalName = festivalNameOverride ??
@@ -449,6 +452,11 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
       if (res.ok) {
         router.push("/")
         router.refresh()
+      } else if (mode === "create" && res.status === 409) {
+        const data = await res.json()
+        const editPath = data.editPath ?? (data.concertId ? `/concerts/edit/${data.concertId}` : null)
+        setAlreadyExistsEditPath(editPath)
+        setError(null)
       } else {
         const data = await res.json()
         setError(data.error || "Failed to save concert")
@@ -553,6 +561,14 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     <>
     <form className="concert-form" onSubmit={handleSubmit}>
       {error && <div className="concert-form__error">{error}</div>}
+      {alreadyExistsEditPath && (
+        <div className="concert-form__already-exists" role="alert">
+          <p>This concert is already in your list. Do you want to edit it?</p>
+          <Link href={alreadyExistsEditPath} className="concert-form__already-exists-link">
+            Edit concert
+          </Link>
+        </div>
+      )}
 
       <div className="concert-form__section">
         <h3>When & Where</h3>

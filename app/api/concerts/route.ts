@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import {
   createConcert,
+  ConcertAlreadyExistsError,
   getConcertsPaginated,
   type CreateConcertInput,
   type ConcertFilters,
@@ -150,12 +151,23 @@ export async function POST(request: NextRequest) {
 
     const concert = await createConcert(input)
 
-    // Revalidate statistics cache
+    // Revalidate statistics and user counts cache
     revalidateTag("concert-statistics", "max")
     revalidateTag("user-concert-statistics", "max")
+    revalidateTag(`user-concert-counts-${session.user.id}`, "max")
 
     return NextResponse.json(concert, { status: 201 })
   } catch (error) {
+    if (error instanceof ConcertAlreadyExistsError) {
+      return NextResponse.json(
+        {
+          error: "This concert is already in your list. Do you want to edit it?",
+          concertId: error.concertId,
+          editPath: `/concerts/edit/${error.concertId}`,
+        },
+        { status: 409 }
+      )
+    }
     console.error("Error creating concert:", error)
     return NextResponse.json(
       { error: "Failed to create concert" },

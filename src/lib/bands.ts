@@ -61,7 +61,19 @@ export async function getAllBands(): Promise<TransformedBand[]> {
   return bandsWithConcerts;
 }
 
-// Get band by slug
+/** Band metadata only; does not load concerts. Use for band page when list is loaded via getConcertsPaginated. */
+export async function getBandBySlugLight(slug: string): Promise<TransformedBand | null> {
+  const band = await prisma.band.findUnique({
+    where: { slug },
+  });
+  if (!band) return null;
+  return {
+    ...transformBand(band),
+    concert: undefined,
+  };
+}
+
+// Get band by slug (includes all concerts; use getBandBySlugLight when only metadata is needed)
 export async function getBandBySlug(slug: string): Promise<TransformedBand | null> {
   const band = await prisma.band.findUnique({
     where: { slug },

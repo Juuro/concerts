@@ -15,6 +15,14 @@ import type { GeocodingData } from "@/types/geocoding"
 // Coordinate tolerance for matching concerts (~100m)
 const COORD_TOLERANCE = 0.001
 
+/** Thrown when the user already has this concert in their list (matched by date/location/headliner). */
+export class ConcertAlreadyExistsError extends Error {
+  constructor(public concertId: string) {
+    super("Concert already in list")
+    this.name = "ConcertAlreadyExistsError"
+  }
+}
+
 /** User-specific support act: bandId + sortOrder. Per-user, not shared. */
 export type SupportingActItem = { bandId: string; sortOrder: number }
 
@@ -447,6 +455,16 @@ export async function createConcert(
         },
       })
       if (!existingWithBands) throw new Error("Concert not found")
+
+      // Check if user already attends this concert (avoid unique constraint)
+      const existingAttendance = await prisma.userConcert.findUnique({
+        where: {
+          userId_concertId: { userId: input.userId, concertId: existingConcert.id },
+        },
+      })
+      if (existingAttendance) {
+        throw new ConcertAlreadyExistsError(existingConcert.id)
+      }
 
       // Always set supportingActIds for linkers so they never see core support acts
       const supportingActIds: SupportingActItem[] = input.bandIds
@@ -1821,6 +1839,9 @@ export async function getUserConcertStatistics(userId: string) {
 export async function getUserConcertCounts(
   userId: string
 ): Promise<ConcertCounts> {
+  "use cache"
+  cacheTag(`user-concert-counts-${userId}`)
+  cacheLife("minutes")
   const now = getStartOfToday()
   const [past, future] = await Promise.all([
     prisma.userConcert.count({
@@ -1875,6 +1896,9 @@ export async function getUserUniqueBandCount(userId: string): Promise<number> {
 }
 
 export async function getGlobalAppStats() {
+  "use cache"
+  cacheTag("global-app-stats")
+  cacheLife("hours")
   const now = getStartOfToday()
   const [concertCount, bandCount, userCount] = await Promise.all([
     prisma.concert.count({ where: { date: { lt: now } } }),

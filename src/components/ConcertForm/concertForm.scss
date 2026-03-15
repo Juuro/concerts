@@ -32,6 +32,29 @@
     padding: 1rem;
   }
 
+  &__already-exists {
+    background-color: #e8f4fd;
+    border: 1px solid #b8daff;
+    border-radius: 8px;
+    color: #084298;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+
+    p {
+      margin: 0 0 0.5rem;
+    }
+  }
+
+  &__already-exists-link {
+    font-weight: 500;
+    text-decoration: underline;
+    color: #084298;
+
+    &:hover {
+      color: #052c65;
+    }
+  }
+
   &__section {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;

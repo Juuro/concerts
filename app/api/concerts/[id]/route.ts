@@ -74,9 +74,10 @@ export async function PUT(
       return NextResponse.json({ error: "Concert not found or not authorized" }, { status: 404 });
     }
 
-    // Revalidate statistics cache
+    // Revalidate statistics and user counts cache
     revalidateTag("concert-statistics", "max");
     revalidateTag("user-concert-statistics", "max");
+    revalidateTag(`user-concert-counts-${session.user.id}`, "max");
 
     return NextResponse.json(concert);
   } catch (error) {
@@ -105,9 +106,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Concert not found or not authorized" }, { status: 404 });
   }
 
-  // Revalidate statistics cache
+  // Revalidate statistics and user counts cache
   revalidateTag("concert-statistics", "max");
   revalidateTag("user-concert-statistics", "max");
+  revalidateTag(`user-concert-counts-${session.user.id}`, "max");
 
   return NextResponse.json({ success: true });
 }
