@@ -1,4 +1,5 @@
 import { connection } from "next/server"
+import { Suspense } from "react"
 import { Metadata } from "next"
 import AdminStats from "./components/AdminStats"
 import AdminAttention from "./components/AdminAttention"
@@ -13,7 +14,17 @@ export const metadata: Metadata = {
   description: "Admin dashboard for managing bands, concerts, and users",
 }
 
-export default async function AdminPage() {
+function AdminDashboardFallback() {
+  return (
+    <div className="admin-page">
+      <div className="admin-dashboard">
+        <p aria-live="polite">Loading dashboard…</p>
+      </div>
+    </div>
+  )
+}
+
+async function AdminDashboard() {
   await connection()
   return (
     <div className="admin-page">
@@ -167,5 +178,13 @@ export default async function AdminPage() {
         <AdminManagementTabs />
       </div>
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<AdminDashboardFallback />}>
+      <AdminDashboard />
+    </Suspense>
   )
 }

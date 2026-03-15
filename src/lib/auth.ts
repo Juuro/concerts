@@ -92,6 +92,11 @@ export const auth = betterAuth({
         required: false,
         defaultValue: true,
       },
+      includeUserIdInErrorReports: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+      },
       // Added by admin plugin, declared here for TypeScript inference
       role: {
         type: "string",
@@ -113,6 +118,7 @@ interface ExtendedUserFields {
   currency?: string
   hideLocationPublic?: boolean
   hideCostPublic?: boolean
+  includeUserIdInErrorReports?: boolean
   banned?: boolean
   banReason?: string | null
   banExpires?: Date | null

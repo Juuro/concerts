@@ -95,6 +95,18 @@ export default function PrivacyPage() {
                 <em>Legal basis:</em> Legitimate interest in security, fraud
                 prevention, and service reliability (Art. 6(1)(f) GDPR).
               </li>
+              <li>
+                <strong>Error and performance monitoring:</strong> We use a
+                third-party service (Sentry) to detect, diagnose and fix
+                errors, and to monitor application performance. When you are
+                logged in and have not opted out, an internal user identifier
+                (no email or name) may be included in error reports so we can
+                associate issues with accounts and fix them faster. You can turn
+                off inclusion of your identifier in error reports at any time in{" "}
+                <a href="/settings">Settings</a>.{" "}
+                <em>Legal basis:</em> Legitimate interest in service stability
+                and quality (Art. 6(1)(f) GDPR).
+              </li>
             </ul>
           </section>
 
@@ -135,6 +147,17 @@ export default function PrivacyPage() {
                 </a>
               </li>
               <li>
+                <strong>Error and performance monitoring:</strong> Sentry
+                (Sentry Inc. / Functional Software Inc.) – we send error
+                reports and performance data to Sentry. When you are logged in
+                and have not opted out in Settings, an internal user ID (no
+                email) is included so we can correlate errors with accounts.
+                Data may be processed in the USA; transfers are governed by
+                Standard Contractual Clauses or the EU-US Data Privacy Framework.
+                We have a data processing agreement with Sentry in accordance
+                with Art. 28 GDPR.
+              </li>
+              <li>
                 <strong>Optional services</strong> (only if enabled in your
                 deployment):
                 <ul>
@@ -159,8 +182,8 @@ export default function PrivacyPage() {
           <section aria-labelledby="third-countries-heading">
             <h2 id="third-countries-heading">4. Transfers to Third Countries</h2>
             <p>
-              Some processors (e.g. Vercel, Resend, GitHub) may process data in
-              the USA or other non‑EEA countries. We ensure appropriate
+              Some processors (e.g. Vercel, Resend, GitHub, Sentry) may process
+              data in the USA or other non‑EEA countries. We ensure appropriate
               safeguards such as adequacy decisions, Standard Contractual
               Clauses, or the EU-US Data Privacy Framework where applicable, in
               addition to the data processing agreements mentioned above.

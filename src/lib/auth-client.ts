@@ -24,6 +24,7 @@ interface ExtendedUser {
   currency?: string
   hideLocationPublic?: boolean
   hideCostPublic?: boolean
+  includeUserIdInErrorReports?: boolean
   banned?: boolean
   banReason?: string | null
   banExpires?: Date | null

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { Suspense } from "react"
 import Link from "next/link"
 import Layout from "../src/components/layout-client"
 import StatisticsWidgetServer from "../src/components/StatisticsWidget/StatisticsWidgetServer"
@@ -28,7 +28,19 @@ interface HomePageProps {
   searchParams: Promise<{ cursor?: string }>
 }
 
-export default async function HomePage({ searchParams }: HomePageProps) {
+function HomePageFallback() {
+  return (
+    <Layout>
+      <main>
+        <div className="container">
+          <p aria-live="polite">Loading…</p>
+        </div>
+      </main>
+    </Layout>
+  )
+}
+
+async function HomeContent({ searchParams }: { searchParams: Promise<{ cursor?: string }> }) {
   const { cursor } = await searchParams
   const session = await auth.api.getSession({ headers: await headers() })
 
@@ -37,6 +49,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   return <LandingPage />
+}
+
+export default function HomePage({ searchParams }: HomePageProps) {
+  return (
+    <Suspense fallback={<HomePageFallback />}>
+      <HomeContent searchParams={searchParams} />
+    </Suspense>
+  )
 }
 
 async function LoggedInHome({

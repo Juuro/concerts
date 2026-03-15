@@ -15,7 +15,14 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { username, isPublic, currency, hideLocationPublic, hideCostPublic } = body;
+    const {
+      username,
+      isPublic,
+      currency,
+      hideLocationPublic,
+      hideCostPublic,
+      includeUserIdInErrorReports,
+    } = body;
 
     // Validate currency if provided
     const VALID_CURRENCIES = [
@@ -58,6 +65,9 @@ export async function PUT(request: NextRequest) {
         isPublic: isPublic || false,
         hideLocationPublic: hideLocationPublic ?? true,
         hideCostPublic: hideCostPublic ?? true,
+        ...(typeof includeUserIdInErrorReports === "boolean" && {
+          includeUserIdInErrorReports,
+        }),
         ...(currency && { currency }),
       },
     });
@@ -71,6 +81,7 @@ export async function PUT(request: NextRequest) {
       currency: updatedUser.currency,
       hideLocationPublic: updatedUser.hideLocationPublic,
       hideCostPublic: updatedUser.hideCostPublic,
+      includeUserIdInErrorReports: updatedUser.includeUserIdInErrorReports,
     });
   } catch (error: any) {
     Sentry.captureException(error);

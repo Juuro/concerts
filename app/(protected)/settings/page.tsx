@@ -17,6 +17,8 @@ export default function SettingsPage() {
   const [hideCostPublic, setHideCostPublic] = useState(
     session?.user?.hideCostPublic ?? true
   )
+  const [includeUserIdInErrorReports, setIncludeUserIdInErrorReports] =
+    useState(session?.user?.includeUserIdInErrorReports ?? true)
   const [currency, setCurrency] = useState(session?.user?.currency || "EUR")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{
@@ -32,6 +34,9 @@ export default function SettingsPage() {
       setCurrency(session.user.currency || "EUR")
       setHideLocationPublic(session.user.hideLocationPublic ?? true)
       setHideCostPublic(session.user.hideCostPublic ?? true)
+      setIncludeUserIdInErrorReports(
+        session.user.includeUserIdInErrorReports ?? true
+      )
     }
   }, [session?.user])
 
@@ -52,7 +57,14 @@ export default function SettingsPage() {
       const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, isPublic, currency, hideLocationPublic, hideCostPublic }),
+        body: JSON.stringify({
+          username,
+          isPublic,
+          currency,
+          hideLocationPublic,
+          hideCostPublic,
+          includeUserIdInErrorReports,
+        }),
       })
 
       if (res.ok) {
@@ -229,6 +241,24 @@ export default function SettingsPage() {
                 </label>
                 <span className="settings__hint">
                   Concert ticket costs will be hidden from your public profile.
+                </span>
+              </div>
+
+              <div className="settings__field settings__checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={includeUserIdInErrorReports}
+                    onChange={(e) =>
+                      setIncludeUserIdInErrorReports(e.target.checked)
+                    }
+                  />
+                  Include my account identifier in error reports (helps us fix
+                  issues faster)
+                </label>
+                <span className="settings__hint">
+                  When enabled, we associate error reports with your account so
+                  we can fix problems; you can turn this off at any time.
                 </span>
               </div>
             </div>

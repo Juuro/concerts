@@ -25,6 +25,7 @@ model User {
   currency      String    @default("EUR")
   hideLocationPublic Boolean @default(true)
   hideCostPublic     Boolean @default(true)
+  includeUserIdInErrorReports Boolean @default(true)
   role          String    @default("user")
   banned        Boolean   @default(false)
   banReason     String?
