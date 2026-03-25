@@ -714,7 +714,9 @@ export default function BandAutocomplete({
                   }}
                 >
                   <span className="band-autocomplete__option-row">
-                    {renderPredictiveText(row.name)}
+                    <span className="band-autocomplete__option-name">
+                      {renderPredictiveText(row.name)}
+                    </span>
                     {sourceLabel && (
                       <span className="band-autocomplete__option-source" aria-hidden="true">
                         {sourceLabel}
