@@ -42,7 +42,9 @@
       "Bash(python3 src/ui-ux-pro-max/scripts/search.py*)",
       "Bash(curl -X POST http://localhost:3000/api/dev/login)",
       "mcp__page-design-guide-mcp__get_animation_guidance",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(lsof -ti:3000)",
+      "Bash(./node_modules/.bin/next build:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
