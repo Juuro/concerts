@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchBands } from "@/lib/bands";
+import { searchBandsWithSuggestions } from "@/lib/bandSearchMerge";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,6 +10,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 
-  const bands = await searchBands(query, Math.min(limit, 50));
-  return NextResponse.json(bands);
+  const results = await searchBandsWithSuggestions(query, Math.min(limit, 50));
+  return NextResponse.json(results);
 }
