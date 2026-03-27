@@ -52,3 +52,26 @@ export interface PhotonSearchResult {
   osmType?: string
   osmId?: number
 }
+
+/**
+ * Venue source identifier for multi-source search
+ */
+export type VenueSource = 'database' | 'ticketmaster' | 'photon'
+
+/**
+ * Enhanced venue result with multi-source support and user personalization.
+ * Extends PhotonSearchResult to maintain backward compatibility.
+ */
+export interface EnhancedVenueResult extends PhotonSearchResult {
+  /** Source of this venue result */
+  source: VenueSource
+
+  /** Whether the authenticated user has visited this venue */
+  isUserVenue?: boolean
+
+  /** Number of times the authenticated user has visited this venue */
+  userVisitCount?: number
+
+  /** Internal scoring for result ranking (higher = more relevant) */
+  score?: number
+}

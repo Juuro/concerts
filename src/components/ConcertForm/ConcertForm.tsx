@@ -7,7 +7,7 @@ import VenueAutocomplete from "@/components/VenueAutocomplete/VenueAutocomplete"
 import BandAutocomplete, { type SelectedBand } from "@/components/BandAutocomplete"
 import BandEditForm from "@/components/BandEditForm/BandEditForm"
 import Dialog from "@/components/Dialog/Dialog"
-import type { PhotonSearchResult } from "@/types/photon"
+import type { EnhancedVenueResult } from "@/types/photon"
 import "./concertForm.scss"
 
 interface Band {
@@ -295,7 +295,7 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     }
   }
 
-  const handleVenueSelect = (result: PhotonSearchResult) => {
+  const handleVenueSelect = (result: EnhancedVenueResult) => {
     setVenue(result.name)
     setLatitude(result.lat)
     setLongitude(result.lon)

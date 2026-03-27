@@ -1,0 +1,768 @@
+{
+  "agent": "quality-engineer",
+  "confidence": 90,
+  "language": "typescript",
+  "summary": "Quality assessment and comprehensive test strategy for venue search fuzzy matching improvement. Task requires handling typos, partial names, and word order variations while maintaining 300ms debounce performance. Critical focus areas: similarity threshold validation (0.80), input validation enforcement (3-100 chars), error resilience across 3 data sources, and 80%+ test coverage.",
+  "checklist_evaluation": {
+    "applicable_sections": [
+      {
+        "section": "2. Security & Input Validation",
+        "applicable_items": 4,
+        "severity": "[C]",
+        "requirements": [
+          "Query parameter validation: min 3 chars (DoS prevention), max 100 chars (size limit), reject if null/empty",
+          "All database queries use Prisma parameterized statements (already compliant)",
+          "Rate limiting enforced: 30 requests per minute per IP (already implemented in route.ts, must test)",
+          "No PII logging: search queries are safe (venue names are public), but never log user IDs or coordinates in search functions"
+        ]
+      },
+      {
+        "section": "3. Error Handling",
+        "applicable_items": 5,
+        "severity": "[C]/[H]",
+        "requirements": [
+          "No unhandled exceptions reach client as 500 with stack trace (catch all in route handler, return generic error message)",
+          "External calls (DB queries, Ticketmaster API, Photon API) have explicit error handling with timeouts (3s DB, 3s TM, 5s Photon)",
+          "Timeout fallback must not crash: returns partial results from successful sources or empty array",
+          "Custom error response for rate limiting (429 Retry-After header)",
+          "Database timeouts logged as WARNING with source name; errors logged as ERROR with operation context"
+        ]
+      },
+      {
+        "section": "4. Logging & Observability",
+        "applicable_items": 3,
+        "severity": "[H]/[M]",
+        "requirements": [
+          "Structured logging: log query length, number of venues processed, final result count, similarity threshold decisions (DEBUG level)",
+          "Never log: venue names, user IDs, coordinates, search queries verbatim (generic operation logging only)",
+          "Sentry integration: all errors in /api/venues/search must be captured (already in route.ts, test this)"
+        ]
+      },
+      {
+        "section": "5. Performance & Scalability",
+        "applicable_items": 3,
+        "severity": "[C]/[H]",
+        "requirements": [
+          "No N+1 query patterns: venue search must use single aggregation query (already compliant with raw SQL)",
+          "Database indexes verified: trigram index exists on Concert.venue (confirmed in migration 20260326000000)",
+          "Levenshtein distance calculation must complete in < 20ms for 100 venues; total orchestration < 200ms with 3s source timeouts"
+        ]
+      },
+      {
+        "section": "6. Testing",
+        "applicable_items": 4,
+        "severity": "[H]",
+        "requirements": [
+          "All new functions have unit tests: searchDatabaseVenues(), calculateSimilarity(), normalizeForVenueComparison()",
+          "Integration tests for orchestration function searchVenuesEnhanced() covering 3-source timeout scenarios",
+          "API route tests covering input validation, rate limiting, error handling (15+ test cases minimum)",
+          "Coverage target: 80% line + branch coverage on venues.ts and route.ts; no untested error paths"
+        ]
+      },
+      {
+        "section": "7. Naming & Documentation",
+        "applicable_items": 3,
+        "severity": "[H]/[M]",
+        "requirements": [
+          "Function naming: camelCase verbs (calculateSimilarity, normalizeForVenueComparison), constants UPPER_SNAKE_CASE",
+          "JSDoc on all public functions: @param {type} name, @returns {type} description, @throws error types",
+          "Complex business logic (Levenshtein algorithm, similarity threshold logic) documented with WHY comments explaining threshold choice"
+        ]
+      },
+      {
+        "section": "8. Database & Data Access",
+        "applicable_items": 2,
+        "severity": "[H]",
+        "requirements": [
+          "Migration includes trigram index creation (confirmed); verify index is active: SELECT * FROM pg_indexes WHERE tablename = 'concert'",
+          "Future optimization: levenshtein() PostgreSQL function for venue counts > 10k (document in code comment, not required for this PR)"
+        ]
+      }
+    ],
+    "critical_requirements": [
+      "[C] Input validation: enforce 3 char min, 100 char max; reject null/empty queries before any DB calls",
+      "[C] Error handling: all external calls (DB, API) wrapped in try/catch; timeouts must not crash application",
+      "[C] Security: no stack traces in error responses; rate limiting enforced (already implemented, must test)",
+      "[C] No PII logging: search queries and user IDs never logged",
+      "[C] Timeout resilience: one source timeout must not break the orchestration (return partial results or empty array)"
+    ],
+    "high_requirements": [
+      "[H] Test coverage: 80%+ line coverage; 15+ test cases covering happy path, edge cases, error scenarios",
+      "[H] Performance: total search orchestration < 200ms with 3s source timeouts (Levenshtein < 20ms for typical query)",
+      "[H] Similarity threshold: 0.80 (80% match); test boundary cases (0.79 must NOT match, 0.80 must match)",
+      "[H] Documentation: JSDoc on all public functions with @throws for error paths; complex logic explained",
+      "[H] Fuzzy matching algorithm: Levenshtein distance with normalization (lowercase, punctuation removal, diacritics)"
+    ]
+  },
+  "test_strategy": {
+    "framework": "Jest",
+    "setup": {
+      "file_location": "src/lib/__tests__/venues.test.ts",
+      "co_located": true,
+      "mocking": "jest.mock() for Prisma, external API calls; jest.spyOn() for observability verification",
+      "coverage_target": "80% line + branch coverage on venues.ts and route.ts"
+    },
+    "unit_tests": [
+      {
+        "test_file": "src/lib/__tests__/venues.test.ts",
+        "target": "searchDatabaseVenues() with fuzzy matching",
+        "scenarios": [
+          {
+            "name": "test_searchDatabaseVenues_partial_name_match_returns_venue",
+            "description": "Query 'hanns-martin-schleyer-ha' finds 'Hanns-Martin-Schleyer-Halle' in database",
+            "maps_to_ac": ["Core requirement: fuzzy matching for partial names"],
+            "setup": "Mock prisma.$queryRaw to return venue with exact name",
+            "assertions": [
+              "Result includes venue with name 'Hanns-Martin-Schleyer-Halle'",
+              "Result has source 'database'",
+              "Result has non-zero score"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_typo_one_char_returns_match",
+            "description": "Query 'schleier-halle' (1 typo) matches 'Schleyer-Halle' with similarity >= 0.80",
+            "maps_to_ac": ["Typo tolerance requirement"],
+            "setup": "Mock prisma.$queryRaw to return venue; calculateSimilarity('schleierHalle', 'schleyerHalle') should = 7/8 ≈ 0.875",
+            "assertions": [
+              "Result includes venue",
+              "Similarity score >= 0.80",
+              "Venue ranked by user/global frequency"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_typo_two_chars_boundary",
+            "description": "Query 'schleyyer-hall' (2 typos) has similarity ~0.70 < 0.80 threshold",
+            "maps_to_ac": ["Threshold boundary testing"],
+            "setup": "Mock venue; calculateSimilarity('schleyyerHall', 'schleyerHalle') should <= 0.75",
+            "assertions": [
+              "Venue NOT included in results (below threshold)",
+              "No false positives"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_case_insensitive",
+            "description": "Query 'HANNS' matches 'hanns-martin-schleyer-halle' (normalized)",
+            "maps_to_ac": ["Case normalization"],
+            "setup": "Query normalized to lowercase before comparison",
+            "assertions": [
+              "Venue found regardless of query case"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_whitespace_normalization",
+            "description": "Query 'hanns martin' (spaces) matches 'Hanns-Martin-Schleyer-Halle' (hyphens normalized)",
+            "maps_to_ac": ["Punctuation normalization"],
+            "setup": "normalizeForVenueComparison removes hyphens, dots, apostrophes",
+            "assertions": [
+              "Venue found after punctuation stripping"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_query_too_short",
+            "description": "Query 'ha' (2 chars) returns empty array",
+            "maps_to_ac": ["Input validation: min 3 chars"],
+            "setup": "No mock needed; function checks length before querying",
+            "assertions": [
+              "Result is empty array",
+              "No database queries executed"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_query_empty",
+            "description": "Query '' or null returns empty array",
+            "maps_to_ac": ["Input validation: null/empty rejection"],
+            "setup": "Pass '' or null as query",
+            "assertions": [
+              "Result is empty array"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_query_too_long",
+            "description": "Query with 101+ chars returns empty array",
+            "maps_to_ac": ["Input validation: max 100 chars"],
+            "setup": "Pass 101-char query string",
+            "assertions": [
+              "Result is empty array (or handled gracefully)"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_no_matches",
+            "description": "Query 'xyzabc12345' returns empty array (no similar venues in DB)",
+            "maps_to_ac": ["False positive boundary"],
+            "setup": "Mock DB with venues that do not reach 0.80 similarity threshold",
+            "assertions": [
+              "Result is empty array",
+              "No false positives"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_exact_match_ranks_highest",
+            "description": "Exact query match ranks highest; regression test",
+            "maps_to_ac": ["Exact matching still works"],
+            "setup": "Query = 'Hanns-Martin-Schleyer-Halle' (exact), mock DB with exact + partial matches",
+            "assertions": [
+              "Exact match appears first (highest score)"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_user_weighted_scoring",
+            "description": "User who visited a venue 5x sees higher score than user who visited 0x",
+            "maps_to_ac": ["Personalization"],
+            "setup": "Pass userId; mock query result with user_count=5 for one, 0 for another",
+            "assertions": [
+              "Score calculation includes user visit count with 100x multiplier"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_global_popularity_boost",
+            "description": "Venue globally popular (100 visits) ranks high even if user never visited",
+            "maps_to_ac": ["Global frequency ranking"],
+            "setup": "Mock venue with global_count=100, user_count=0",
+            "assertions": [
+              "Score includes global_count in calculation"
+            ]
+          },
+          {
+            "name": "test_searchDatabaseVenues_result_limit",
+            "description": "Results limited to 10 venues maximum",
+            "maps_to_ac": ["Result limit enforcement"],
+            "setup": "Mock DB to return 20+ venues",
+            "assertions": [
+              "Returned array has <= 10 items"
+            ]
+          }
+        ],
+        "mocks": [
+          "jest.mock('@/lib/prisma'): mock prisma.$queryRaw and prisma.concert.findMany",
+          "jest.mock() for helper functions if extracted: calculateSimilarity, normalizeForVenueComparison"
+        ],
+        "coverage_target": "80% line coverage on searchDatabaseVenues(); branch coverage for all conditionals (empty query, user scoring, result limits)"
+      },
+      {
+        "test_file": "src/lib/__tests__/venues.test.ts",
+        "target": "Helper functions: calculateSimilarity(), normalizeForVenueComparison()",
+        "scenarios": [
+          {
+            "name": "test_calculateSimilarity_exact_match",
+            "description": "calculateSimilarity('abc', 'abc') returns 1.0",
+            "setup": "Call function directly",
+            "assertions": ["Result === 1.0"]
+          },
+          {
+            "name": "test_calculateSimilarity_one_insertion",
+            "description": "calculateSimilarity('abc', 'abcd') returns 3/4 = 0.75",
+            "setup": "Levenshtein distance = 1, maxLength = 4",
+            "assertions": ["Result === 0.75"]
+          },
+          {
+            "name": "test_calculateSimilarity_one_substitution",
+            "description": "calculateSimilarity('abc', 'adc') returns 2/3 ≈ 0.667",
+            "setup": "Levenshtein distance = 1, maxLength = 3",
+            "assertions": ["Result ≈ 0.667"]
+          },
+          {
+            "name": "test_normalizeForVenueComparison_lowercase",
+            "description": "normalizeForVenueComparison('HANNS') returns 'hanns'",
+            "setup": "Call function",
+            "assertions": ["Result === 'hanns'"]
+          },
+          {
+            "name": "test_normalizeForVenueComparison_remove_hyphens",
+            "description": "normalizeForVenueComparison('Hanns-Martin') returns 'hannsmartin'",
+            "setup": "Call function",
+            "assertions": ["Result === 'hannsmartin'"]
+          },
+          {
+            "name": "test_normalizeForVenueComparison_remove_dots",
+            "description": "normalizeForVenueComparison('St. Paul') returns 'st paul'",
+            "setup": "Call function",
+            "assertions": ["Result === 'st paul'"]
+          },
+          {
+            "name": "test_normalizeForVenueComparison_remove_apostrophes",
+            "description": "normalizeForVenueComparison('O\\'Reilly Hall') returns 'oreilly hall'",
+            "setup": "Call function",
+            "assertions": ["Result === 'oreilly hall'"]
+          },
+          {
+            "name": "test_normalizeForVenueComparison_diacritics",
+            "description": "normalizeForVenueComparison('Café Münchener') returns normalized (ü->u, é->e if using NFKD)",
+            "setup": "Call function with diacritics",
+            "assertions": [
+              "Diacritics removed or normalized",
+              "Result is ASCII-friendly for Levenshtein"
+            ]
+          }
+        ],
+        "mocks": ["None - pure functions"],
+        "coverage_target": "100% line coverage on helper functions"
+      },
+      {
+        "test_file": "src/lib/__tests__/venues.test.ts",
+        "target": "searchVenuesEnhanced() - orchestration and resilience",
+        "scenarios": [
+          {
+            "name": "test_searchVenuesEnhanced_database_source_ranks_highest",
+            "description": "When all 3 sources return results, database results appear first",
+            "setup": "Mock all 3 sources; DB result has score=100, TM score=30, Photon score=10",
+            "assertions": [
+              "Result[0].source === 'database'",
+              "Database results ranked by score descending"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_timeout_db_source",
+            "description": "DB query times out after 3s; returns results from TM + Photon, no crash",
+            "setup": "Mock searchDatabaseVenues to return rejected promise; others return results",
+            "assertions": [
+              "Result includes TM and Photon results",
+              "No exception thrown",
+              "Result count > 0"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_timeout_photon_source",
+            "description": "Photon query times out after 5s; returns DB + TM results",
+            "setup": "Mock searchVenues to return rejected promise; others return results",
+            "assertions": [
+              "Result includes DB and TM results",
+              "No exception thrown"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_all_sources_timeout",
+            "description": "All 3 sources timeout; returns empty array gracefully",
+            "setup": "Mock all 3 sources to reject with timeout error",
+            "assertions": [
+              "Result is empty array (not exception)"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_deduplication",
+            "description": "Same venue from DB + TM (same coords); only highest-scored result returned",
+            "setup": "Mock DB and TM to return same venue with different scores",
+            "assertions": [
+              "Result length = 1",
+              "Result.score = max(DB score, TM score)"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_user_proximity_scoring",
+            "description": "User visited location A; venue B nearby gets proximity bonus",
+            "setup": "Mock getUserVisitedLocations to return [lat=50.1, lon=10.1]; venue at 50.11, 10.11",
+            "assertions": [
+              "Venue score includes proximity bonus (+50 - distance in km)"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_unauthenticated_user_fields_stripped",
+            "description": "Unauthenticated user gets results WITHOUT isUserVenue or userVisitCount",
+            "setup": "searchVenuesEnhanced(query, { userId: undefined })",
+            "assertions": [
+              "Result items do NOT have isUserVenue field",
+              "Result items do NOT have userVisitCount field"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_authenticated_user_fields_included",
+            "description": "Authenticated user gets results WITH isUserVenue and userVisitCount for their own venues",
+            "setup": "searchVenuesEnhanced(query, { userId: 'user123' }); mock DB result with isUserVenue=true",
+            "assertions": [
+              "Result items for user venues have isUserVenue field",
+              "Result items have userVisitCount field"
+            ]
+          },
+          {
+            "name": "test_searchVenuesEnhanced_result_count_limit",
+            "description": "Final results limited to 10 items even if all sources return more",
+            "setup": "Mock all 3 sources to return 20 results each (60 total before dedup)",
+            "assertions": [
+              "Final result.length === 10"
+            ]
+          }
+        ],
+        "mocks": [
+          "jest.mock('@/lib/venues'): searchDatabaseVenues, searchTicketmasterVenues, searchVenues, getUserVisitedLocations",
+          "jest.spyOn() to verify timeout promises are created and resolved"
+        ],
+        "coverage_target": "80% line coverage on searchVenuesEnhanced(); 100% branch coverage for timeout handling"
+      }
+    ],
+    "integration_tests": [
+      {
+        "test_file": "src/lib/__tests__/venues.integration.test.ts (optional, lower priority)",
+        "target": "GET /api/venues/search route",
+        "scenarios": [
+          {
+            "name": "test_venues_api_valid_query_returns_200",
+            "description": "Valid query q='schleyer' returns 200 with venue array",
+            "setup": "Mock searchVenuesEnhanced to return test results",
+            "assertions": [
+              "Status === 200",
+              "Response is JSON array",
+              "Array contains EnhancedVenueResult objects"
+            ]
+          },
+          {
+            "name": "test_venues_api_missing_query_returns_200_empty",
+            "description": "Missing q parameter returns 200 with empty array",
+            "setup": "Call with no q param",
+            "assertions": [
+              "Status === 200",
+              "Response === []"
+            ]
+          },
+          {
+            "name": "test_venues_api_query_too_short_returns_200_empty",
+            "description": "q='ab' returns 200 with empty array",
+            "setup": "Call with q='ab'",
+            "assertions": [
+              "Status === 200",
+              "Response === []"
+            ]
+          },
+          {
+            "name": "test_venues_api_query_too_long_returns_200_empty",
+            "description": "q with 101+ chars returns 200 with empty array",
+            "setup": "Call with q=101-char string",
+            "assertions": [
+              "Status === 200",
+              "Response === []"
+            ]
+          },
+          {
+            "name": "test_venues_api_invalid_lat_ignored",
+            "description": "lat='invalid' ignored; search proceeds without bias",
+            "setup": "Call with lat='abc'",
+            "assertions": [
+              "Status === 200",
+              "searchVenuesEnhanced called with lat=undefined"
+            ]
+          },
+          {
+            "name": "test_venues_api_out_of_range_lat_ignored",
+            "description": "lat=91 (out of range) ignored",
+            "setup": "Call with lat=91",
+            "assertions": [
+              "lat set to undefined before calling searchVenuesEnhanced"
+            ]
+          },
+          {
+            "name": "test_venues_api_rate_limit_30_requests",
+            "description": "30 requests in 60s succeed",
+            "setup": "Send 30 requests with same IP within 60s",
+            "assertions": [
+              "All 30 return 200"
+            ]
+          },
+          {
+            "name": "test_venues_api_rate_limit_31st_request",
+            "description": "31st request in 60s returns 429",
+            "setup": "Send 31 requests with same IP within 60s",
+            "assertions": [
+              "31st request returns 429 Too Many Requests",
+              "Response includes Retry-After: 60 header"
+            ]
+          },
+          {
+            "name": "test_venues_api_rate_limit_reset_after_window",
+            "description": "After 60s window passes, new request succeeds",
+            "setup": "Send 30 requests, wait 60s, send 1 more",
+            "assertions": [
+              "Request #31 after 60s returns 200"
+            ]
+          },
+          {
+            "name": "test_venues_api_internal_error_returns_500",
+            "description": "searchVenuesEnhanced throws error; returns 500 with generic message",
+            "setup": "Mock searchVenuesEnhanced to throw error",
+            "assertions": [
+              "Status === 500",
+              "Response.error === 'Failed to search venues'",
+              "No stack trace in response"
+            ]
+          },
+          {
+            "name": "test_venues_api_error_captured_by_sentry",
+            "description": "Error logged to Sentry via Sentry.captureException",
+            "setup": "Mock searchVenuesEnhanced to throw; spy on Sentry.captureException",
+            "assertions": [
+              "Sentry.captureException called with error"
+            ]
+          },
+          {
+            "name": "test_venues_api_authenticated_user_gets_personalized_results",
+            "description": "Authenticated user gets results with isUserVenue/userVisitCount",
+            "setup": "Mock auth.api.getSession to return session with user ID; mock search results",
+            "assertions": [
+              "searchVenuesEnhanced called with userId parameter",
+              "Results include personalization fields"
+            ]
+          },
+          {
+            "name": "test_venues_api_unauthenticated_user_no_personalization",
+            "description": "Unauthenticated user does not get personalization fields",
+            "setup": "Mock auth.api.getSession to throw or return null",
+            "assertions": [
+              "searchVenuesEnhanced called with userId=undefined",
+              "Results do not include isUserVenue/userVisitCount"
+            ]
+          }
+        ],
+        "mocks": [
+          "jest.mock('@/lib/venues'): searchVenuesEnhanced",
+          "jest.mock('@/lib/auth'): auth.api.getSession",
+          "jest.mock('@sentry/nextjs'): Sentry.captureException"
+        ],
+        "coverage_target": "80% line coverage on route.ts; 100% branch coverage for validation and error handling"
+      }
+    ],
+    "e2e_tests": [],
+    "performance_benchmarks": [
+      {
+        "metric": "Database query time (single venue search)",
+        "target": "< 50ms",
+        "verification": "Measure time for searchDatabaseVenues with 100 venues in DB; should use trigram index",
+        "notes": "Trigram index exists; verify with: SELECT * FROM pg_indexes WHERE tablename = 'concert' AND indexname LIKE '%trgm%'"
+      },
+      {
+        "metric": "Levenshtein calculation (100 venues)",
+        "target": "< 20ms",
+        "verification": "Measure time to compare query against 100 venue names",
+        "notes": "O(n × m²) where n=100, m=avg query length ~10; should be acceptable"
+      },
+      {
+        "metric": "Total orchestration (3 sources)",
+        "target": "< 200ms (with 3s source timeouts)",
+        "verification": "Measure end-to-end searchVenuesEnhanced time under normal conditions",
+        "notes": "Debounce is 300ms; target 200ms leaves 100ms buffer"
+      },
+      {
+        "metric": "API route handler response time",
+        "target": "< 250ms p95",
+        "verification": "Load test /api/venues/search with 100 concurrent requests",
+        "notes": "Rate limit: 30 req/min per IP; test should not hit limits"
+      }
+    ]
+  },
+  "naming_requirements": [
+    {
+      "element": "Similarity calculation function",
+      "proposed_name": "calculateSimilarity",
+      "convention": "camelCase verb + subject; makes purpose clear",
+      "alternatives": ["computeSimilarity", "levenshteinSimilarity"]
+    },
+    {
+      "element": "Normalization helper",
+      "proposed_name": "normalizeForVenueComparison",
+      "convention": "camelCase verb + descriptor; indicates it's for venue-specific comparison",
+      "alternatives": ["normalizeVenueName", "normalizeForMatching"]
+    },
+    {
+      "element": "Constant: min query length",
+      "proposed_name": "VENUE_SEARCH_MIN_LENGTH",
+      "convention": "UPPER_SNAKE_CASE; indicates it's a configuration constant",
+      "notes": "Value: 3"
+    },
+    {
+      "element": "Constant: max query length",
+      "proposed_name": "VENUE_SEARCH_MAX_LENGTH",
+      "convention": "UPPER_SNAKE_CASE",
+      "notes": "Value: 100"
+    },
+    {
+      "element": "Constant: similarity threshold",
+      "proposed_name": "VENUE_SIMILARITY_THRESHOLD",
+      "convention": "UPPER_SNAKE_CASE",
+      "notes": "Value: 0.80 (80%)"
+    }
+  ],
+  "documentation_requirements": [
+    {
+      "file": "src/lib/venues.ts",
+      "items": [
+        {
+          "target": "searchDatabaseVenues()",
+          "requirement": "Update JSDoc to mention fuzzy matching",
+          "template": "/**\n * Search venues from database with fuzzy matching and user-weighted scoring.\n *\n * Uses Levenshtein distance to find venues with >= 80% similarity to the query.\n * Results scored by user visit count (if authenticated) and global frequency.\n *\n * @param query - Search query string (3-100 characters)\n * @param userId - Optional user ID for personalized scoring\n * @param limit - Maximum results (default 10)\n * @returns Array of venue results with scores, sorted by relevance\n * @throws Error if query validation fails (checked before this is called)\n */"
+        },
+        {
+          "target": "calculateSimilarity()",
+          "requirement": "New function; requires complete JSDoc",
+          "template": "/**\n * Calculate similarity between two strings using Levenshtein distance.\n *\n * Strings are normalized (lowercase, punctuation removed) before comparison.\n * Similarity = 1 - (distance / maxLength), where distance is edit distance.\n *\n * @param name1 - First string to compare\n * @param name2 - Second string to compare\n * @returns Similarity score from 0 (no match) to 1 (exact match)\n * @throws TypeError if name1 or name2 is not a string\n */"
+        },
+        {
+          "target": "normalizeForVenueComparison()",
+          "requirement": "New function; requires complete JSDoc",
+          "template": "/**\n * Normalize a string for venue name comparison.\n *\n * Applies the following transformations:\n * - Convert to lowercase\n * - Remove diacritics (ü -> u, é -> e) using Unicode NFKD\n * - Remove punctuation (hyphens, dots, apostrophes, commas)\n * - Trim leading/trailing whitespace\n *\n * Used for fuzzy matching; does not affect display names.\n *\n * @param name - Venue name to normalize\n * @returns Normalized string suitable for Levenshtein comparison\n */"
+        }
+      ]
+    },
+    {
+      "file": "app/api/venues/search/route.ts",
+      "items": [
+        {
+          "target": "GET /api/venues/search",
+          "requirement": "Update route docstring to mention fuzzy matching and threshold",
+          "template": "/**\n * GET /api/venues/search\n * Search for event venues with fuzzy matching across multiple sources.\n *\n * Sources (in priority order):\n * 1. Database - User's concert history with fuzzy matching (80% similarity threshold)\n * 2. Ticketmaster - Concert-specific venue database\n * 3. Photon/OpenStreetMap - General geocoding fallback\n *\n * Fuzzy matching handles typos, partial names, and punctuation variations.\n * E.g., 'hanns-martin-schleyer-ha' matches 'Hanns-Martin-Schleyer-Halle'.\n *\n * Query parameters:\n * - q: Search query (required, 3-100 characters)\n * - lat: Latitude for biasing results (optional, -90 to 90)\n * - lon: Longitude for biasing results (optional, -180 to 180)\n *\n * Returns: Array of EnhancedVenueResult objects, sorted by relevance score\n *\n * Personalization fields (isUserVenue, userVisitCount) are only included\n * for authenticated users viewing their own venue history.\n */"
+        }
+      ]
+    }
+  ],
+  "security_requirements": [
+    {
+      "concern": "Input validation on search query",
+      "requirement": "Enforce 3-100 character length; reject null/empty; validate before any DB calls",
+      "checklist_ref": "2.1 Security & Input Validation [C]",
+      "implementation": "Add validation at start of GET handler and searchDatabaseVenues(); return 200 with empty array if invalid"
+    },
+    {
+      "concern": "SQL Injection",
+      "requirement": "All queries parameterized via Prisma; no string concatenation in raw queries",
+      "checklist_ref": "2.1 Security & Input Validation [C]",
+      "implementation": "Verify: existing raw query in searchDatabaseVenues uses Prisma.$queryRaw with interpolation (already safe); no changes needed"
+    },
+    {
+      "concern": "Rate limiting",
+      "requirement": "30 requests per minute per IP; return 429 with Retry-After header",
+      "checklist_ref": "2.3 Security & Input Validation [M]",
+      "implementation": "Already implemented in route.ts; must test 31st request triggers 429"
+    },
+    {
+      "concern": "PII in logs",
+      "requirement": "Never log search queries, user IDs, coordinates; generic operation logging only",
+      "checklist_ref": "4.2 Logging [C]",
+      "implementation": "Log structure: 'venue.search', query_length, result_count, timeout_source (if applicable)"
+    },
+    {
+      "concern": "Error information disclosure",
+      "requirement": "No stack traces or internal details in error responses",
+      "checklist_ref": "3.2 Error Handling [C]",
+      "implementation": "Catch all errors in GET handler; return generic 'Failed to search venues' message with 500 status"
+    }
+  ],
+  "observability_requirements": [
+    {
+      "location": "searchVenuesEnhanced()",
+      "level": "INFO",
+      "message": "Venue search orchestration started",
+      "fields": ["query_length", "has_user_location"]
+    },
+    {
+      "location": "searchVenuesEnhanced()",
+      "level": "DEBUG",
+      "message": "Similarity check result",
+      "fields": ["query", "venue_name", "similarity_score"],
+      "note": "Only if similarity < threshold (false negatives)"
+    },
+    {
+      "location": "searchVenuesEnhanced() - timeout handling",
+      "level": "WARNING",
+      "message": "Venue source timeout",
+      "fields": ["source_name", "timeout_ms", "fallback_sources_available"]
+    },
+    {
+      "location": "GET /api/venues/search - error handling",
+      "level": "ERROR",
+      "message": "Venue search failed",
+      "fields": ["error_message", "http_status"],
+      "note": "Include correlation ID if available from request context"
+    },
+    {
+      "location": "searchVenuesEnhanced() - completion",
+      "level": "INFO",
+      "message": "Venue search orchestration completed",
+      "fields": ["result_count", "execution_time_ms", "sources_used"]
+    }
+  ],
+  "risks": [
+    {
+      "description": "Fuzzy matching too lenient (false positives): 'abc' matches 'abcdef' at 0.79 threshold",
+      "severity": "MEDIUM",
+      "mitigation": "Threshold = 0.80; test boundary case: 'abc' vs 'abcd' should NOT match (similarity = 0.75); 'abc' vs 'abce' should NOT match",
+      "acceptance_criteria": "Test case test_searchDatabaseVenues_similarity_threshold_edge passes"
+    },
+    {
+      "description": "Fuzzy matching too strict: legitimate 2-char typos not matched",
+      "severity": "MEDIUM",
+      "mitigation": "Test with real venue names (e.g., 'Schleyer-Halle'); tune threshold if needed based on data",
+      "acceptance_criteria": "Typo test cases cover 1-2 char variations; manual QA validates real-world scenarios"
+    },
+    {
+      "description": "Performance regression: Levenshtein calculation takes > 20ms for 100 venues",
+      "severity": "HIGH",
+      "mitigation": "Benchmark before/after; if > 20ms, optimize: (a) move to PostgreSQL levenshtein() for large datasets, (b) add client-side debounce (already 300ms)",
+      "acceptance_criteria": "Performance benchmark test passes; total orchestration < 200ms"
+    },
+    {
+      "description": "Similarity calculation crashes on edge case (empty string, very long string > 1000 chars)",
+      "severity": "HIGH",
+      "mitigation": "Add bounds checks in calculateSimilarity; test with extreme inputs; test error handling in try/catch",
+      "acceptance_criteria": "No unhandled exceptions in calculateSimilarity tests; all edge cases return valid values"
+    },
+    {
+      "description": "Database query slow with large venue count (> 10k venues); trigram index not used",
+      "severity": "HIGH",
+      "mitigation": "Verify trigram index is active: SELECT * FROM pg_indexes WHERE tablename='concert' AND indexname LIKE '%trgm%'; if missing, create it (migration exists)",
+      "acceptance_criteria": "Production database has trigram index; query time verified < 50ms"
+    },
+    {
+      "description": "User confusion: why didn't 'X' match 'Y'?",
+      "severity": "LOW",
+      "mitigation": "Log similarity scores at DEBUG level (invisible to users); document threshold choice in code comments",
+      "acceptance_criteria": "DEBUG logs include similarity score for false negatives; code comment explains 0.80 choice"
+    },
+    {
+      "description": "Timeout cascade: all 3 sources fail, users see 'No venues found' with no indication why",
+      "severity": "CRITICAL",
+      "mitigation": "Never let all sources fail silently; log each timeout as WARNING; if all fail, log as ERROR with 'all sources unavailable'",
+      "acceptance_criteria": "Test case test_searchVenuesEnhanced_all_sources_timeout passes; error logged; graceful fallback to empty array"
+    },
+    {
+      "description": "Rate limiter edge case: clock skew or rapid requests at window boundary",
+      "severity": "MEDIUM",
+      "mitigation": "Test rate limiter at window boundaries (59s, 60s, 61s); verify reset works correctly",
+      "acceptance_criteria": "Rate limit tests pass; 30 requests succeed, 31st fails, after 60s new request succeeds"
+    },
+    {
+      "description": "Missing test coverage: new functions have < 80% coverage, errors not tested",
+      "severity": "HIGH",
+      "mitigation": "Implement 15+ test cases covering happy path, errors, edge cases; run coverage report; must show 80%+ on new code",
+      "acceptance_criteria": "Coverage report shows 80%+ line + branch coverage; no critical error paths left untested"
+    }
+  ],
+  "pre_implementation_checklist": [
+    {
+      "item": "Confirm trigram index exists in database",
+      "command": "SELECT * FROM pg_indexes WHERE tablename='concert' AND indexname LIKE '%trgm%';",
+      "expected": "Result shows 'concert_venue_trgm_idx' using GIN",
+      "blocking": true
+    },
+    {
+      "item": "Verify Levenshtein distance algorithm available",
+      "status": "Already in codebase: app/api/admin/bands/duplicates/route.ts",
+      "note": "Can reuse or extract to shared utility"
+    },
+    {
+      "item": "Decide: extract Levenshtein to src/utils/similarity.ts or keep in venues.ts",
+      "recommendation": "Keep in venues.ts for now; only one consumer (venue search). Extract to utils if band duplicates are refactored to use it."
+    },
+    {
+      "item": "Ensure Jest is configured for TypeScript in project",
+      "status": "Need to verify: package.json has jest config or jest.config.js exists",
+      "note": "No existing test files in app/ or src/lib/, so setup may be minimal"
+    },
+    {
+      "item": "Define similarity threshold value (0.80 or other)",
+      "recommendation": "Start with 0.80 (80% match); tune downward if false negatives, upward if false positives"
+    }
+  ],
+  "acceptance_criteria_mapping": {
+    "AC1_partial_name_search": "Test cases: test_searchDatabaseVenues_partial_name_match_returns_venue",
+    "AC2_typo_tolerance": "Test cases: test_searchDatabaseVenues_typo_one_char_returns_match, test_searchDatabaseVenues_typo_two_chars_boundary",
+    "AC3_performance_300ms": "Performance benchmark: total orchestration < 200ms",
+    "AC4_no_false_positives": "Test cases: test_searchDatabaseVenues_similarity_threshold_edge (0.79 should NOT match)",
+    "AC5_user_visited_venues_ranked_high": "Test case: test_searchVenuesEnhanced_authenticated_user_fields_included",
+    "AC6_graceful_fallback_on_source_failure": "Test case: test_searchVenuesEnhanced_timeout_db_source (returns TM + Photon)"
+  }
+}

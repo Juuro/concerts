@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import type { PhotonSearchResult } from "@/types/photon"
+import type { EnhancedVenueResult } from "@/types/photon"
 import "./venueAutocomplete.scss"
 
 interface VenueAutocompleteProps {
   value: string
   latitude?: number
   longitude?: number
-  onSelect: (result: PhotonSearchResult) => void
+  onSelect: (result: EnhancedVenueResult) => void
   onClear: () => void
   disabled?: boolean
   error?: string
@@ -24,7 +24,7 @@ export default function VenueAutocomplete({
   error,
 }: VenueAutocompleteProps) {
   const [searchTerm, setSearchTerm] = useState(value)
-  const [results, setResults] = useState<PhotonSearchResult[]>([])
+  const [results, setResults] = useState<EnhancedVenueResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -91,7 +91,7 @@ export default function VenueAutocomplete({
   }, [])
 
   const handleSelect = useCallback(
-    (result: PhotonSearchResult) => {
+    (result: EnhancedVenueResult) => {
       setSearchTerm(result.name)
       setIsOpen(false)
       setHighlightedIndex(-1)
@@ -206,7 +206,7 @@ export default function VenueAutocomplete({
         >
           {results.map((result, index) => (
             <button
-              key={`${result.osmId}-${index}`}
+              key={`${result.lat}-${result.lon}-${index}`}
               type="button"
               role="option"
               id={`venue-option-${index}`}
@@ -219,6 +219,14 @@ export default function VenueAutocomplete({
             >
               <div className="venue-autocomplete__item-name">
                 {result.name}
+                <span className={`venue-autocomplete__source-badge venue-autocomplete__source-badge--${result.source}`}>
+                  {result.source.charAt(0).toUpperCase() + result.source.slice(1)}
+                </span>
+                {result.isUserVenue && (
+                  <span className="venue-autocomplete__visited-badge">
+                    Visited{result.userVisitCount && result.userVisitCount > 1 ? ` ${result.userVisitCount}x` : ""}
+                  </span>
+                )}
               </div>
               <div className="venue-autocomplete__item-address">
                 {result.displayName}

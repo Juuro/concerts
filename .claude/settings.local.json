@@ -44,7 +44,13 @@
       "mcp__page-design-guide-mcp__get_animation_guidance",
       "Bash(npx prisma:*)",
       "Bash(lsof -ti:3000)",
-      "Bash(./node_modules/.bin/next build:*)"
+      "Bash(./node_modules/.bin/next build:*)",
+      "Bash(mkdir -p .claude/agents/allianz-mac/.temp)",
+      "Bash(.claude/agents/allianz-mac/.temp/.session-state.json:*)",
+      "Bash(rm -rf .claude/agents/allianz-mac/.temp/)",
+      "Bash(mkdir -p .claude/agents/allianz-mac/.temp/)",
+      "Bash(/tmp/quality-proposal.json:*)",
+      "Read(//tmp/**)"
     ]
   },
   "enableAllProjectMcpServers": true,
