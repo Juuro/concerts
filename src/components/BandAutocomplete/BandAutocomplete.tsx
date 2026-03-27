@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, Fragment } from "react"
+import type { BandSearchResultItem } from "@/types/bandSearch"
+import { normalizeBandSearchKey } from "@/utils/bandSearchNormalize"
 import "./bandAutocomplete.scss"
 
 interface Band {
@@ -35,7 +37,7 @@ export default function BandAutocomplete({
 }: BandAutocompleteProps) {
   // Autocomplete state
   const [searchTerm, setSearchTerm] = useState("")
-  const [searchResults, setSearchResults] = useState<Band[]>([])
+  const [searchResults, setSearchResults] = useState<BandSearchResultItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -73,11 +75,16 @@ export default function BandAutocomplete({
           `/api/bands/search?q=${encodeURIComponent(searchTerm)}`
         )
         if (res.ok) {
-          const data = await res.json()
-          // Filter out already selected bands
-          const filtered = data.filter(
-            (band: Band) => !selectedBands.some((sb) => sb.bandId === band.id)
-          )
+          const data = (await res.json()) as BandSearchResultItem[]
+          const filtered = data.filter((row) => {
+            if (row.kind === "db") {
+              return !selectedBands.some((sb) => sb.bandId === row.id)
+            }
+            const key = normalizeBandSearchKey(row.name)
+            return !selectedBands.some(
+              (sb) => normalizeBandSearchKey(sb.name) === key
+            )
+          })
           setSearchResults(filtered)
           setIsOpen(filtered.length > 0 || searchTerm.length >= 2)
         }
@@ -122,7 +129,7 @@ export default function BandAutocomplete({
     setTimeout(() => setAnnouncement(message), 50)
   }, [])
 
-  // Add a band to selection
+  // Add an existing DB band to selection
   const handleAddBand = useCallback(
     (band: Band) => {
       if (selectedBands.some((b) => b.bandId === band.id)) return
@@ -142,6 +149,28 @@ export default function BandAutocomplete({
       inputRef.current?.focus()
     },
     [selectedBands, onBandsChange]
+  )
+
+  /** External catalog row: create band (same flow as typing a new name). */
+  const handleSelectSuggestion = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim()
+      if (!trimmed || !onCreateBand) return
+      if (
+        selectedBands.some(
+          (sb) => normalizeBandSearchKey(sb.name) === normalizeBandSearchKey(trimmed)
+        )
+      ) {
+        return
+      }
+      setSearchTerm("")
+      setSearchResults([])
+      setIsOpen(false)
+      setHighlightedIndex(-1)
+      await onCreateBand(trimmed)
+      inputRef.current?.focus()
+    },
+    [selectedBands, onCreateBand]
   )
 
   // Remove a band from selection
@@ -255,7 +284,16 @@ export default function BandAutocomplete({
       case "Enter":
         e.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < searchResults.length) {
-          handleAddBand(searchResults[highlightedIndex])
+          const row = searchResults[highlightedIndex]
+          if (row.kind === "db") {
+            handleAddBand({
+              id: row.id,
+              name: row.name,
+              slug: row.slug,
+            })
+          } else {
+            void handleSelectSuggestion(row.name)
+          }
         }
         break
       case "Escape":
@@ -637,21 +675,57 @@ export default function BandAutocomplete({
           aria-label="Band search results"
         >
           {searchResults.length > 0 ? (
-            searchResults.slice(0, 10).map((band, index) => (
-              <li
-                key={band.id}
-                role="option"
-                id={`band-option-${index}`}
-                aria-selected={index === highlightedIndex}
-                className={`band-autocomplete__option ${
-                  index === highlightedIndex ? "band-autocomplete__option--highlighted" : ""
-                }`}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                onClick={() => handleAddBand(band)}
-              >
-                {renderPredictiveText(band.name)}
-              </li>
-            ))
+            searchResults.slice(0, 10).map((row, index) => {
+              const key =
+                row.kind === "db"
+                  ? row.id
+                  : `suggestion-${row.source}-${row.externalId ?? row.name}`
+              const sourceLabel =
+                row.kind === "suggestion"
+                  ? row.source === "musicbrainz"
+                    ? "MusicBrainz"
+                    : "Last.fm"
+                  : null
+              return (
+                <li
+                  key={key}
+                  role="option"
+                  id={`band-option-${index}`}
+                  aria-selected={index === highlightedIndex}
+                  aria-label={
+                    sourceLabel
+                      ? `${row.name}, suggested from ${sourceLabel}`
+                      : row.name
+                  }
+                  className={`band-autocomplete__option ${
+                    index === highlightedIndex ? "band-autocomplete__option--highlighted" : ""
+                  }`}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  onClick={() => {
+                    if (row.kind === "db") {
+                      handleAddBand({
+                        id: row.id,
+                        name: row.name,
+                        slug: row.slug,
+                      })
+                    } else {
+                      void handleSelectSuggestion(row.name)
+                    }
+                  }}
+                >
+                  <span className="band-autocomplete__option-row">
+                    <span className="band-autocomplete__option-name">
+                      {renderPredictiveText(row.name)}
+                    </span>
+                    {sourceLabel && (
+                      <span className="band-autocomplete__option-source" aria-hidden="true">
+                        {sourceLabel}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              )
+            })
           ) : (
             !isSearching &&
             searchTerm.length >= 2 && (

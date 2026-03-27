@@ -112,6 +112,7 @@
     cursor: pointer;
     font-size: 0.9375rem;
     padding: 0.75rem;
+    text-align: left;
     transition: background-color variables.$transition-duration ease;
 
     &:not(:last-child) {
@@ -122,6 +123,32 @@
     &--highlighted {
       background-color: #f8f9fa;
     }
+  }
+
+  &__option-row {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    justify-content: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  // Single box: match/prediction spans flow as normal text, not separate flex items.
+  &__option-name {
+    display: inline-block;
+    max-width: 100%;
+    min-width: 0;
+    text-align: left;
+  }
+
+  &__option-source {
+    color: #888;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   &__match {
