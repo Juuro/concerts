@@ -17,10 +17,18 @@ import type { GeocodingData } from "@/types/geocoding"
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const cursor = searchParams.get("cursor") ?? undefined
-  const limit = parseInt(searchParams.get("limit") || "20", 10)
-  const direction = (searchParams.get("direction") || "forward") as
+  let limit = parseInt(searchParams.get("limit") || "20", 10)
+  let direction = (searchParams.get("direction") || "forward") as
     | "forward"
     | "backward"
+
+  // Validate input parameters
+  if (limit < 1 || limit > 100) {
+    limit = 20
+  }
+  if (direction !== "forward" && direction !== "backward") {
+    direction = "forward"
+  }
 
   // Extract filter parameters
   const userOnly = searchParams.get("userOnly") === "true"
@@ -88,24 +96,41 @@ export async function GET(request: NextRequest) {
   }
 
   // Fetch paginated results with filters
-  const result = await getConcertsPaginated(cursor, limit, direction, filters)
+  try {
+    const result = await getConcertsPaginated(cursor, limit, direction, filters)
 
-  // Strip hidden data from public profile responses (defense in depth)
-  if (publicProfileUser) {
-    const now = new Date().toISOString()
-    result.items = result.items.map((item) => ({
-      ...item,
-      ...(publicProfileUser!.hideLocationPublic && {
-        venue: null,
-        city: { lat: 0, lon: 0 },
-        fields: { geocoderAddressFields: { _normalized_city: "" } as GeocodingData },
-        ...(item.date > now && { date: "" }),
-      }),
-      ...(publicProfileUser!.hideCostPublic && { cost: null }),
-    }))
+    // Strip hidden data from public profile responses (defense in depth)
+    if (publicProfileUser) {
+      const now = new Date().toISOString()
+      result.items = result.items.map((item) => ({
+        ...item,
+        ...(publicProfileUser!.hideLocationPublic && {
+          venue: null,
+          city: { lat: 0, lon: 0 },
+          fields: { geocoderAddressFields: { _normalized_city: "" } as GeocodingData },
+          ...(item.date > now && { date: "" }),
+        }),
+        ...(publicProfileUser!.hideCostPublic && { cost: null }),
+      }))
+    }
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error("Pagination failed", {
+      cursor,
+      direction,
+      limit,
+      filters,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    Sentry.captureException(error, {
+      extra: { cursor, direction, limit, filters },
+    })
+    return NextResponse.json(
+      { error: "Failed to load concerts" },
+      { status: 500 }
+    )
   }
-
-  return NextResponse.json(result)
 }
 
 export async function POST(request: NextRequest) {

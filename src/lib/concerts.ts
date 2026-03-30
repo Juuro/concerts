@@ -1228,9 +1228,16 @@ export async function getConcertsPaginated(
     }
   }
 
+  // For backward direction with cursor, include the cursor concert (don't skip)
+  // This fixes the bug where visiting a URL with cursor parameter loads no concerts
+  const shouldSkipCursor = cursor && direction === "forward"
+
   const concerts = await prisma.concert.findMany({
     take,
-    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    ...(cursor && {
+      cursor: { id: cursor },
+      skip: shouldSkipCursor ? 1 : 0
+    }),
     where,
     include: {
       bands: {
@@ -1249,10 +1256,12 @@ export async function getConcertsPaginated(
   }
 
   const hasExtra = concerts.length > limit
+  // When backward direction with cursor, first item is the cursor itself - keep it
+  // When forward direction, last item is the extra - remove it
   const items = hasExtra
     ? direction === "forward"
       ? concerts.slice(0, -1)
-      : concerts.slice(1)
+      : concerts.slice(1) // Remove the extra at the beginning
     : concerts
 
   return {
@@ -1288,14 +1297,18 @@ async function getConcertsPaginatedForUserByBand(
   const take = limit + 1
   type Row = { id: string }
 
+  // For backward direction with cursor, include the cursor concert (don't skip)
+  const shouldSkipCursor = cursor && direction === "forward"
+
   // Get cursor's concert date for keyset pagination
+  // Use Concert.id (not UserConcert.id) for cursor consistency with URLs
   let cursorDate: Date | null = null
   if (cursor) {
-    const uc = await prisma.userConcert.findUnique({
-      where: { id: cursor, userId: filters.userId! },
-      select: { concert: { select: { date: true } } },
+    const concert = await prisma.concert.findUnique({
+      where: { id: cursor },
+      select: { date: true },
     })
-    cursorDate = uc?.concert?.date ?? null
+    cursorDate = concert?.date ?? null
   }
 
   const yearClause =
@@ -1311,15 +1324,15 @@ async function getConcertsPaginatedForUserByBand(
   const cursorClause =
     cursor && cursorDate
       ? isForward
-        ? Prisma.sql`AND (c."date", uc.id) < (${cursorDate}, ${cursor})`
-        : Prisma.sql`AND (c."date", uc.id) > (${cursorDate}, ${cursor})`
+        ? Prisma.sql`AND (c."date", c.id) < (${cursorDate}, ${cursor})`
+        : Prisma.sql`AND (c."date", c.id) >= (${cursorDate}, ${cursor})`
       : Prisma.empty
   const orderClause = isForward
-    ? Prisma.sql`ORDER BY c."date" DESC, uc.id DESC`
-    : Prisma.sql`ORDER BY c."date" ASC, uc.id ASC`
+    ? Prisma.sql`ORDER BY c."date" DESC, c.id DESC`
+    : Prisma.sql`ORDER BY c."date" ASC, c.id ASC`
 
   const rows = await prisma.$queryRaw<Row[]>`
-    SELECT uc.id
+    SELECT c.id
     FROM user_concert uc
     JOIN concert c ON c.id = uc."concertId"
     WHERE uc."userId" = ${filters.userId}
@@ -1354,8 +1367,11 @@ async function getConcertsPaginatedForUserByBand(
     }
   }
 
+  // Fetch full UserConcert records with concert data
+  // Must maintain the same order as the raw SQL query (ordered by concert.id)
+  const idToIndex = new Map(ids.map((id, index) => [id, index]))
   const userConcerts = await prisma.userConcert.findMany({
-    where: { id: { in: ids } },
+    where: { concert: { id: { in: ids } } },
     include: {
       concert: {
         include: {
@@ -1370,8 +1386,9 @@ async function getConcertsPaginatedForUserByBand(
     },
   })
 
+  // Sort by concert.id order from SQL query (not userConcert.id)
   const orderMap = new Map(ids.map((id, i) => [id, i]))
-  userConcerts.sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!)
+  userConcerts.sort((a, b) => orderMap.get(a.concert.id)! - orderMap.get(b.concert.id)!)
 
   const hasExtra = userConcerts.length > limit
   const items = hasExtra ? userConcerts.slice(0, limit) : userConcerts
@@ -1384,21 +1401,22 @@ async function getConcertsPaginatedForUserByBand(
     items: await transformConcertsBatch(
       items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
+    // Return concert.id (not userConcert.id) for cursor consistency with URLs
     nextCursor:
       direction === "forward"
         ? hasExtra
-          ? items[items.length - 1].id
+          ? items[items.length - 1].concert.id
           : null
         : cursor
-          ? items[items.length - 1]?.id ?? null
+          ? items[items.length - 1]?.concert.id ?? null
           : null,
     prevCursor:
       direction === "forward"
         ? cursor
-          ? items[0]?.id ?? null
+          ? items[0]?.concert.id ?? null
           : null
         : hasExtra
-          ? items[0]?.id ?? null
+          ? items[0]?.concert.id ?? null
           : null,
     hasMore: direction === "forward" ? hasExtra : Boolean(cursor),
     hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
@@ -1466,12 +1484,17 @@ async function getConcertsPaginatedForUser(
     where.user = { isPublic: filters.isPublic }
   }
 
+  // For backward direction with cursor, include the cursor concert (don't skip)
+  // This fixes the bug where visiting a URL with cursor parameter loads no concerts
+  const shouldSkipCursor = cursor && direction === "forward"
+
   // Query UserConcert to get user's attended concerts
+  // Use concert.id for cursor (not userConcert.id) for consistency with URL cursors
   const userConcerts = await prisma.userConcert.findMany({
     take,
     ...(cursor && {
-      cursor: { id: cursor },
-      skip: 1,
+      cursor: { concert: { id: cursor } },
+      skip: shouldSkipCursor ? 1 : 0,
     }),
     where,
     include: {
@@ -1486,7 +1509,8 @@ async function getConcertsPaginatedForUser(
         },
       },
     },
-    orderBy: [{ concert: { date: "desc" } }, { id: "desc" }],
+    // Order by concert.date DESC, concert.id DESC for stable cursor pagination
+    orderBy: [{ concert: { date: "desc" } }, { concert: { id: "desc" } }],
   })
 
   // For backward direction, reverse to maintain consistent order
@@ -1495,27 +1519,30 @@ async function getConcertsPaginatedForUser(
   }
 
   const hasExtra = userConcerts.length > limit
+  // When backward direction with cursor, first item is the cursor itself - keep it
+  // When forward direction, last item is the extra - remove it
   const items = hasExtra
     ? direction === "forward"
       ? userConcerts.slice(0, -1)
-      : userConcerts.slice(1)
+      : userConcerts.slice(1) // Remove the extra at the beginning
     : userConcerts
 
   return {
     items: await transformConcertsBatch(
       items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
+    // Return concert.id (not userConcert.id) for cursor consistency with URLs
     nextCursor:
       direction === "forward" && hasExtra
-        ? items[items.length - 1].id
+        ? items[items.length - 1].concert.id
         : direction === "backward"
-          ? (items[items.length - 1]?.id ?? null)
+          ? (items[items.length - 1]?.concert.id ?? null)
           : null,
     prevCursor:
       direction === "backward" && hasExtra
-        ? items[0].id
+        ? items[0].concert.id
         : direction === "forward" && cursor
-          ? (items[0]?.id ?? null)
+          ? (items[0]?.concert.id ?? null)
           : null,
     hasMore: direction === "forward" ? hasExtra : true,
     hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
