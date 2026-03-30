@@ -1,7 +1,10 @@
 {
   "mcpServers": {
     "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/sebastian-engel/trackmyconcerts"
+      "transport": {
+        "type": "sse",
+        "url": "https://mcp.sentry.dev/mcp/sebastian-engel/trackmyconcerts"
+      }
     }
   }
 }
