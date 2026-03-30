@@ -297,7 +297,10 @@ export async function searchVenuesEnhanced(
       []
     ),
     withTimeout(
-      searchVenues(query, lat && lon ? { lat, lon } : undefined),
+      searchVenues(
+        query,
+        lat !== undefined && lon !== undefined ? { lat, lon } : undefined
+      ),
       5000,
       []
     ),
