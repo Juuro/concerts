@@ -7,6 +7,7 @@
  * 3. Photon - General OpenStreetMap geocoding
  */
 
+import * as Sentry from "@sentry/nextjs"
 import { prisma } from "@/lib/prisma"
 import { searchVenues } from "@/utils/photon"
 import { searchTicketmasterVenues } from "@/utils/ticketmaster"
@@ -54,10 +55,11 @@ async function withTimeout<T>(
 }
 
 /**
- * Search venues from database with user-weighted scoring.
+ * Search venues from database scoped to a specific user's concert history.
+ * Returns only venues from concerts the user has attended.
  *
  * @param query - Search query string
- * @param userId - Optional user ID for personalized scoring
+ * @param userId - User ID to scope results to. Returns empty if not provided.
  * @param limit - Maximum results (default 10)
  * @returns Array of venue results with scores
  */
@@ -66,58 +68,100 @@ export async function searchDatabaseVenues(
   userId?: string,
   limit = 10
 ): Promise<EnhancedVenueResult[]> {
-  if (query.length < 3) {
+  if (query.length < 3 || !userId) {
     return []
   }
 
-  // Raw SQL for complex aggregation with user-weighted scoring
-  const results = await prisma.$queryRaw<
-    Array<{
-      venue: string
-      latitude: number
-      longitude: number
-      normalizedCity: string | null
-      global_count: bigint
-      user_count: bigint
-    }>
-  >`
-    SELECT
-      c.venue,
-      c.latitude,
-      c.longitude,
-      c."normalizedCity",
-      COUNT(DISTINCT uc.id) as global_count,
-      COUNT(DISTINCT CASE WHEN uc."userId" = ${userId || ""} THEN uc.id END) as user_count
-    FROM concert c
-    JOIN user_concert uc ON uc."concertId" = c.id
-    WHERE c.venue ILIKE ${"%" + query + "%"} AND c.venue IS NOT NULL
-    GROUP BY c.venue, c.latitude, c.longitude, c."normalizedCity"
-    ORDER BY (COUNT(DISTINCT CASE WHEN uc."userId" = ${userId || ""} THEN uc.id END) * 100 + COUNT(DISTINCT uc.id)) DESC
-    LIMIT ${limit}
-  `
+  type DbVenueRow = {
+    venue: string
+    latitude: number
+    longitude: number
+    normalizedCity: string | null
+    user_count: bigint
+    similarity: number
+  }
 
-  return results.map((row) => {
-    const userVisitCount = Number(row.user_count)
-    const globalCount = Number(row.global_count)
-    const isUserVenue = userVisitCount > 0
+  function mapResults(results: DbVenueRow[]): EnhancedVenueResult[] {
+    return results.map((row) => {
+      const userVisitCount = Number(row.user_count)
+      const similarityBonus = Math.round(Number(row.similarity) * 50)
 
-    // Calculate score: user visits weighted heavily + global popularity
-    const score = 50 + userVisitCount * 100 + globalCount + (isUserVenue ? 100 : 0)
+      const score = 150 + userVisitCount * 100 + similarityBonus
 
-    return {
-      name: row.venue,
-      displayName: row.normalizedCity
-        ? `${row.venue}, ${row.normalizedCity}`
-        : row.venue,
-      lat: row.latitude,
-      lon: row.longitude,
-      city: row.normalizedCity || undefined,
-      source: "database" as VenueSource,
-      isUserVenue,
-      userVisitCount: isUserVenue ? userVisitCount : undefined,
-      score,
-    }
-  })
+      return {
+        name: row.venue,
+        displayName: row.normalizedCity
+          ? `${row.venue}, ${row.normalizedCity}`
+          : row.venue,
+        lat: row.latitude,
+        lon: row.longitude,
+        city: row.normalizedCity || undefined,
+        source: "database" as VenueSource,
+        isUserVenue: true,
+        userVisitCount,
+        score,
+      }
+    })
+  }
+
+  // Try fuzzy matching first (requires pg_trgm extension).
+  // Falls back to ILIKE-only if pg_trgm is not available.
+  try {
+    const results = await prisma.$queryRaw<DbVenueRow[]>`
+      SELECT
+        c.venue,
+        c.latitude,
+        c.longitude,
+        c."normalizedCity",
+        COUNT(DISTINCT uc.id) as user_count,
+        word_similarity(${query}, c.venue) as similarity
+      FROM concert c
+      JOIN user_concert uc ON uc."concertId" = c.id
+      WHERE c.venue IS NOT NULL
+        AND uc."userId" = ${userId}
+        AND (
+          c.venue ILIKE ${"%" + query + "%"}
+          OR word_similarity(${query}, c.venue) > ${0.3}
+        )
+      GROUP BY c.venue, c.latitude, c.longitude, c."normalizedCity"
+      ORDER BY
+        CASE WHEN c.venue ILIKE ${"%" + query + "%"} THEN 0 ELSE 1 END,
+        word_similarity(${query}, c.venue) DESC,
+        COUNT(DISTINCT uc.id) DESC
+      LIMIT ${limit}
+    `
+    return mapResults(results)
+  } catch {
+    // word_similarity() failed — pg_trgm extension likely not available.
+    // Fall back to ILIKE-only query so database results still appear.
+  }
+
+  try {
+    const results = await prisma.$queryRaw<DbVenueRow[]>`
+      SELECT
+        c.venue,
+        c.latitude,
+        c.longitude,
+        c."normalizedCity",
+        COUNT(DISTINCT uc.id) as user_count,
+        0::float as similarity
+      FROM concert c
+      JOIN user_concert uc ON uc."concertId" = c.id
+      WHERE c.venue IS NOT NULL
+        AND uc."userId" = ${userId}
+        AND c.venue ILIKE ${"%" + query + "%"}
+      GROUP BY c.venue, c.latitude, c.longitude, c."normalizedCity"
+      ORDER BY COUNT(DISTINCT uc.id) DESC
+      LIMIT ${limit}
+    `
+    return mapResults(results)
+  } catch (error) {
+    Sentry.captureException(error, {
+      extra: { userId: userId || "anonymous", limit },
+    })
+    console.error("Database venue search failed")
+    return []
+  }
 }
 
 /**

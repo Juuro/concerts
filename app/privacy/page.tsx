@@ -168,6 +168,9 @@ export default function PrivacyPage() {
                   <li>
                     <strong>Photon (OpenStreetMap):</strong> Venue search and
                     reverse geocoding (only venue/city-related data).
+                    Approximate geographic coordinates derived from your IP
+                    address may be used to bias venue search results toward
+                    your location. This data is not stored.
                   </li>
                   <li>
                     <strong>Map tiles:</strong> Map tiles may be loaded from

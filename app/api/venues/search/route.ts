@@ -86,6 +86,19 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Fallback: use Vercel's IP-based geolocation headers when no explicit
+  // coordinates were provided. These are injected automatically in production.
+  // Coordinates are used transiently for result biasing only — never stored or logged (GDPR).
+  if (lat === undefined && lon === undefined) {
+    const geoLat = parseFloat(request.headers.get("x-vercel-ip-latitude") || "")
+    const geoLon = parseFloat(request.headers.get("x-vercel-ip-longitude") || "")
+    if (!isNaN(geoLat) && geoLat >= -90 && geoLat <= 90 &&
+        !isNaN(geoLon) && geoLon >= -180 && geoLon <= 180) {
+      lat = geoLat
+      lon = geoLon
+    }
+  }
+
   // Get authenticated user (optional - for personalized results)
   let userId: string | undefined
   try {

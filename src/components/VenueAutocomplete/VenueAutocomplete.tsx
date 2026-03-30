@@ -90,6 +90,32 @@ export default function VenueAutocomplete({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  const renderPredictiveText = (venueName: string) => {
+    const lowerSearch = searchTerm.toLowerCase()
+    const lowerName = venueName.toLowerCase()
+    const matchIndex = lowerName.indexOf(lowerSearch)
+
+    if (matchIndex === -1) {
+      return <span className="venue-autocomplete__prediction">{venueName}</span>
+    }
+
+    const beforeMatch = venueName.slice(0, matchIndex)
+    const match = venueName.slice(matchIndex, matchIndex + searchTerm.length)
+    const afterMatch = venueName.slice(matchIndex + searchTerm.length)
+
+    return (
+      <>
+        {beforeMatch && (
+          <span className="venue-autocomplete__prediction">{beforeMatch}</span>
+        )}
+        <span className="venue-autocomplete__match">{match}</span>
+        {afterMatch && (
+          <span className="venue-autocomplete__prediction">{afterMatch}</span>
+        )}
+      </>
+    )
+  }
+
   const handleSelect = useCallback(
     (result: EnhancedVenueResult) => {
       setSearchTerm(result.name)
@@ -218,7 +244,9 @@ export default function VenueAutocomplete({
               onMouseEnter={() => setHighlightedIndex(index)}
             >
               <div className="venue-autocomplete__item-name">
-                {result.name}
+                <span className="venue-autocomplete__item-name-text">
+                  {renderPredictiveText(result.name)}
+                </span>
                 <span className={`venue-autocomplete__source-badge venue-autocomplete__source-badge--${result.source}`}>
                   {result.source.charAt(0).toUpperCase() + result.source.slice(1)}
                 </span>

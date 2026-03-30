@@ -109,12 +109,23 @@
   }
 
   &__item-name {
-    font-weight: 600;
     margin-bottom: 0.25rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+  }
+
+  &__item-name-text {
+    display: inline-block;
+  }
+
+  &__match {
+    font-weight: 400;
+  }
+
+  &__prediction {
+    font-weight: 700;
   }
 
   &__visited-badge {
