@@ -1298,10 +1298,10 @@ async function getConcertsPaginatedForUserByBand(
   type Row = { id: string }
 
   // For backward direction with cursor, include the cursor concert (don't skip)
-  const shouldSkipCursor = cursor && direction === "forward"
+  const shouldSkipCursor = direction === "forward"
 
   // Get cursor's concert date for keyset pagination
-  // Use Concert.id (not UserConcert.id) for cursor consistency with URLs
+  // Cursor from URL is Concert.id - get its date for the SQL comparison
   let cursorDate: Date | null = null
   if (cursor) {
     const concert = await prisma.concert.findUnique({
@@ -1321,6 +1321,7 @@ async function getConcertsPaginatedForUserByBand(
       : Prisma.empty
 
   const isForward = direction === "forward"
+  // For backward with cursor, use >= to include cursor concert (not skip it)
   const cursorClause =
     cursor && cursorDate
       ? isForward
@@ -1369,9 +1370,12 @@ async function getConcertsPaginatedForUserByBand(
 
   // Fetch full UserConcert records with concert data
   // Must maintain the same order as the raw SQL query (ordered by concert.id)
-  const idToIndex = new Map(ids.map((id, index) => [id, index]))
+  const orderMap = new Map(ids.map((id, i) => [id, i]))
   const userConcerts = await prisma.userConcert.findMany({
-    where: { concert: { id: { in: ids } } },
+    where: {
+      userId: filters.userId!,
+      concertId: { in: ids },
+    },
     include: {
       concert: {
         include: {
@@ -1386,9 +1390,8 @@ async function getConcertsPaginatedForUserByBand(
     },
   })
 
-  // Sort by concert.id order from SQL query (not userConcert.id)
-  const orderMap = new Map(ids.map((id, i) => [id, i]))
-  userConcerts.sort((a, b) => orderMap.get(a.concert.id)! - orderMap.get(b.concert.id)!)
+  // Sort by concert.id order from SQL query (concert.id, not userConcert.id)
+  userConcerts.sort((a, b) => orderMap.get(a.concertId)! - orderMap.get(b.concertId)!)
 
   const hasExtra = userConcerts.length > limit
   const items = hasExtra ? userConcerts.slice(0, limit) : userConcerts
@@ -1488,12 +1491,30 @@ async function getConcertsPaginatedForUser(
   // This fixes the bug where visiting a URL with cursor parameter loads no concerts
   const shouldSkipCursor = cursor && direction === "forward"
 
+  // Convert Concert.id cursor (from URL) to UserConcert.id if needed
+  // The cursor from URL is Concert.id, but we query UserConcert table
+  let userConcertCursor = cursor
+  if (cursor) {
+    const uc = await prisma.userConcert.findFirst({
+      where: {
+        userId: filters.userId,
+        concertId: cursor,
+      },
+      select: { id: true },
+    })
+    if (uc) {
+      userConcertCursor = uc.id
+    } else {
+      // Cursor concert not in user's list - treat as invalid cursor
+      userConcertCursor = undefined
+    }
+  }
+
   // Query UserConcert to get user's attended concerts
-  // Use concert.id for cursor (not userConcert.id) for consistency with URL cursors
   const userConcerts = await prisma.userConcert.findMany({
     take,
-    ...(cursor && {
-      cursor: { concert: { id: cursor } },
+    ...(userConcertCursor && {
+      cursor: { id: userConcertCursor },
       skip: shouldSkipCursor ? 1 : 0,
     }),
     where,
@@ -1509,8 +1530,7 @@ async function getConcertsPaginatedForUser(
         },
       },
     },
-    // Order by concert.date DESC, concert.id DESC for stable cursor pagination
-    orderBy: [{ concert: { date: "desc" } }, { concert: { id: "desc" } }],
+    orderBy: [{ concert: { date: "desc" } }, { id: "desc" }],
   })
 
   // For backward direction, reverse to maintain consistent order
@@ -1531,7 +1551,7 @@ async function getConcertsPaginatedForUser(
     items: await transformConcertsBatch(
       items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
-    // Return concert.id (not userConcert.id) for cursor consistency with URLs
+    // Return Concert.id for cursor (URL uses Concert.id, we convert to UserConcert.id on next request)
     nextCursor:
       direction === "forward" && hasExtra
         ? items[items.length - 1].concert.id
