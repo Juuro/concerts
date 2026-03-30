@@ -26,7 +26,7 @@ function loadDotEnvFile() {
 function parseBoolean(value, defaultValue = false) {
   if (value === undefined || value === null) return defaultValue;
   const normalized = String(value).toLowerCase().trim();
-me  return normalized === 'true' || normalized === '1' || normalized === 'yes';
+  return normalized === 'true' || normalized === '1' || normalized === 'yes';
 }
 
 function sleep(ms) {
