@@ -232,7 +232,7 @@ export default function VenueAutocomplete({
         >
           {results.map((result, index) => (
             <button
-              key={`${result.lat}-${result.lon}-${index}`}
+              key={result.osmId != null ? `osm:${result.osmId}` : `${result.source}:${result.name}:${result.lat}:${result.lon}`}
               type="button"
               role="option"
               id={`venue-option-${index}`}
