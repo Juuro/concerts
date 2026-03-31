@@ -23,18 +23,26 @@
     "standard-version": "^9.5.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.10.2",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/ui": "^2.1.8",
     "eslint": "^9.20.0",
     "eslint-config-next": "^16.1.6",
+    "jsdom": "^25.0.1",
     "prettier": "^3.5.3",
     "puppeteer": "^24.38.0",
     "sass": "^1.97.3",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.8"
   },
   "keywords": [
     "nextjs",
@@ -48,6 +56,9 @@
     "format": "prettier --write ./src/**/*.{js,jsx,ts,tsx,scss}",
     "lint": "eslint .",
     "release": "standard-version",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
