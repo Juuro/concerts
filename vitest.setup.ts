@@ -15,3 +15,67 @@ vi.mock('next/link', () => ({
     return React.createElement('a', { href, className, ...props }, children);
   },
 }));
+
+// Mock Prisma client for database operations
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    concert: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+      groupBy: vi.fn(),
+      $queryRaw: vi.fn(),
+    },
+    band: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    festival: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+    },
+    userConcert: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    concertBand: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      groupBy: vi.fn(),
+      count: vi.fn(),
+    },
+    $transaction: vi.fn((callback) => callback(this.prisma)),
+    $queryRaw: vi.fn(),
+  },
+}));
+
+// Mock external utility functions
+vi.mock('@/utils/data', () => ({
+  getGeocodingData: vi.fn().mockResolvedValue({
+    _normalized_city: 'Berlin',
+  }),
+}));
+
+vi.mock('@/utils/helpers', () => ({
+  cityToSlug: vi.fn((city: string) => city.toLowerCase().replace(/\s+/g, '-')),
+}));
