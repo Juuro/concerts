@@ -218,6 +218,8 @@ Next.js `Image` and `Link` components are automatically mocked in `vitest.setup.
 
 **CRITICAL:** Never use production user data or real PII in test fixtures. This is a **MANDATORY** requirement for all tests.
 
+That does **not** mean every string must be generic: recognizable **public** band, city, or venue names in fully synthetic mocks (e.g. the Last.fm and `ConcertCard` examples above) are fine—they are not personal data when they are not copied from production and do not stand in for a real individual. User-shaped fields (email, name, notes, private location tied to a persona in the test) must stay anonymized; see **Rules** (item 3).
+
 ### Anonymized Test Data Examples
 
 ```typescript
@@ -298,7 +300,7 @@ vi.stubEnv('LASTFM_API_KEY', process.env.LASTFM_API_KEY);
 
 1. **Always use test email domains**: `test.example.com`, `example.com`
 2. **Use mock UUIDs**: `550e8400-e29b-41d4-a716-446655440000` (not production UUIDs)
-3. **Generic names**: "Test User", "Test Band", "Test Venue"
+3. **Separate user data from illustrative labels**: For **users and attendance** (emails, display names, notes, venues/costs tied to a real person in the scenario), use anonymized values—e.g. "Test User", `user-*@test.example.com`, "Test Venue" when you mean a private fixture. **Public** band names, city names, or venue names that only label shared/catalog data (like examples elsewhere in this doc) are not personal data under GDPR; using recognizable names for readability is fine as long as fixtures are not copied from production and do not identify a real individual.
 4. **Mock all external APIs**: No real API calls to Last.fm, Photon, MusicBrainz
 5. **Public coordinates only**: Use well-known landmarks (Berlin: 52.52, 13.405)
 
@@ -306,8 +308,8 @@ vi.stubEnv('LASTFM_API_KEY', process.env.LASTFM_API_KEY);
 
 Before merging tests, verify:
 
-- [ ] Test fixtures use anonymized data (`@test.example.com` emails, mock IDs)
-- [ ] No real band names, venue names, or personal data in test fixtures
+- [ ] Test fixtures use anonymized data (`@test.example.com` emails, mock IDs) and are not copied from production
+- [ ] No PII in fixtures: no real people's names or emails, no production user rows, no data that identifies a specific natural person
 - [ ] Functions that return raw user data have JSDoc documenting privacy flag responsibility
 - [ ] API route tests verify privacy flag filtering (if applicable)
 - [ ] No PII in test logs: log only IDs, never names/emails/locations
@@ -339,7 +341,7 @@ Mock data must include full Prisma relation types to prevent runtime errors. If 
 
 #### Mock Data Factories with Full Relations
 
-Use Prisma's `$ConcertGetPayload` utility type to ensure mock data matches production types:
+Use Prisma's `Prisma.ConcertGetPayload` utility type to ensure mock data matches production types:
 
 ```typescript
 import { vi } from 'vitest';

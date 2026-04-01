@@ -17,8 +17,8 @@ vi.mock('next/link', () => ({
 }));
 
 // Mock Prisma client for database operations
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
+vi.mock('@/lib/prisma', () => {
+  const prismaModels = {
     concert: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -28,22 +28,31 @@ vi.mock('@/lib/prisma', () => ({
       delete: vi.fn(),
       count: vi.fn(),
       groupBy: vi.fn(),
-      $queryRaw: vi.fn(),
     },
     band: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+      deleteMany: vi.fn(),
     },
     festival: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
+      deleteMany: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      count: vi.fn(),
     },
     userConcert: {
       findMany: vi.fn(),
@@ -64,10 +73,24 @@ vi.mock('@/lib/prisma', () => ({
       groupBy: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback(this.prisma)),
+  };
+
+  const prismaMock = {
+    ...prismaModels,
     $queryRaw: vi.fn(),
-  },
-}));
+    $transaction: vi.fn((arg: unknown) => {
+      if (typeof arg === 'function') {
+        return Promise.resolve(arg(prismaMock));
+      }
+      if (Array.isArray(arg)) {
+        return Promise.all(arg);
+      }
+      return Promise.resolve(undefined);
+    }),
+  };
+
+  return { prisma: prismaMock };
+});
 
 // Mock external utility functions
 vi.mock('@/utils/data', () => ({
