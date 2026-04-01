@@ -14,10 +14,11 @@ const mockGetInfo = vi.fn((params: { artist: string; autocorrect?: 0 | 1 }, call
   });
 });
 
+// Vitest 4+ requires a real `function` (or class) when code uses `new` on the mock.
 vi.mock('lastfm-ts-api', () => ({
-  LastFMArtist: vi.fn().mockImplementation(() => ({
-    getInfo: mockGetInfo,
-  })),
+  LastFMArtist: vi.fn(function LastFMArtist(_apiKey: string, _secret?: string) {
+    return { getInfo: mockGetInfo };
+  }),
 }));
 
 // Import after mocking
@@ -26,11 +27,15 @@ const { getArtistInfo } = await import('../lastfm');
 describe('lastfm', () => {
   describe('getArtistInfo', () => {
     beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.unstubAllEnvs();
       mockGetInfo.mockClear();
     });
 
     afterEach(() => {
+      vi.mocked(console.warn).mockRestore();
+      vi.mocked(console.error).mockRestore();
       vi.unstubAllEnvs();
     });
 
