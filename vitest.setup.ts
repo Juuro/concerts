@@ -120,8 +120,3 @@ vi.mock('@/utils/data', () => ({
     _normalized_city: 'Berlin',
   }),
 }));
-
-vi.mock('@/utils/helpers', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utils/helpers')>();
-  return { ...actual };
-});
