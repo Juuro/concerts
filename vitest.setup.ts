@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom/vitest';
+import type { ImageProps } from 'next/image';
 import { vi } from 'vitest';
 import React from 'react';
 
 // Mock Next.js Image component (strip Next-only props so React does not forward invalid DOM attributes)
 vi.mock('next/image', () => ({
-  default: (props: Record<string, unknown>) => {
+  default: (props: ImageProps) => {
     const {
       fill: _f,
       priority: _p,
@@ -14,11 +15,18 @@ vi.mock('next/image', () => ({
       loader: _l,
       quality: _q,
       unoptimized: _u,
+      preload: _preload,
+      overrideSrc: _overrideSrc,
+      layout: _layout,
+      objectFit: _objectFit,
+      objectPosition: _objectPosition,
+      lazyBoundary: _lazyBoundary,
+      lazyRoot: _lazyRoot,
       ...imgProps
     } = props;
     return React.createElement('img', {
-      ...imgProps,
-      alt: (props.alt as string) || '',
+      ...(imgProps as React.ImgHTMLAttributes<HTMLImageElement>),
+      alt: props.alt ?? '',
     });
   },
 }));
