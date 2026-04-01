@@ -17,6 +17,7 @@ export default defineConfig({
         'out/',
         '**/*.config.*',
         '**/*.setup.*',
+        '**/*.test.*',
         '**/types/**',
         '**/__tests__/**',
       ],

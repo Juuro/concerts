@@ -216,7 +216,9 @@ Next.js `Image` and `Link` components are automatically mocked in `vitest.setup.
 
 ## GDPR Compliance in Tests
 
-**CRITICAL:** Never use production user data or real PII in test fixtures.
+**CRITICAL:** Never use production user data or real PII in test fixtures. This is a **MANDATORY** requirement for all tests.
+
+That does **not** mean every string must be generic: recognizable **public** band, city, or venue names in fully synthetic mocks (e.g. the Last.fm and `ConcertCard` examples above) are fine—they are not personal data when they are not copied from production and do not stand in for a real individual. User-shaped fields (email, name, notes, private location tied to a persona in the test) must stay anonymized; see **Rules** (item 3).
 
 ### Anonymized Test Data Examples
 
@@ -241,6 +243,49 @@ const mockUser = {
 };
 ```
 
+### Privacy Flag Responsibility
+
+**IMPORTANT**: Functions in `src/lib/concerts.ts` return RAW data. Privacy flag filtering (`hideLocationPublic`, `hideCostPublic`, `isPublic`) is the **CALLER'S responsibility** (API routes, components, pages).
+
+When documenting or testing functions that return user-related data, use this JSDoc pattern:
+
+```typescript
+/**
+ * Returns concerts with full location and cost data.
+ *
+ * **GDPR:** Caller must apply privacy flags before exposing to users:
+ * - If hideLocationPublic: exclude venue, latitude, longitude
+ * - If hideCostPublic: exclude cost field
+ * - If !isPublic: exclude entire user data from public endpoints
+ */
+export async function getUserConcerts(userId: string) {
+  // Raw data returned - no filtering
+}
+```
+
+### Example Privacy Flag Test
+
+When testing API routes or components that consume concerts data, verify privacy filtering:
+
+```typescript
+it('test_publicProfile_respects_hideLocationPublic', async () => {
+  const user = {
+    id: 'test-user-1',
+    hideLocationPublic: true,
+    isPublic: true
+  };
+
+  const concert = mockConcert();
+
+  // API route should filter location fields
+  const response = filterForPublicProfile(concert, user);
+
+  expect(response.venue).toBeUndefined();
+  expect(response.city.lat).toBeUndefined();
+  expect(response.city.lon).toBeUndefined();
+});
+```
+
 ### API Key Handling
 
 ```typescript
@@ -255,9 +300,21 @@ vi.stubEnv('LASTFM_API_KEY', process.env.LASTFM_API_KEY);
 
 1. **Always use test email domains**: `test.example.com`, `example.com`
 2. **Use mock UUIDs**: `550e8400-e29b-41d4-a716-446655440000` (not production UUIDs)
-3. **Generic names**: "Test User", "Test Band", "Test Venue"
+3. **Separate user data from illustrative labels**: For **users and attendance** (emails, display names, notes, venues/costs tied to a real person in the scenario), use anonymized values—e.g. "Test User", `user-*@test.example.com`, "Test Venue" when you mean a private fixture. **Public** band names, city names, or venue names that only label shared/catalog data (like examples elsewhere in this doc) are not personal data under GDPR; using recognizable names for readability is fine as long as fixtures are not copied from production and do not identify a real individual.
 4. **Mock all external APIs**: No real API calls to Last.fm, Photon, MusicBrainz
 5. **Public coordinates only**: Use well-known landmarks (Berlin: 52.52, 13.405)
+
+### GDPR Compliance Checklist
+
+Before merging tests, verify:
+
+- [ ] Test fixtures use anonymized data (`@test.example.com` emails, mock IDs) and are not copied from production
+- [ ] No PII in fixtures: no real people's names or emails, no production user rows, no data that identifies a specific natural person
+- [ ] Functions that return raw user data have JSDoc documenting privacy flag responsibility
+- [ ] API route tests verify privacy flag filtering (if applicable)
+- [ ] No PII in test logs: log only IDs, never names/emails/locations
+- [ ] No real API keys in test environment
+- [ ] All external APIs mocked (Last.fm, Photon, MusicBrainz)
 
 ## Mocking Strategies
 
@@ -276,17 +333,273 @@ vi.stubEnv('ENV_VAR_NAME', 'value');
 vi.unstubAllEnvs(); // Clean up in afterEach
 ```
 
-### Prisma Client Mocking (for future API route tests)
+### Prisma Client Mocking (CRITICAL)
+
+**IMPORTANT:** The Prisma client is globally mocked in `vitest.setup.ts`. Individual tests must provide realistic mock return values using `vi.mocked()`.
+
+Mock data must include full Prisma relation types to prevent runtime errors. If your mock returns generic objects without nested relations (`bands[]`, `festival`, `attendees[]`, `_count`), tests will pass but production code will crash on property access.
+
+#### Mock Data Factories with Full Relations
+
+Use Prisma's `Prisma.ConcertGetPayload` utility type to ensure mock data matches production types:
 
 ```typescript
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    concert: {
-      findMany: vi.fn().mockResolvedValue([]),
-      create: vi.fn().mockResolvedValue(mockConcert),
-    },
-  },
-}));
+import { vi } from 'vitest';
+import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma/client';
+
+// Mock Concert with full relations
+const mockConcert = (): Prisma.ConcertGetPayload<{
+  include: {
+    bands: { include: { band: true } }
+    festival: true
+    attendees: true
+    _count: { select: { attendees: true } }
+  }
+}> => ({
+  id: 'concert-1',
+  date: new Date('2025-01-01'),
+  latitude: 52.5,
+  longitude: 13.4,
+  venue: 'Test Venue',
+  normalizedCity: 'Berlin',
+  isFestival: false,
+  festivalId: null,
+  createdById: 'test-user-1',
+  updatedById: 'test-user-1',
+  bands: [{
+    id: 'cb-1',
+    concertId: 'concert-1',
+    bandId: 'band-1',
+    isHeadliner: true,
+    sortOrder: 0,
+    band: mockBand()
+  }],
+  festival: null,
+  attendees: [{
+    id: 'uc-1',
+    userId: 'test-user-1',
+    concertId: 'concert-1',
+    cost: '50.00',
+    notes: 'Great show',
+    supportingActIds: []
+  }],
+  _count: { attendees: 1 }
+});
+
+// Mock Band
+const mockBand = (): Prisma.BandGetPayload<{}> => ({
+  id: 'band-1',
+  name: 'Test Band A',
+  slug: 'test-band-a',
+  imageUrl: null,
+  imageEnrichedAt: null,
+  lastfmUrl: null,
+  websiteUrl: null,
+  genres: [],
+  bio: null,
+  createdById: 'test-user-1',
+  updatedById: 'test-user-1'
+});
+
+// Use in tests
+it('test_getConcertById_returns_transformed_concert', async () => {
+  vi.mocked(prisma.concert.findUnique).mockResolvedValue(mockConcert());
+
+  const result = await getConcertById('concert-1');
+
+  expect(result).toBeDefined();
+  expect(result?.id).toBe('concert-1');
+  expect(result?.bands[0].name).toBe('Test Band A'); // Safe property access
+});
+```
+
+#### Resetting Mocks Between Tests
+
+Always reset mocks between tests to prevent state bleeding:
+
+```typescript
+import { beforeEach, vi } from 'vitest';
+
+beforeEach(() => {
+  vi.clearAllMocks(); // Clears call history and mock implementations
+});
+```
+
+## concerts.ts Test Patterns
+
+The `src/lib/concerts.ts` file contains 25+ exported functions covering CRUD operations, pagination, filtering, statistics, and duplicate detection. Tests for this file should follow these patterns:
+
+### Authorization Testing (Attendance-Based)
+
+**CRITICAL**: Authorization checks verify **ATTENDANCE**, not ownership. In the multi-tenant model, concerts are shared entities. Authorization checks verify whether a user attended a concert before allowing updates/deletes.
+
+```typescript
+import { vi } from 'vitest';
+import { prisma } from '@/lib/prisma';
+import { updateConcert } from '@/lib/concerts';
+
+it('test_updateConcert_with_non_attendee_returns_null', async () => {
+  // User A attended the concert
+  const attendance = {
+    id: 'uc-1',
+    userId: 'user-A',
+    concertId: 'concert-1',
+    cost: '50.00',
+    notes: null,
+    supportingActIds: []
+  };
+  vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(attendance);
+
+  // User B tries to update concert that user A attended
+  const result = await updateConcert('concert-1', 'user-B', { venue: 'New Venue' });
+
+  // This test MUST FAIL if attendance check is removed or bypassed
+  expect(result).toBeNull();
+});
+```
+
+**Test Coverage Requirements**:
+1. Non-attendee cannot update concert (returns null)
+2. Non-attendee cannot delete concert (returns false)
+3. Single attendee can update concert in place
+4. Multiple attendees trigger fork logic on core field changes
+
+### Fork Logic Testing
+
+Multi-tenant fork logic triggers when:
+- Concert has multiple attendees (`_count.attendees > 1`)
+- User modifies a core field (date, venue, latitude/longitude, headliner)
+
+When fork logic triggers:
+1. New concert is created with the user's changes
+2. User is removed from the original concert's attendees
+3. Original concert is deleted if orphaned (no remaining attendees)
+4. User's cost/notes are preserved in the new concert
+
+```typescript
+it('test_updateConcert_multi_attendee_forks_on_venue_change', async () => {
+  // Concert with 2 attendees
+  const concert = mockConcert();
+  concert._count.attendees = 2;
+
+  vi.mocked(prisma.concert.findUnique).mockResolvedValue(concert);
+  vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    return await callback(prisma);
+  });
+
+  // User updates venue (core field change)
+  const result = await updateConcert('concert-1', 'user-A', { venue: 'New Venue' });
+
+  // Verify fork behavior
+  expect(prisma.concert.create).toHaveBeenCalledWith({
+    data: expect.objectContaining({
+      venue: 'New Venue'
+    })
+  });
+  expect(prisma.userConcert.delete).toHaveBeenCalled();
+});
+```
+
+### Pagination Testing
+
+Pagination uses cursor-based logic where the cursor is the `Concert.id` of the last item in the current page. Results are ordered by `date` descending and then `id` descending.
+
+**Test Coverage Requirements**:
+- Default pagination (no cursor, newest concerts first)
+- Forward pagination using `nextCursor` (date DESC, id DESC)
+- Backward pagination using `prevCursor` (date DESC, id DESC)
+- Invalid cursor handling (malformed or non-existent IDs) — tests should assert behavior consistent with `getConcertsPaginated` in `src/lib/concerts.ts` without hard-coding assumptions that may change
+- Filter combinations (userId, bandSlug, city, year)
+
+```typescript
+it('test_getConcertsPaginated_forward_pagination', async () => {
+  const concerts = [
+    mockConcert({ id: 'c1', date: new Date('2025-01-02') }),
+    mockConcert({ id: 'c2', date: new Date('2025-01-01') })
+  ];
+
+  vi.mocked(prisma.concert.findMany).mockResolvedValue(concerts);
+
+  // getConcertsPaginated(cursor?, limit?, direction?, filters?)
+  const result = await getConcertsPaginated(
+    undefined,     // cursor
+    20,            // limit
+    'forward',     // direction
+    undefined      // filters
+  );
+
+  expect(result.concerts).toHaveLength(2);
+  expect(result.nextCursor).toBeDefined();
+});
+```
+
+### Statistics Testing
+
+Statistics functions use `unstable_cache` for performance. Tests should verify cache behavior and aggregation logic.
+
+```typescript
+it('test_getConcertStatistics_aggregates_correctly', async () => {
+  const concerts = [
+    mockConcert({ date: new Date('2024-01-01'), normalizedCity: 'Berlin' }),
+    mockConcert({ date: new Date('2024-01-15'), normalizedCity: 'Berlin' }),
+    mockConcert({ date: new Date('2025-01-01'), normalizedCity: 'Munich' })
+  ];
+
+  vi.mocked(prisma.concert.findMany).mockResolvedValue(concerts);
+
+  const stats = await getConcertStatistics();
+
+  // Verify top years, cities, bands
+  expect(stats.topYears).toContainEqual({ year: 2024, count: 2 });
+  expect(stats.topCities).toContainEqual({ city: 'Berlin', count: 2 });
+});
+```
+
+### Duplicate Detection Testing
+
+Duplicate detection uses `COORD_TOLERANCE` (0.001 degrees ≈ 100m) to match concerts by:
+- Same date
+- Same location (within tolerance)
+- Same headliner
+
+```typescript
+it('test_findMatchingConcert_within_tolerance', async () => {
+  const existingConcert = mockConcert({
+    date: new Date('2025-01-01'),
+    latitude: 52.5200,
+    longitude: 13.4050
+  });
+
+  const newConcert = {
+    date: new Date('2025-01-01'),
+    latitude: 52.5205, // Within 0.001 tolerance
+    longitude: 13.4055
+  };
+
+  const match = await findMatchingConcert(newConcert, 'test-user-1');
+
+  expect(match).toBeDefined();
+  expect(match?.id).toBe(existingConcert.id);
+});
+
+it('test_findMatchingConcert_outside_tolerance_returns_null', async () => {
+  const existingConcert = mockConcert({
+    date: new Date('2025-01-01'),
+    latitude: 52.5200,
+    longitude: 13.4050
+  });
+
+  const newConcert = {
+    date: new Date('2025-01-01'),
+    latitude: 52.5300, // Outside 0.001 tolerance
+    longitude: 13.4050
+  };
+
+  const match = await findMatchingConcert(newConcert, 'test-user-1');
+
+  expect(match).toBeNull();
+});
 ```
 
 ## Common Gotchas
@@ -348,12 +661,75 @@ it('test_getConcertsByBand_filters_correctly', async () => {
 
 ## Coverage Goals
 
-- **New code**: Aim for 80%+ line coverage
-- **Pure functions**: Should reach 100% coverage
-- **Complex async logic**: 85%+ coverage
+- **Target**: 80% lines, 80% branches, 80% functions
+- **Pure functions**: Should reach 100% coverage (easy to test)
+- **Complex async logic**: 85%+ coverage (CRUD, fork logic, pagination)
 - **React components**: 80%+ coverage
 
-Coverage thresholds are enforced in `vitest.config.ts`. Tests will fail if coverage drops below 80%.
+**Important**: Coverage thresholds in `vitest.config.ts` use `autoUpdate: true`, meaning thresholds adjust automatically based on current coverage. As the codebase grows, coverage targets will be enforced more strictly.
+
+Focus on **branch coverage**, not just line coverage. A function with high line coverage but low branch coverage indicates missing error path or edge case tests.
+
+## Known Limitations
+
+These items are out of scope for unit tests and documented as tech debt for future improvement:
+
+### Error Handling
+
+- **Geocoding failures**: Unit tests mock successful geocoding. API-level error handling is tested in integration tests.
+- **Prisma transaction deadlocks**: Unit tests mock successful transactions. Retry logic is tested in integration tests.
+- **Query timeouts**: Unit tests don't use real database connections. Timeout behavior is tested in E2E tests.
+
+### Resilience
+
+- **Retry logic**: Not present in `concerts.ts`. Considered follow-up work.
+- **Circuit breakers**: Not present. External API calls (Last.fm, Photon) should implement circuit breakers at the API client level.
+
+### Cache Invalidation
+
+- **`revalidateTag` behavior**: Unit tests cannot verify Next.js cache invalidation. This is tested in E2E tests by verifying page content updates after mutations.
+
+### Observability
+
+- **Logging**: No structured logging in `concerts.ts`. This is a HIGH priority tech debt item. Future work should add structured logging to entry/exit points of public functions:
+  - Operation name (e.g., `concert.create.started`)
+  - Entity IDs (concertId, userId - never names or emails)
+  - Status (success/error)
+  - Duration (optional)
+
+## Coverage Requirements
+
+### Target Coverage
+
+- **Line coverage**: 80%
+- **Branch coverage**: 80%
+- **Function coverage**: 80%
+
+Run `yarn test:coverage` and review the HTML report in `coverage/index.html` to identify uncovered lines and branches.
+
+### Enforcement
+
+Every exported function must have minimum **3 test cases**:
+
+1. **Happy path**: Valid input returns expected output
+2. **Error/null case**: Invalid input returns null or throws error
+3. **Edge case**: Boundary condition (empty array, null values, limit bounds)
+
+### Coverage Report Review
+
+When reviewing coverage reports, focus on **BRANCHES**, not just lines:
+
+- A function can have high line coverage but low branch coverage if only happy paths are tested
+- The HTML report highlights untested branches in yellow/red
+- Add tests for uncovered branches or document why they are unreachable
+
+Example review checklist:
+
+- [ ] All exported functions have ≥3 test cases
+- [ ] All conditional branches (`if`/`else`) are covered
+- [ ] Error paths are tested (null returns, exceptions thrown)
+- [ ] Edge cases are tested (empty arrays, boundary values)
+- [ ] Complex functions (fork logic, pagination) have dedicated test suites
 
 ## Troubleshooting
 
