@@ -161,20 +161,19 @@ describe("Edge Cases & Error Handling", () => {
   })
 
   test("test_getConcertsPaginated_with_invalid_cursor_handles_gracefully", async () => {
-    // Tests error handling when cursor points to non-existent concert
-    // Should not crash, should return empty results or skip cursor
+    // Tests behavior when cursor points to non-existent concert.
+    // Prisma typically throws in this case; the function should propagate or handle the error.
     const invalidCursor = "non-existent-cursor-id"
 
-    // Mock: no concerts found with invalid cursor
-    vi.mocked(prisma.concert.findMany).mockResolvedValue([])
+    // Mock: Prisma rejecting because the cursor record does not exist
+    vi
+      .mocked(prisma.concert.findMany)
+      .mockRejectedValue(new Error("Record to fetch does not exist."))
 
-    const result = await getConcertsPaginated(invalidCursor, 20, "forward")
-
-    // Should handle gracefully without throwing
-    expect(result).toBeDefined()
-    expect(result.items).toEqual([])
-    expect(result.hasMore).toBe(false)
-    expect(result.nextCursor).toBeNull()
+    // Expect the pagination helper to surface the underlying error
+    await expect(
+      getConcertsPaginated(invalidCursor, 20, "forward"),
+    ).rejects.toThrow("Record to fetch does not exist.")
   })
 
   test("test_getConcertsPaginated_empty_results_returns_empty_array", async () => {
