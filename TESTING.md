@@ -503,28 +503,31 @@ it('test_updateConcert_multi_attendee_forks_on_venue_change', async () => {
 
 ### Pagination Testing
 
-Pagination uses cursor-based logic with the format: `${date.toISOString()}_${id}`.
+Pagination uses cursor-based logic where the cursor is the `Concert.id` of the last item in the current page. Results are ordered by `date` descending and then `id` descending.
 
 **Test Coverage Requirements**:
-- Forward pagination (date ASC, id ASC)
-- Backward pagination (date DESC, id DESC)
-- Invalid cursor handling (malformed string, returns empty array)
-- Limit clamping (max 100 to prevent resource exhaustion)
+- Default pagination (no cursor, newest concerts first)
+- Forward pagination using `nextCursor` (date DESC, id DESC)
+- Backward pagination using `prevCursor` (date DESC, id DESC)
+- Invalid cursor handling (malformed or non-existent IDs) — tests should assert behavior consistent with `getConcertsPaginated` in `src/lib/concerts.ts` without hard-coding assumptions that may change
 - Filter combinations (userId, bandSlug, city, year)
 
 ```typescript
 it('test_getConcertsPaginated_forward_pagination', async () => {
   const concerts = [
-    mockConcert({ id: 'c1', date: new Date('2025-01-01') }),
-    mockConcert({ id: 'c2', date: new Date('2025-01-02') })
+    mockConcert({ id: 'c1', date: new Date('2025-01-02') }),
+    mockConcert({ id: 'c2', date: new Date('2025-01-01') })
   ];
 
   vi.mocked(prisma.concert.findMany).mockResolvedValue(concerts);
 
-  const result = await getConcertsPaginated({
-    limit: 20,
-    direction: 'forward'
-  });
+  // getConcertsPaginated(cursor?, limit?, direction?, filters?)
+  const result = await getConcertsPaginated(
+    undefined,     // cursor
+    20,            // limit
+    'forward',     // direction
+    undefined      // filters
+  );
 
   expect(result.concerts).toHaveLength(2);
   expect(result.nextCursor).toBeDefined();
