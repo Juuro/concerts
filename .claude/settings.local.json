@@ -32,26 +32,18 @@
       "mcp__page-design-guide-mcp__get_design_principles",
       "mcp__page-design-guide-mcp__get_component_guidance",
       "mcp__page-design-guide-mcp__get_modern_trends",
-      "Bash(grep -l \"session.user.role\" /Users/g125260/repos/concerts/app/api/**/*.ts)",
       "mcp__next-devtools__browser_eval",
       "mcp__next-devtools__nextjs_docs",
       "Bash(node screenshot.mjs http://localhost:3000*)",
       "Bash(lsof -i :3000)",
-      "Read(//Users/g125260/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.0.1/**)",
       "Bash(python3 scripts/search.py \"admin dashboard nested tabs navigation sidebar filter\" --design-system -p \"Admin Dashboard\")",
       "Bash(python3 src/ui-ux-pro-max/scripts/search.py*)",
       "Bash(curl -X POST http://localhost:3000/api/dev/login)",
       "mcp__page-design-guide-mcp__get_animation_guidance",
       "Bash(npx prisma:*)",
-      "Bash(/Users/g125260/.claude/hooks/amac-linter/lint.sh:*)",
-      "Bash(head -5 __NEW_LINE_a1404029fd73d055__ echo \"\" echo \"Checking error handling in GET route:\" grep -n \"try {\" /Users/g125260/repos/concerts/app/api/concerts/route.ts grep -n \"catch \\(error\\)\" /Users/g125260/repos/concerts/app/api/concerts/route.ts)",
-      "Bash(head -10 __NEW_LINE_56c50097c19b790e__ echo \"\" echo \"[C] Input validation:\" grep -n \"if \\(limit\\\\|if \\(direction\" /Users/g125260/repos/concerts/app/api/concerts/route.ts __NEW_LINE_56c50097c19b790e__ echo \"\" echo \"[H] Cursor type consistency \\(Concert.id not UserConcert.id\\):\" grep -n \"concert.id\" /Users/g125260/repos/concerts/src/lib/concerts.ts)",
       "Bash(npm audit:*)",
       "Bash(python3:*)",
       "Bash(CURSOR=\"cmndf46k1000r9k3gn6ww0gxx\" echo \"Testing with cursor from second concert...\" curl -s \"http://localhost:3000/api/concerts?cursor=$CURSOR&limit=2&direction=backward\")",
-      "Bash(~/.claude/allianz-mac/MEMORY.md:*)",
-      "Bash(TRUST_FILE=~/.claude/allianz-mac/trust-level.json:*)",
-      "Bash(for f in .claude/agents/allianz-mac/.temp/proposal-architect.json .claude/agents/allianz-mac/.temp/proposal-quality-engineer.json .claude/agents/allianz-mac/.temp/proposal-pragmatist.json .claude/agents/allianz-mac/.temp/proposal-resilience-performance.json .claude/agents/allianz-mac/.temp/proposal-security-specialist.json .claude/agents/allianz-mac/.temp/proposal-gdpr-compliance.json)",
       "Bash(do)",
       "Bash(if [ ! -f \"$f\" ])",
       "Bash(then)",
@@ -61,13 +53,10 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(test:*)",
-      "Bash(/Users/g125260/repos/concerts/src/lib/concerts.test.ts:*)",
       "Bash(for file in \"package.json\" \"vitest.config.ts\" \"vitest.setup.ts\" \"src/lib/concerts.test.ts\" \"TESTING.md\" \"CLAUDE.md\")",
       "Bash(if [ -f \"$file\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "context7"
-  ]
+  "enabledMcpjsonServers": ["context7"]
 }
