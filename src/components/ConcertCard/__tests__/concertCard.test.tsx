@@ -37,7 +37,7 @@ describe('ConcertCard', () => {
     },
   };
 
-  it('test_ConcertCard_renders_main_band_name', () => {
+  it('test_ConcertCard_when_default_concert_renders_main_band_as_link', () => {
     render(<ConcertCard concert={mockConcert} />);
 
     const bandLink = screen.getByRole('link', { name: 'Radiohead' });
@@ -45,7 +45,7 @@ describe('ConcertCard', () => {
     expect(bandLink).toHaveAttribute('href', '/band/radiohead');
   });
 
-  it('test_ConcertCard_renders_support_bands_as_badges', () => {
+  it('test_ConcertCard_when_support_act_present_renders_support_bands_as_badges', () => {
     render(<ConcertCard concert={mockConcert} />);
 
     // Support band should be rendered (main band excluded from badges in non-festival)
@@ -54,7 +54,7 @@ describe('ConcertCard', () => {
     expect(supportBandLink).toHaveAttribute('href', '/band/support-band');
   });
 
-  it('test_ConcertCard_festival_shows_all_bands_as_badges', () => {
+  it('test_ConcertCard_when_festival_renders_all_bands_as_badges', () => {
     const festivalConcert: TransformedConcert = {
       ...mockConcert,
       isFestival: true,
@@ -78,7 +78,7 @@ describe('ConcertCard', () => {
     expect(supportBadge).toHaveAttribute('href', '/band/support-band');
   });
 
-  it('test_ConcertCard_displays_venue_and_city', () => {
+  it('test_ConcertCard_when_rendered_shows_venue_and_city_links', () => {
     render(<ConcertCard concert={mockConcert} />);
 
     expect(screen.getByText('Test Venue')).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('ConcertCard', () => {
     expect(cityLink).toHaveAttribute('href', '/city/berlin');
   });
 
-  it('test_ConcertCard_displays_formatted_date', () => {
+  it('test_ConcertCard_when_rendered_shows_locale_formatted_date', () => {
     render(<ConcertCard concert={mockConcert} />);
 
     // Date formatted as German locale: "15. Juni 2024"
@@ -108,7 +108,7 @@ describe('ConcertCard', () => {
       vi.useRealTimers();
     });
 
-    it('test_ConcertCard_future_concert_has_future_class', () => {
+    it('test_ConcertCard_when_concert_date_after_today_has_future_class', () => {
       const futureConcert: TransformedConcert = {
         ...mockConcert,
         date: '2027-12-31T20:00:00.000Z',
@@ -120,7 +120,7 @@ describe('ConcertCard', () => {
       expect(card).toHaveClass('future');
     });
 
-    it('test_ConcertCard_past_concert_no_future_class', () => {
+    it('test_ConcertCard_when_concert_date_before_today_has_no_future_class', () => {
       const { container } = render(<ConcertCard concert={mockConcert} />);
 
       const card = container.querySelector('.concert-card');
@@ -128,7 +128,7 @@ describe('ConcertCard', () => {
     });
   });
 
-  it('test_ConcertCard_renders_image_when_available', () => {
+  it('test_ConcertCard_when_band_has_imageUrl_renders_img', () => {
     const { container } = render(<ConcertCard concert={mockConcert} />);
 
     const img = container.querySelector('img');
@@ -136,7 +136,7 @@ describe('ConcertCard', () => {
     expect(img).toHaveAttribute('src', 'https://example.com/radiohead.jpg');
   });
 
-  it('test_ConcertCard_renders_placeholder_when_no_image', () => {
+  it('test_ConcertCard_when_band_has_no_imageUrl_renders_placeholder', () => {
     const concertWithoutImage: TransformedConcert = {
       ...mockConcert,
       bands: [

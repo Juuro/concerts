@@ -213,7 +213,7 @@ describe("Edge Cases & Error Handling", () => {
     expect(result).toBeNull()
   })
 
-  test("test_coordinate_tolerance_boundary_exactly_0001_degrees", async () => {
+  test("test_findMatchingConcert_when_coords_within_0_001_deg_match_outside_tolerance_returns_null", async () => {
     // Tests coordinate tolerance boundary (COORD_TOLERANCE = 0.001 degrees ≈ 100m)
     // Verifies concerts within tolerance are matched, outside tolerance are not
     const date = new Date("2025-08-01")
@@ -1338,7 +1338,7 @@ describe("Pagination (Cursor-Based)", () => {
     expect(result.items).toHaveLength(1)
   })
 
-  test("test_getConcertsPaginated_combined_filters", async () => {
+  test("test_getConcertsPaginated_when_city_year_and_bandSlug_combined_returns_filtered_items", async () => {
     // Setup: Return concerts matching multiple filters
     const mockConcerts = [
       {
@@ -1406,7 +1406,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     vi.clearAllMocks()
   })
 
-  test('updateConcert multi-attendee forks on date change', async () => {
+  test('test_updateConcert_when_multi_attendee_and_date_change_forks_new_concert', async () => {
     const userId = 'user-1'
     const originalDate = new Date('2024-06-15')
     const newDate = new Date('2024-06-16')
@@ -1496,7 +1496,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     )
   })
 
-  test('updateConcert multi-attendee forks on venue change', async () => {
+  test('test_updateConcert_when_multi_attendee_and_venue_change_forks_new_concert', async () => {
     const userId = 'user-2'
 
     const existingConcert = {
@@ -1569,7 +1569,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     expect(prisma.concert.create).toHaveBeenCalled()
   })
 
-  test('updateConcert multi-attendee forks on headliner change', async () => {
+  test('test_updateConcert_when_multi_attendee_and_headliner_change_forks_new_concert', async () => {
     const userId = 'user-3'
 
     const existingConcert = {
@@ -1654,7 +1654,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     )
   })
 
-  test('fork creates new concert and removes user from original', async () => {
+  test('test_updateConcert_when_fork_creates_new_concert_and_removes_user_from_original', async () => {
     const userId = 'user-fork-1'
 
     const existingConcert = {
@@ -1743,7 +1743,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     )
   })
 
-  test('fork preserves user cost and notes', async () => {
+  test('test_updateConcert_when_fork_preserves_user_cost_and_notes', async () => {
     const userId = 'user-preserve'
     const userCost = 150
     const userNotes = 'VIP ticket with backstage pass'
@@ -1832,7 +1832,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     )
   })
 
-  test('fork does NOT delete original if other attendees remain', async () => {
+  test('test_updateConcert_when_fork_with_remaining_attendees_preserves_original_concert', async () => {
     const userId = 'user-keep-original'
 
     const existingConcert = {
@@ -1916,7 +1916,7 @@ describe('Fork Logic (Multi-Tenant)', () => {
     expect(prisma.concert.create).toHaveBeenCalled()
   })
 
-  test('updateConcert single attendee does NOT fork (updates in place)', async () => {
+  test('test_updateConcert_when_single_attendee_core_field_change_updates_in_place', async () => {
     const userId = 'user-single'
 
     const existingConcert = {

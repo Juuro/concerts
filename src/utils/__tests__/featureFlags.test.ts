@@ -43,12 +43,12 @@ describe('featureFlags', () => {
       expect(isFeatureEnabled('NONEXISTENT_FLAG', false)).toBe(false);
     });
 
-    it('test_isFeatureEnabled_trims_whitespace_from_env_var', () => {
+    it('test_isFeatureEnabled_when_env_var_has_leading_trailing_whitespace_returns_true', () => {
       vi.stubEnv('ENABLE_LASTFM', '  true  ');
       expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM)).toBe(true);
     });
 
-    it('test_isFeatureEnabled_case_insensitive', () => {
+    it('test_isFeatureEnabled_when_env_var_is_mixed_case_returns_parsed_boolean', () => {
       vi.stubEnv('ENABLE_LASTFM', 'TRUE');
       expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM)).toBe(true);
 

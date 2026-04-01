@@ -135,7 +135,7 @@ vi.mock('lastfm-ts-api', () => ({
   })),
 }));
 
-it('test_getArtistInfo_successful_response_returns_data', async () => {
+it('test_getArtistInfo_when_api_succeeds_returns_artist_data', async () => {
   vi.stubEnv('ENABLE_LASTFM', 'true');
   vi.stubEnv('LASTFM_API_KEY', 'test-api-key');
 
@@ -176,7 +176,7 @@ import { render, screen } from '@testing-library/react';
 import ConcertCard from '../concertCard';
 import type { TransformedConcert } from '@/lib/concerts';
 
-it('test_ConcertCard_renders_band_name', () => {
+it('test_ConcertCard_when_default_concert_renders_main_band_as_link', () => {
   const mockConcert: TransformedConcert = {
     id: 'test-id',
     date: '2024-06-15T19:00:00.000Z',

@@ -74,7 +74,7 @@ describe('lastfm', () => {
       expect(mockGetInfo).not.toHaveBeenCalled();
     });
 
-    it('test_getArtistInfo_successful_response_returns_artist_data', async () => {
+    it('test_getArtistInfo_when_api_succeeds_returns_artist_data', async () => {
       vi.stubEnv('ENABLE_LASTFM', 'true');
       vi.stubEnv('LASTFM_API_KEY', 'test-api-key');
 
