@@ -45,46 +45,6 @@ import {
   type CreateConcertInput,
 } from "./concerts"
 
-// Mock Prisma client
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    concert: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
-      groupBy: vi.fn(),
-    },
-    userConcert: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
-      aggregate: vi.fn(),
-    },
-    band: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      count: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
-      count: vi.fn(),
-    },
-    concertBand: {
-      deleteMany: vi.fn(),
-      create: vi.fn(),
-      count: vi.fn(),
-      groupBy: vi.fn(),
-    },
-    $transaction: vi.fn(),
-    $queryRaw: vi.fn(),
-  },
-}))
 
 // Mock external utilities
 vi.mock("@/utils/data", () => ({
