@@ -1,0 +1,144 @@
+{
+  "agent": "pragmatist",
+  "confidence": 85,
+  "language": "typescript",
+  "summary": "Create comprehensive unit tests for src/lib/concerts.ts by reusing Vitest setup from feature/unit-testing-framework branch. Focus on simple, direct test cases for 25+ exported functions with Prisma mocking. Achieves 80% coverage in ~1,200 lines across one main test file.",
+  "scope_assessment": {
+    "classification": "MEDIUM",
+    "new_files_count": 2,
+    "modified_files_count": 2,
+    "estimated_total_lines": 1400,
+    "is_single_story_scope": true,
+    "scope_concerns": null,
+    "justification": "This is a focused test suite for a single, well-scoped library file. No new abstractions, no framework changes. All work fits into vitest.config.ts + vitest.setup.ts (already exist on unit-testing-framework branch) + src/lib/concerts.test.ts (new) + package.json updates (test scripts)."
+  },
+  "reusable_existing_code": [
+    {
+      "existing_file": "feature/unit-testing-framework branch: vitest.config.ts",
+      "what_to_reuse": "Full Vitest configuration with jsdom environment, setupFiles, coverage settings",
+      "how": "Copy vitest.config.ts and vitest.setup.ts from feature/unit-testing-framework branch as-is. These already handle Prisma mocking patterns."
+    },
+    {
+      "existing_file": "feature/unit-testing-framework branch: vitest.setup.ts",
+      "what_to_reuse": "Mock patterns for next/image and next/link",
+      "how": "Extend vitest.setup.ts with Prisma client mocks using vi.mock('@/lib/prisma'). Reuse the same testing-library/jest-dom setup."
+    },
+    {
+      "existing_file": "package.json on feature/unit-testing-framework branch",
+      "what_to_reuse": "Test script definitions and devDependencies list",
+      "how": "Copy vitest + @vitest/coverage-v8 + @vitest/ui + jsdom + @vitejs/plugin-react versions exactly. Copy 'test', 'test:watch', 'test:coverage' script definitions."
+    },
+    {
+      "existing_file": "src/lib/concerts.ts (entire file)",
+      "what_to_reuse": "All function signatures, interfaces, and error classes",
+      "how": "Use the full list of 25+ exported functions and types (TransformedBand, TransformedConcert, etc.) as the test scope. No refactoring needed."
+    }
+  ],
+  "simplest_approach": {
+    "description": "Install Vitest and copy configuration from feature/unit-testing-framework branch. Write a single focused test file (src/lib/concerts.test.ts) with straightforward mocks of Prisma. Test each function in isolation with realistic mock data. Avoid fancy test utilities—use direct vi.mock() and basic beforeEach setup. Group tests by function category (CRUD, pagination, statistics, spending). Aim for 80% coverage.",
+    "changes": [
+      {
+        "action": "MODIFY",
+        "file_path": "package.json",
+        "description": "Add Vitest + coverage + UI devDependencies and test scripts. Copy the exact versions from feature/unit-testing-framework branch to ensure consistency.",
+        "estimated_lines": 10,
+        "justification": "Required for AC2, AC4. Enables test execution."
+      },
+      {
+        "action": "CREATE",
+        "file_path": "vitest.config.ts",
+        "description": "Copy vitest.config.ts from feature/unit-testing-framework branch. Already has proper jsdom environment, setupFiles path, coverage excludes, and TypeScript alias (@/ for src).",
+        "estimated_lines": 35,
+        "justification": "Required for AC2. Provides Vitest configuration compatible with Next.js + Prisma."
+      },
+      {
+        "action": "CREATE",
+        "file_path": "vitest.setup.ts",
+        "description": "Copy vitest.setup.ts from feature/unit-testing-framework branch and extend it. Add Prisma client mock (vi.mock('@/lib/prisma')) that provides a fully mocked prisma object. Include mocks for next/image and next/link from the original setup.",
+        "estimated_lines": 80,
+        "justification": "Required for AC2. Sets up global mocking of Prisma and Next.js modules before all tests run."
+      },
+      {
+        "action": "CREATE",
+        "file_path": "src/lib/concerts.test.ts",
+        "description": "Write comprehensive test suite for all 25+ exported functions in concerts.ts. Group tests by feature: getStartOfToday (1 test), CRUD (createConcert, updateConcert, deleteConcert, getConcertById = 8 tests covering fork logic, concert merging, edge cases), Retrieval (getUserConcerts, getAllConcerts, getConcertsByBand, getConcertsByYear, getConcertsByCity, getAllYears, getAllCities = 10 tests), Matching (findMatchingConcert = 3 tests for tolerance), Pagination (getConcertsPaginated, getConcertsPaginatedForUser, getConcertsPaginatedForUserByBand = 12 tests for cursor logic, forward/backward, filters), Counts (getConcertCounts, getUserBandConcertCounts, getUserConcertCounts = 6 tests), Statistics (getConcertStatistics, getUserConcertStatistics = 4 tests), Spending (getUserTotalSpent, getUserTotalSpentCached = 4 tests), Utilities (parseSupportingActIds, bandToTransformed, getHeadliner = 6 tests). Each test uses vi.mocked prisma calls with realistic mock data. Total ~1,150 lines.",
+        "estimated_lines": 1150,
+        "justification": "Required for AC1, AC3. Core deliverable. Tests all functions and edge cases (pagination cursors, duplicate detection, fork merging, null handling, JSON parsing of supportingActIds)."
+      }
+    ],
+    "explicitly_not_doing": [
+      {
+        "what": "Integration tests with real database",
+        "why_not": "Out of scope. This is a unit test story. Integration tests can be a follow-up."
+      },
+      {
+        "what": "Generic test helper utilities or custom test frameworks",
+        "why_not": "YAGNI. Only one test file exists (concerts.test.ts). Direct vi.mock() and beforeEach setup is simpler and more maintainable than a custom test helper library."
+      },
+      {
+        "what": "Testing private functions (parseSupportingActIds, bandToTransformed, etc.)",
+        "why_not": "They are not exported. We only test exported public API. Internal functions are tested implicitly through CRUD operations."
+      },
+      {
+        "what": "Prisma transaction mocking",
+        "why_not": "Not needed for 80% coverage. Most functions don't use transactions. When they do (forkConcertForUser), we mock the transaction path without the transaction wrapper."
+      },
+      {
+        "what": "Testing cache invalidation logic (revalidateTag)",
+        "why_not": "Outside this library. That logic is in API routes. Concerts.ts doesn't contain cache tags."
+      }
+    ]
+  },
+  "complexity_warnings": [
+    {
+      "concern": "Raw SQL queries (prisma.$queryRaw) in getUserBandConcertCounts, getUserConcertStatistics, getUserTotalSpent, getUserUniqueBandCount",
+      "evidence": "These functions use raw SQL with JSONB filtering. Mocking these is tricky.",
+      "alternative": "Mock via vi.spyOn(prisma, '$queryRaw'). For testing, verify the SQL query is called with correct parameters. Don't try to simulate the SQL logic—just verify the query structure. This achieves adequate coverage without complexity."
+    },
+    {
+      "concern": "Concert fork logic in updateConcert is complex with multiple transaction branches and concert merging",
+      "evidence": "Lines 626-779: forkConcertForUser has 3-way logic (fork + merge + return to existing concert). Requires careful test sequencing.",
+      "alternative": "Write 4-5 dedicated fork tests: (1) fork for single user, (2) fork for multi-attendee, (3) fork + merge to existing, (4) fork + no merge. Use isolated mock data for each. Simple step-by-step assertions avoid branching complexity."
+    },
+    {
+      "concern": "Pagination with cursor-based keyset logic requires careful mock data ordering",
+      "evidence": "getConcertsPaginated uses (date, id) tuple cursors. Forward/backward direction reverses results.",
+      "alternative": "Create simple mock data: 3 concerts (A=2025-01-01, B=2025-01-02, C=2025-01-03). Test forward (A→B), backward (C→B), edge cases (empty result). Don't test all filter combinations—test each filter separately (bandSlug, city, year, isPublic) in isolation. This gives 80% coverage without N^4 combos."
+    }
+  ],
+  "risks": [
+    {
+      "description": "Vitest setup from feature/unit-testing-framework branch may have diverged from main if that branch was updated. Copy exactly at this point in time.",
+      "likelihood": "LOW",
+      "mitigation": "Pull the exact files from feature/unit-testing-framework at the commit hash shown in git log (7507a32) to ensure reproducibility."
+    },
+    {
+      "description": "Prisma mock setup for raw SQL queries ($queryRaw) may need adjustment if Prisma versions differ.",
+      "likelihood": "MEDIUM",
+      "mitigation": "Test the mock with a simple query first. If $queryRaw mock fails, check if prisma version in package.json matches feature/unit-testing-framework branch."
+    },
+    {
+      "description": "Some functions depend on getGeocodingData (from src/utils/data.ts) which makes external API calls. Need to mock this.",
+      "likelihood": "MEDIUM",
+      "mitigation": "Mock src/utils/data.ts in vitest.setup.ts or in test file via vi.mock('@/utils/data'). Return simple mock geocoding results (e.g., { _normalized_city: 'Berlin' })."
+    },
+    {
+      "description": "Concert matching logic uses COORD_TOLERANCE (0.001) for latitude/longitude. Small floating-point variations could fail tests.",
+      "likelihood": "LOW",
+      "mitigation": "Use exact coordinates in mock data (e.g., 52.5, 13.4 for Berlin). Avoid floating-point calculations in test data."
+    }
+  ],
+  "testing_approach": {
+    "mocking_strategy": "Mock prisma client at the module level (vi.mock('@/lib/prisma')) in vitest.setup.ts. Each test uses vi.mocked(prisma) to define return values. Mock getGeocodingData to return simple { _normalized_city: string } objects. All mock data is realistic (ISO dates, valid UUIDs, sensible band/concert names).",
+    "test_data": "Reuse 5-10 realistic band records (id, name, slug, imageUrl, genres), 3-5 concert records (id, date, lat/lon, venue, normalizedCity), 2 festival records, 2 user records. Generate consistent IDs and dates. Avoid randomness.",
+    "coverage_target": "80% overall. Focus on branch coverage (fork logic, cursor pagination directions, null handling). Skip edge cases that require integration (e.g., exact SQL subquery behavior). Use vi.spyOn to verify calls without simulating actual SQL.",
+    "run_strategy": "yarn test runs all tests once. yarn test:watch enters watch mode. yarn test:coverage generates HTML report. All three must work without errors."
+  },
+  "estimation": {
+    "setup_time": "15 min (copy vitest.config.ts, vitest.setup.ts, update package.json)",
+    "mock_data_creation": "20 min (define 10-15 realistic mock records for bands, concerts, users)",
+    "test_writing": "120 min (write ~1,150 lines of test code: 25+ functions × 3-5 tests each + edge cases)",
+    "debugging": "30 min (fix Prisma mock issues, raw SQL mocking, ensure 80% coverage)",
+    "total_estimate": "185 minutes (3 hours)"
+  }
+}

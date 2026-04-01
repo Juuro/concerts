@@ -1,0 +1,330 @@
+{
+  "agent": "resilience-performance",
+  "confidence": 78,
+  "language": "typescript",
+  "summary": "The src/lib/concerts.ts library is a mission-critical module with 25+ exported functions for concert CRUD, pagination, and statistics. Assessment identifies resilience gaps (missing error handling, unprotected Prisma calls), performance risks (N+1 queries in some code paths, synchronous band transformations, raw SQL queries without timeouts), and opportunities for optimization (connection pooling configuration, caching strategies, transaction isolation).",
+  "dependency_map": [
+    {
+      "dependency": "PostgreSQL via Prisma PgAdapter + pg.Pool",
+      "type": "DATABASE",
+      "failure_modes": [
+        "Connection timeout (slow network, DB overload)",
+        "Connection pool exhaustion (too many concurrent queries)",
+        "Constraint violations (unique violations on UserConcert, ConcertBand)",
+        "Transaction deadlock (concurrent forks and merges)",
+        "Raw SQL query timeout (complex JSON aggregations)",
+        "Query planning timeout (missing indexes)",
+        "Network partition (Vercel to DB)"
+      ],
+      "current_handling": "No retry logic, no timeouts on Prisma operations, no circuit breaker, connection pool defaults used (may be insufficient for concurrent load)",
+      "recommended_handling": "Implement: (1) exponential backoff retry on transient Prisma errors; (2) explicit timeout on all Prisma queries; (3) circuit breaker for repeated failures; (4) tune connection pool based on concurrency profile; (5) handle transaction deadlock with retry; (6) add context-aware logging for all DB errors"
+    },
+    {
+      "dependency": "Next.js request context / HTTP client",
+      "type": "EXTERNAL_HTTP",
+      "failure_modes": [
+        "Network timeout fetching concert data in API routes",
+        "Request body parsing fails (malformed JSON)",
+        "Session retrieval fails (auth service down)"
+      ],
+      "current_handling": "No timeout on request.json(); auth calls use implicit timeouts from Next.js; generic catch-all in POST",
+      "recommended_handling": "Add explicit timeout when parsing request body; add specific error handling for Sentry vs auth failures"
+    },
+    {
+      "dependency": "Photon/Nominatim geocoding (via getGeocodingData)",
+      "type": "EXTERNAL_HTTP",
+      "failure_modes": [
+        "Network timeout (external API slow/down)",
+        "Rate limit (429)",
+        "Invalid coordinates returned"
+      ],
+      "current_handling": "Called in createNewConcertWithUser and updateConcert; no retry, no timeout, no rate limit awareness",
+      "recommended_handling": "Wrap getGeocodingData in retry with exponential backoff; add timeout (5s connect, 10s read); fall back gracefully if geocoding fails"
+    },
+    {
+      "dependency": "Prisma $queryRaw for complex JSON queries",
+      "type": "DATABASE_CUSTOM",
+      "failure_modes": [
+        "Raw SQL query timeout (computeUserConcertStatistics band aggregation with JSON parsing)",
+        "SQL syntax errors (parameter injection risk, though Prisma.sql guards against it)",
+        "Fallback catch block hides migration status (supportingActIds column)"
+      ],
+      "current_handling": "Try-catch fallback in computeUserConcertStatistics; no timeout; exception swallowed by fallback",
+      "recommended_handling": "Add explicit query timeout via Postgres statement_timeout; expose migration errors distinctly; log fallback activations"
+    }
+  ],
+  "error_handling_gaps": [
+    {
+      "location": "createConcert() -> createNewConcertWithUser()",
+      "gap": "getGeocodingData() call has no error handling; if Photon API fails, entire concert creation fails with 500",
+      "impact": "User sees generic 'Failed to create concert' instead of 'Geocoding service unavailable, concert created without city data'",
+      "fix": "Wrap getGeocodingData in try-catch; if it fails, set normalizedCity to null and log warning; return concert anyway. Distinguish transient (retry-able) vs permanent (fail-fast) errors.",
+      "priority": "MUST"
+    },
+    {
+      "location": "updateConcert() -> forkConcertForUser() -> prisma.$transaction()",
+      "gap": "Transaction with create/delete inside; no handling for transaction failure (deadlock, constraint violation); if match-merge logic fails mid-transaction, state is inconsistent",
+      "impact": "Concurrent edits on same concert from multiple users could cause duplicate attendees or orphaned records; requires manual DB recovery",
+      "fix": "Add try-catch around entire forkConcertForUser flow; on transaction failure, log with context (concertId, userId) and re-throw as distinct error; implement retry on deadlock with exponential backoff",
+      "priority": "MUST"
+    },
+    {
+      "location": "POST /api/concerts and PUT /api/concerts/[id]",
+      "gap": "Catch block catches all errors and returns generic 500; ConcertAlreadyExistsError handled explicitly, but other DB errors (constraint violations, auth errors, Sentry capture errors) not differentiated",
+      "impact": "Clients can't distinguish user error (concert already exists) from system error (database constraint failure) from infrastructure error (Sentry down)",
+      "fix": "Expand catch block: (1) catch Prisma UniqueConstraintError and map to 409 Conflict with specific message; (2) catch Prisma.PrismaClientValidationError and return 400 Bad Request; (3) distinguish transient vs permanent errors; (4) only capture to Sentry if not user-caused error",
+      "priority": "MUST"
+    },
+    {
+      "location": "getConcertsPaginatedForUserByBand() and getUserTotalSpent() with bandSlug",
+      "gap": "Band lookup via prisma.band.findUnique returns null silently if band slug invalid; subsequent raw SQL query returns empty result; no error signal to caller",
+      "impact": "Invalid band slug treated same as band with no concerts; client can't distinguish 'band not found' from 'user attended 0 concerts by this band'",
+      "fix": "After band lookup, throw distinct error if band not found: 'throw new Error(`Band not found: ${slug}`)'; or return distinct response object with notFound flag",
+      "priority": "SHOULD"
+    },
+    {
+      "location": "computeUserConcertStatistics() raw SQL query with fallback",
+      "gap": "If supportingActIds column missing (migration not run), fallback catch block silently activates; caller doesn't know if stats are complete or degraded",
+      "impact": "In production, if migration partially applied, stats appear correct but exclude user's supporting act selection data",
+      "fix": "Log migration status distinctly (warn if fallback activates); include degraded-mode flag in response; return stats with 'degradedMode: true' so client can show warning",
+      "priority": "SHOULD"
+    },
+    {
+      "location": "All Prisma queries (findMany, create, update, delete, aggregate)",
+      "gap": "No explicit timeout configured; long-running query can block request indefinitely if database is slow or overloaded",
+      "impact": "Single slow query can cause cascading timeouts in Next.js edge runtime (12s limit), leading to dropped requests and user experience degradation",
+      "fix": "Add context.timeout() around all prisma operations; wrap in timeout promise that rejects after 10s (for read), 15s (for write); differentiate timeout errors from other DB errors",
+      "priority": "MUST"
+    }
+  ],
+  "retry_recommendations": [
+    {
+      "operation": "getGeocodingData() call in concert creation/update",
+      "strategy": "Exponential backoff with jitter; only retry on transient HTTP errors (5xx, timeout, connection reset)",
+      "config": {
+        "max_retries": 2,
+        "initial_delay_ms": 500,
+        "max_delay_ms": 3000,
+        "jitter": true,
+        "backoff_multiplier": 2
+      },
+      "on_exhaustion": "Log error with coordinates, allow concert creation with normalizedCity = null, return 201 with warning field",
+      "idempotent": true,
+      "priority": "MUST"
+    },
+    {
+      "operation": "Prisma transaction in forkConcertForUser (deadlock)",
+      "strategy": "Retry entire fork operation on deadlock; exponential backoff between retries",
+      "config": {
+        "max_retries": 3,
+        "initial_delay_ms": 100,
+        "max_delay_ms": 1000,
+        "jitter": true
+      },
+      "on_exhaustion": "Log conflict with both concert IDs and user ID; return 409 Conflict with message 'Another user is editing this concert, please refresh'",
+      "idempotent": true,
+      "priority": "MUST"
+    },
+    {
+      "operation": "Prisma $queryRaw for band statistics (timeout resilience)",
+      "strategy": "Automatic fallback to simpler query; log that fallback was used for monitoring",
+      "config": {
+        "query_timeout_s": 5,
+        "fallback_enabled": true
+      },
+      "on_exhaustion": "Fallback query activated; returns degraded stats (headliner only, no supporting acts) with degradedMode flag",
+      "idempotent": true,
+      "priority": "SHOULD"
+    }
+  ],
+  "idempotency_assessment": [
+    {
+      "operation": "Create concert (POST /api/concerts)",
+      "currently_idempotent": true,
+      "mechanism": "Duplicate detection via findMatchingConcert (date + location + headliner); raises ConcertAlreadyExistsError on re-invocation with same data",
+      "risk": "None - designed for idempotency",
+      "coverage": "Only covers concerts with explicit headliner; headliner-less concerts are NOT checked for duplicates",
+      "priority": "CONSIDER"
+    },
+    {
+      "operation": "Update concert (PUT /api/concerts/[id])",
+      "currently_idempotent": true,
+      "mechanism": "UpdateConcertInput is fully specified; multiple invocations with same input produce same output",
+      "risk": "Low - band edits may trigger fork, but fork is deterministic given input",
+      "caveat": "Fork logic depends on current concert state; if another user modifies concert between retries, result may differ",
+      "priority": "CONSIDER"
+    },
+    {
+      "operation": "Delete concert (DELETE /api/concerts/[id])",
+      "currently_idempotent": true,
+      "mechanism": "Second delete returns 404 (concert already deleted); caller must handle 404 as success",
+      "risk": "Client must treat 404 as idempotent success; not all clients do this",
+      "fix": "Return 200 { success: true } on second delete (already gone) instead of 404; or document that 404 means 'already deleted, operation succeeded'",
+      "priority": "SHOULD"
+    }
+  ],
+  "performance_concerns": [
+    {
+      "concern": "N+1 queries in transformConcertSync when prefetchedBands Map is incomplete",
+      "location": "transformConcertSync() lines 172-174 filters supportingActBands; if band missing from prefetchedBands, returns undefined",
+      "impact": "If prefetch misses a band ID, transform silently drops it from output; no warning; UI shows incomplete band list",
+      "current_code": "supportingActBands.map((o) => prefetchedBands.get(o.bandId)).filter((b): b is PrismaBand => b != null)",
+      "fix": "Log warning if any band ID not in map; optionally fetch missing bands inline (fallback), but this reintroduces N+1 queries",
+      "priority": "SHOULD"
+    },
+    {
+      "concern": "computeUserConcertStatistics performs sequential Promise.all but with nested queries inside (lines 1771-1854)",
+      "location": "computeUserConcertStatistics() band stats query",
+      "impact": "Band stats computation: (1) raw $queryRaw for top 10 band IDs; (2) await prisma.band.findMany; (3) then sequential Promise.all over bandIds to count concerts per band - this is N+1-like pattern in the aggregate flow",
+      "fix": "Consolidate band counting into single raw SQL query: SELECT band_id, COUNT(*) FROM effective_bands GROUP BY band_id ORDER BY COUNT DESC LIMIT 5; avoid sequential Promise.all",
+      "priority": "SHOULD"
+    },
+    {
+      "concern": "getConcertsPaginated calls transformConcertsBatch which batches band fetches, but raw SQL queries (getConcertsPaginatedForUserByBand) perform N+1 for counts",
+      "location": "getConcertsPaginatedForUserByBand() lines 1281-1405 plus subsequent getConcertsPaginatedForUser calls",
+      "impact": "For band-filtered pagination with 20 items: (1) raw SQL to get IDs; (2) findMany to fetch concerts; (3) SEPARATE nested band lookups to fill prefetchedBands map - adds latency",
+      "current_pattern": "Raw SQL fetch IDs → findMany concerts → transformConcertsBatch (which fetches supporting act bands)",
+      "fix": "Include band data in initial raw SQL query via JOIN or ensure band IDs from supporting acts are collected before any I/O; use better SQL query design",
+      "priority": "SHOULD"
+    },
+    {
+      "concern": "Connection pool may be undersized for concurrent load at scale",
+      "location": "src/lib/prisma.ts - Pool instantiation with defaults",
+      "impact": "If 100+ concurrent requests arrive, default pool size (10) leads to queue starvation; requests block waiting for connection; timeouts accumulate",
+      "current_config": "Pool { connectionString, default pool_size=10, max_overflow=?? }",
+      "fix": "Configure pool explicitly: new Pool({ ..., max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 }); or set statement_timeout in connection string",
+      "priority": "SHOULD"
+    },
+    {
+      "concern": "getAllConcerts() loads ALL concerts into memory for transform; scales poorly as DB grows",
+      "location": "getAllConcerts() lines 296-309",
+      "impact": "Production: if database has 100k concerts, query + transform loads all 100k into memory in single pass; OOM risk if many concurrent requests",
+      "fix": "This function appears unused in current codebase (grep to verify); if needed, add pagination limit or streaming cursor; or mark as deprecated with pagination alternative",
+      "priority": "CONSIDER"
+    },
+    {
+      "concern": "getAllYears() and getAllCities() load all distinct values into memory then sort",
+      "location": "getAllYears() lines 384-398, getAllCities() lines 401-408",
+      "impact": "Low risk (bounded by unique years ~100, unique cities ~1k) but inefficient; sorting in application instead of SQL",
+      "fix": "Add ORDER BY in SQL query: Prisma doesn't expose direct SQL order for groupBy; use raw SQL or accept current approach for now",
+      "priority": "CONSIDER"
+    }
+  ],
+  "caching_recommendations": [
+    {
+      "what_to_cache": "User's band statistics (mostSeenBands, top 5 unique bands)",
+      "pattern": "Memoize or Redis with TTL; re-compute on concert create/update/delete",
+      "ttl_seconds": 3600,
+      "current_pattern": "No caching; computed fresh on every request to /api/admin/stats or dashboard",
+      "rationale": "Band stats are expensive (complex SQL join with JSON parsing); rarely change except when user adds/edits concerts; 1-hour TTL balances freshness vs latency",
+      "priority": "SHOULD"
+    },
+    {
+      "what_to_cache": "Concert pagination cursors and cursor->ID mapping",
+      "pattern": "In-memory cache (Map or Redis) with 5-min TTL; map cursor string to concert ID and date for keyset pagination",
+      "ttl_seconds": 300,
+      "rationale": "Cursor-based pagination requires looking up concert date by cursor ID; if cursor is stale, lookup fails; caching cursor->ID mapping speeds up subsequent pages",
+      "priority": "CONSIDER"
+    },
+    {
+      "what_to_cache": "Band metadata (name, slug, image, genres) after first fetch",
+      "pattern": "DataLoader-style batch cache within single request; persistent Redis cache across requests with 24h TTL",
+      "ttl_seconds": 86400,
+      "rationale": "Band data is mostly static; fetched repeatedly in transformConcertsBatch; caching reduces DB round-trips for prefetch",
+      "priority": "SHOULD"
+    },
+    {
+      "what_to_cache": "Concert matching results (findMatchingConcert coordinate tolerance searches)",
+      "pattern": "Short-lived cache (30s) keyed by (date, lat, lon, headlinerId); invalidate on concert create/update",
+      "ttl_seconds": 30,
+      "rationale": "Within same request batch, multiple create/update ops may search same coordinates; cache prevents repeated DB queries",
+      "priority": "CONSIDER"
+    }
+  ],
+  "timeout_recommendations": [
+    {
+      "service": "Prisma database operations (findMany, create, update, delete)",
+      "connect_timeout_s": 5,
+      "read_timeout_s": 10,
+      "write_timeout_s": 15,
+      "rationale": "Next.js edge runtime enforces 12s limit for serverless functions; database operations must complete within this; 10s for read ensures room for transformation; 15s for write accounts for transaction overhead"
+    },
+    {
+      "service": "Prisma $queryRaw for complex JSON band aggregations",
+      "statement_timeout_s": 5,
+      "rationale": "Complex raw SQL queries (computeUserConcertStatistics band stats) can scan large datasets; 5s timeout prevents runaway queries; fallback to simpler query if timeout"
+    },
+    {
+      "service": "getGeocodingData (Photon/Nominatim reverse geocoding)",
+      "connect_timeout_s": 3,
+      "read_timeout_s": 5,
+      "rationale": "External HTTP API; fast response expected; 5s read timeout prevents blocking concert creation indefinitely"
+    },
+    {
+      "service": "request.json() body parsing in API routes",
+      "timeout_ms": 5000,
+      "rationale": "Prevent hung requests from clients sending incomplete bodies; 5s is reasonable for typical payloads; fail-fast to free server resources"
+    }
+  ],
+  "risks": [
+    {
+      "description": "Geocoding failure during concert creation leaves DB in inconsistent state if transaction not used",
+      "likelihood": "MEDIUM",
+      "impact": "Concert created without city data; user sees concert without location tag; admin reports show incomplete data",
+      "mitigation": "Wrap createNewConcertWithUser in try-catch; if geocoding fails, still create concert with normalizedCity=null; return 201 with warning; make geocoding optional, not blocking"
+    },
+    {
+      "description": "Fork transaction deadlock under concurrent multi-user edits causes cascading request failures",
+      "likelihood": "LOW_TO_MEDIUM",
+      "impact": "Edit requests return 500 instead of 409; UI shows generic error; user loses data if client-side cache not preserved",
+      "mitigation": "Implement retry with exponential backoff for Prisma deadlock errors; return 409 with user-friendly message on 3 retries exhausted; log deadlock for monitoring"
+    },
+    {
+      "description": "Missing indexes on pagination queries (date, normalizedCity, userId+concertId) cause full table scans",
+      "likelihood": "MEDIUM",
+      "impact": "As concert count grows to 100k+, pagination queries slow from ~50ms to ~500ms+; user experience degrades; costs increase",
+      "mitigation": "Verify Prisma schema has @@index on date, normalizedCity, userId, concertId; add composite index on (userId, concertId) for UserConcert; monitor slow query log"
+    },
+    {
+      "description": "Connection pool exhaustion if concurrent requests spike (e.g., when user shares public profile link)",
+      "likelihood": "MEDIUM",
+      "impact": "New requests queue indefinitely; timeouts accumulate; cascading failures; partial outage",
+      "mitigation": "Configure pg.Pool with explicit max: 20, idleTimeoutMillis: 30000; add circuit breaker that returns 503 if connection queue exceeds threshold; monitor pool utilization"
+    },
+    {
+      "description": "Raw SQL queries vulnerable to logic errors; migration of supportingActIds column not detected",
+      "likelihood": "LOW",
+      "impact": "If migration not run, raw SQL queries fail; fallback silently activates; stats are incomplete; data loss goes unnoticed",
+      "mitigation": "Add distinct migration check at startup; fail fast if required columns missing; expose degraded-mode flag in responses; log migration status changes"
+    },
+    {
+      "description": "Sentry capture in error handler can block request if Sentry slow or down",
+      "likelihood": "LOW",
+      "impact": "API response times spike; cascading timeouts; Sentry errors not useful if system already under stress",
+      "mitigation": "Capture Sentry async (no await); implement timeout on Sentry capture (2s max); fall back to local logging if Sentry unreachable"
+    }
+  ],
+  "recommendations_summary": {
+    "must_implement": [
+      "Add timeout() wrapper on all Prisma queries to prevent indefinite blocking",
+      "Implement error handling for getGeocodingData failures; allow concert creation without geocoding",
+      "Add specific Prisma error handling in API routes (constraint violations -> 409, validation -> 400)",
+      "Implement retry with backoff for Prisma deadlock errors in forkConcertForUser",
+      "Configure pg.Pool connection limits explicitly (max: 20, idleTimeoutMillis: 30000)"
+    ],
+    "should_implement": [
+      "Distinguish transient vs permanent errors; expose error type to client (retryable vs not)",
+      "Add band statistics caching with 1-hour TTL; invalidate on concert mutations",
+      "Optimize computeUserConcertStatistics raw SQL to avoid N+1-like pattern in band counting",
+      "Log migration status; expose degradedMode flag if supportingActIds column not present",
+      "Add circuit breaker for repeated geocoding failures; skip geocoding after 3 consecutive failures"
+    ],
+    "consider_implementing": [
+      "Verify indexes on Concert(date, normalizedCity, userId) and UserConcert(userId, concertId)",
+      "Implement DELETE idempotency: return 200 instead of 404 on second delete",
+      "Add cursor->ID mapping cache for pagination (30s TTL)",
+      "Deprecate getAllConcerts() if unused; replace with paginated version",
+      "Profile concert transform memory usage; consider streaming responses for large result sets"
+    ]
+  }
+}

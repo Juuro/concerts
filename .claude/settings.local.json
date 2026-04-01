@@ -59,7 +59,11 @@
       "Bash(elif ! python3 -m json.tool \"$f\")",
       "Bash(else)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(test:*)",
+      "Bash(/Users/g125260/repos/concerts/src/lib/concerts.test.ts:*)",
+      "Bash(for file in \"package.json\" \"vitest.config.ts\" \"vitest.setup.ts\" \"src/lib/concerts.test.ts\" \"TESTING.md\" \"CLAUDE.md\")",
+      "Bash(if [ -f \"$file\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,

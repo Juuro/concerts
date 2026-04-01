@@ -1,0 +1,82 @@
+{
+  "agent": "devil-advocate",
+  "verdict": "CHALLENGES_FOUND",
+  "highest_severity": "CRITICAL",
+  "summary": "The plan assumes vitest.config.ts exists on feature/unit-testing-framework branch, but package.json has zero Vitest dependencies, meaning the branch either doesn't exist or was never merged - implementation will fail immediately.",
+  "challenges": [
+    {
+      "id": "DA1",
+      "severity": "CRITICAL",
+      "category": "assumption",
+      "challenge": "The plan assumes vitest.config.ts and vitest.setup.ts can be copied from feature/unit-testing-framework branch (commit 7507a32), but current package.json has ZERO Vitest dependencies. The branch reference may be invalid, those files may not exist, or they were never merged. Implementation will fail immediately when trying to run yarn test because Vitest is not installed.",
+      "evidence": "synthesised-plan.json line 76: 'Copy exact versions from feature/unit-testing-framework branch (commit 7507a32)'. Current package.json lines 25-37 devDependencies: no vitest, @vitest/ui, @vitest/coverage-v8, or jsdom. AC2 references 'per TESTING.md' but TESTING.md does not exist in codebase.",
+      "suggested_fix": "BEFORE implementation: git checkout feature/unit-testing-framework && verify vitest.config.ts exists && verify package.json has vitest deps. If files don't exist, this is green-field setup, not reuse. Fallback: Install Vitest from scratch with versions matching Next.js 16.x compatibility (vitest@2.x, @vitest/ui@2.x, @vitest/coverage-v8@2.x, jsdom@25.x)."
+    },
+    {
+      "id": "DA2",
+      "severity": "CRITICAL",
+      "category": "assumption",
+      "challenge": "The plan claims authorization checks prevent non-owners from updating concerts (Security agent's CRITICAL requirement), but the actual code checks ATTENDANCE, not ownership. In the multi-tenant model, concerts are SHARED - any attendee can update (triggering fork if multi-attendee). The Security agent misunderstood the business model. Tests will verify the wrong authorization semantics.",
+      "evidence": "concerts.ts lines 786-793: updateConcert checks 'attendance = await prisma.userConcert.findUnique({ where: { userId_concertId }})' then 'if (!attendance) return null'. This checks if user attended the concert, NOT if they own it. Line 830: multi-attendee edits trigger fork, creating a NEW concert for the editing user. synthesised-plan.json lines 119-128: 'test_updateConcert_non_owner_returns_null' but 'non-owner' is the wrong term - should be 'non-attendee'.",
+      "suggested_fix": "Rewrite authorization tests: (1) 'test_updateConcert_non_attendee_returns_null' - user who did NOT attend cannot edit, (2) 'test_updateConcert_single_attendee_updates_in_place' - sole attendee modifies shared concert, (3) 'test_updateConcert_multi_attendee_forks_on_core_change' - attendee editing multi-attendee concert creates fork, (4) 'test_deleteConcert_non_attendee_returns_false'. Fix terminology: attendance authorization, not ownership authorization."
+    },
+    {
+      "id": "DA3",
+      "severity": "HIGH",
+      "category": "risk",
+      "challenge": "The plan tests 25+ functions but IGNORES the most complex function: forkConcertForUser (135 lines, uses $transaction, deletes UserConcert, creates Concert, handles geocoding, checks orphan deletion). Fork logic is the #1 multi-tenant bug source but is NOT listed in key_functions. Tests could achieve 80% coverage without testing fork at all if they mock updateConcert to never trigger fork.",
+      "evidence": "concerts.ts lines 626-760: forkConcertForUser function (135 lines), called from updateConcert line 831 when 'existing._count.attendees > 1 && forkTriggerFieldsChanged'. synthesised-plan.json lines 104-165: 10 test functions listed, NONE test fork explicitly. Line 830 (concerts.ts): fork triggered by multi-attendee + date/venue/headliner change. No test verifies fork transaction atomicity.",
+      "suggested_fix": "Add CRITICAL priority fork tests: (1) test_fork_creates_new_concert_and_removes_from_original, (2) test_fork_preserves_user_cost_and_notes, (3) test_fork_deletes_original_if_orphaned, (4) test_fork_keeps_original_if_other_attendees, (5) test_fork_calls_getGeocodingData_for_new_location. Mock getGeocodingData to avoid external API in tests."
+    },
+    {
+      "id": "DA4",
+      "severity": "HIGH",
+      "category": "consensus",
+      "challenge": "All 8 agents agreed to 80% coverage target, but coverage can be gamed by testing only happy paths (10 lines of assertions, 400+ lines untested branches). AC3 requires 'all major functions AND edge cases' but the plan has no enforcement mechanism beyond 'QE to review coverage report' (which is not a blocking gate). The plan could ship with 80% line coverage but 40% branch coverage.",
+      "evidence": "synthesised-plan.json line 20: 'Target 80% line + branch coverage (5/5 agents agree)'. AC3 (shared-context line 25): 'All major functions and edge cases are tested'. Line 259: 'Coverage gaming' risk rated MEDIUM with mitigation 'Include edge cases' but no verification. vitest.config.ts coverage thresholds: lines 80%, branches 80%, functions 80% - but plan doesn't specify HOW to verify branches.",
+      "suggested_fix": "Add blocking quality gate: (1) Every exported function must have minimum 3 test cases (happy path, error/null case, edge case), (2) Coverage report must show which BRANCHES are untested with line numbers, (3) Any function with <70% branch coverage requires justification comment explaining why branches are unreachable. Make QE coverage review a REQUIRED step before merge, not optional."
+    },
+    {
+      "id": "DA5",
+      "severity": "HIGH",
+      "category": "silent_test_failure",
+      "challenge": "The plan mocks Prisma globally in vitest.setup.ts, but individual test files must use vi.mocked(prisma.concert.findMany).mockResolvedValue(...) with REALISTIC return types. If mocks return generic objects without nested relations (bands[], festival, attendees[], _count), tests will pass but production code will crash on property access like 'concert.bands[0].band.name'. The plan does not specify mock data shapes.",
+      "evidence": "synthesised-plan.json line 94: 'Mock Prisma client via vi.mock('@/lib/prisma')' but no specification of mock return value structure. concerts.ts line 111-134: transformConcert expects concert.bands[{band: Band, isHeadliner, sortOrder}], concert.festival{name, url}, attendance{cost, notes, supportingActIds}. Line 441-458: findMatchingConcert includes bands relation. If mocks don't match Prisma types, TypeScript won't catch it because vi.mocked returns any.",
+      "suggested_fix": "In TESTING.md (or concerts.test.ts JSDoc): Specify mock data factories for Concert, Band, ConcertBand, UserConcert with ALL required relations. Example: 'mockConcert() returns { id, date, latitude, longitude, venue, bands: [{ band: mockBand(), isHeadliner: true, sortOrder: 0 }], festival: null, attendees: [], _count: { attendees: 1 } }'. Use Prisma.$ConcertGetPayload<{include: {bands: {include: {band: true}}, festival: true, attendees: true}}> type for mock return values."
+    },
+    {
+      "id": "DA6",
+      "severity": "MEDIUM",
+      "category": "simplicity",
+      "challenge": "The plan creates TESTING.md documentation (priority 5, 174 lines describing patterns) for a SINGLE test file. YAGNI principle should apply - documentation is premature until a second test file exists and patterns repeat. Pragmatist won on 'no separate test-fixtures.ts' but lost on documentation scope. This violates the same YAGNI reasoning.",
+      "evidence": "synthesised-plan.json lines 170-176: 'CREATE TESTING.md... Sections: Vitest Setup, Running Tests, Mocking Patterns (Prisma, External APIs), GDPR Compliance, concerts.ts Test Patterns, Known Limitations'. AC2 says 'Tests follow project testing patterns using Vitest (per TESTING.md)' but TESTING.md doesn't exist yet - this is circular reference. The deliverable is unit tests, not a testing framework.",
+      "suggested_fix": "Skip TESTING.md for now. Put mock data patterns in JSDoc at top of concerts.test.ts: '/** Prisma Mock Patterns: Use vi.mocked(prisma.concert.findMany).mockResolvedValue(...) with full relations. GDPR: All test data uses @test.example.com emails and mock UUIDs. */'. If a second test file (e.g., bands.test.ts) is added later and duplicates patterns, THEN extract to TESTING.md."
+    },
+    {
+      "id": "DA7",
+      "severity": "MEDIUM",
+      "category": "quality_gate",
+      "challenge": "The plan marks authorization tests as 'CRITICAL: MUST FAIL if authorization check removed' but provides no mechanism to verify this. Tests could pass with wrong assertions (e.g., mocking userId to match, or checking wrong error type). The 'MUST FAIL' requirement is aspirational, not enforced. Test brittleness risk (line 248) acknowledges this but mitigation is not in test spec.",
+      "evidence": "synthesised-plan.json lines 119-128: 'test_updateConcert_non_owner_returns_null (CRITICAL)... Test MUST FAIL if authorization check removed'. Line 248-250: 'Authorization test brittleness: Tests for non-owner scenarios could pass even if authorization is broken if mock data is wrong... mitigation: Write tests that explicitly set non-matching userId'. The mitigation is DESCRIBED but not SPECIFIED in key_functions.",
+      "suggested_fix": "Add to test specification: 'Authorization tests must: (1) Create mock attendance with userId='user-A', (2) Call update/delete with userId='user-B', (3) Assert return value is null/false, (4) Include comment: // This test fails if line 787 attendance check is removed or bypassed. Test with: temporarily remove check, verify test fails, restore check.'"
+    },
+    {
+      "id": "DA8",
+      "severity": "LOW",
+      "category": "scope",
+      "challenge": "The plan tests getUserTotalSpent (line 158) but NOT getUserTotalSpentCached (the cached wrapper). If the cache key is wrong or revalidation tag is missing, production will serve stale spending totals but tests will pass because they call the unwrapped function. getConcertStatistics has a cache test (line 149) but spending does not.",
+      "evidence": "concerts.ts likely has getUserTotalSpent (base function) and getUserTotalSpentCached (unstable_cache wrapper) following the pattern of getConcertStatistics/getUserConcertStatistics. synthesised-plan.json line 154-158: 'test_getUserTotalSpent_aggregates_cost' but no mention of cache test. Line 149-152: 'test_getConcertStatistics_uses_cache' sets precedent for testing cache wrappers.",
+      "suggested_fix": "Add test: 'test_getUserTotalSpentCached_uses_cache_with_correct_key' verifying unstable_cache wrapper has userId in cache key and correct revalidation tag. Low priority because caching bugs manifest in E2E tests, but plan claims 'comprehensive' coverage."
+    }
+  ],
+  "concessions": [
+    "Vitest is the correct testing framework choice for Next.js 16 / TypeScript projects.",
+    "Inline mocks in concerts.test.ts (no separate test-fixtures.ts) is the correct YAGNI decision - Pragmatist wins.",
+    "Testing only exported functions and skipping parseSupportingActIds is pragmatically sound - black-box testing approach.",
+    "Test organization by functional area (Utilities, CRUD, Pagination, Filtering, Statistics, Spending) is logical and maintainable.",
+    "Using vi.mocked(prisma) for Prisma client mocking follows Vitest best practices.",
+    "The 80% coverage threshold (lines + branches + functions) is reasonable IF branch coverage is actually verified, not just aggregate lines.",
+    "Reusing vitest.config.ts from feature branch (IF it exists) is good DRY principle.",
+    "Anonymized test data with @test.example.com emails is correct GDPR compliance approach."
+  ]
+}

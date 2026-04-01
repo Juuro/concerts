@@ -76,6 +76,7 @@ vi.mock('@/utils/data', () => ({
   }),
 }));
 
-vi.mock('@/utils/helpers', () => ({
-  cityToSlug: vi.fn((city: string) => city.toLowerCase().replace(/\s+/g, '-')),
-}));
+vi.mock('@/utils/helpers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/utils/helpers')>();
+  return { ...actual };
+});
