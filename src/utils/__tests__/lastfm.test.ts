@@ -1,17 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock the lastfm-ts-api module with default successful response
-const mockGetInfo = vi.fn((params: { artist: string; autocorrect?: 0 | 1 }, callback: (err: any, res: any) => void) => {
-  // Last.fm API returns { artist: {...} } structure
-  callback(null, {
-    artist: {
-      name: params.artist,
-      url: `https://www.last.fm/music/${params.artist}`,
-      image: [{ size: 'large', '#text': 'https://example.com/image.jpg' }],
-      bio: { summary: 'Test bio' },
-      tags: { tag: ['indie', 'rock'] },
-    },
-  });
+// Hoisted with the mock factory so the factory does not close over a TDZ-bound const.
+const { mockGetInfo } = vi.hoisted(() => {
+  const mockGetInfo = vi.fn(
+    (params: { artist: string; autocorrect?: 0 | 1 }, callback: (err: any, res: any) => void) => {
+      // Last.fm API returns { artist: {...} } structure
+      callback(null, {
+        artist: {
+          name: params.artist,
+          url: `https://www.last.fm/music/${params.artist}`,
+          image: [{ size: 'large', '#text': 'https://example.com/image.jpg' }],
+          bio: { summary: 'Test bio' },
+          tags: { tag: ['indie', 'rock'] },
+        },
+      });
+    }
+  );
+  return { mockGetInfo };
 });
 
 // Vitest 4+ requires a real `function` (or class) when code uses `new` on the mock.

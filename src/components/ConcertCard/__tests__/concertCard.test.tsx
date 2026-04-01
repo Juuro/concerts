@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ConcertCard from '../concertCard';
 import type { TransformedConcert } from '@/lib/concerts';
@@ -95,23 +95,37 @@ describe('ConcertCard', () => {
     expect(screen.getByText(/juni 2024/i)).toBeInTheDocument();
   });
 
-  it('test_ConcertCard_future_concert_has_future_class', () => {
-    const futureConcert: TransformedConcert = {
-      ...mockConcert,
-      date: '2027-12-31T20:00:00.000Z', // Future date
-    };
+  describe('future vs past CSS class', () => {
+    /** Fixed "today" so isInTheFuture() (concert date vs new Date().toISOString()) is deterministic. */
+    const frozenNow = new Date('2026-01-01T12:00:00.000Z');
 
-    const { container } = render(<ConcertCard concert={futureConcert} />);
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(frozenNow);
+    });
 
-    const card = container.querySelector('.concert-card');
-    expect(card).toHaveClass('future');
-  });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-  it('test_ConcertCard_past_concert_no_future_class', () => {
-    const { container } = render(<ConcertCard concert={mockConcert} />);
+    it('test_ConcertCard_future_concert_has_future_class', () => {
+      const futureConcert: TransformedConcert = {
+        ...mockConcert,
+        date: '2027-12-31T20:00:00.000Z',
+      };
 
-    const card = container.querySelector('.concert-card');
-    expect(card).not.toHaveClass('future');
+      const { container } = render(<ConcertCard concert={futureConcert} />);
+
+      const card = container.querySelector('.concert-card');
+      expect(card).toHaveClass('future');
+    });
+
+    it('test_ConcertCard_past_concert_no_future_class', () => {
+      const { container } = render(<ConcertCard concert={mockConcert} />);
+
+      const card = container.querySelector('.concert-card');
+      expect(card).not.toHaveClass('future');
+    });
   });
 
   it('test_ConcertCard_renders_image_when_available', () => {
