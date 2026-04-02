@@ -87,9 +87,16 @@ export interface ConcertFilters {
 
 export interface PaginatedConcerts {
   items: TransformedConcert[]
+  /** Always a `concert.id` (same as `TransformedConcert.id`), including when filtering by `userId`. */
   nextCursor: string | null
+  /** Always a `concert.id`. */
   prevCursor: string | null
   hasMore: boolean
+  /**
+   * For newest-first lists: whether there are concerts **more recent** than the first item
+   * (used for the top “load more recent” control). For `direction: "backward"`, still means
+   * whether another backward page exists.
+   */
   hasPrevious: boolean
 }
 

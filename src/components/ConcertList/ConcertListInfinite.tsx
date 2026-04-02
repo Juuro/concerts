@@ -72,9 +72,9 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
     [filterParams]
   )
 
-  // Fetch more concerts (forward direction)
+  // Fetch more concerts (forward direction — older / toward past)
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !nextCursor) return
+    if (loadingMore || loadingEarlier || !hasMore || !nextCursor) return
 
     setLoadingMore(true)
     setRetryCount(0)
@@ -129,15 +129,16 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
     nextCursor,
     hasMore,
     loadingMore,
+    loadingEarlier,
     router,
     searchParams,
     showToast,
     buildQueryString,
   ])
 
-  // Fetch earlier concerts (backward direction)
-  const loadEarlier = useCallback(async () => {
-    if (loadingEarlier || !hasPrevious) return
+  // Fetch more recent concerts (backward — newer than first visible row)
+  const loadMoreRecent = useCallback(async () => {
+    if (loadingEarlier || loadingMore || !hasPrevious) return
 
     const firstConcertId = concerts[0]?.id
     if (!firstConcertId) return
@@ -157,10 +158,15 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
         const data = await res.json()
 
-        setConcerts((prev) => [...data.items, ...prev])
+        setConcerts((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id))
+          const incoming = (data.items as TransformedConcert[]).filter(
+            (c) => !existingIds.has(c.id)
+          )
+          return [...incoming, ...prev]
+        })
         setHasPrevious(data.hasPrevious)
 
-        // Clear the cursor from URL if we've loaded all previous items
         if (!data.hasPrevious) {
           const params = new URLSearchParams(searchParams.toString())
           params.delete("cursor")
@@ -171,11 +177,11 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
           await fetchWithRetry(1)
         } else {
           showToast({
-            message: "Failed to load earlier concerts",
+            message: "Failed to load more recent concerts",
             type: "error",
             action: {
               label: "Retry",
-              onClick: () => loadEarlier(),
+              onClick: () => loadMoreRecent(),
             },
             duration: 0,
           })
@@ -189,6 +195,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
     concerts,
     hasPrevious,
     loadingEarlier,
+    loadingMore,
     router,
     searchParams,
     showToast,
@@ -199,7 +206,12 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !loadingMore &&
+          !loadingEarlier
+        ) {
           loadMore()
         }
       },
@@ -211,7 +223,7 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
     }
 
     return () => observerRef.current?.disconnect()
-  }, [loadMore, hasMore, loadingMore])
+  }, [loadMore, hasMore, loadingMore, loadingEarlier])
 
   // Re-observe when nextCursor changes
   useEffect(() => {
@@ -222,25 +234,28 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
 
   return (
     <div className="concert-list-infinite">
-      {/* Load Earlier Button */}
       {hasPrevious && (
-        <div className="concert-list-infinite__load-earlier">
+        <div className="concert-list-infinite__load-more-recent">
           <button
             type="button"
-            onClick={loadEarlier}
+            onClick={loadMoreRecent}
             disabled={loadingEarlier}
-            className="load-earlier-btn"
+            className="load-more-recent-btn"
+            aria-label={
+              loadingEarlier
+                ? "Loading more recent concerts"
+                : "Load more recent concerts above this list"
+            }
           >
-            {loadingEarlier ? "Loading..." : "↑ Load earlier concerts"}
+            {loadingEarlier ? "Loading..." : "↑ Load more recent concerts"}
           </button>
         </div>
       )}
 
-      {/* Loading earlier skeletons */}
       {loadingEarlier && (
         <ul className="list-unstyled">
           {Array.from({ length: 3 }).map((_, i) => (
-            <ConcertCardSkeleton key={`skeleton-earlier-${i}`} />
+            <ConcertCardSkeleton key={`skeleton-more-recent-${i}`} />
           ))}
         </ul>
       )}

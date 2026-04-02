@@ -256,10 +256,9 @@ describe("Pagination (Cursor-Based)", () => {
       "backward"
     )
 
-    // Assert: After reversing [D,C,B] -> [B,C,D], then slice(1) -> [C,D]
-    expect(result.items).toHaveLength(2)
+    // Anchor row (cursor D) is excluded; remaining row(s) sorted newest-first → [C]
+    expect(result.items).toHaveLength(1)
     expect(result.items[0].id).toBe("mock-concert-id-c")
-    expect(result.items[1].id).toBe("mock-concert-id-d")
     expect(result.prevCursor).toBe("mock-concert-id-c")
     expect(result.hasMore).toBe(true) // Always true for backward
     expect(result.hasPrevious).toBe(true)
@@ -425,6 +424,7 @@ describe("Pagination (Cursor-Based)", () => {
     vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
       mockUserConcerts as any
     )
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValue(null as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
     // Execute: Filter by userId
@@ -441,6 +441,76 @@ describe("Pagination (Cursor-Based)", () => {
       })
     )
     expect(result.items).toHaveLength(2)
+    expect(result.hasPrevious).toBe(false)
+  })
+
+  test("test_getConcertsPaginated_userId_forward_at_oldest_cursor_returns_anchor_row", async () => {
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce([] as any)
+    vi.mocked(prisma.userConcert.findFirst)
+      .mockResolvedValueOnce({ id: "uc-anchor" } as any)
+      .mockResolvedValueOnce({
+        id: "uc-anchor",
+        userId: "u1",
+        concertId: mockConcertA.id,
+        cost: null,
+        notes: null,
+        supportingActIds: null,
+        createdAt: new Date(),
+        concert: {
+          ...mockConcertA,
+          bands: [],
+          festival: null,
+          _count: { attendees: 1 },
+        },
+      } as any)
+      .mockResolvedValueOnce(null as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([])
+
+    const result = await getConcertsPaginated(
+      mockConcertA.id,
+      20,
+      "forward",
+      { userId: "u1" }
+    )
+
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].id).toBe(mockConcertA.id)
+    expect(result.hasMore).toBe(false)
+    expect(result.hasPrevious).toBe(false)
+  })
+
+  test("test_getConcertsPaginated_userId_forward_hasPrevious_true_when_newer_exists", async () => {
+    const mockUserConcerts = [
+      {
+        id: "uc-b",
+        userId: "u1",
+        concertId: mockConcertB.id,
+        cost: null,
+        notes: null,
+        supportingActIds: null,
+        createdAt: new Date(),
+        concert: {
+          ...mockConcertB,
+          bands: [],
+          festival: null,
+          _count: { attendees: 1 },
+        },
+      },
+    ]
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce(
+      mockUserConcerts as any
+    )
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
+      id: "uc-newer",
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([])
+
+    const result = await getConcertsPaginated(undefined, 20, "forward", {
+      userId: "u1",
+    })
+
+    expect(result.items).toHaveLength(1)
+    expect(result.hasPrevious).toBe(true)
   })
 
   test("test_getConcertsPaginated_with_username_filter", async () => {
@@ -474,6 +544,7 @@ describe("Pagination (Cursor-Based)", () => {
     vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
       mockUserConcerts as any
     )
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValue(null as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
     // Execute: Filter by username (requires userId to be set by caller)
@@ -721,16 +792,24 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
     vi.mocked(prisma.band.findUnique).mockResolvedValueOnce({
       id: "band-1",
     } as any)
-    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
-      concert: { date: new Date("2024-01-01T00:00:00.000Z") },
-    } as any)
-    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+    vi.mocked(prisma.userConcert.findFirst)
+      .mockResolvedValueOnce({
+        id: "uc-old",
+        concert: {
+          date: new Date("2024-01-01T00:00:00.000Z"),
+          id: "concert-older",
+        },
+      } as any)
+      .mockResolvedValueOnce(null as any)
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([] as any)
+      .mockResolvedValueOnce([{ exists: true }] as any)
 
-    const result = await getConcertsPaginated("uc-older", 20, "forward", {
+    const result = await getConcertsPaginated("concert-older", 20, "forward", {
       userId: "user-1",
       bandSlug: "band-a",
     })
-    expect(result.prevCursor).toBe("uc-older")
+    expect(result.prevCursor).toBe("concert-older")
     expect(result.hasPrevious).toBe(true)
   })
 
@@ -739,7 +818,10 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
       id: "band-1",
     } as any)
     vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
-      concert: { date: new Date("2024-01-01T00:00:00.000Z") },
+      concert: {
+        date: new Date("2024-01-01T00:00:00.000Z"),
+        id: "c-cursor",
+      },
     } as any)
     vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([
       { id: "uc-1" },
@@ -795,7 +877,7 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
     ] as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
-    const result = await getConcertsPaginated("uc-cursor", 2, "backward", {
+    const result = await getConcertsPaginated("c-cursor", 2, "backward", {
       userId: "user-1",
       bandSlug: "band-a",
     })
@@ -829,7 +911,7 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
     const result = await getConcertsPaginated(
-      "uc-cursor-missing",
+      "concert-cursor-missing",
       20,
       "forward",
       {
@@ -893,12 +975,17 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
     ] as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
-    const result = await getConcertsPaginated("uc-0", 2, "backward", {
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
+      id: "uc-1",
+    } as any)
+    const result = await getConcertsPaginated("c1", 2, "backward", {
       userId: "user-1",
       isPublic: true,
       city: "x",
     })
-    expect(result.items).toHaveLength(2)
+    // Anchor c1 removed from slice; newest-first sort
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].id).toBe("c2")
     expect(result.hasPrevious).toBe(true)
   })
 })
