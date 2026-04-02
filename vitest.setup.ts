@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom/vitest';
-import type { ImageProps } from 'next/image';
-import type { LinkProps } from 'next/link';
-import { vi } from 'vitest';
-import React from 'react';
+import "@testing-library/jest-dom/vitest"
+import type { ImageProps } from "next/image"
+import type { LinkProps } from "next/link"
+import { vi } from "vitest"
+import React from "react"
 
 // Mock Next.js Image component (strip Next-only props so React does not forward invalid DOM attributes)
-vi.mock('next/image', () => ({
+vi.mock("next/image", () => ({
   default: (props: ImageProps) => {
     const {
       fill: _f,
@@ -24,16 +24,16 @@ vi.mock('next/image', () => ({
       lazyBoundary: _lazyBoundary,
       lazyRoot: _lazyRoot,
       ...imgProps
-    } = props;
-    return React.createElement('img', {
+    } = props
+    return React.createElement("img", {
       ...(imgProps as React.ImgHTMLAttributes<HTMLImageElement>),
-      alt: props.alt ?? '',
-    });
+      alt: props.alt ?? "",
+    })
   },
-}));
+}))
 
 // Mock Next.js Link component (strip Next-only props so React does not forward invalid DOM attributes)
-vi.mock('next/link', () => ({
+vi.mock("next/link", () => ({
   default: ({
     children,
     href,
@@ -48,12 +48,12 @@ vi.mock('next/link', () => ({
     as: _as,
     ...anchorProps
   }: React.PropsWithChildren<LinkProps>) => {
-    return React.createElement('a', { href, ...anchorProps }, children);
+    return React.createElement("a", { href, ...anchorProps }, children)
   },
-}));
+}))
 
 // Mock Prisma client for database operations
-vi.mock('@/lib/prisma', () => {
+vi.mock("@/lib/prisma", () => {
   const prismaModels = {
     concert: {
       findMany: vi.fn(),
@@ -109,28 +109,28 @@ vi.mock('@/lib/prisma', () => {
       groupBy: vi.fn(),
       count: vi.fn(),
     },
-  };
+  }
 
   const prismaMock = {
     ...prismaModels,
     $queryRaw: vi.fn(),
     $transaction: vi.fn((arg: unknown) => {
-      if (typeof arg === 'function') {
-        return Promise.resolve(arg(prismaMock));
+      if (typeof arg === "function") {
+        return Promise.resolve(arg(prismaMock))
       }
       if (Array.isArray(arg)) {
-        return Promise.all(arg);
+        return Promise.all(arg)
       }
-      return Promise.resolve(undefined);
+      return Promise.resolve(undefined)
     }),
-  };
+  }
 
-  return { prisma: prismaMock };
-});
+  return { prisma: prismaMock }
+})
 
 // Mock external utility functions
-vi.mock('@/utils/data', () => ({
+vi.mock("@/utils/data", () => ({
   getGeocodingData: vi.fn().mockResolvedValue({
-    _normalized_city: 'Berlin',
+    _normalized_city: "Berlin",
   }),
-}));
+}))
