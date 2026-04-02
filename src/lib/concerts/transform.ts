@@ -98,14 +98,16 @@ function transformConcertSync(
   const supportingActs = attendance
     ? parseSupportingActIds((attendance as { supportingActIds?: unknown }).supportingActIds)
     : null
-  const supportingActBands = (supportingActs ?? [])
-    .map((o) => prefetchedBands.get(o.bandId))
-    .filter((b): b is PrismaBand => b != null)
-
-  const bands: TransformedBand[] = [
-    ...(headlinerBand ? [headlinerBand] : []),
-    ...supportingActBands.map((b) => bandToTransformed(b, false)),
-  ]
+  const bands: TransformedBand[] =
+    supportingActs === null
+      ? coreBands.map((cb) => bandToTransformed(cb.band, cb.isHeadliner))
+      : [
+          ...(headlinerBand ? [headlinerBand] : []),
+          ...supportingActs
+            .map((o) => prefetchedBands.get(o.bandId))
+            .filter((b): b is PrismaBand => b != null)
+            .map((b) => bandToTransformed(b, false)),
+        ]
 
   const transformed: TransformedConcert = {
     id: concert.id,

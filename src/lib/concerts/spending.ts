@@ -1,11 +1,6 @@
 import { prisma } from "../prisma"
 import { Prisma } from "@/generated/prisma/client"
-
-function getStartOfToday(): Date {
-  const now = new Date()
-  now.setUTCHours(0, 0, 0, 0)
-  return now
-}
+import { getStartOfToday } from "./date"
 
 export async function getUserTotalSpent(
   userId: string,
@@ -14,7 +9,7 @@ export async function getUserTotalSpent(
     city?: string
     year?: number
     pastOnly?: boolean
-  },
+  }
 ): Promise<{ total: number; currency: string }> {
   const now = getStartOfToday()
 
@@ -34,7 +29,9 @@ export async function getUserTotalSpent(
         filters.city != null
           ? Prisma.sql`AND c."normalizedCity" = ${filters.city}`
           : Prisma.empty
-      const pastClause = filters.pastOnly ? Prisma.sql`AND c."date" < ${now}` : Prisma.empty
+      const pastClause = filters.pastOnly
+        ? Prisma.sql`AND c."date" < ${now}`
+        : Prisma.empty
 
       const rows = await prisma.$queryRaw<Row[]>`
         SELECT COALESCE(SUM(uc.cost), 0)::float AS total
@@ -110,8 +107,7 @@ export async function getUserTotalSpent(
 }
 
 export async function getUserTotalSpentCached(
-  userId: string,
+  userId: string
 ): Promise<{ total: number; currency: string }> {
   return getUserTotalSpent(userId, { pastOnly: true })
 }
-

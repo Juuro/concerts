@@ -1,13 +1,7 @@
 import { prisma } from "../prisma"
-import { Prisma } from "@/generated/prisma/client"
 import { cityToSlug } from "@/utils/helpers"
 import type { ConcertCounts, ConcertStatistics } from "./types"
-
-function getStartOfToday(): Date {
-  const now = new Date()
-  now.setUTCHours(0, 0, 0, 0)
-  return now
-}
+import { getStartOfToday } from "./date"
 
 // ============================================
 // Concert Counts (lightweight)
@@ -29,7 +23,7 @@ export async function getConcertCounts(): Promise<ConcertCounts> {
 export async function getUserBandConcertCounts(
   userId: string,
   bandId: string,
-  now: Date,
+  now: Date
 ): Promise<ConcertCounts> {
   type Row = { past_count: bigint; future_count: bigint }
   const rows = await prisma.$queryRaw<Row[]>`
@@ -88,7 +82,9 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
           return Array.from(yearMap.entries())
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5)
-            .map(([year, count]) => [year, count, year] as [string, number, string])
+            .map(
+              ([year, count]) => [year, count, year] as [string, number, string]
+            )
         }),
 
       prisma.concert
@@ -106,8 +102,8 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
                 string,
                 number,
                 string,
-              ],
-          ),
+              ]
+          )
         ),
 
       prisma.concertBand
@@ -134,11 +130,13 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
               })
               const band = bands.find((b) => b.id === bandId)
               return band ? { ...band, count } : null
-            }),
+            })
           )
 
           return bandCounts
-            .filter((b): b is NonNullable<typeof b> => b !== null && b.count > 0)
+            .filter(
+              (b): b is NonNullable<typeof b> => b !== null && b.count > 0
+            )
             .sort((a, b) => b.count - a.count)
             .slice(0, 5)
             .map((b) => [b.name, b.count, b.slug] as [string, number, string])
@@ -169,7 +167,7 @@ export async function getConcertStatistics(): Promise<ConcertStatistics> {
 // ============================================
 
 async function computeUserConcertStatistics(
-  userId: string,
+  userId: string
 ): Promise<ConcertStatistics> {
   const now = getStartOfToday()
 
@@ -196,7 +194,9 @@ async function computeUserConcertStatistics(
           return Array.from(yearMap.entries())
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5)
-            .map(([year, count]) => [year, count, year] as [string, number, string])
+            .map(
+              ([year, count]) => [year, count, year] as [string, number, string]
+            )
         }),
 
       prisma.concert
@@ -218,8 +218,8 @@ async function computeUserConcertStatistics(
                 string,
                 number,
                 string,
-              ],
-          ),
+              ]
+          )
         ),
 
       // Most seen bands (effective bands: core + supportingActIds)
@@ -268,7 +268,9 @@ async function computeUserConcertStatistics(
             .map((r) => {
               const band = bands.find((b) => b.id === r.band_id)
               const count = Number(r.cnt)
-              return band && count > 0 ? ([band.name, count, band.slug] as [string, number, string]) : null
+              return band && count > 0
+                ? ([band.name, count, band.slug] as [string, number, string])
+                : null
             })
             .filter((x): x is [string, number, string] => x != null)
             .slice(0, 5)
@@ -301,11 +303,13 @@ async function computeUserConcertStatistics(
               })
               const band = bands.find((b) => b.id === bandId)
               return band ? { ...band, count } : null
-            }),
+            })
           )
 
           return bandCounts
-            .filter((b): b is NonNullable<typeof b> => b !== null && b.count > 0)
+            .filter(
+              (b): b is NonNullable<typeof b> => b !== null && b.count > 0
+            )
             .sort((a, b) => b.count - a.count)
             .slice(0, 5)
             .map((b) => [b.name, b.count, b.slug] as [string, number, string])
@@ -333,13 +337,13 @@ async function computeUserConcertStatistics(
 }
 
 export async function getUserConcertStatistics(
-  userId: string,
+  userId: string
 ): Promise<ConcertStatistics> {
   return computeUserConcertStatistics(userId)
 }
 
 export async function getUserConcertCounts(
-  userId: string,
+  userId: string
 ): Promise<ConcertCounts> {
   const now = getStartOfToday()
   const [past, future] = await Promise.all([
@@ -428,4 +432,3 @@ export async function getGlobalAppStats(): Promise<{
   ])
   return { concertCount, bandCount, userCount }
 }
-

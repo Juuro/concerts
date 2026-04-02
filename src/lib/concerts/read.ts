@@ -176,9 +176,22 @@ export async function getEffectiveBandsForForm(
   )
   const headliner = sortedCore.find((cb) => cb.isHeadliner)
 
-  // Support acts always come from UserConcert.supportingActIds (per-user)
-  const supportingActs = attendance ? parseSupportingActIds(attendance.supportingActIds) : null
-  const supportingActBandIds = supportingActs?.map((o) => o.bandId) ?? []
+  // Support acts come from UserConcert.supportingActIds (per-user).
+  // Legacy fallback: if parsing yields null for an existing attendance record,
+  // use non-headliner ConcertBand entries so support acts stay editable pre-migration.
+  const parsedSupportingActs = attendance ? parseSupportingActIds(attendance.supportingActIds) : null
+  const legacySupportingActs =
+    attendance && parsedSupportingActs == null
+      ? sortedCore
+          .filter((cb) => !cb.isHeadliner)
+          .map((cb) => ({
+            bandId: cb.band.id,
+            name: cb.band.name,
+            slug: cb.band.slug,
+            isHeadliner: false,
+          }))
+      : null
+  const supportingActBandIds = parsedSupportingActs?.map((o) => o.bandId) ?? []
   const supportingActBands =
     supportingActBandIds.length > 0
       ? await prisma.band.findMany({ where: { id: { in: supportingActBandIds } } })
@@ -196,21 +209,23 @@ export async function getEffectiveBandsForForm(
           },
         ]
       : []),
-    ...(supportingActs ?? [])
-      .map((o) => {
-        const b = bandsById.get(o.bandId)
-        return b
-          ? {
-              bandId: b.id,
-              name: b.name,
-              slug: b.slug,
-              isHeadliner: false,
-            }
-          : null
-      })
-      .filter(
-        (x): x is { bandId: string; name: string; slug: string; isHeadliner: boolean } => x != null,
-      ),
+    ...(legacySupportingActs ??
+      (parsedSupportingActs ?? [])
+        .map((o) => {
+          const b = bandsById.get(o.bandId)
+          return b
+            ? {
+                bandId: b.id,
+                name: b.name,
+                slug: b.slug,
+                isHeadliner: false,
+              }
+            : null
+        })
+        .filter(
+          (x): x is { bandId: string; name: string; slug: string; isHeadliner: boolean } =>
+            x != null,
+        )),
   ]
 }
 

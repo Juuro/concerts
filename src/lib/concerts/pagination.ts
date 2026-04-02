@@ -112,7 +112,7 @@ async function getConcertsPaginatedForUserByBand(
   // Get cursor's concert date for keyset pagination
   let cursorDate: Date | null = null
   if (cursor) {
-    const uc = await prisma.userConcert.findUnique({
+    const uc = await prisma.userConcert.findFirst({
       where: { id: cursor, userId: filters.userId! },
       select: { concert: { select: { date: true } } },
     })
