@@ -5,11 +5,11 @@ import ConcertListInfinite from "../../../src/components/ConcertList/ConcertList
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
 import {
   getUserConcertCounts,
-  getConcertsPaginated,
-  getUserTotalSpent,
-  getStartOfToday,
   getUserBandConcertCounts,
-} from "@/lib/concerts"
+} from "@/lib/concerts/stats"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
+import { getUserTotalSpent } from "@/lib/concerts/spending"
+import { getStartOfToday } from "@/lib/concerts/date"
 import { getBandBySlugLight, enrichBandData } from "@/lib/bands"
 import { after } from "next/server"
 import { getSession } from "@/lib/auth"

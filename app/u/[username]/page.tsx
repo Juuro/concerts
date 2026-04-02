@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getConcertsPaginated, getUserConcerts, getUserConcertStatistics, getUserConcertCounts, getUserUniqueBandCount } from "@/lib/concerts"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
+import { getUserConcerts } from "@/lib/concerts/read"
+import {
+  getUserConcertStatistics,
+  getUserConcertCounts,
+  getUserUniqueBandCount,
+} from "@/lib/concerts/stats"
 import Header from "@/components/Header/header"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"

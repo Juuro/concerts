@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import type { Band as PrismaBand } from "@/generated/prisma/client";
-import { getConcertsByBand, type TransformedConcert } from "./concerts";
+import { getConcertsByBand } from "./concerts/read";
+import type { TransformedConcert } from "./concerts/types";
 import { getArtistInfo } from "@/utils/lastfm";
 import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz";
 import { validateWebsiteUrl } from "@/utils/validation";

@@ -6,14 +6,14 @@ import StatCard from "@/components/StatCard/StatCard"
 import FeatureCard from "@/components/FeatureCard/FeatureCard"
 import { ConcertListInfinite } from "../src/components/ConcertList"
 import {
-  getConcertsPaginated,
   getUserConcertStatistics,
   getUserConcertCounts,
-  getUserTotalSpentCached,
   getGlobalAppStats,
   getUserUniqueBandCount,
   getUserDashboardCounts,
-} from "@/lib/concerts"
+} from "@/lib/concerts/stats"
+import { getUserTotalSpentCached } from "@/lib/concerts/spending"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"

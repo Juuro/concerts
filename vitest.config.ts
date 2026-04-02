@@ -15,6 +15,7 @@ export default defineConfig({
         'node_modules/',
         '.next/',
         'out/',
+        'src/generated/**',
         '**/*.config.*',
         '**/*.setup.*',
         '**/*.test.*',
