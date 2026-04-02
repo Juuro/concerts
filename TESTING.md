@@ -245,7 +245,7 @@ const mockUser = {
 
 ### Privacy Flag Responsibility
 
-**IMPORTANT**: Functions in `src/lib/concerts.ts` return RAW data. Privacy flag filtering (`hideLocationPublic`, `hideCostPublic`, `isPublic`) is the **CALLER'S responsibility** (API routes, components, pages).
+**IMPORTANT**: Functions under `src/lib/concerts/*` (for example `read.ts`, `pagination.ts`, `transform.ts`, `stats.ts`) return RAW data. Privacy flag filtering (`hideLocationPublic`, `hideCostPublic`, `isPublic`) is the **CALLER'S responsibility** (API routes, components, pages).
 
 When documenting or testing functions that return user-related data, use this JSDoc pattern:
 
@@ -426,9 +426,9 @@ beforeEach(() => {
 });
 ```
 
-## concerts.ts Test Patterns
+## Concerts Module Test Patterns
 
-The `src/lib/concerts.ts` file contains 25+ exported functions covering CRUD operations, pagination, filtering, statistics, and duplicate detection. Tests for this file should follow these patterns:
+The concerts domain now lives in modular files under `src/lib/concerts/*` and exposes domain functions via `@/lib/concerts`. Tests for these modules should follow these patterns:
 
 ### Authorization Testing (Attendance-Based)
 
@@ -509,7 +509,7 @@ Pagination uses cursor-based logic where the cursor is the `Concert.id` of the l
 - Default pagination (no cursor, newest concerts first)
 - Forward pagination using `nextCursor` (date DESC, id DESC)
 - Backward pagination using `prevCursor` (date DESC, id DESC)
-- Invalid cursor handling (malformed or non-existent IDs) — tests should assert behavior consistent with `getConcertsPaginated` in `src/lib/concerts.ts` without hard-coding assumptions that may change
+- Invalid cursor handling (malformed or non-existent IDs) — tests should assert behavior consistent with `getConcertsPaginated` in `src/lib/concerts/pagination.ts` without hard-coding assumptions that may change
 - Filter combinations (userId, bandSlug, city, year)
 
 ```typescript
@@ -682,7 +682,7 @@ These items are out of scope for unit tests and documented as tech debt for futu
 
 ### Resilience
 
-- **Retry logic**: Not present in `concerts.ts`. Considered follow-up work.
+- **Retry logic**: Not present in the concerts domain modules under `src/lib/concerts/*`. Considered follow-up work.
 - **Circuit breakers**: Not present. External API calls (Last.fm, Photon) should implement circuit breakers at the API client level.
 
 ### Cache Invalidation
@@ -691,7 +691,7 @@ These items are out of scope for unit tests and documented as tech debt for futu
 
 ### Observability
 
-- **Logging**: No structured logging in `concerts.ts`. This is a HIGH priority tech debt item. Future work should add structured logging to entry/exit points of public functions:
+- **Logging**: No structured logging in the concerts domain modules under `src/lib/concerts/*`. This is a HIGH priority tech debt item. Future work should add structured logging to entry/exit points of public functions:
   - Operation name (e.g., `concert.create.started`)
   - Entity IDs (concertId, userId - never names or emails)
   - Status (success/error)

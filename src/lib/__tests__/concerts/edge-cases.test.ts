@@ -86,7 +86,7 @@ describe("Edge Cases & Error Handling", () => {
       bandIds: [{ bandId, isHeadliner: true }],
     }
 
-    // This test MUST FAIL if duplicate detection is removed (lines 509-516 in concerts.ts)
+    // This test MUST fail if duplicate-attendance checks are removed from create flow.
     await expect(createConcert(input)).rejects.toThrow(ConcertAlreadyExistsError)
     await expect(createConcert(input)).rejects.toThrow("Concert already in list")
   })
@@ -104,7 +104,7 @@ describe("Edge Cases & Error Handling", () => {
       venue: "Hacked Venue",
     })
 
-    // Test MUST return null when user is not an attendee (line 787-793 in concerts.ts)
+    // Must return null when attendance lookup fails in update authorization flow.
     expect(result).toBeNull()
     // Verify no Prisma update operations were called (security check)
     expect(prisma.concert.update).not.toHaveBeenCalled()
@@ -122,7 +122,7 @@ describe("Edge Cases & Error Handling", () => {
 
     const result = await deleteConcert(concertId, nonAttendeeUserId)
 
-    // Test MUST return false when user is not an attendee (line 1080-1086 in concerts.ts)
+    // Must return false when attendance lookup fails in delete authorization flow.
     expect(result).toBe(false)
     // Verify no delete operations were called (security check)
     expect(prisma.userConcert.delete).not.toHaveBeenCalled()
@@ -239,7 +239,7 @@ describe("Edge Cases & Error Handling", () => {
 
   test("test_deleteConcert_removes_attendance_and_orphaned_concert", async () => {
     // Tests cascade deletion: when last attendee leaves, concert is deleted
-    // Critical for orphan cleanup (lines 1098-1103 in concerts.ts)
+    // Critical for orphan cleanup in the delete mutation flow.
     const concertId = "concert-orphan"
     const userId = "user-last-attendee"
     const attendanceId = "uc-orphan"
@@ -276,7 +276,7 @@ describe("Edge Cases & Error Handling", () => {
 
   test("test_deleteConcert_preserves_concert_with_remaining_attendees", async () => {
     // Tests that shared concerts are NOT deleted when other attendees remain
-    // Critical for multi-tenant data integrity (lines 1093-1103 in concerts.ts)
+    // Critical for multi-tenant integrity: shared concerts remain when attendees still exist.
     const concertId = "concert-shared"
     const userId = "user-leaving"
     const attendanceId = "uc-leaving"

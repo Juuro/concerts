@@ -138,11 +138,11 @@ function transformConcertSync(
     transformed.attendance = {
       id: attendance.id,
       userId: attendance.userId,
-      cost: attendance.cost ? attendance.cost.toString() : null,
+      cost: attendance.cost != null ? attendance.cost.toString() : null,
       notes: attendance.notes,
     }
     transformed.userId = attendance.userId
-    transformed.cost = attendance.cost ? attendance.cost.toString() : null
+    transformed.cost = attendance.cost != null ? attendance.cost.toString() : null
   }
 
   if (concert._count?.attendees !== undefined) {
