@@ -109,37 +109,29 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
       prisma.concertBand
         .groupBy({
           by: ["bandId"],
+          where: { concert: { date: { lt: now } } },
           _count: true,
           orderBy: { _count: { bandId: "desc" } },
-          take: 10,
+          take: 5,
         })
         .then(async (results) => {
           const bandIds = results.map((r) => r.bandId)
+          if (bandIds.length === 0) return [] as [string, number, string][]
+
           const bands = await prisma.band.findMany({
             where: { id: { in: bandIds } },
             select: { id: true, name: true, slug: true },
           })
+          const bandById = new Map(bands.map((band) => [band.id, band]))
 
-          const bandCounts = await Promise.all(
-            bandIds.map(async (bandId) => {
-              const count = await prisma.concertBand.count({
-                where: {
-                  bandId,
-                  concert: { date: { lt: now } },
-                },
-              })
-              const band = bands.find((b) => b.id === bandId)
-              return band ? { ...band, count } : null
+          return results
+            .map((r) => {
+              const band = bandById.get(r.bandId)
+              return band
+                ? ([band.name, r._count, band.slug] as [string, number, string])
+                : null
             })
-          )
-
-          return bandCounts
-            .filter(
-              (b): b is NonNullable<typeof b> => b !== null && b.count > 0
-            )
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5)
-            .map((b) => [b.name, b.count, b.slug] as [string, number, string])
+            .filter((b): b is [string, number, string] => b !== null)
         }),
 
       prisma.concert.count({ where: { date: { lt: now } } }),

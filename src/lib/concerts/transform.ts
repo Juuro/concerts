@@ -22,6 +22,7 @@ import type {
 export function parseSupportingActIds(raw: unknown): SupportingActItem[] | null {
   if (raw == null || !Array.isArray(raw)) return null
   const arr = raw as unknown[]
+  if (arr.length === 0) return []
   const out: SupportingActItem[] = []
   for (const item of arr) {
     if (item && typeof item === "object" && "bandId" in item && "sortOrder" in item) {
@@ -31,6 +32,7 @@ export function parseSupportingActIds(raw: unknown): SupportingActItem[] | null 
       }
     }
   }
+  if (out.length === 0) return null
   return out.sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
