@@ -7,6 +7,8 @@ on:
 jobs:
   test-and-coverage:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
 
     steps:
       - name: Checkout repository
@@ -27,7 +29,9 @@ jobs:
         run: yarn install --immutable
 
       - name: Generate Prisma Client
-        run: yarn db:generate
+        run: |
+          yarn db:generate
+          test -f src/generated/prisma/client.ts
 
       - name: Run tests with coverage thresholds
         run: yarn test:coverage
