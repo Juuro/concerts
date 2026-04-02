@@ -26,5 +26,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Generate Prisma Client
+        run: yarn db:generate
+
       - name: Run tests with coverage thresholds
         run: yarn test:coverage
