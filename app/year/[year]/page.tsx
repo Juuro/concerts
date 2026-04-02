@@ -3,11 +3,11 @@ import Layout from "../../../src/components/layout-client"
 import ConcertListInfinite from "../../../src/components/ConcertList/ConcertListInfinite"
 import ConcertCount from "../../../src/components/ConcertCount/concertCount"
 import {
-  getConcertsPaginated,
   getUserConcertCounts,
-  getUserTotalSpent,
-  getStartOfToday,
-} from "@/lib/concerts"
+} from "@/lib/concerts/stats"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
+import { getUserTotalSpent } from "@/lib/concerts/spending"
+import { getStartOfToday } from "@/lib/concerts/date"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ConcertCard from '../concertCard';
-import type { TransformedConcert } from '@/lib/concerts';
+import type { TransformedConcert } from '@/lib/concerts/types';
 
 describe('ConcertCard', () => {
   const mockConcert: TransformedConcert = {
@@ -153,5 +153,23 @@ describe('ConcertCard', () => {
 
     const placeholder = container.querySelector('.concert-card-image-placeholder');
     expect(placeholder).toBeInTheDocument();
+  });
+
+  it('test_ConcertCard_when_hideLocation_true_does_not_render_venue_or_city', () => {
+    render(<ConcertCard concert={mockConcert} hideLocation />);
+
+    expect(screen.queryByText('Test Venue')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Berlin' })).not.toBeInTheDocument();
+  });
+
+  it('test_ConcertCard_when_hideCost_true_does_not_render_cost', () => {
+    const concertWithCost: TransformedConcert = {
+      ...mockConcert,
+      cost: "50",
+    };
+
+    render(<ConcertCard concert={concertWithCost} hideCost currency="EUR" />);
+
+    expect(screen.queryByText(/50\s*EUR/i)).not.toBeInTheDocument();
   });
 });

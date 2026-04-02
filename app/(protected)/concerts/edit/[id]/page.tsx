@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getEffectiveBandsForForm } from "@/lib/concerts";
+import { getEffectiveBandsForForm } from "@/lib/concerts/read";
 import { ConcertForm } from "@/components/ConcertForm";
 import "./edit-concert.scss";
 

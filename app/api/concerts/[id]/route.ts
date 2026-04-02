@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getConcertById, updateConcert, deleteConcert, type UpdateConcertInput } from "@/lib/concerts";
+import type { UpdateConcertInput } from "@/lib/concerts/types";
+import { getConcertById } from "@/lib/concerts/read";
+import { updateConcert } from "@/lib/concerts/mutations/update";
+import { deleteConcert } from "@/lib/concerts/mutations/delete";
 import { getOrCreateFestival } from "@/lib/festivals";
 
 export async function GET(

@@ -3,13 +3,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { revalidateTag } from "next/cache"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import {
-  createConcert,
-  ConcertAlreadyExistsError,
-  getConcertsPaginated,
-  type CreateConcertInput,
-  type ConcertFilters,
-} from "@/lib/concerts"
+import { createConcert } from "@/lib/concerts/mutations/create"
+import { ConcertAlreadyExistsError } from "@/lib/concerts/errors"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
+import type { CreateConcertInput, ConcertFilters } from "@/lib/concerts/types"
 import { getOrCreateFestival } from "@/lib/festivals"
 import { prisma } from "@/lib/prisma"
 import type { GeocodingData } from "@/types/geocoding"
