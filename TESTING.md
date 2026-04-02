@@ -666,7 +666,7 @@ it('test_getConcertsByBand_filters_correctly', async () => {
 - **Complex async logic**: 85%+ coverage (CRUD, fork logic, pagination)
 - **React components**: 80%+ coverage
 
-**Important**: Coverage thresholds in `vitest.config.ts` use `autoUpdate: true`, meaning thresholds adjust automatically based on current coverage. As the codebase grows, coverage targets will be enforced more strictly.
+**Important**: Coverage thresholds in `vitest.config.ts` are enforced **per source file** at 80% for lines, branches, functions, and statements.
 
 Focus on **branch coverage**, not just line coverage. A function with high line coverage but low branch coverage indicates missing error path or edge case tests.
 
@@ -708,6 +708,11 @@ These items are out of scope for unit tests and documented as tech debt for futu
 Run `yarn test:coverage` and review the HTML report in `coverage/index.html` to identify uncovered lines and branches.
 
 ### Enforcement
+
+Pull requests run the `PR Test Coverage` GitHub Action, which executes `yarn test:coverage` and fails if:
+
+- Any test fails
+- Any covered source file is below 80% for lines, branches, functions, or statements
 
 Every exported function must have minimum **3 test cases**:
 

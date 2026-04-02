@@ -21,11 +21,12 @@ export default defineConfig({
         '**/types/**',
         '**/__tests__/**',
       ],
-      // Thresholds are aspirational goals for incremental coverage growth
-      // For this initial setup, we verify example test coverage (100% on helpers/featureFlags)
-      // Global thresholds will be enforced once more of the codebase has tests
       thresholds: {
-        autoUpdate: true, // Update thresholds based on current coverage
+        lines: 80,
+        branches: 80,
+        functions: 80,
+        statements: 80,
+        perFile: true,
       },
     },
   },
