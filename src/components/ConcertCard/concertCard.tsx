@@ -4,7 +4,7 @@ import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { cityToSlug, extractCityName } from "../../utils/helpers"
-import type { TransformedConcert } from "@/lib/concerts"
+import type { TransformedConcert } from "@/lib/concerts/types"
 import "./concertCard.scss"
 
 interface ConcertCardProps {

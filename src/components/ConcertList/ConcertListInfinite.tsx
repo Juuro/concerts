@@ -6,7 +6,7 @@ import ConcertCard from "../ConcertCard/concertCard"
 import ConcertCardSkeleton from "../ConcertCard/ConcertCardSkeleton"
 import { useToast } from "../Toast"
 import { useSession } from "@/lib/auth-client"
-import type { TransformedConcert } from "@/lib/concerts"
+import type { TransformedConcert } from "@/lib/concerts/types"
 import "./concertListInfinite.scss"
 
 interface ConcertListInfiniteProps {
