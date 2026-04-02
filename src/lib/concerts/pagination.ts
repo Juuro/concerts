@@ -7,7 +7,7 @@ export async function getConcertsPaginated(
   cursor?: string,
   limit = 20,
   direction: "forward" | "backward" = "forward",
-  filters?: ConcertFilters,
+  filters?: ConcertFilters
 ): Promise<PaginatedConcerts> {
   const take = direction === "forward" ? limit + 1 : -(limit + 1)
 
@@ -104,7 +104,7 @@ async function getConcertsPaginatedForUserByBand(
   limit: number,
   direction: "forward" | "backward",
   filters: ConcertFilters,
-  bandId: string,
+  bandId: string
 ): Promise<PaginatedConcerts> {
   const take = limit + 1
   type Row = { id: string }
@@ -203,7 +203,7 @@ async function getConcertsPaginatedForUserByBand(
 
   return {
     items: await transformConcertsBatch(
-      items.map((uc) => ({ concert: uc.concert, attendance: uc })),
+      items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
     nextCursor:
       direction === "forward"
@@ -211,15 +211,15 @@ async function getConcertsPaginatedForUserByBand(
           ? items[items.length - 1].id
           : null
         : cursor
-          ? items[items.length - 1]?.id ?? null
+          ? (items[items.length - 1]?.id ?? null)
           : null,
     prevCursor:
       direction === "forward"
         ? cursor
-          ? items[0]?.id ?? null
+          ? (items[0]?.id ?? null)
           : null
         : hasExtra
-          ? items[0]?.id ?? null
+          ? (items[0]?.id ?? null)
           : null,
     hasMore: direction === "forward" ? hasExtra : Boolean(cursor),
     hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
@@ -231,7 +231,7 @@ async function getConcertsPaginatedForUser(
   cursor: string | undefined,
   limit: number,
   direction: "forward" | "backward",
-  filters: ConcertFilters,
+  filters: ConcertFilters
 ): Promise<PaginatedConcerts> {
   // Band filter requires raw SQL (headliner OR supportingActIds)
   if (filters.bandSlug && filters.userId) {
@@ -245,7 +245,7 @@ async function getConcertsPaginatedForUser(
         limit,
         direction,
         filters,
-        band.id,
+        band.id
       )
     }
   }
@@ -324,7 +324,7 @@ async function getConcertsPaginatedForUser(
 
   return {
     items: await transformConcertsBatch(
-      items.map((uc) => ({ concert: uc.concert, attendance: uc })),
+      items.map((uc) => ({ concert: uc.concert, attendance: uc }))
     ),
     nextCursor:
       direction === "forward" && hasExtra
@@ -342,4 +342,3 @@ async function getConcertsPaginatedForUser(
     hasPrevious: direction === "backward" ? hasExtra : Boolean(cursor),
   }
 }
-

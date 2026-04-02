@@ -5,4 +5,3 @@ export class ConcertAlreadyExistsError extends Error {
     this.name = "ConcertAlreadyExistsError"
   }
 }
-

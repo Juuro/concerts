@@ -7,7 +7,11 @@ import {
   type UserConcert,
 } from "@/generated/prisma/client"
 import { getGeocodingData } from "@/utils/data"
-import type { CreateConcertInput, SupportingActItem, TransformedConcert } from "../types"
+import type {
+  CreateConcertInput,
+  SupportingActItem,
+  TransformedConcert,
+} from "../types"
 import { transformConcert } from "../transform"
 import { findMatchingConcert, getHeadliner } from "../matching"
 import { ConcertAlreadyExistsError } from "../errors"
@@ -25,9 +29,14 @@ type ConcertWithRelations = PrismaConcert & {
  * - Otherwise create a new shared `Concert` + user `UserConcert`.
  * - Preserves exact duplicate detection + transformation behavior.
  */
-export async function createConcert(input: CreateConcertInput): Promise<TransformedConcert> {
+export async function createConcert(
+  input: CreateConcertInput
+): Promise<TransformedConcert> {
   const headliner = getHeadliner(
-    input.bandIds.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner ?? false })),
+    input.bandIds.map((b) => ({
+      bandId: b.bandId,
+      isHeadliner: b.isHeadliner ?? false,
+    }))
   )
   const headlinerBandId = headliner?.bandId
 
@@ -40,7 +49,7 @@ export async function createConcert(input: CreateConcertInput): Promise<Transfor
       input.date,
       input.latitude,
       input.longitude,
-      headlinerBandId,
+      headlinerBandId
     )
 
     if (existingConcert) {
@@ -58,7 +67,10 @@ export async function createConcert(input: CreateConcertInput): Promise<Transfor
       // Check if user already attends this concert (avoid unique constraint)
       const existingAttendance = await prisma.userConcert.findUnique({
         where: {
-          userId_concertId: { userId: input.userId, concertId: existingConcert.id },
+          userId_concertId: {
+            userId: input.userId,
+            concertId: existingConcert.id,
+          },
         },
       })
       if (existingAttendance) {
@@ -93,7 +105,9 @@ export async function createConcert(input: CreateConcertInput): Promise<Transfor
 }
 
 /** Create a new Concert + UserConcert (no matching). */
-async function createNewConcertWithUser(input: CreateConcertInput): Promise<ConcertWithRelations> {
+async function createNewConcertWithUser(
+  input: CreateConcertInput
+): Promise<ConcertWithRelations> {
   const geocodingData = await getGeocodingData(input.latitude, input.longitude)
   const normalizedCity =
     geocodingData?._normalized_city && !geocodingData._is_coordinates
@@ -150,4 +164,3 @@ async function createNewConcertWithUser(input: CreateConcertInput): Promise<Conc
 
   return concert
 }
-

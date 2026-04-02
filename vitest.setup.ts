@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import type { ImageProps } from 'next/image';
+import type { LinkProps } from 'next/link';
 import { vi } from 'vitest';
 import React from 'react';
 
@@ -31,10 +32,23 @@ vi.mock('next/image', () => ({
   },
 }));
 
-// Mock Next.js Link component
+// Mock Next.js Link component (strip Next-only props so React does not forward invalid DOM attributes)
 vi.mock('next/link', () => ({
-  default: ({ children, href, className, ...props }: any) => {
-    return React.createElement('a', { href, className, ...props }, children);
+  default: ({
+    children,
+    href,
+    prefetch: _prefetch,
+    replace: _replace,
+    scroll: _scroll,
+    shallow: _shallow,
+    locale: _locale,
+    passHref: _passHref,
+    legacyBehavior: _legacyBehavior,
+    onNavigate: _onNavigate,
+    as: _as,
+    ...anchorProps
+  }: React.PropsWithChildren<LinkProps>) => {
+    return React.createElement('a', { href, ...anchorProps }, children);
   },
 }));
 

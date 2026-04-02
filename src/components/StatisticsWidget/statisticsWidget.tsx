@@ -37,9 +37,7 @@ const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({
 
   const mostConcertsOfOneBand = useMemo(() => {
     if (mostSeenBandsArray.length === 0) return 0
-    return Math.max(
-      ...mostSeenBandsArray.map((band) => band.numberOfConcerts)
-    )
+    return Math.max(...mostSeenBandsArray.map((band) => band.numberOfConcerts))
   }, [mostSeenBandsArray])
 
   const cityCountsObject = useMemo(() => {

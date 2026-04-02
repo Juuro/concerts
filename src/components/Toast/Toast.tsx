@@ -45,7 +45,10 @@ const Toast: React.FC<ToastProps> = ({
   if (!isVisible) return null
 
   return (
-    <div className={`toast toast--${type} ${isExiting ? "toast--exiting" : ""}`} role="alert">
+    <div
+      className={`toast toast--${type} ${isExiting ? "toast--exiting" : ""}`}
+      role="alert"
+    >
       <span className="toast__message">{message}</span>
       <div className="toast__actions">
         {action && (

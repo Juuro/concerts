@@ -19,11 +19,7 @@ vi.mock("@/utils/data", () => ({
   }),
 }))
 
-function mkBand(params: {
-  id: string
-  name: string
-  slug: string
-}): any {
+function mkBand(params: { id: string; name: string; slug: string }): any {
   return {
     id: params.id,
     name: params.name,
@@ -50,7 +46,11 @@ describe("Fork Logic (Multi-Tenant)", () => {
     const originalDate = new Date("2024-06-15")
     const newDate = new Date("2024-06-16")
 
-    const headlinerBand = mkBand({ id: "band-1", name: "Band A", slug: "band-a" })
+    const headlinerBand = mkBand({
+      id: "band-1",
+      name: "Band A",
+      slug: "band-a",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-1",
@@ -137,14 +137,18 @@ describe("Fork Logic (Multi-Tenant)", () => {
           date: newDate,
           createdById: userId,
         }),
-      }),
+      })
     )
   })
 
   test("test_updateConcert_when_multi_attendee_and_venue_change_forks_new_concert", async () => {
     const userId = "user-2"
 
-    const headlinerBand = mkBand({ id: "band-2", name: "Band B", slug: "band-b" })
+    const headlinerBand = mkBand({
+      id: "band-2",
+      name: "Band B",
+      slug: "band-b",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-2",
@@ -215,7 +219,9 @@ describe("Fork Logic (Multi-Tenant)", () => {
     vi.mocked(prisma.userConcert.delete).mockResolvedValueOnce({} as any)
     vi.mocked(prisma.concert.create).mockResolvedValueOnce(forkedConcert as any)
 
-    const result = await updateConcert("concert-3", userId, { venue: "New Venue" })
+    const result = await updateConcert("concert-3", userId, {
+      venue: "New Venue",
+    })
 
     expect(result).toBeTruthy()
     expect(result?.venue).toBe("New Venue")
@@ -225,8 +231,16 @@ describe("Fork Logic (Multi-Tenant)", () => {
   test("test_updateConcert_when_multi_attendee_and_headliner_change_forks_new_concert", async () => {
     const userId = "user-3"
 
-    const existingHeadlinerBand = mkBand({ id: "band-3", name: "Band C", slug: "band-c" })
-    const newHeadlinerBand = mkBand({ id: "band-4", name: "Band D", slug: "band-d" })
+    const existingHeadlinerBand = mkBand({
+      id: "band-3",
+      name: "Band C",
+      slug: "band-c",
+    })
+    const newHeadlinerBand = mkBand({
+      id: "band-4",
+      name: "Band D",
+      slug: "band-d",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-3",
@@ -312,14 +326,18 @@ describe("Fork Logic (Multi-Tenant)", () => {
             }),
           }),
         }),
-      }),
+      })
     )
   })
 
   test("test_updateConcert_when_fork_creates_new_concert_and_removes_user_from_original", async () => {
     const userId = "user-fork-1"
 
-    const headlinerBand = mkBand({ id: "band-fork", name: "Fork Band", slug: "fork-band" })
+    const headlinerBand = mkBand({
+      id: "band-fork",
+      name: "Fork Band",
+      slug: "fork-band",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-fork-original",
@@ -402,7 +420,7 @@ describe("Fork Logic (Multi-Tenant)", () => {
         data: expect.objectContaining({
           attendees: expect.any(Object),
         }),
-      }),
+      })
     )
   })
 
@@ -453,7 +471,9 @@ describe("Fork Logic (Multi-Tenant)", () => {
     } as any)
 
     vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
-    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([supportingBand as any])
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([
+      supportingBand as any,
+    ])
 
     const forkedConcert = {
       id: "concert-forked-preserve",
@@ -508,14 +528,18 @@ describe("Fork Logic (Multi-Tenant)", () => {
             }),
           }),
         }),
-      }),
+      })
     )
   })
 
   test("test_updateConcert_when_fork_with_remaining_attendees_preserves_original_concert", async () => {
     const userId = "user-keep-original"
 
-    const headlinerBand = mkBand({ id: "band-keep", name: "Keep Band", slug: "keep-band" })
+    const headlinerBand = mkBand({
+      id: "band-keep",
+      name: "Keep Band",
+      slug: "keep-band",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-keep",
@@ -605,7 +629,11 @@ describe("Fork Logic (Multi-Tenant)", () => {
     const existingDate = new Date("2024-12-01")
     const updatedDate = new Date("2024-12-02")
 
-    const headlinerBand = mkBand({ id: "band-single", name: "Single Band", slug: "single-band" })
+    const headlinerBand = mkBand({
+      id: "band-single",
+      name: "Single Band",
+      slug: "single-band",
+    })
 
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "attendance-single",
@@ -617,27 +645,26 @@ describe("Fork Logic (Multi-Tenant)", () => {
     } as any)
 
     // 1) Fetch existing concert (for fork decision)
-    vi.mocked(prisma.concert.findUnique)
-      .mockResolvedValueOnce({
-        id: "concert-single",
-        date: existingDate,
-        latitude: 52.52,
-        longitude: 13.405,
-        venue: "Single Venue",
-        normalizedCity: "berlin",
-        isFestival: false,
-        festivalId: null,
-        festival: null,
-        bands: [
-          {
-            bandId: headlinerBand.id,
-            isHeadliner: true,
-            sortOrder: 0,
-            band: headlinerBand,
-          },
-        ],
-        _count: { attendees: 1 },
-      } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-single",
+      date: existingDate,
+      latitude: 52.52,
+      longitude: 13.405,
+      venue: "Single Venue",
+      normalizedCity: "berlin",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: headlinerBand.id,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: headlinerBand,
+        },
+      ],
+      _count: { attendees: 1 },
+    } as any)
 
     // concert.update
     vi.mocked(prisma.concert.update).mockResolvedValueOnce({
@@ -645,50 +672,48 @@ describe("Fork Logic (Multi-Tenant)", () => {
     } as any)
 
     // 2) Re-fetch after update (for matching concert check)
-    vi.mocked(prisma.concert.findUnique)
-      .mockResolvedValueOnce({
-        id: "concert-single",
-        date: updatedDate,
-        latitude: 52.52,
-        longitude: 13.405,
-        bands: [{ bandId: headlinerBand.id, isHeadliner: true }],
-      } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-single",
+      date: updatedDate,
+      latitude: 52.52,
+      longitude: 13.405,
+      bands: [{ bandId: headlinerBand.id, isHeadliner: true }],
+    } as any)
 
     // findMatchingConcert: no match
     vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
 
     // 3) Final fetch with relations (for transformConcert)
-    vi.mocked(prisma.concert.findUnique)
-      .mockResolvedValueOnce({
-        id: "concert-single",
-        date: updatedDate,
-        latitude: 52.52,
-        longitude: 13.405,
-        venue: "Single Venue",
-        normalizedCity: "berlin",
-        isFestival: false,
-        festivalId: null,
-        festival: null,
-        bands: [
-          {
-            bandId: headlinerBand.id,
-            isHeadliner: true,
-            sortOrder: 0,
-            band: headlinerBand,
-          },
-        ],
-        attendees: [
-          {
-            id: "attendance-single",
-            userId,
-            concertId: "concert-single",
-            cost: 45,
-            notes: "Solo show",
-            supportingActIds: [],
-          },
-        ],
-        _count: { attendees: 1 },
-      } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-single",
+      date: updatedDate,
+      latitude: 52.52,
+      longitude: 13.405,
+      venue: "Single Venue",
+      normalizedCity: "berlin",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: headlinerBand.id,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: headlinerBand,
+        },
+      ],
+      attendees: [
+        {
+          id: "attendance-single",
+          userId,
+          concertId: "concert-single",
+          cost: 45,
+          notes: "Solo show",
+          supportingActIds: [],
+        },
+      ],
+      _count: { attendees: 1 },
+    } as any)
 
     const result = await updateConcert("concert-single", userId, {
       date: updatedDate,
@@ -702,7 +727,7 @@ describe("Fork Logic (Multi-Tenant)", () => {
     expect(prisma.concert.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "concert-single" },
-      }),
+      })
     )
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
@@ -755,7 +780,14 @@ describe("updateConcert multi-attendee band-only change (no fork)", () => {
     vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
     vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
       ...existing,
-      attendees: [{ userId, cost: null, notes: null, supportingActIds: [{ bandId: "band-support", sortOrder: 0 }] }],
+      attendees: [
+        {
+          userId,
+          cost: null,
+          notes: null,
+          supportingActIds: [{ bandId: "band-support", sortOrder: 0 }],
+        },
+      ],
     } as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
     const result = await updateConcert("c-multi-1", userId, {
@@ -820,8 +852,13 @@ describe("updateConcert post-update dedup matching", () => {
       venue: "Venue B",
       bands: [{ bandId: "band-1", isHeadliner: true }],
     } as any)
-    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([{ id: "c-match-1" }] as any)
-    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({ id: "att-1", userId } as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
+      { id: "c-match-1" },
+    ] as any)
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "att-1",
+      userId,
+    } as any)
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce(null)
     vi.mocked(prisma.userConcert.create).mockResolvedValue({} as any)
     vi.mocked(prisma.userConcert.delete).mockResolvedValue({} as any)
@@ -844,7 +881,9 @@ describe("updateConcert post-update dedup matching", () => {
       _count: { attendees: 2 },
     } as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
-    const result = await updateConcert("c-dedup-1", userId, { venue: "Venue B" })
+    const result = await updateConcert("c-dedup-1", userId, {
+      venue: "Venue B",
+    })
     expect(result).not.toBeNull()
     expect(result!.id).toBe("c-match-1")
     expect(prisma.userConcert.create).toHaveBeenCalled()
@@ -870,7 +909,14 @@ describe("updateConcert shared field updates (single attendee)", () => {
       festivalId: null,
       createdById: "user-1",
       updatedById: null,
-      bands: [{ bandId: "band-1", isHeadliner: true, sortOrder: 0, band: mkBand({ id: "band-1", name: "Band A", slug: "band-a" }) }],
+      bands: [
+        {
+          bandId: "band-1",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: mkBand({ id: "band-1", name: "Band A", slug: "band-a" }),
+        },
+      ],
       festival: null,
       _count: { attendees: 1 },
     }
@@ -896,9 +942,10 @@ describe("updateConcert shared field updates (single attendee)", () => {
       attendees: [{ userId, cost: null, notes: null, supportingActIds: [] }],
     } as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
-    const result = await updateConcert("c-update-1", userId, { venue: "New Venue" })
+    const result = await updateConcert("c-update-1", userId, {
+      venue: "New Venue",
+    })
     expect(result).not.toBeNull()
     expect(prisma.concert.update).toHaveBeenCalled()
   })
 })
-

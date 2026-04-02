@@ -42,7 +42,9 @@ const ConcertListInfinite: React.FC<ConcertListInfiniteProps> = ({
   const { data: session } = useSession()
 
   // For public profile pages, enable edit buttons if the viewer owns the profile
-  const isViewingOwnProfile = Boolean(profileUserId && session?.user?.id === profileUserId)
+  const isViewingOwnProfile = Boolean(
+    profileUserId && session?.user?.id === profileUserId
+  )
   const shouldShowEditButtons = showEditButtons || isViewingOwnProfile
   const effectiveUserId = currentUserId || session?.user?.id
 

@@ -7,7 +7,11 @@ import {
   type UserConcert,
 } from "@/generated/prisma/client"
 import { getGeocodingData } from "@/utils/data"
-import type { SupportingActItem, TransformedConcert, UpdateConcertInput } from "../types"
+import type {
+  SupportingActItem,
+  TransformedConcert,
+  UpdateConcertInput,
+} from "../types"
 import { parseSupportingActIds, transformConcert } from "../transform"
 import { findMatchingConcert, getHeadliner } from "../matching"
 
@@ -26,7 +30,11 @@ async function forkConcertForUser(
   originalConcert: ConcertWithRelations,
   userId: string,
   input: UpdateConcertInput,
-  currentAttendance: { cost: any; notes: string | null; supportingActIds: unknown },
+  currentAttendance: {
+    cost: any
+    notes: string | null
+    supportingActIds: unknown
+  }
 ): Promise<TransformedConcert> {
   // Get geocoding data for the new location
   const latitude = input.latitude ?? originalConcert.latitude
@@ -55,7 +63,8 @@ async function forkConcertForUser(
     const originalHeadliner = originalConcert.bands.find((b) => b.isHeadliner)
     headlinerBandId = originalHeadliner?.bandId
     // Support acts from user's supportingActIds (per-user data)
-    supportingActIds = parseSupportingActIds(currentAttendance.supportingActIds) ?? []
+    supportingActIds =
+      parseSupportingActIds(currentAttendance.supportingActIds) ?? []
   }
 
   // Use transaction for atomicity
@@ -91,7 +100,8 @@ async function forkConcertForUser(
         attendees: {
           create: {
             userId,
-            cost: input.cost !== undefined ? input.cost : currentAttendance.cost,
+            cost:
+              input.cost !== undefined ? input.cost : currentAttendance.cost,
             notes:
               input.notes !== undefined ? input.notes : currentAttendance.notes,
             supportingActIds,
@@ -114,7 +124,7 @@ async function forkConcertForUser(
 
   // 3. Check if new concert matches an existing one (merge logic)
   const newHeadliner = getHeadliner(
-    result.bands.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner })),
+    result.bands.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner }))
   )
   const newHeadlinerId = newHeadliner?.bandId
   const matchingConcert =
@@ -124,7 +134,7 @@ async function forkConcertForUser(
       result.latitude,
       result.longitude,
       newHeadlinerId,
-      result.id, // Exclude the just-created concert
+      result.id // Exclude the just-created concert
     ))
 
   if (matchingConcert) {
@@ -180,7 +190,7 @@ async function forkConcertForUser(
 export async function updateConcert(
   id: string,
   userId: string,
-  input: UpdateConcertInput,
+  input: UpdateConcertInput
 ): Promise<TransformedConcert | null> {
   // Verify user has attendance (is linked to this concert)
   const attendance = await prisma.userConcert.findUnique({
@@ -213,14 +223,18 @@ export async function updateConcert(
   const existingHeadlinerId = getHeadliner(existing.bands)?.bandId
   const inputHeadlinerId = input.bandIds
     ? getHeadliner(
-        input.bandIds.map((b) => ({ bandId: b.bandId, isHeadliner: b.isHeadliner || false })),
+        input.bandIds.map((b) => ({
+          bandId: b.bandId,
+          isHeadliner: b.isHeadliner || false,
+        }))
       )?.bandId
     : undefined
   const headlinerChanged =
     input.bandIds !== undefined && inputHeadlinerId !== existingHeadlinerId
 
   const forkTriggerFieldsChanged =
-    (input.date !== undefined && input.date.getTime() !== existing.date.getTime()) ||
+    (input.date !== undefined &&
+      input.date.getTime() !== existing.date.getTime()) ||
     (input.latitude !== undefined && input.latitude !== existing.latitude) ||
     (input.longitude !== undefined && input.longitude !== existing.longitude) ||
     (input.venue !== undefined && input.venue !== existing.venue) ||
@@ -237,19 +251,21 @@ export async function updateConcert(
 
   // Support-act-only edit: same headliner, no core field change → update only UserConcert.supportingActIds
   const noCoreFieldChanged =
-    (input.date === undefined || input.date.getTime() === existing.date.getTime()) &&
+    (input.date === undefined ||
+      input.date.getTime() === existing.date.getTime()) &&
     (input.latitude === undefined || input.latitude === existing.latitude) &&
     (input.longitude === undefined || input.longitude === existing.longitude) &&
     (input.venue === undefined || input.venue === existing.venue) &&
-    (input.isFestival === undefined || input.isFestival === existing.isFestival) &&
+    (input.isFestival === undefined ||
+      input.isFestival === existing.isFestival) &&
     (input.festivalId === undefined ||
       (input.festivalId ?? null) === (existing.festivalId ?? null))
 
   const onlyBandsChanged =
     input.bandIds !== undefined && !headlinerChanged && noCoreFieldChanged
   if (onlyBandsChanged) {
-    const supportActOverrides: SupportingActItem[] = input.bandIds!
-      .filter((b) => b.bandId !== inputHeadlinerId)
+    const supportActOverrides: SupportingActItem[] = input
+      .bandIds!.filter((b) => b.bandId !== inputHeadlinerId)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
     await prisma.userConcert.update({
@@ -352,7 +368,7 @@ export async function updateConcert(
     if (input.latitude !== undefined || input.longitude !== undefined) {
       const geocodingData = await getGeocodingData(
         input.latitude ?? existing.latitude,
-        input.longitude ?? existing.longitude,
+        input.longitude ?? existing.longitude
       )
       normalizedCity =
         geocodingData?._normalized_city && !geocodingData._is_coordinates
@@ -389,7 +405,7 @@ export async function updateConcert(
           updatedConcert.latitude,
           updatedConcert.longitude,
           updatedHeadlinerId,
-          id, // Exclude the concert being edited
+          id // Exclude the concert being edited
         )
 
         // If we found a matching concert, migrate the user
@@ -414,7 +430,8 @@ export async function updateConcert(
                 concertId: matchingConcert.id,
                 cost: currentAttendance.cost,
                 notes: currentAttendance.notes,
-                supportingActIds: currentAttendance.supportingActIds ?? undefined,
+                supportingActIds:
+                  currentAttendance.supportingActIds ?? undefined,
               },
             })
           }
@@ -448,7 +465,10 @@ export async function updateConcert(
           })
 
           if (finalConcert) {
-            return await transformConcert(finalConcert, finalConcert.attendees![0])
+            return await transformConcert(
+              finalConcert,
+              finalConcert.attendees![0]
+            )
           }
         }
       }
@@ -473,4 +493,3 @@ export async function updateConcert(
 
   return await transformConcert(concert, concert.attendees![0])
 }
-

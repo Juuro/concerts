@@ -119,9 +119,13 @@ describe("createConcert Happy Paths", () => {
     }
 
     // findMatchingConcert returns existing concert
-    vi.mocked(prisma.concert.findMany).mockResolvedValue([existingConcert] as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValue([
+      existingConcert,
+    ] as any)
     // Fetch full concert
-    vi.mocked(prisma.concert.findUnique).mockResolvedValue(existingWithBands as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValue(
+      existingWithBands as any
+    )
     // User does NOT already attend
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(null)
     // Link user
@@ -155,7 +159,7 @@ describe("createConcert Happy Paths", () => {
           userId,
           concertId,
         }),
-      }),
+      })
     )
     // concert.create should NOT have been called (reused existing)
     expect(prisma.concert.create).not.toHaveBeenCalled()
@@ -211,4 +215,3 @@ describe("createConcert Happy Paths", () => {
     expect(prisma.concert.create).toHaveBeenCalled()
   })
 })
-

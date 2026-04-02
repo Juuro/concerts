@@ -51,7 +51,9 @@ describe("update.ts dedicated coverage", () => {
       isFestival: false,
       festivalId: null,
       festival: null,
-      bands: [{ bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner }],
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner },
+      ],
       _count: { attendees: 2 },
     }
 
@@ -75,7 +77,9 @@ describe("update.ts dedicated coverage", () => {
       isFestival: false,
       festivalId: null,
       festival: null,
-      bands: [{ bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner }],
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner },
+      ],
       attendees: [
         {
           id: "att-fork",
@@ -89,7 +93,9 @@ describe("update.ts dedicated coverage", () => {
       _count: { attendees: 1 },
     }
     vi.mocked(prisma.concert.create).mockResolvedValueOnce(createdFork as any)
-    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([{ id: "c-match" }] as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
+      { id: "c-match" },
+    ] as any)
     // existing attendance on matching concert => no prisma.userConcert.create
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "att-existing-match",
@@ -112,7 +118,9 @@ describe("update.ts dedicated coverage", () => {
       isFestival: false,
       festivalId: null,
       festival: null,
-      bands: [{ bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner }],
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: headliner },
+      ],
       attendees: [
         {
           id: "att-existing-match",
@@ -167,12 +175,30 @@ describe("update.ts dedicated coverage", () => {
     vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
     vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
       ...existing,
-      attendees: [{ id: "att-hg", userId, concertId: "c-hard-guard", cost: 25, notes: null, supportingActIds: [] }],
+      attendees: [
+        {
+          id: "att-hg",
+          userId,
+          concertId: "c-hard-guard",
+          cost: 25,
+          notes: null,
+          supportingActIds: [],
+        },
+      ],
     } as any)
     vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([] as any)
     vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
       ...existing,
-      attendees: [{ id: "att-hg", userId, concertId: "c-hard-guard", cost: 25, notes: null, supportingActIds: [] }],
+      attendees: [
+        {
+          id: "att-hg",
+          userId,
+          concertId: "c-hard-guard",
+          cost: 25,
+          notes: null,
+          supportingActIds: [],
+        },
+      ],
       _count: { attendees: 3 },
     } as any)
 
@@ -205,7 +231,14 @@ describe("update.ts dedicated coverage", () => {
       isFestival: false,
       festivalId: null,
       festival: null,
-      bands: [{ bandId: "band-old", isHeadliner: true, sortOrder: 0, band: oldHeadliner }],
+      bands: [
+        {
+          bandId: "band-old",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: oldHeadliner,
+        },
+      ],
       _count: { attendees: 1 },
     }
 
@@ -238,7 +271,14 @@ describe("update.ts dedicated coverage", () => {
       ...existing,
       latitude: 3,
       longitude: 4,
-      bands: [{ bandId: "band-new", isHeadliner: true, sortOrder: 0, band: newHeadliner }],
+      bands: [
+        {
+          bandId: "band-new",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: newHeadliner,
+        },
+      ],
       attendees: [
         {
           id: "att-single",
@@ -273,4 +313,3 @@ describe("update.ts dedicated coverage", () => {
     expect(prisma.concert.update).toHaveBeenCalled()
   })
 })
-

@@ -80,7 +80,8 @@
   }
 
   &--exiting {
-    animation: toast-slide-out variables.$transition-duration variables.$transition-easing-accelerate forwards;
+    animation: toast-slide-out variables.$transition-duration
+      variables.$transition-easing-accelerate forwards;
   }
 }
 

@@ -25,8 +25,14 @@ export async function findMatchingConcert(
   const candidates = await prisma.concert.findMany({
     where: {
       date: { gte: dateStart, lte: dateEnd },
-      latitude: { gte: latitude - COORD_TOLERANCE, lte: latitude + COORD_TOLERANCE },
-      longitude: { gte: longitude - COORD_TOLERANCE, lte: longitude + COORD_TOLERANCE },
+      latitude: {
+        gte: latitude - COORD_TOLERANCE,
+        lte: latitude + COORD_TOLERANCE,
+      },
+      longitude: {
+        gte: longitude - COORD_TOLERANCE,
+        lte: longitude + COORD_TOLERANCE,
+      },
       ...(excludeId && { id: { not: excludeId } }),
       bands: {
         some: {
@@ -45,8 +51,7 @@ export async function findMatchingConcert(
  * Get the headliner band from a list of concert bands.
  */
 export function getHeadliner(
-  bands: { bandId: string; isHeadliner: boolean }[],
+  bands: { bandId: string; isHeadliner: boolean }[]
 ): { bandId: string; isHeadliner: boolean } | undefined {
   return bands.find((b) => b.isHeadliner)
 }
-

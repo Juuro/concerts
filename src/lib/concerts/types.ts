@@ -108,4 +108,3 @@ export interface ConcertStatistics {
   totalPast: number
   totalFuture: number
 }
-

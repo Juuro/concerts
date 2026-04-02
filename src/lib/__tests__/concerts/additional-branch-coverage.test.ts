@@ -32,7 +32,9 @@ describe("Additional Branch Coverage", () => {
       vi.mocked(prisma.userConcert.aggregate).mockResolvedValue({
         _sum: { cost: 500 },
       } as any)
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "EUR" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "EUR",
+      } as any)
 
       const result = await getUserTotalSpent(userId, { pastOnly: true })
 
@@ -47,7 +49,7 @@ describe("Additional Branch Coverage", () => {
               date: expect.objectContaining({ lt: expect.any(Date) }),
             }),
           }),
-        }),
+        })
       )
 
       vi.useRealTimers()
@@ -59,7 +61,9 @@ describe("Additional Branch Coverage", () => {
       vi.mocked(prisma.userConcert.aggregate).mockResolvedValue({
         _sum: { cost: 200 },
       } as any)
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "USD" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "USD",
+      } as any)
 
       const result = await getUserTotalSpent(userId, { city: "Berlin" })
 
@@ -72,7 +76,7 @@ describe("Additional Branch Coverage", () => {
               normalizedCity: "Berlin",
             }),
           }),
-        }),
+        })
       )
     })
 
@@ -82,7 +86,9 @@ describe("Additional Branch Coverage", () => {
       vi.mocked(prisma.userConcert.aggregate).mockResolvedValue({
         _sum: { cost: 350 },
       } as any)
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "EUR" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "EUR",
+      } as any)
 
       const result = await getUserTotalSpent(userId, { year: 2023 })
 
@@ -97,7 +103,7 @@ describe("Additional Branch Coverage", () => {
               },
             }),
           }),
-        }),
+        })
       )
     })
 
@@ -109,9 +115,13 @@ describe("Additional Branch Coverage", () => {
       vi.mocked(prisma.userConcert.aggregate).mockResolvedValue({
         _sum: { cost: 100 },
       } as any)
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "EUR" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "EUR",
+      } as any)
 
-      const result = await getUserTotalSpent(userId, { bandSlug: "nonexistent" })
+      const result = await getUserTotalSpent(userId, {
+        bandSlug: "nonexistent",
+      })
 
       expect(result.total).toBe(100)
       // Falls through to aggregate path since band not found
@@ -169,7 +179,11 @@ describe("Additional Branch Coverage", () => {
             bandId: "band-headliner",
             isHeadliner: true,
             sortOrder: 0,
-            band: { id: "band-headliner", name: "Headliner", slug: "headliner" },
+            band: {
+              id: "band-headliner",
+              name: "Headliner",
+              slug: "headliner",
+            },
           },
         ],
         festival: null,
@@ -177,7 +191,9 @@ describe("Additional Branch Coverage", () => {
       }
 
       // 1st findUnique: fetch existing
-      vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(existing as any)
+      vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(
+        existing as any
+      )
       // userConcert.update for support acts
       vi.mocked(prisma.userConcert.update).mockResolvedValueOnce({} as any)
 
@@ -196,7 +212,9 @@ describe("Additional Branch Coverage", () => {
       }
 
       // 2nd findUnique: re-fetch after support-act update
-      vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(updatedConcertResult as any)
+      vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(
+        updatedConcertResult as any
+      )
 
       // findUnique for updated attendance
       vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
@@ -208,7 +226,11 @@ describe("Additional Branch Coverage", () => {
         supportingActIds: [{ bandId: "band-support-new", sortOrder: 0 }],
       } as any)
 
-      const supportBand = { id: "band-support-new", name: "Support New", slug: "support-new" }
+      const supportBand = {
+        id: "band-support-new",
+        name: "Support New",
+        slug: "support-new",
+      }
       vi.mocked(prisma.band.findMany).mockResolvedValue([supportBand] as any)
 
       const result = await updateConcert(concertId, userId, {
@@ -229,7 +251,7 @@ describe("Additional Branch Coverage", () => {
           data: expect.objectContaining({
             supportingActIds: [{ bandId: "band-support-new", sortOrder: 0 }],
           }),
-        }),
+        })
       )
     })
   })
@@ -286,7 +308,9 @@ describe("Additional Branch Coverage", () => {
         },
       ]
 
-      vi.mocked(prisma.userConcert.findMany).mockResolvedValue(mockUserConcerts as any)
+      vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
+        mockUserConcerts as any
+      )
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getUserConcerts(userId)
@@ -299,4 +323,3 @@ describe("Additional Branch Coverage", () => {
     })
   })
 })
-

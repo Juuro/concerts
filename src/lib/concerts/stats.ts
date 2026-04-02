@@ -3,6 +3,11 @@ import { cityToSlug } from "@/utils/helpers"
 import type { ConcertCounts, ConcertStatistics } from "./types"
 import { getStartOfToday } from "./date"
 
+/** Prisma `groupBy` with `_count: { _all: true }` returns counts on `_count._all`. */
+function groupByAllCount(row: { _count: { _all: number } }): number {
+  return row._count._all
+}
+
 // ============================================
 // Concert Counts (lightweight)
 // ============================================
@@ -71,13 +76,13 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
         .groupBy({
           by: ["date"],
           where: { date: { lt: now } },
-          _count: true,
+          _count: { _all: true },
         })
         .then((results) => {
           const yearMap = new Map<string, number>()
           for (const r of results) {
             const year = r.date.getFullYear().toString()
-            yearMap.set(year, (yearMap.get(year) || 0) + r._count)
+            yearMap.set(year, (yearMap.get(year) || 0) + groupByAllCount(r))
           }
           return Array.from(yearMap.entries())
             .sort((a, b) => b[1] - a[1])
@@ -91,18 +96,18 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
         .groupBy({
           by: ["normalizedCity"],
           where: { date: { lt: now }, normalizedCity: { not: null } },
-          _count: true,
+          _count: { _all: true },
           orderBy: { _count: { normalizedCity: "desc" } },
           take: 5,
         })
         .then((results) =>
           results.map(
             (r) =>
-              [r.normalizedCity!, r._count, cityToSlug(r.normalizedCity!)] as [
-                string,
-                number,
-                string,
-              ]
+              [
+                r.normalizedCity!,
+                groupByAllCount(r),
+                cityToSlug(r.normalizedCity!),
+              ] as [string, number, string]
           )
         ),
 
@@ -110,7 +115,7 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
         .groupBy({
           by: ["bandId"],
           where: { concert: { date: { lt: now } } },
-          _count: true,
+          _count: { _all: true },
           orderBy: { _count: { bandId: "desc" } },
           take: 5,
         })
@@ -128,7 +133,11 @@ async function computeConcertStatistics(): Promise<ConcertStatistics> {
             .map((r) => {
               const band = bandById.get(r.bandId)
               return band
-                ? ([band.name, r._count, band.slug] as [string, number, string])
+                ? ([band.name, groupByAllCount(r), band.slug] as [
+                    string,
+                    number,
+                    string,
+                  ])
                 : null
             })
             .filter((b): b is [string, number, string] => b !== null)
@@ -175,13 +184,13 @@ async function computeUserConcertStatistics(
         .groupBy({
           by: ["date"],
           where: { id: { in: concertIds }, date: { lt: now } },
-          _count: true,
+          _count: { _all: true },
         })
         .then((results) => {
           const yearMap = new Map<string, number>()
           for (const r of results) {
             const year = r.date.getFullYear().toString()
-            yearMap.set(year, (yearMap.get(year) || 0) + r._count)
+            yearMap.set(year, (yearMap.get(year) || 0) + groupByAllCount(r))
           }
           return Array.from(yearMap.entries())
             .sort((a, b) => b[1] - a[1])
@@ -199,18 +208,18 @@ async function computeUserConcertStatistics(
             date: { lt: now },
             normalizedCity: { not: null },
           },
-          _count: true,
+          _count: { _all: true },
           orderBy: { _count: { normalizedCity: "desc" } },
           take: 5,
         })
         .then((results) =>
           results.map(
             (r) =>
-              [r.normalizedCity!, r._count, cityToSlug(r.normalizedCity!)] as [
-                string,
-                number,
-                string,
-              ]
+              [
+                r.normalizedCity!,
+                groupByAllCount(r),
+                cityToSlug(r.normalizedCity!),
+              ] as [string, number, string]
           )
         ),
 
@@ -271,7 +280,7 @@ async function computeUserConcertStatistics(
           const results = await prisma.concertBand.groupBy({
             by: ["bandId"],
             where: { concertId: { in: concertIds } },
-            _count: true,
+            _count: { _all: true },
             orderBy: { _count: { bandId: "desc" } },
             take: 10,
           })

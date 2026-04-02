@@ -10,7 +10,12 @@ interface DialogProps {
   children: ReactNode
 }
 
-export default function Dialog({ open, onClose, title, children }: DialogProps) {
+export default function Dialog({
+  open,
+  onClose,
+  title,
+  children,
+}: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -60,12 +65,7 @@ export default function Dialog({ open, onClose, title, children }: DialogProps) 
             onClick={onClose}
             aria-label="Close"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-            >
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
               <path
                 d="M18 6L6 18M6 6l12 12"
                 stroke="currentColor"

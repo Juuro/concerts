@@ -1,6 +1,10 @@
 import { describe, expect, test, vi, beforeEach } from "vitest"
 import { prisma } from "@/lib/prisma"
-import { parseSupportingActIds, transformConcert, transformConcertsBatch } from "@/lib/concerts/transform"
+import {
+  parseSupportingActIds,
+  transformConcert,
+  transformConcertsBatch,
+} from "@/lib/concerts/transform"
 
 describe("transform.ts dedicated coverage", () => {
   beforeEach(() => {
@@ -51,7 +55,16 @@ describe("transform.ts dedicated coverage", () => {
           bandId: "headliner-1",
           isHeadliner: true,
           sortOrder: 2,
-          band: { id: "headliner-1", name: "Headliner", slug: "headliner", imageUrl: null, websiteUrl: null, lastfmUrl: null, genres: [], bio: null },
+          band: {
+            id: "headliner-1",
+            name: "Headliner",
+            slug: "headliner",
+            imageUrl: null,
+            websiteUrl: null,
+            lastfmUrl: null,
+            genres: [],
+            bio: null,
+          },
         },
       ],
       _count: { attendees: 1 },
@@ -66,7 +79,10 @@ describe("transform.ts dedicated coverage", () => {
 
     const transformed = await transformConcert(concert, attendance)
     expect(transformed.fields.geocoderAddressFields._is_coordinates).toBe(true)
-    expect(transformed.bands.map((b) => b.slug)).toEqual(["headliner", "support-one"])
+    expect(transformed.bands.map((b) => b.slug)).toEqual([
+      "headliner",
+      "support-one",
+    ])
   })
 
   test("transformConcertsBatch keeps empty prefetch map path when no supporting acts", async () => {
@@ -84,7 +100,16 @@ describe("transform.ts dedicated coverage", () => {
           bandId: "h1",
           isHeadliner: true,
           sortOrder: 1,
-          band: { id: "h1", name: "H", slug: "h", imageUrl: null, websiteUrl: null, lastfmUrl: null, genres: [], bio: null },
+          band: {
+            id: "h1",
+            name: "H",
+            slug: "h",
+            imageUrl: null,
+            websiteUrl: null,
+            lastfmUrl: null,
+            genres: [],
+            bio: null,
+          },
         },
       ],
       _count: { attendees: 1 },

@@ -64,9 +64,13 @@ describe("Edge Cases & Error Handling", () => {
     }
 
     // Mock: findMatchingConcert returns existing concert
-    vi.mocked(prisma.concert.findMany).mockResolvedValue([existingConcert] as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValue([
+      existingConcert,
+    ] as any)
     // Mock: concert.findUnique returns full concert with bands
-    vi.mocked(prisma.concert.findUnique).mockResolvedValue(existingWithBands as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValue(
+      existingWithBands as any
+    )
     // Mock: user already attends this concert
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValue({
       id: "uc-001",
@@ -87,8 +91,12 @@ describe("Edge Cases & Error Handling", () => {
     }
 
     // This test MUST fail if duplicate-attendance checks are removed from create flow.
-    await expect(createConcert(input)).rejects.toThrow(ConcertAlreadyExistsError)
-    await expect(createConcert(input)).rejects.toThrow("Concert already in list")
+    await expect(createConcert(input)).rejects.toThrow(
+      ConcertAlreadyExistsError
+    )
+    await expect(createConcert(input)).rejects.toThrow(
+      "Concert already in list"
+    )
   })
 
   test("test_updateConcert_with_null_attendance_returns_null", async () => {
@@ -135,12 +143,14 @@ describe("Edge Cases & Error Handling", () => {
     const invalidCursor = "non-existent-cursor-id"
 
     // Mock: Prisma rejecting because the cursor record does not exist
-    vi.mocked(prisma.concert.findMany).mockRejectedValue(new Error("Record to fetch does not exist."))
+    vi.mocked(prisma.concert.findMany).mockRejectedValue(
+      new Error("Record to fetch does not exist.")
+    )
 
     // Expect the pagination helper to surface the underlying error
-    await expect(getConcertsPaginated(invalidCursor, 20, "forward")).rejects.toThrow(
-      "Record to fetch does not exist.",
-    )
+    await expect(
+      getConcertsPaginated(invalidCursor, 20, "forward")
+    ).rejects.toThrow("Record to fetch does not exist.")
   })
 
   test("test_getConcertsPaginated_empty_results_returns_empty_array", async () => {
@@ -169,7 +179,12 @@ describe("Edge Cases & Error Handling", () => {
     // Mock: no concerts found matching criteria
     vi.mocked(prisma.concert.findMany).mockResolvedValue([])
 
-    const result = await findMatchingConcert(date, latitude, longitude, headlinerBandId)
+    const result = await findMatchingConcert(
+      date,
+      latitude,
+      longitude,
+      headlinerBandId
+    )
 
     // Should return null when no match found
     expect(result).toBeNull()
@@ -179,8 +194,8 @@ describe("Edge Cases & Error Handling", () => {
     // Tests coordinate tolerance boundary (COORD_TOLERANCE = 0.001 degrees ≈ 100m)
     // Verifies concerts within tolerance are matched, outside tolerance are not
     const date = new Date("2025-08-01")
-    const baseLat = 52.5200
-    const baseLon = 13.4050
+    const baseLat = 52.52
+    const baseLon = 13.405
     const headlinerBandId = "band-tolerance-test"
 
     const existingConcert = {
@@ -197,13 +212,15 @@ describe("Edge Cases & Error Handling", () => {
     }
 
     // Test 1: Exactly at tolerance boundary (0.001 degrees) - SHOULD match
-    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([existingConcert] as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
+      existingConcert,
+    ] as any)
 
     const matchAtBoundary = await findMatchingConcert(
       date,
       baseLat + 0.001, // Exactly at upper tolerance boundary
       baseLon + 0.001,
-      headlinerBandId,
+      headlinerBandId
     )
 
     // Verify the query was called with correct tolerance range
@@ -219,7 +236,7 @@ describe("Edge Cases & Error Handling", () => {
             lte: baseLon + 0.001 + 0.001, // baseLon + 0.002
           },
         }),
-      }),
+      })
     )
 
     expect(matchAtBoundary).toBe(existingConcert)
@@ -231,7 +248,7 @@ describe("Edge Cases & Error Handling", () => {
       date,
       baseLat + 0.002, // Outside tolerance
       baseLon + 0.002,
-      headlinerBandId,
+      headlinerBandId
     )
 
     expect(noMatchOutsideTolerance).toBeNull()
@@ -308,4 +325,3 @@ describe("Edge Cases & Error Handling", () => {
     expect(prisma.concert.delete).not.toHaveBeenCalled()
   })
 })
-

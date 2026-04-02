@@ -95,11 +95,7 @@ export default function ResetPasswordForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        className="reset-form__submit"
-        disabled={isLoading}
-      >
+      <button type="submit" className="reset-form__submit" disabled={isLoading}>
         {isLoading ? "Resetting..." : "Reset Password"}
       </button>
     </form>

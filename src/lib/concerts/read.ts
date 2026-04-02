@@ -1,10 +1,16 @@
 import { prisma } from "../prisma"
 import type { Band as PrismaBand, ConcertBand } from "@/generated/prisma/client"
 import type { TransformedConcert } from "./types"
-import { parseSupportingActIds, transformConcert, transformConcertsBatch } from "./transform"
+import {
+  parseSupportingActIds,
+  transformConcert,
+  transformConcertsBatch,
+} from "./transform"
 
 // Get all concerts for a user (via UserConcert junction)
-export async function getUserConcerts(userId: string): Promise<TransformedConcert[]> {
+export async function getUserConcerts(
+  userId: string
+): Promise<TransformedConcert[]> {
   const userConcerts = await prisma.userConcert.findMany({
     where: { userId },
     include: {
@@ -23,7 +29,7 @@ export async function getUserConcerts(userId: string): Promise<TransformedConcer
   })
 
   return transformConcertsBatch(
-    userConcerts.map((uc) => ({ concert: uc.concert, attendance: uc })),
+    userConcerts.map((uc) => ({ concert: uc.concert, attendance: uc }))
   )
 }
 
@@ -44,7 +50,9 @@ export async function getAllConcerts(): Promise<TransformedConcert[]> {
 }
 
 // Get concerts by band slug
-export async function getConcertsByBand(slug: string): Promise<TransformedConcert[]> {
+export async function getConcertsByBand(
+  slug: string
+): Promise<TransformedConcert[]> {
   const concerts = await prisma.concert.findMany({
     where: {
       bands: {
@@ -68,7 +76,7 @@ export async function getConcertsByBand(slug: string): Promise<TransformedConcer
 
 // Get concerts by year
 export async function getConcertsByYear(
-  year: number | string,
+  year: number | string
 ): Promise<TransformedConcert[]> {
   const yearNum = typeof year === "string" ? parseInt(year, 10) : year
   const startDate = new Date(yearNum, 0, 1)
@@ -95,7 +103,9 @@ export async function getConcertsByYear(
 }
 
 // Get concerts by city (from normalizedCity column)
-export async function getConcertsByCity(cityName: string): Promise<TransformedConcert[]> {
+export async function getConcertsByCity(
+  cityName: string
+): Promise<TransformedConcert[]> {
   const concerts = await prisma.concert.findMany({
     where: { normalizedCity: cityName },
     include: {
@@ -140,7 +150,7 @@ export async function getAllCities(): Promise<string[]> {
 
 export async function getConcertById(
   id: string,
-  userId?: string,
+  userId?: string
 ): Promise<TransformedConcert | null> {
   const concert = await prisma.concert.findUnique({
     where: { id },
@@ -167,19 +177,25 @@ export async function getConcertById(
  */
 export async function getEffectiveBandsForForm(
   concert: { bands: (ConcertBand & { band: PrismaBand })[] },
-  attendance: { supportingActIds?: unknown } | null,
-): Promise<{ bandId: string; name: string; slug: string; isHeadliner: boolean }[]> {
+  attendance: { supportingActIds?: unknown } | null
+): Promise<
+  { bandId: string; name: string; slug: string; isHeadliner: boolean }[]
+> {
   // Headliner always comes from ConcertBand (shared)
   const sortedCore = concert.bands.sort(
-    (a: ConcertBand & { band: PrismaBand }, b: ConcertBand & { band: PrismaBand }) =>
-      a.sortOrder - b.sortOrder,
+    (
+      a: ConcertBand & { band: PrismaBand },
+      b: ConcertBand & { band: PrismaBand }
+    ) => a.sortOrder - b.sortOrder
   )
   const headliner = sortedCore.find((cb) => cb.isHeadliner)
 
   // Support acts come from UserConcert.supportingActIds (per-user).
   // Legacy fallback: if parsing yields null for an existing attendance record,
   // use non-headliner ConcertBand entries so support acts stay editable pre-migration.
-  const parsedSupportingActs = attendance ? parseSupportingActIds(attendance.supportingActIds) : null
+  const parsedSupportingActs = attendance
+    ? parseSupportingActIds(attendance.supportingActIds)
+    : null
   const legacySupportingActs =
     attendance && parsedSupportingActs == null
       ? sortedCore
@@ -194,7 +210,9 @@ export async function getEffectiveBandsForForm(
   const supportingActBandIds = parsedSupportingActs?.map((o) => o.bandId) ?? []
   const supportingActBands =
     supportingActBandIds.length > 0
-      ? await prisma.band.findMany({ where: { id: { in: supportingActBandIds } } })
+      ? await prisma.band.findMany({
+          where: { id: { in: supportingActBandIds } },
+        })
       : []
   const bandsById = new Map(supportingActBands.map((b) => [b.id, b]))
 
@@ -223,9 +241,14 @@ export async function getEffectiveBandsForForm(
             : null
         })
         .filter(
-          (x): x is { bandId: string; name: string; slug: string; isHeadliner: boolean } =>
-            x != null,
+          (
+            x
+          ): x is {
+            bandId: string
+            name: string
+            slug: string
+            isHeadliner: boolean
+          } => x != null
         )),
   ]
 }
-

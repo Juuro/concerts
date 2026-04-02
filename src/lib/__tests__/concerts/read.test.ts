@@ -22,10 +22,21 @@ describe("read.ts dedicated coverage", () => {
           bandId: "b1",
           isHeadliner: true,
           sortOrder: 0,
-          band: { id: "b1", name: "Band", slug: "band", imageUrl: null, websiteUrl: null, lastfmUrl: null, genres: [], bio: null },
+          band: {
+            id: "b1",
+            name: "Band",
+            slug: "band",
+            imageUrl: null,
+            websiteUrl: null,
+            lastfmUrl: null,
+            genres: [],
+            bio: null,
+          },
         },
       ],
-      attendees: [{ id: "a1", userId: "u1", cost: 20, notes: null, supportingActIds: [] }],
+      attendees: [
+        { id: "a1", userId: "u1", cost: 20, notes: null, supportingActIds: [] },
+      ],
       _count: { attendees: 1 },
     } as any)
 
@@ -50,13 +61,17 @@ describe("read.ts dedicated coverage", () => {
       },
     ] as any
 
-    const result = await getEffectiveBandsForForm(
-      { bands },
-      { supportingActIds: [{ invalid: true }] } as any,
-    )
+    const result = await getEffectiveBandsForForm({ bands }, {
+      supportingActIds: [{ invalid: true }],
+    } as any)
     expect(result).toEqual([
       { bandId: "head", name: "Head", slug: "head", isHeadliner: true },
-      { bandId: "support-legacy", name: "Legacy", slug: "legacy", isHeadliner: false },
+      {
+        bandId: "support-legacy",
+        name: "Legacy",
+        slug: "legacy",
+        isHeadliner: false,
+      },
     ])
   })
 
@@ -76,12 +91,17 @@ describe("read.ts dedicated coverage", () => {
           },
         ],
       } as any,
-      { supportingActIds: [{ bandId: "support-1", sortOrder: 0 }] } as any,
+      { supportingActIds: [{ bandId: "support-1", sortOrder: 0 }] } as any
     )
 
     expect(result).toEqual([
       { bandId: "head", name: "Head", slug: "head", isHeadliner: true },
-      { bandId: "support-1", name: "Support", slug: "support", isHeadliner: false },
+      {
+        bandId: "support-1",
+        name: "Support",
+        slug: "support",
+        isHeadliner: false,
+      },
     ])
   })
 })

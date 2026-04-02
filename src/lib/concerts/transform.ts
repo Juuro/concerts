@@ -19,13 +19,20 @@ import type {
  * - Returns [] when user has no support acts: show headliner only.
  * - Returns [...] when user has specific support acts: show headliner + these.
  */
-export function parseSupportingActIds(raw: unknown): SupportingActItem[] | null {
+export function parseSupportingActIds(
+  raw: unknown
+): SupportingActItem[] | null {
   if (raw == null || !Array.isArray(raw)) return null
   const arr = raw as unknown[]
   if (arr.length === 0) return []
   const out: SupportingActItem[] = []
   for (const item of arr) {
-    if (item && typeof item === "object" && "bandId" in item && "sortOrder" in item) {
+    if (
+      item &&
+      typeof item === "object" &&
+      "bandId" in item &&
+      "sortOrder" in item
+    ) {
       const o = item as { bandId: unknown; sortOrder: unknown }
       if (typeof o.bandId === "string" && typeof o.sortOrder === "number") {
         out.push({ bandId: o.bandId, sortOrder: o.sortOrder })
@@ -48,7 +55,10 @@ type ConcertWithAttendance = ConcertWithRelations & {
   userAttendance?: UserConcert | null
 }
 
-function bandToTransformed(band: PrismaBand, isHeadliner?: boolean): TransformedBand {
+function bandToTransformed(
+  band: PrismaBand,
+  isHeadliner?: boolean
+): TransformedBand {
   return {
     id: band.id,
     name: band.name,
@@ -67,7 +77,9 @@ function bandToTransformed(band: PrismaBand, isHeadliner?: boolean): Transformed
   }
 }
 
-function buildGeocodingFromConcert(concert: ConcertWithAttendance): GeocodingData {
+function buildGeocodingFromConcert(
+  concert: ConcertWithAttendance
+): GeocodingData {
   if (concert.normalizedCity) {
     return { _normalized_city: concert.normalizedCity }
   }
@@ -84,21 +96,27 @@ function buildGeocodingFromConcert(concert: ConcertWithAttendance): GeocodingDat
 function transformConcertSync(
   concert: ConcertWithAttendance,
   userAttendance: UserConcert | null | undefined,
-  prefetchedBands: Map<string, PrismaBand>,
+  prefetchedBands: Map<string, PrismaBand>
 ): TransformedConcert {
   const geocodingData = buildGeocodingFromConcert(concert)
 
   const attendance = userAttendance ?? concert.userAttendance
 
   const coreBands = concert.bands.sort(
-    (a: ConcertBand & { band: PrismaBand }, b: ConcertBand & { band: PrismaBand }) =>
-      a.sortOrder - b.sortOrder,
+    (
+      a: ConcertBand & { band: PrismaBand },
+      b: ConcertBand & { band: PrismaBand }
+    ) => a.sortOrder - b.sortOrder
   )
   const headliner = coreBands.find((cb) => cb.isHeadliner)
-  const headlinerBand = headliner ? bandToTransformed(headliner.band, true) : null
+  const headlinerBand = headliner
+    ? bandToTransformed(headliner.band, true)
+    : null
 
   const supportingActs = attendance
-    ? parseSupportingActIds((attendance as { supportingActIds?: unknown }).supportingActIds)
+    ? parseSupportingActIds(
+        (attendance as { supportingActIds?: unknown }).supportingActIds
+      )
     : null
   const bands: TransformedBand[] =
     supportingActs === null
@@ -142,7 +160,8 @@ function transformConcertSync(
       notes: attendance.notes,
     }
     transformed.userId = attendance.userId
-    transformed.cost = attendance.cost != null ? attendance.cost.toString() : null
+    transformed.cost =
+      attendance.cost != null ? attendance.cost.toString() : null
   }
 
   if (concert._count?.attendees !== undefined) {
@@ -157,13 +176,18 @@ function transformConcertSync(
  * fetches them in ONE query, then transforms synchronously.
  */
 export async function transformConcertsBatch(
-  items: Array<{ concert: ConcertWithAttendance; attendance?: UserConcert | null }>,
+  items: Array<{
+    concert: ConcertWithAttendance
+    attendance?: UserConcert | null
+  }>
 ): Promise<TransformedConcert[]> {
   const allBandIds = new Set<string>()
   for (const { concert, attendance: att } of items) {
     const uc = att ?? concert.userAttendance
     if (uc) {
-      const acts = parseSupportingActIds((uc as { supportingActIds?: unknown }).supportingActIds)
+      const acts = parseSupportingActIds(
+        (uc as { supportingActIds?: unknown }).supportingActIds
+      )
       if (acts) {
         for (const a of acts) allBandIds.add(a.bandId)
       }
@@ -177,26 +201,30 @@ export async function transformConcertsBatch(
             await prisma.band.findMany({
               where: { id: { in: [...allBandIds] } },
             })
-          ).map((b) => [b.id, b]),
+          ).map((b) => [b.id, b])
         )
       : new Map()
 
   return items.map(({ concert, attendance }) =>
-    transformConcertSync(concert, attendance ?? null, prefetchedBands),
+    transformConcertSync(concert, attendance ?? null, prefetchedBands)
   )
 }
 
 /** Legacy single-concert transform (still needed by createConcert/updateConcert). */
 export async function transformConcert(
   concert: ConcertWithAttendance,
-  userAttendance?: UserConcert | null,
+  userAttendance?: UserConcert | null
 ): Promise<TransformedConcert> {
-  const supportingActs = (userAttendance ?? concert.userAttendance)
-    ? parseSupportingActIds(
-        ((userAttendance ?? concert.userAttendance) as { supportingActIds?: unknown })
-          .supportingActIds,
-      )
-    : null
+  const supportingActs =
+    (userAttendance ?? concert.userAttendance)
+      ? parseSupportingActIds(
+          (
+            (userAttendance ?? concert.userAttendance) as {
+              supportingActIds?: unknown
+            }
+          ).supportingActIds
+        )
+      : null
   const bandIds = supportingActs?.map((o) => o.bandId) ?? []
   const prefetchedBands: Map<string, PrismaBand> =
     bandIds.length > 0
@@ -205,10 +233,9 @@ export async function transformConcert(
             await prisma.band.findMany({
               where: { id: { in: bandIds } },
             })
-          ).map((b) => [b.id, b]),
+          ).map((b) => [b.id, b])
         )
       : new Map()
 
   return transformConcertSync(concert, userAttendance ?? null, prefetchedBands)
 }
-

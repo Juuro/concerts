@@ -217,9 +217,7 @@ export default function VenueAutocomplete({
               onClick={() => handleSelect(result)}
               onMouseEnter={() => setHighlightedIndex(index)}
             >
-              <div className="venue-autocomplete__item-name">
-                {result.name}
-              </div>
+              <div className="venue-autocomplete__item-name">{result.name}</div>
               <div className="venue-autocomplete__item-address">
                 {result.displayName}
               </div>
@@ -228,11 +226,14 @@ export default function VenueAutocomplete({
         </div>
       )}
 
-      {isOpen && !isSearching && searchTerm.length >= 3 && results.length === 0 && (
-        <div className="venue-autocomplete__no-results">
-          No venues found. Try a different search.
-        </div>
-      )}
+      {isOpen &&
+        !isSearching &&
+        searchTerm.length >= 3 &&
+        results.length === 0 && (
+          <div className="venue-autocomplete__no-results">
+            No venues found. Try a different search.
+          </div>
+        )}
     </div>
   )
 }

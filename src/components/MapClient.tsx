@@ -169,8 +169,10 @@ export default function MapClient({
           const source = map.getSource("concerts") as maplibregl.GeoJSONSource
           const zoom = await source.getClusterExpansionZoom(clusterId)
           map.easeTo({
-            center: (features[0].geometry as GeoJSON.Point)
-              .coordinates as [number, number],
+            center: (features[0].geometry as GeoJSON.Point).coordinates as [
+              number,
+              number,
+            ],
             zoom,
           })
         })
@@ -191,9 +193,7 @@ export default function MapClient({
 
           new maplibregl.Popup()
             .setLngLat(coords)
-            .setHTML(
-              `<strong>${name}</strong><br />${venue} am ${date}`
-            )
+            .setHTML(`<strong>${name}</strong><br />${venue} am ${date}`)
             .addTo(map)
         })
 

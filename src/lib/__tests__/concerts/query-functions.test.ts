@@ -66,7 +66,9 @@ describe("Query Functions", () => {
 
   describe("getAllConcerts", () => {
     test("test_getAllConcerts_returns_transformed_concerts", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValue([mockConcertWithRelations] as any)
+      vi.mocked(prisma.concert.findMany).mockResolvedValue([
+        mockConcertWithRelations,
+      ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getAllConcerts()
@@ -79,7 +81,7 @@ describe("Query Functions", () => {
       expect(prisma.concert.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: { date: "desc" },
-        }),
+        })
       )
     })
 
@@ -95,7 +97,9 @@ describe("Query Functions", () => {
 
   describe("getConcertsByBand", () => {
     test("test_getConcertsByBand_filters_by_slug", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValue([mockConcertWithRelations] as any)
+      vi.mocked(prisma.concert.findMany).mockResolvedValue([
+        mockConcertWithRelations,
+      ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getConcertsByBand("test-band")
@@ -106,7 +110,7 @@ describe("Query Functions", () => {
           where: {
             bands: { some: { band: { slug: "test-band" } } },
           },
-        }),
+        })
       )
     })
 
@@ -122,7 +126,9 @@ describe("Query Functions", () => {
 
   describe("getConcertsByYear", () => {
     test("test_getConcertsByYear_number_input_uses_date_range", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValue([mockConcertWithRelations] as any)
+      vi.mocked(prisma.concert.findMany).mockResolvedValue([
+        mockConcertWithRelations,
+      ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getConcertsByYear(2024)
@@ -136,12 +142,14 @@ describe("Query Functions", () => {
               lte: new Date(2024, 11, 31, 23, 59, 59, 999),
             },
           },
-        }),
+        })
       )
     })
 
     test("test_getConcertsByYear_string_input_converts_to_number", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValue([mockConcertWithRelations] as any)
+      vi.mocked(prisma.concert.findMany).mockResolvedValue([
+        mockConcertWithRelations,
+      ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getConcertsByYear("2024")
@@ -155,14 +163,16 @@ describe("Query Functions", () => {
               lte: new Date(2024, 11, 31, 23, 59, 59, 999),
             },
           },
-        }),
+        })
       )
     })
   })
 
   describe("getConcertsByCity", () => {
     test("test_getConcertsByCity_filters_by_normalizedCity", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValue([mockConcertWithRelations] as any)
+      vi.mocked(prisma.concert.findMany).mockResolvedValue([
+        mockConcertWithRelations,
+      ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
       const result = await getConcertsByCity("Berlin")
@@ -171,7 +181,7 @@ describe("Query Functions", () => {
       expect(prisma.concert.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { normalizedCity: "Berlin" },
-        }),
+        })
       )
     })
 
@@ -202,7 +212,7 @@ describe("Query Functions", () => {
         expect.objectContaining({
           where: { date: { lte: expect.any(Date) } },
           select: { date: true },
-        }),
+        })
       )
     })
 
@@ -230,7 +240,7 @@ describe("Query Functions", () => {
         expect.objectContaining({
           where: { normalizedCity: { not: null } },
           distinct: ["normalizedCity"],
-        }),
+        })
       )
     })
 
@@ -257,7 +267,11 @@ describe("getEffectiveBandsForForm", () => {
           bandId: "band-headliner",
           isHeadliner: true,
           sortOrder: 0,
-          band: { id: "band-headliner", name: "Headliner Band", slug: "headliner-band" },
+          band: {
+            id: "band-headliner",
+            name: "Headliner Band",
+            slug: "headliner-band",
+          },
         },
       ],
     }
@@ -309,4 +323,3 @@ describe("getConcertById", () => {
     expect(result).toBeNull()
   })
 })
-

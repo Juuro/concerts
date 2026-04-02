@@ -1,6 +1,9 @@
 import { prisma } from "../../prisma"
 
-export async function deleteConcert(id: string, userId: string): Promise<boolean> {
+export async function deleteConcert(
+  id: string,
+  userId: string
+): Promise<boolean> {
   // Verify user has attendance
   const attendance = await prisma.userConcert.findUnique({
     where: { userId_concertId: { userId, concertId: id } },
@@ -29,4 +32,3 @@ export async function deleteConcert(id: string, userId: string): Promise<boolean
 
   return true
 }
-

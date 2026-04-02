@@ -13,7 +13,10 @@ import {
   getUserConcertCounts,
   getUserBandConcertCounts,
 } from "@/lib/concerts/stats"
-import { getUserTotalSpent, getUserTotalSpentCached } from "@/lib/concerts/spending"
+import {
+  getUserTotalSpent,
+  getUserTotalSpentCached,
+} from "@/lib/concerts/spending"
 import { mockConcertCountPastFuture } from "./testUtils"
 
 // Mock external utilities
@@ -36,18 +39,20 @@ describe("Statistics & Aggregation", () => {
       vi.setSystemTime(mockNow)
 
       // Mock groupBy for year counts
-      vi.mocked(prisma.concert.groupBy as any).mockImplementation((args: any) => {
-        if (args.by.includes("date")) {
-          return Promise.resolve([
-            { date: new Date("2023-06-15"), _count: 5 },
-            { date: new Date("2023-08-20"), _count: 3 },
-            { date: new Date("2022-07-10"), _count: 7 },
-            { date: new Date("2022-09-15"), _count: 2 },
-            { date: new Date("2021-05-01"), _count: 4 },
-          ])
+      vi.mocked(prisma.concert.groupBy as any).mockImplementation(
+        (args: any) => {
+          if (args.by.includes("date")) {
+            return Promise.resolve([
+              { date: new Date("2023-06-15"), _count: { _all: 5 } },
+              { date: new Date("2023-08-20"), _count: { _all: 3 } },
+              { date: new Date("2022-07-10"), _count: { _all: 7 } },
+              { date: new Date("2022-09-15"), _count: { _all: 2 } },
+              { date: new Date("2021-05-01"), _count: { _all: 4 } },
+            ])
+          }
+          return Promise.resolve([])
         }
-        return Promise.resolve([])
-      })
+      )
 
       // Mock other groupBy calls (cities, bands)
       vi.mocked(prisma.concert.count).mockResolvedValue(21)
@@ -72,19 +77,21 @@ describe("Statistics & Aggregation", () => {
       vi.setSystemTime(mockNow)
 
       // Mock groupBy for city counts
-      vi.mocked(prisma.concert.groupBy as any).mockImplementation((args: any) => {
-        if (args.by.includes("normalizedCity")) {
-          return Promise.resolve([
-            { normalizedCity: "Berlin", _count: 12 },
-            { normalizedCity: "New York", _count: 8 },
-            { normalizedCity: "London", _count: 5 },
-          ])
-        }
-        if (args.by.includes("date")) {
+      vi.mocked(prisma.concert.groupBy as any).mockImplementation(
+        (args: any) => {
+          if (args.by.includes("normalizedCity")) {
+            return Promise.resolve([
+              { normalizedCity: "Berlin", _count: { _all: 12 } },
+              { normalizedCity: "New York", _count: { _all: 8 } },
+              { normalizedCity: "London", _count: { _all: 5 } },
+            ])
+          }
+          if (args.by.includes("date")) {
+            return Promise.resolve([])
+          }
           return Promise.resolve([])
         }
-        return Promise.resolve([])
-      })
+      )
 
       vi.mocked(prisma.concert.count).mockResolvedValue(25)
       vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([])
@@ -112,9 +119,9 @@ describe("Statistics & Aggregation", () => {
 
       // Mock groupBy for bands
       vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([
-        { bandId: "band-1", _count: 15 },
-        { bandId: "band-2", _count: 10 },
-        { bandId: "band-3", _count: 7 },
+        { bandId: "band-1", _count: { _all: 15 } },
+        { bandId: "band-2", _count: { _all: 10 } },
+        { bandId: "band-3", _count: { _all: 7 } },
       ] as any)
 
       vi.mocked(prisma.band.findMany).mockResolvedValue([
@@ -123,12 +130,14 @@ describe("Statistics & Aggregation", () => {
         { id: "band-3", name: "Arcade Fire", slug: "arcade-fire" },
       ] as any)
 
-      vi.mocked(prisma.concertBand.count as any).mockImplementation((args: any) => {
-        if (args.where.bandId === "band-1") return Promise.resolve(15)
-        if (args.where.bandId === "band-2") return Promise.resolve(10)
-        if (args.where.bandId === "band-3") return Promise.resolve(7)
-        return Promise.resolve(0)
-      })
+      vi.mocked(prisma.concertBand.count as any).mockImplementation(
+        (args: any) => {
+          if (args.where.bandId === "band-1") return Promise.resolve(15)
+          if (args.where.bandId === "band-2") return Promise.resolve(10)
+          if (args.where.bandId === "band-3") return Promise.resolve(7)
+          return Promise.resolve(0)
+        }
+      )
 
       // Mock other groupBy calls
       vi.mocked(prisma.concert.groupBy).mockResolvedValue([])
@@ -138,7 +147,11 @@ describe("Statistics & Aggregation", () => {
 
       expect(stats.mostSeenBands).toHaveLength(3)
       expect(stats.mostSeenBands[0]).toEqual(["Radiohead", 15, "radiohead"])
-      expect(stats.mostSeenBands[1]).toEqual(["The National", 10, "the-national"])
+      expect(stats.mostSeenBands[1]).toEqual([
+        "The National",
+        10,
+        "the-national",
+      ])
       expect(stats.mostSeenBands[2]).toEqual(["Arcade Fire", 7, "arcade-fire"])
       expect(stats.maxBandCount).toBe(15)
 
@@ -148,7 +161,7 @@ describe("Statistics & Aggregation", () => {
     test("test_getConcertStatistics_handles_missing_band_rows_and_defaults_max_values", async () => {
       vi.mocked(prisma.concert.groupBy as any).mockResolvedValue([])
       vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([
-        { bandId: "band-missing", _count: 5 },
+        { bandId: "band-missing", _count: { _all: 5 } },
       ] as any)
       // Missing matching band record should be filtered out by map/filter branch.
       vi.mocked(prisma.band.findMany).mockResolvedValue([] as any)
@@ -170,30 +183,30 @@ describe("Statistics & Aggregation", () => {
       vi.setSystemTime(mockNow)
 
       // Mock user's concert IDs
-      vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
-        [
-          { concertId: "concert-1" },
-          { concertId: "concert-2" },
-          { concertId: "concert-3" },
-        ] as any,
-      )
+      vi.mocked(prisma.userConcert.findMany).mockResolvedValue([
+        { concertId: "concert-1" },
+        { concertId: "concert-2" },
+        { concertId: "concert-3" },
+      ] as any)
 
       // Mock groupBy for years
-      vi.mocked(prisma.concert.groupBy as any).mockImplementation((args: any) => {
-        if (args.by.includes("date")) {
-          return Promise.resolve([
-            { date: new Date("2023-06-15"), _count: 2 },
-            { date: new Date("2022-07-10"), _count: 1 },
-          ])
+      vi.mocked(prisma.concert.groupBy as any).mockImplementation(
+        (args: any) => {
+          if (args.by.includes("date")) {
+            return Promise.resolve([
+              { date: new Date("2023-06-15"), _count: { _all: 2 } },
+              { date: new Date("2022-07-10"), _count: { _all: 1 } },
+            ])
+          }
+          if (args.by.includes("normalizedCity")) {
+            return Promise.resolve([
+              { normalizedCity: "Berlin", _count: { _all: 2 } },
+              { normalizedCity: "Munich", _count: { _all: 1 } },
+            ])
+          }
+          return Promise.resolve([])
         }
-        if (args.by.includes("normalizedCity")) {
-          return Promise.resolve([
-            { normalizedCity: "Berlin", _count: 2 },
-            { normalizedCity: "Munich", _count: 1 },
-          ])
-        }
-        return Promise.resolve([])
-      })
+      )
 
       // Mock $queryRaw for bands
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
@@ -206,12 +219,14 @@ describe("Statistics & Aggregation", () => {
         { id: "band-2", name: "Blur", slug: "blur" },
       ] as any)
 
-      vi.mocked(prisma.userConcert.count as any).mockImplementation((args: any) => {
-        if (args.where.userId === userId) {
-          return Promise.resolve(3)
+      vi.mocked(prisma.userConcert.count as any).mockImplementation(
+        (args: any) => {
+          if (args.where.userId === userId) {
+            return Promise.resolve(3)
+          }
+          return Promise.resolve(0)
         }
-        return Promise.resolve(0)
-      })
+      )
 
       const stats = await getUserConcertStatistics(userId)
 
@@ -225,7 +240,7 @@ describe("Statistics & Aggregation", () => {
       expect(prisma.userConcert.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { userId },
-        }),
+        })
       )
 
       vi.useRealTimers()
@@ -237,30 +252,45 @@ describe("Statistics & Aggregation", () => {
       vi.useFakeTimers()
       vi.setSystemTime(mockNow)
 
-      vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
-        [{ concertId: "concert-1" }, { concertId: "concert-2" }] as any,
+      vi.mocked(prisma.userConcert.findMany).mockResolvedValue([
+        { concertId: "concert-1" },
+        { concertId: "concert-2" },
+      ] as any)
+      vi.mocked(prisma.concert.groupBy as any).mockImplementation(
+        (args: any) => {
+          if (args.by.includes("date"))
+            return Promise.resolve([
+              { date: new Date("2023-01-01"), _count: { _all: 2 } },
+            ])
+          if (args.by.includes("normalizedCity"))
+            return Promise.resolve([
+              { normalizedCity: "Berlin", _count: { _all: 2 } },
+            ])
+          return Promise.resolve([])
+        }
       )
-      vi.mocked(prisma.concert.groupBy as any).mockImplementation((args: any) => {
-        if (args.by.includes("date")) return Promise.resolve([{ date: new Date("2023-01-01"), _count: 2 }])
-        if (args.by.includes("normalizedCity")) return Promise.resolve([{ normalizedCity: "Berlin", _count: 2 }])
-        return Promise.resolve([])
-      })
 
-      vi.mocked(prisma.$queryRaw).mockRejectedValueOnce(new Error("missing column"))
+      vi.mocked(prisma.$queryRaw).mockRejectedValueOnce(
+        new Error("missing column")
+      )
       vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([
-        { bandId: "band-1", _count: 2 },
-        { bandId: "band-2", _count: 1 },
+        { bandId: "band-1", _count: { _all: 2 } },
+        { bandId: "band-2", _count: { _all: 1 } },
       ] as any)
       vi.mocked(prisma.band.findMany).mockResolvedValue([
         { id: "band-1", name: "Band One", slug: "band-one" },
         { id: "band-2", name: "Band Two", slug: "band-two" },
       ] as any)
-      vi.mocked(prisma.concertBand.count as any).mockImplementation((args: any) => {
-        if (args.where.bandId === "band-1") return Promise.resolve(2)
-        if (args.where.bandId === "band-2") return Promise.resolve(1)
-        return Promise.resolve(0)
-      })
-      vi.mocked(prisma.userConcert.count as any).mockImplementation(() => Promise.resolve(2))
+      vi.mocked(prisma.concertBand.count as any).mockImplementation(
+        (args: any) => {
+          if (args.where.bandId === "band-1") return Promise.resolve(2)
+          if (args.where.bandId === "band-2") return Promise.resolve(1)
+          return Promise.resolve(0)
+        }
+      )
+      vi.mocked(prisma.userConcert.count as any).mockImplementation(() =>
+        Promise.resolve(2)
+      )
 
       const stats = await getUserConcertStatistics(userId)
       expect(stats.mostSeenBands).toEqual([
@@ -302,7 +332,9 @@ describe("Statistics & Aggregation", () => {
       } as any)
 
       // Mock user for currency
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "EUR" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "EUR",
+      } as any)
 
       const result = await getUserTotalSpent(userId)
 
@@ -326,7 +358,9 @@ describe("Statistics & Aggregation", () => {
       vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: 150.75 }])
 
       // Mock user for currency
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "USD" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "USD",
+      } as any)
 
       const result = await getUserTotalSpent(userId, {
         bandSlug: "radiohead",
@@ -355,7 +389,9 @@ describe("Statistics & Aggregation", () => {
       } as any)
 
       // Mock user for currency
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "GBP" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "GBP",
+      } as any)
 
       const result = await getUserTotalSpent(userId)
 
@@ -378,7 +414,9 @@ describe("Statistics & Aggregation", () => {
       } as any)
 
       // Mock user for currency
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ currency: "EUR" } as any)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        currency: "EUR",
+      } as any)
 
       const result = await getUserTotalSpentCached(userId)
 
@@ -414,15 +452,17 @@ describe("Statistics & Aggregation", () => {
       vi.useFakeTimers()
       vi.setSystemTime(mockNow)
 
-      vi.mocked(prisma.userConcert.count as any).mockImplementation((args: any) => {
-        if (args.where.userId === userId && args.where.concert?.date?.lt) {
-          return Promise.resolve(20) // User's past concerts
+      vi.mocked(prisma.userConcert.count as any).mockImplementation(
+        (args: any) => {
+          if (args.where.userId === userId && args.where.concert?.date?.lt) {
+            return Promise.resolve(20) // User's past concerts
+          }
+          if (args.where.userId === userId && args.where.concert?.date?.gte) {
+            return Promise.resolve(5) // User's future concerts
+          }
+          return Promise.resolve(0)
         }
-        if (args.where.userId === userId && args.where.concert?.date?.gte) {
-          return Promise.resolve(5) // User's future concerts
-        }
-        return Promise.resolve(0)
-      })
+      )
 
       const counts = await getUserConcertCounts(userId)
 
@@ -512,4 +552,3 @@ describe("Dashboard & Global Stats", () => {
     expect(result).toEqual({ concertCount: 42, bandCount: 120, userCount: 15 })
   })
 })
-
