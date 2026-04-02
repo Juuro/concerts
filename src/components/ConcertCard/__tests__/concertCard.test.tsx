@@ -172,4 +172,81 @@ describe('ConcertCard', () => {
 
     expect(screen.queryByText(/50\s*EUR/i)).not.toBeInTheDocument();
   });
+
+  it('test_ConcertCard_when_first_band_missing_renders_unknown_band_heading', () => {
+    const noBandsConcert: TransformedConcert = {
+      ...mockConcert,
+      bands: [],
+    };
+
+    render(<ConcertCard concert={noBandsConcert} />);
+    expect(screen.getByText('Unknown band')).toBeInTheDocument();
+  });
+
+  it('test_ConcertCard_when_image_url_protocol_relative_prefixes_https', () => {
+    const protocolRelative: TransformedConcert = {
+      ...mockConcert,
+      bands: [
+        {
+          id: 'band-1',
+          name: 'Radiohead',
+          slug: 'radiohead',
+          url: '/band/radiohead',
+          imageUrl: '//cdn.example.com/radiohead.jpg',
+        },
+      ],
+    };
+
+    const { container } = render(<ConcertCard concert={protocolRelative} />);
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://cdn.example.com/radiohead.jpg');
+  });
+
+  it('test_ConcertCard_when_hideLocation_true_and_future_hides_date_meta', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T12:00:00.000Z'));
+
+    const futureConcert: TransformedConcert = {
+      ...mockConcert,
+      date: '2027-12-31T20:00:00.000Z',
+    };
+
+    render(<ConcertCard concert={futureConcert} hideLocation />);
+    expect(screen.queryByText(/2027/i)).not.toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
+
+  it('test_ConcertCard_when_attendee_count_above_one_renders_attendee_badge', () => {
+    const sharedConcert: TransformedConcert = {
+      ...mockConcert,
+      attendeeCount: 3,
+    };
+    render(<ConcertCard concert={sharedConcert} />);
+    expect(screen.getByText('3 attended')).toBeInTheDocument();
+  });
+
+  it('test_ConcertCard_when_user_matches_attendance_shows_edit_button', () => {
+    const editableConcert: TransformedConcert = {
+      ...mockConcert,
+      attendance: {
+        id: 'attendance-1',
+        userId: 'user-1',
+        cost: null,
+        notes: null,
+      },
+    };
+    render(
+      <ConcertCard
+        concert={editableConcert}
+        showEditButton
+        currentUserId="user-1"
+      />,
+    );
+    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute(
+      'href',
+      `/concerts/edit/${mockConcert.id}`,
+    );
+  });
 });

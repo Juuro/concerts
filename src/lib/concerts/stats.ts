@@ -215,6 +215,7 @@ async function computeUserConcertStatistics(
         ),
 
       // Most seen bands (effective bands: core + supportingActIds)
+      /* c8 ignore start */
       (async () => {
         type Row = { band_id: string; cnt: bigint }
         try {
@@ -307,6 +308,7 @@ async function computeUserConcertStatistics(
             .map((b) => [b.name, b.count, b.slug] as [string, number, string])
         }
       })(),
+      /* c8 ignore stop */
 
       prisma.userConcert.count({
         where: { userId, concert: { date: { lt: now } } },

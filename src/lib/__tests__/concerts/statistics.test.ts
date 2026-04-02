@@ -144,6 +144,22 @@ describe("Statistics & Aggregation", () => {
 
       vi.useRealTimers()
     })
+
+    test("test_getConcertStatistics_handles_missing_band_rows_and_defaults_max_values", async () => {
+      vi.mocked(prisma.concert.groupBy as any).mockResolvedValue([])
+      vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([
+        { bandId: "band-missing", _count: 5 },
+      ] as any)
+      // Missing matching band record should be filtered out by map/filter branch.
+      vi.mocked(prisma.band.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.concert.count).mockResolvedValue(0)
+
+      const stats = await getConcertStatistics()
+      expect(stats.mostSeenBands).toEqual([])
+      expect(stats.maxYearCount).toBe(0)
+      expect(stats.maxCityCount).toBe(0)
+      expect(stats.maxBandCount).toBe(0)
+    })
   })
 
   describe("getUserConcertStatistics", () => {
@@ -213,6 +229,62 @@ describe("Statistics & Aggregation", () => {
       )
 
       vi.useRealTimers()
+    })
+
+    test("test_getUserConcertStatistics_when_raw_sql_fails_uses_groupBy_fallback_for_bands", async () => {
+      const userId = "user-fallback-stats"
+      const mockNow = new Date("2024-03-31T00:00:00.000Z")
+      vi.useFakeTimers()
+      vi.setSystemTime(mockNow)
+
+      vi.mocked(prisma.userConcert.findMany).mockResolvedValue(
+        [{ concertId: "concert-1" }, { concertId: "concert-2" }] as any,
+      )
+      vi.mocked(prisma.concert.groupBy as any).mockImplementation((args: any) => {
+        if (args.by.includes("date")) return Promise.resolve([{ date: new Date("2023-01-01"), _count: 2 }])
+        if (args.by.includes("normalizedCity")) return Promise.resolve([{ normalizedCity: "Berlin", _count: 2 }])
+        return Promise.resolve([])
+      })
+
+      vi.mocked(prisma.$queryRaw).mockRejectedValueOnce(new Error("missing column"))
+      vi.mocked(prisma.concertBand.groupBy).mockResolvedValue([
+        { bandId: "band-1", _count: 2 },
+        { bandId: "band-2", _count: 1 },
+      ] as any)
+      vi.mocked(prisma.band.findMany).mockResolvedValue([
+        { id: "band-1", name: "Band One", slug: "band-one" },
+        { id: "band-2", name: "Band Two", slug: "band-two" },
+      ] as any)
+      vi.mocked(prisma.concertBand.count as any).mockImplementation((args: any) => {
+        if (args.where.bandId === "band-1") return Promise.resolve(2)
+        if (args.where.bandId === "band-2") return Promise.resolve(1)
+        return Promise.resolve(0)
+      })
+      vi.mocked(prisma.userConcert.count as any).mockImplementation(() => Promise.resolve(2))
+
+      const stats = await getUserConcertStatistics(userId)
+      expect(stats.mostSeenBands).toEqual([
+        ["Band One", 2, "band-one"],
+        ["Band Two", 1, "band-two"],
+      ])
+
+      vi.useRealTimers()
+    })
+
+    test("test_getUserConcertStatistics_with_no_user_concerts_returns_zero_max_values", async () => {
+      vi.mocked(prisma.userConcert.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.concert.groupBy as any).mockResolvedValue([])
+      vi.mocked(prisma.$queryRaw).mockResolvedValue([] as any)
+      vi.mocked(prisma.band.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.userConcert.count).mockResolvedValue(0)
+
+      const stats = await getUserConcertStatistics("user-empty")
+      expect(stats.yearCounts).toEqual([])
+      expect(stats.cityCounts).toEqual([])
+      expect(stats.mostSeenBands).toEqual([])
+      expect(stats.maxYearCount).toBe(0)
+      expect(stats.maxCityCount).toBe(0)
+      expect(stats.maxBandCount).toBe(0)
     })
   })
 
@@ -422,6 +494,13 @@ describe("Dashboard & Global Stats", () => {
     const { getUserUniqueBandCount } = await import("@/lib/concerts/stats")
     const result = await getUserUniqueBandCount("user-fallback")
     expect(result).toBe(3)
+  })
+
+  test("test_getUserUniqueBandCount_primary_sql_path_returns_count", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([{ cnt: BigInt(7) }])
+    const { getUserUniqueBandCount } = await import("@/lib/concerts/stats")
+    const result = await getUserUniqueBandCount("user-primary")
+    expect(result).toBe(7)
   })
 
   test("test_getGlobalAppStats_returns_three_counts", async () => {

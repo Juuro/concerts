@@ -694,5 +694,106 @@ describe("getConcertsPaginated with userId + bandSlug filter", () => {
     expect(prisma.$queryRaw).toHaveBeenCalled()
     expect(result.items).toHaveLength(0)
   })
+
+  test("test_getConcertsPaginated_userId_bandSlug_when_band_not_found_falls_back_to_userConcert_query", async () => {
+    vi.mocked(prisma.band.findUnique).mockResolvedValueOnce(null as any)
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce([] as any)
+    const result = await getConcertsPaginated(undefined, 20, "forward", {
+      userId: "user-1",
+      bandSlug: "missing-band",
+    })
+    expect(prisma.$queryRaw).not.toHaveBeenCalled()
+    expect(prisma.userConcert.findMany).toHaveBeenCalled()
+    expect(result.items).toEqual([])
+  })
+
+  test("test_getConcertsPaginated_user_band_raw_sql_empty_rows_with_cursor_sets_prev_cursor", async () => {
+    vi.mocked(prisma.band.findUnique).mockResolvedValueOnce({ id: "band-1" } as any)
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
+      concert: { date: new Date("2024-01-01T00:00:00.000Z") },
+    } as any)
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+
+    const result = await getConcertsPaginated("uc-older", 20, "forward", {
+      userId: "user-1",
+      bandSlug: "band-a",
+    })
+    expect(result.prevCursor).toBe("uc-older")
+    expect(result.hasPrevious).toBe(true)
+  })
+
+  test("test_getConcertsPaginated_user_band_raw_sql_backward_reverses_items_and_sets_cursors", async () => {
+    vi.mocked(prisma.band.findUnique).mockResolvedValueOnce({ id: "band-1" } as any)
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce({
+      concert: { date: new Date("2024-01-01T00:00:00.000Z") },
+    } as any)
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([{ id: "uc-1" }, { id: "uc-2" }, { id: "uc-3" }] as any)
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce([
+      {
+        id: "uc-1",
+        concert: { id: "c1", date: new Date("2024-01-03"), latitude: 1, longitude: 1, venue: "v1", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+      {
+        id: "uc-2",
+        concert: { id: "c2", date: new Date("2024-01-02"), latitude: 1, longitude: 1, venue: "v2", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+      {
+        id: "uc-3",
+        concert: { id: "c3", date: new Date("2024-01-01"), latitude: 1, longitude: 1, venue: "v3", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+    ] as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([])
+
+    const result = await getConcertsPaginated("uc-cursor", 2, "backward", {
+      userId: "user-1",
+      bandSlug: "band-a",
+    })
+    expect(result.items).toHaveLength(2)
+    expect(result.hasPrevious).toBe(true)
+  })
+
+  test("test_getConcertsPaginated_user_band_raw_sql_without_cursor_date_uses_empty_cursor_clause", async () => {
+    vi.mocked(prisma.band.findUnique).mockResolvedValueOnce({ id: "band-1" } as any)
+    vi.mocked(prisma.userConcert.findFirst).mockResolvedValueOnce(null as any)
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([{ id: "uc-1" }] as any)
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce([
+      {
+        id: "uc-1",
+        concert: { id: "c1", date: new Date("2024-01-01"), latitude: 1, longitude: 1, venue: "v1", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+    ] as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([])
+
+    const result = await getConcertsPaginated("uc-cursor-missing", 20, "forward", {
+      userId: "user-1",
+      bandSlug: "band-a",
+    })
+    expect(result.items).toHaveLength(1)
+  })
+
+  test("test_getConcertsPaginated_user_backward_path_reverses_userConcerts_array", async () => {
+    vi.mocked(prisma.userConcert.findMany).mockResolvedValueOnce([
+      {
+        id: "uc-1",
+        userId: "user-1",
+        concert: { id: "c1", date: new Date("2024-01-03"), latitude: 1, longitude: 1, venue: "v1", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+      {
+        id: "uc-2",
+        userId: "user-1",
+        concert: { id: "c2", date: new Date("2024-01-02"), latitude: 1, longitude: 1, venue: "v2", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+      {
+        id: "uc-3",
+        userId: "user-1",
+        concert: { id: "c3", date: new Date("2024-01-01"), latitude: 1, longitude: 1, venue: "v3", normalizedCity: "x", isFestival: false, festival: null, bands: [], _count: { attendees: 1 } },
+      },
+    ] as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([])
+
+    const result = await getConcertsPaginated("uc-0", 2, "backward", { userId: "user-1", isPublic: true, city: "x" })
+    expect(result.items).toHaveLength(2)
+    expect(result.hasPrevious).toBe(true)
+  })
 })
 

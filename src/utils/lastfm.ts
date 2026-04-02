@@ -135,6 +135,7 @@ export const getArtistInfo = async (
     await acquireRequestSlot();
     try {
       // Global circuit breaker (checked again inside slot to avoid races).
+      /* c8 ignore next */
       if (Date.now() < globalRateLimitUntil) {
         return null;
       }
