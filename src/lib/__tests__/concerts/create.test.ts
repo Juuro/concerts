@@ -205,7 +205,9 @@ describe("createConcert Happy Paths", () => {
       _count: { attendees: 2 },
     }
 
-    vi.mocked(prisma.concert.findMany).mockResolvedValue([existingConcert] as any)
+    vi.mocked(prisma.concert.findMany).mockResolvedValue([
+      existingConcert,
+    ] as any)
     vi.mocked(prisma.concert.findUnique).mockResolvedValue(
       existingWithBands as any
     )
