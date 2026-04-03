@@ -38,6 +38,7 @@
     "eslint-config-next": "^16.1.6",
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.5.3",
     "puppeteer": "^24.38.0",
     "sass": "^1.97.3",
@@ -70,6 +71,9 @@
     "db:studio": "prisma studio",
     "migrate:shared-concerts": "tsx --env-file=.env scripts/migrate-to-shared-concerts.ts",
     "migrate:supporting-acts": "tsx --env-file=.env scripts/migrate-supporting-acts.ts"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,scss}": "prettier --write --ignore-path .gitignore"
   },
   "resolutions": {
     "lodash": "^4.17.23",
