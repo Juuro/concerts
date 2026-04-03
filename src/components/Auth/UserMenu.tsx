@@ -52,11 +52,11 @@ export default function UserMenu() {
         )}
       </button>
 
-      <div className={`user-menu__dropdown ${isOpen ? "user-menu__dropdown--open" : ""}`}>
+      <div
+        className={`user-menu__dropdown ${isOpen ? "user-menu__dropdown--open" : ""}`}
+      >
         <div className="user-menu__info">
-          <span className="user-menu__name">
-            {session.user.name || "User"}
-          </span>
+          <span className="user-menu__name">{session.user.name || "User"}</span>
           <span className="user-menu__email">{session.user.email}</span>
         </div>
         <hr className="user-menu__divider" />

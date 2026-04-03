@@ -118,7 +118,9 @@ async function fetchPhotonSearch(
   }
 
   if (!json.features || !Array.isArray(json.features)) {
-    console.error(`Photon response missing features array for ${url.toString()}`)
+    console.error(
+      `Photon response missing features array for ${url.toString()}`
+    )
     return []
   }
 

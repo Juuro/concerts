@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import VenueAutocomplete from "@/components/VenueAutocomplete/VenueAutocomplete"
-import BandAutocomplete, { type SelectedBand } from "@/components/BandAutocomplete"
+import BandAutocomplete, {
+  type SelectedBand,
+} from "@/components/BandAutocomplete"
 import BandEditForm from "@/components/BandEditForm/BandEditForm"
 import Dialog from "@/components/Dialog/Dialog"
 import type { EnhancedVenueResult } from "@/types/photon"
@@ -33,7 +35,12 @@ interface ConcertFormProps {
     isFestival: boolean
     festivalId?: string | null
     festivalName?: string | null
-    bands: { bandId: string; name: string; slug?: string; isHeadliner?: boolean }[]
+    bands: {
+      bandId: string
+      name: string
+      slug?: string
+      isHeadliner?: boolean
+    }[]
   }
   mode: "create" | "edit"
   currency?: string
@@ -59,11 +66,18 @@ type FestivalValidationState =
   | { type: "not-found"; name: string }
   | { type: "corrected"; original: string; correctedName: string }
 
-export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin = false }: ConcertFormProps) {
+export default function ConcertForm({
+  concert,
+  mode,
+  currency = "EUR",
+  isAdmin = false,
+}: ConcertFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [alreadyExistsEditPath, setAlreadyExistsEditPath] = useState<string | null>(null)
+  const [alreadyExistsEditPath, setAlreadyExistsEditPath] = useState<
+    string | null
+  >(null)
 
   // Form state
   const [date, setDate] = useState(concert?.date?.split("T")[0] || "")
@@ -104,11 +118,14 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
   const [festivalHighlightedIndex, setFestivalHighlightedIndex] = useState(-1)
 
   // Band validation state
-  const [bandValidation, setBandValidation] = useState<BandValidationState>({ type: "idle" })
+  const [bandValidation, setBandValidation] = useState<BandValidationState>({
+    type: "idle",
+  })
   const [pendingBandName, setPendingBandName] = useState("")
 
   // Festival validation state
-  const [festivalValidation, setFestivalValidation] = useState<FestivalValidationState>({ type: "idle" })
+  const [festivalValidation, setFestivalValidation] =
+    useState<FestivalValidationState>({ type: "idle" })
   const [pendingFestivalName, setPendingFestivalName] = useState("")
 
   // Debounced festival search
@@ -147,7 +164,12 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
       if (prev.some((b) => b.bandId === band.id)) return prev
       return [
         ...prev,
-        { bandId: band.id, name: band.name, slug: band.slug, isHeadliner: prev.length === 0 },
+        {
+          bandId: band.id,
+          name: band.name,
+          slug: band.slug,
+          isHeadliner: prev.length === 0,
+        },
       ]
     })
   }, [])
@@ -199,7 +221,9 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     setBandValidation({ type: "validating" })
 
     try {
-      const res = await fetch(`/api/bands/validate?name=${encodeURIComponent(name)}`)
+      const res = await fetch(
+        `/api/bands/validate?name=${encodeURIComponent(name)}`
+      )
       if (!res.ok) {
         // Validation endpoint failed -- proceed without blocking
         await doCreateBand(name)
@@ -209,9 +233,17 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
 
       const data: ValidationResult = await res.json()
 
-      if (data.found && data.correctedName && data.correctedName.toLowerCase() !== name.toLowerCase()) {
+      if (
+        data.found &&
+        data.correctedName &&
+        data.correctedName.toLowerCase() !== name.toLowerCase()
+      ) {
         // Found with a different name -- suggest correction
-        setBandValidation({ type: "corrected", original: name, correctedName: data.correctedName })
+        setBandValidation({
+          type: "corrected",
+          original: name,
+          correctedName: data.correctedName,
+        })
       } else if (data.found) {
         // Exact match found -- proceed directly
         await doCreateBand(data.name || name)
@@ -229,9 +261,10 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
   }
 
   const handleBandValidationConfirm = async (useCorrectedName?: boolean) => {
-    const name = useCorrectedName && bandValidation.type === "corrected"
-      ? bandValidation.correctedName
-      : pendingBandName
+    const name =
+      useCorrectedName && bandValidation.type === "corrected"
+        ? bandValidation.correctedName
+        : pendingBandName
     setBandValidation({ type: "idle" })
     setPendingBandName("")
     await doCreateBand(name)
@@ -315,7 +348,8 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     setAlreadyExistsEditPath(null)
 
     try {
-      const newFestivalName = festivalNameOverride ??
+      const newFestivalName =
+        festivalNameOverride ??
         (isFestival && !selectedFestival && festivalSearch.trim()
           ? festivalSearch.trim()
           : undefined)
@@ -326,7 +360,8 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
         longitude,
         venue,
         isFestival,
-        festivalId: isFestival && selectedFestival ? selectedFestival.id : undefined,
+        festivalId:
+          isFestival && selectedFestival ? selectedFestival.id : undefined,
         festivalName: newFestivalName,
         cost: cost ? parseFloat(cost) : null,
         bandIds: selectedBands.map((b) => ({
@@ -350,7 +385,9 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
         router.refresh()
       } else if (mode === "create" && res.status === 409) {
         const data = await res.json()
-        const editPath = data.editPath ?? (data.concertId ? `/concerts/edit/${data.concertId}` : null)
+        const editPath =
+          data.editPath ??
+          (data.concertId ? `/concerts/edit/${data.concertId}` : null)
         setAlreadyExistsEditPath(editPath)
         setError(null)
       } else {
@@ -374,16 +411,19 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     }
 
     // If a new festival name is being created, validate first
-    const newFestivalName = isFestival && !selectedFestival && festivalSearch.trim()
-      ? festivalSearch.trim()
-      : null
+    const newFestivalName =
+      isFestival && !selectedFestival && festivalSearch.trim()
+        ? festivalSearch.trim()
+        : null
 
     if (newFestivalName) {
       setPendingFestivalName(newFestivalName)
       setFestivalValidation({ type: "validating" })
 
       try {
-        const res = await fetch(`/api/festivals/validate?name=${encodeURIComponent(newFestivalName)}`)
+        const res = await fetch(
+          `/api/festivals/validate?name=${encodeURIComponent(newFestivalName)}`
+        )
         if (!res.ok) {
           await doSubmit()
           setFestivalValidation({ type: "idle" })
@@ -392,8 +432,16 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
 
         const data: ValidationResult = await res.json()
 
-        if (data.found && data.correctedName && data.correctedName.toLowerCase() !== newFestivalName.toLowerCase()) {
-          setFestivalValidation({ type: "corrected", original: newFestivalName, correctedName: data.correctedName })
+        if (
+          data.found &&
+          data.correctedName &&
+          data.correctedName.toLowerCase() !== newFestivalName.toLowerCase()
+        ) {
+          setFestivalValidation({
+            type: "corrected",
+            original: newFestivalName,
+            correctedName: data.correctedName,
+          })
           return
         } else if (data.found) {
           await doSubmit(data.name || newFestivalName)
@@ -414,10 +462,13 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
     await doSubmit()
   }
 
-  const handleFestivalValidationConfirm = async (useCorrectedName?: boolean) => {
-    const name = useCorrectedName && festivalValidation.type === "corrected"
-      ? festivalValidation.correctedName
-      : pendingFestivalName
+  const handleFestivalValidationConfirm = async (
+    useCorrectedName?: boolean
+  ) => {
+    const name =
+      useCorrectedName && festivalValidation.type === "corrected"
+        ? festivalValidation.correctedName
+        : pendingFestivalName
     setFestivalValidation({ type: "idle" })
     setPendingFestivalName("")
     await doSubmit(name)
@@ -455,361 +506,389 @@ export default function ConcertForm({ concert, mode, currency = "EUR", isAdmin =
 
   return (
     <>
-    <form className="concert-form" onSubmit={handleSubmit}>
-      {error && <div className="concert-form__error">{error}</div>}
-      {alreadyExistsEditPath && (
-        <div className="concert-form__already-exists" role="alert">
-          <p>This concert is already in your list. Do you want to edit it?</p>
-          <Link href={alreadyExistsEditPath} className="concert-form__already-exists-link">
-            Edit concert
-          </Link>
+      <form className="concert-form" onSubmit={handleSubmit}>
+        {error && <div className="concert-form__error">{error}</div>}
+        {alreadyExistsEditPath && (
+          <div className="concert-form__already-exists" role="alert">
+            <p>This concert is already in your list. Do you want to edit it?</p>
+            <Link
+              href={alreadyExistsEditPath}
+              className="concert-form__already-exists-link"
+            >
+              Edit concert
+            </Link>
+          </div>
+        )}
+
+        <div className="concert-form__section">
+          <h3>When & Where</h3>
+
+          <div className="concert-form__field">
+            <label htmlFor="date">Date *</label>
+            <input
+              type="date"
+              id="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="concert-form__field">
+            <label htmlFor="venue">Venue *</label>
+            <VenueAutocomplete
+              value={venue}
+              latitude={latitude}
+              longitude={longitude}
+              onSelect={handleVenueSelect}
+              onClear={handleVenueClear}
+              disabled={isSubmitting}
+              error={
+                !venueSelected && venue
+                  ? "Please select a venue from the dropdown"
+                  : undefined
+              }
+            />
+            {venueSelected && latitude && longitude && (
+              <div className="concert-form__venue-coords">
+                ✓ Selected: {venue} ({latitude.toFixed(4)},{" "}
+                {longitude.toFixed(4)})
+              </div>
+            )}
+          </div>
+
+          <div className="concert-form__field">
+            <label htmlFor="cost">Ticket Cost ({currency})</label>
+            <input
+              type="number"
+              id="cost"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+            />
+          </div>
         </div>
-      )}
 
-      <div className="concert-form__section">
-        <h3>When & Where</h3>
+        <div className="concert-form__section">
+          <h3>Bands *</h3>
 
-        <div className="concert-form__field">
-          <label htmlFor="date">Date *</label>
-          <input
-            type="date"
-            id="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="concert-form__field">
-          <label htmlFor="venue">Venue *</label>
-          <VenueAutocomplete
-            value={venue}
-            latitude={latitude}
-            longitude={longitude}
-            onSelect={handleVenueSelect}
-            onClear={handleVenueClear}
+          <BandAutocomplete
+            selectedBands={selectedBands}
+            onBandsChange={setSelectedBands}
+            onCreateBand={handleCreateBand}
             disabled={isSubmitting}
-            error={
-              !venueSelected && venue
-                ? "Please select a venue from the dropdown"
-                : undefined
-            }
+            isAdmin={isAdmin}
+            onEditBand={setEditingBandSlug}
           />
-          {venueSelected && latitude && longitude && (
-            <div className="concert-form__venue-coords">
-              ✓ Selected: {venue} ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+        </div>
+
+        <div className="concert-form__section">
+          <h3>Festival</h3>
+
+          <div className="concert-form__field concert-form__checkbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={isFestival}
+                onChange={(e) => {
+                  setIsFestival(e.target.checked)
+                  if (!e.target.checked) {
+                    handleClearFestival()
+                  }
+                }}
+              />
+              This was a festival
+            </label>
+          </div>
+
+          {isFestival && (
+            <div className="concert-form__field">
+              <label htmlFor="festivalSearch">Festival name</label>
+
+              {selectedFestival ? (
+                <div className="concert-form__selected-festival">
+                  <span className="concert-form__selected-festival-name">
+                    {selectedFestival.name}
+                  </span>
+                  <button
+                    type="button"
+                    className="concert-form__selected-festival-clear"
+                    onClick={handleClearFestival}
+                    aria-label={`Clear festival ${selectedFestival.name}`}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      focusable="false"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                    >
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="concert-form__search">
+                    <input
+                      type="text"
+                      id="festivalSearch"
+                      role="combobox"
+                      aria-expanded={festivalResults.length > 0}
+                      aria-controls="festival-listbox"
+                      aria-activedescendant={
+                        festivalHighlightedIndex >= 0
+                          ? `festival-option-${festivalHighlightedIndex}`
+                          : undefined
+                      }
+                      aria-autocomplete="list"
+                      aria-haspopup="listbox"
+                      value={festivalSearch}
+                      onChange={(e) => setFestivalSearch(e.target.value)}
+                      onKeyDown={handleFestivalKeyDown}
+                      placeholder="Type to search festivals..."
+                    />
+                    {isFestivalSearching && (
+                      <span className="concert-form__searching">
+                        Searching...
+                      </span>
+                    )}
+                  </div>
+
+                  {festivalResults.length > 0 && (
+                    <ul
+                      className="concert-form__results"
+                      role="listbox"
+                      id="festival-listbox"
+                      aria-label="Festival search results"
+                    >
+                      {festivalResults.map((festival, index) => (
+                        <li
+                          key={festival.id}
+                          role="option"
+                          id={`festival-option-${index}`}
+                          aria-selected={index === festivalHighlightedIndex}
+                          className={
+                            index === festivalHighlightedIndex
+                              ? "highlighted"
+                              : ""
+                          }
+                          onMouseEnter={() =>
+                            setFestivalHighlightedIndex(index)
+                          }
+                        >
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => handleSelectFestival(festival)}
+                          >
+                            {festival.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {festivalSearch.length >= 2 &&
+                    festivalResults.length === 0 &&
+                    !isFestivalSearching && (
+                      <div className="concert-form__no-results">
+                        <span>
+                          No festivals found. &quot;{festivalSearch}&quot; will
+                          be created on save.
+                        </span>
+                      </div>
+                    )}
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <div className="concert-form__field">
-          <label htmlFor="cost">Ticket Cost ({currency})</label>
-          <input
-            type="number"
-            id="cost"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-          />
-        </div>
-      </div>
-
-      <div className="concert-form__section">
-        <h3>Bands *</h3>
-
-        <BandAutocomplete
-          selectedBands={selectedBands}
-          onBandsChange={setSelectedBands}
-          onCreateBand={handleCreateBand}
-          disabled={isSubmitting}
-          isAdmin={isAdmin}
-          onEditBand={setEditingBandSlug}
-        />
-      </div>
-
-      <div className="concert-form__section">
-        <h3>Festival</h3>
-
-        <div className="concert-form__field concert-form__checkbox">
-          <label>
-            <input
-              type="checkbox"
-              checked={isFestival}
-              onChange={(e) => {
-                setIsFestival(e.target.checked)
-                if (!e.target.checked) {
-                  handleClearFestival()
-                }
-              }}
-            />
-            This was a festival
-          </label>
-        </div>
-
-        {isFestival && (
-          <div className="concert-form__field">
-            <label htmlFor="festivalSearch">Festival name</label>
-
-            {selectedFestival ? (
-              <div className="concert-form__selected-festival">
-                <span className="concert-form__selected-festival-name">
-                  {selectedFestival.name}
-                </span>
-                <button
-                  type="button"
-                  className="concert-form__selected-festival-clear"
-                  onClick={handleClearFestival}
-                  aria-label={`Clear festival ${selectedFestival.name}`}
-                >
-                  <svg
-                    aria-hidden="true"
-                    focusable="false"
-                    viewBox="0 0 24 24"
-                    width="14"
-                    height="14"
-                  >
-                    <path
-                      d="M18 6L6 18M6 6l12 12"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="concert-form__search">
-                  <input
-                    type="text"
-                    id="festivalSearch"
-                    role="combobox"
-                    aria-expanded={festivalResults.length > 0}
-                    aria-controls="festival-listbox"
-                    aria-activedescendant={
-                      festivalHighlightedIndex >= 0
-                        ? `festival-option-${festivalHighlightedIndex}`
-                        : undefined
-                    }
-                    aria-autocomplete="list"
-                    aria-haspopup="listbox"
-                    value={festivalSearch}
-                    onChange={(e) => setFestivalSearch(e.target.value)}
-                    onKeyDown={handleFestivalKeyDown}
-                    placeholder="Type to search festivals..."
-                  />
-                  {isFestivalSearching && (
-                    <span className="concert-form__searching">
-                      Searching...
-                    </span>
-                  )}
-                </div>
-
-                {festivalResults.length > 0 && (
-                  <ul
-                    className="concert-form__results"
-                    role="listbox"
-                    id="festival-listbox"
-                    aria-label="Festival search results"
-                  >
-                    {festivalResults.map((festival, index) => (
-                      <li
-                        key={festival.id}
-                        role="option"
-                        id={`festival-option-${index}`}
-                        aria-selected={index === festivalHighlightedIndex}
-                        className={
-                          index === festivalHighlightedIndex
-                            ? "highlighted"
-                            : ""
-                        }
-                        onMouseEnter={() =>
-                          setFestivalHighlightedIndex(index)
-                        }
-                      >
-                        <button
-                          type="button"
-                          tabIndex={-1}
-                          onClick={() => handleSelectFestival(festival)}
-                        >
-                          {festival.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {festivalSearch.length >= 2 &&
-                  festivalResults.length === 0 &&
-                  !isFestivalSearching && (
-                    <div className="concert-form__no-results">
-                      <span>
-                        No festivals found. &quot;{festivalSearch}&quot; will be
-                        created on save.
-                      </span>
-                    </div>
-                  )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="concert-form__actions">
-        <button
-          type="button"
-          className="concert-form__cancel"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </button>
-
-        {mode === "edit" && (
+        <div className="concert-form__actions">
           <button
             type="button"
-            className="concert-form__delete"
-            onClick={handleDelete}
+            className="concert-form__cancel"
+            onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Delete
+            Cancel
           </button>
-        )}
 
-        <button
-          type="submit"
-          className="concert-form__submit"
-          disabled={isSubmitting || selectedBands.length === 0 || !venueSelected}
-        >
-          {isSubmitting
-            ? "Saving..."
-            : mode === "create"
-              ? "Add Concert"
-              : "Save Changes"}
-        </button>
-      </div>
-    </form>
+          {mode === "edit" && (
+            <button
+              type="button"
+              className="concert-form__delete"
+              onClick={handleDelete}
+              disabled={isSubmitting}
+            >
+              Delete
+            </button>
+          )}
 
-    {isAdmin &&
-      selectedBands
-        .filter((band) => band.slug)
-        .map((band) => (
-          <Dialog
-            key={band.bandId}
-            open={editingBandSlug === band.slug}
-            onClose={() => setEditingBandSlug(null)}
-            title={`Edit ${band.name}`}
+          <button
+            type="submit"
+            className="concert-form__submit"
+            disabled={
+              isSubmitting || selectedBands.length === 0 || !venueSelected
+            }
           >
-            <BandEditForm
-              band={{ slug: band.slug, name: band.name }}
-              onSave={(updated) => {
-                setSelectedBands((prev) =>
-                  prev.map((b) =>
-                    b.slug === band.slug ? { ...b, name: updated.name } : b
+            {isSubmitting
+              ? "Saving..."
+              : mode === "create"
+                ? "Add Concert"
+                : "Save Changes"}
+          </button>
+        </div>
+      </form>
+
+      {isAdmin &&
+        selectedBands
+          .filter((band) => band.slug)
+          .map((band) => (
+            <Dialog
+              key={band.bandId}
+              open={editingBandSlug === band.slug}
+              onClose={() => setEditingBandSlug(null)}
+              title={`Edit ${band.name}`}
+            >
+              <BandEditForm
+                band={{ slug: band.slug, name: band.name }}
+                onSave={(updated) => {
+                  setSelectedBands((prev) =>
+                    prev.map((b) =>
+                      b.slug === band.slug ? { ...b, name: updated.name } : b
+                    )
                   )
-                )
-                setEditingBandSlug(null)
-              }}
-              onCancel={() => setEditingBandSlug(null)}
-            />
-          </Dialog>
-        ))}
+                  setEditingBandSlug(null)
+                }}
+                onCancel={() => setEditingBandSlug(null)}
+              />
+            </Dialog>
+          ))}
 
-    {/* Band validation dialog */}
-    <Dialog
-      open={bandValidation.type === "not-found" || bandValidation.type === "corrected"}
-      onClose={handleBandValidationCancel}
-      title="Verify band name"
-    >
-      {bandValidation.type === "not-found" && (
-        <div className="concert-form__validation-dialog">
-          <p>
-            &quot;{bandValidation.name}&quot; was not found on MusicBrainz or Last.fm. Are you sure the name is correct?
-          </p>
-          <div className="concert-form__validation-actions">
-            <button type="button" onClick={handleBandValidationCancel}>
-              Cancel
-            </button>
-            <button type="button" onClick={() => handleBandValidationConfirm()}>
-              Create anyway
-            </button>
+      {/* Band validation dialog */}
+      <Dialog
+        open={
+          bandValidation.type === "not-found" ||
+          bandValidation.type === "corrected"
+        }
+        onClose={handleBandValidationCancel}
+        title="Verify band name"
+      >
+        {bandValidation.type === "not-found" && (
+          <div className="concert-form__validation-dialog">
+            <p>
+              &quot;{bandValidation.name}&quot; was not found on MusicBrainz or
+              Last.fm. Are you sure the name is correct?
+            </p>
+            <div className="concert-form__validation-actions">
+              <button type="button" onClick={handleBandValidationCancel}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBandValidationConfirm()}
+              >
+                Create anyway
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      {bandValidation.type === "corrected" && (
-        <div className="concert-form__validation-dialog">
-          <p>
-            Did you mean &quot;{bandValidation.correctedName}&quot;?
-          </p>
-          <div className="concert-form__validation-actions">
-            <button type="button" onClick={handleBandValidationCancel}>
-              Cancel
-            </button>
-            <button type="button" onClick={() => handleBandValidationConfirm(false)}>
-              Create as &quot;{bandValidation.original}&quot;
-            </button>
-            <button type="button" onClick={() => handleBandValidationConfirm(true)}>
-              Use &quot;{bandValidation.correctedName}&quot;
-            </button>
+        )}
+        {bandValidation.type === "corrected" && (
+          <div className="concert-form__validation-dialog">
+            <p>Did you mean &quot;{bandValidation.correctedName}&quot;?</p>
+            <div className="concert-form__validation-actions">
+              <button type="button" onClick={handleBandValidationCancel}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBandValidationConfirm(false)}
+              >
+                Create as &quot;{bandValidation.original}&quot;
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBandValidationConfirm(true)}
+              >
+                Use &quot;{bandValidation.correctedName}&quot;
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </Dialog>
+        )}
+      </Dialog>
 
-    {/* Festival validation dialog */}
-    <Dialog
-      open={festivalValidation.type === "not-found" || festivalValidation.type === "corrected"}
-      onClose={handleFestivalValidationCancel}
-      title="Verify festival name"
-    >
-      {festivalValidation.type === "not-found" && (
-        <div className="concert-form__validation-dialog">
-          <p>
-            &quot;{festivalValidation.name}&quot; was not found on MusicBrainz. Are you sure the name is correct?
-          </p>
-          <div className="concert-form__validation-actions">
-            <button type="button" onClick={handleFestivalValidationCancel}>
-              Cancel
-            </button>
-            <button type="button" onClick={() => handleFestivalValidationConfirm()}>
-              Create anyway
-            </button>
+      {/* Festival validation dialog */}
+      <Dialog
+        open={
+          festivalValidation.type === "not-found" ||
+          festivalValidation.type === "corrected"
+        }
+        onClose={handleFestivalValidationCancel}
+        title="Verify festival name"
+      >
+        {festivalValidation.type === "not-found" && (
+          <div className="concert-form__validation-dialog">
+            <p>
+              &quot;{festivalValidation.name}&quot; was not found on
+              MusicBrainz. Are you sure the name is correct?
+            </p>
+            <div className="concert-form__validation-actions">
+              <button type="button" onClick={handleFestivalValidationCancel}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFestivalValidationConfirm()}
+              >
+                Create anyway
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      {festivalValidation.type === "corrected" && (
-        <div className="concert-form__validation-dialog">
-          <p>
-            Did you mean &quot;{festivalValidation.correctedName}&quot;?
-          </p>
-          <div className="concert-form__validation-actions">
-            <button type="button" onClick={handleFestivalValidationCancel}>
-              Cancel
-            </button>
-            <button type="button" onClick={() => handleFestivalValidationConfirm(false)}>
-              Create as &quot;{festivalValidation.original}&quot;
-            </button>
-            <button type="button" onClick={() => handleFestivalValidationConfirm(true)}>
-              Use &quot;{festivalValidation.correctedName}&quot;
-            </button>
+        )}
+        {festivalValidation.type === "corrected" && (
+          <div className="concert-form__validation-dialog">
+            <p>Did you mean &quot;{festivalValidation.correctedName}&quot;?</p>
+            <div className="concert-form__validation-actions">
+              <button type="button" onClick={handleFestivalValidationCancel}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFestivalValidationConfirm(false)}
+              >
+                Create as &quot;{festivalValidation.original}&quot;
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFestivalValidationConfirm(true)}
+              >
+                Use &quot;{festivalValidation.correctedName}&quot;
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </Dialog>
+        )}
+      </Dialog>
 
-    {/* Band validating loading indicator */}
-    {bandValidation.type === "validating" && (
-      <div className="concert-form__validating" aria-live="polite">
-        Checking band name...
-      </div>
-    )}
-    {festivalValidation.type === "validating" && (
-      <div className="concert-form__validating" aria-live="polite">
-        Checking festival name...
-      </div>
-    )}
+      {/* Band validating loading indicator */}
+      {bandValidation.type === "validating" && (
+        <div className="concert-form__validating" aria-live="polite">
+          Checking band name...
+        </div>
+      )}
+      {festivalValidation.type === "validating" && (
+        <div className="concert-form__validating" aria-live="polite">
+          Checking festival name...
+        </div>
+      )}
     </>
   )
 }

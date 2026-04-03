@@ -44,7 +44,8 @@
         border-radius: 0.3em;
         display: block;
         position: absolute;
-        animation: bar-grow variables.$transition-duration-slow variables.$transition-easing-decelerate both;
+        animation: bar-grow variables.$transition-duration-slow
+          variables.$transition-easing-decelerate both;
       }
 
       .text {

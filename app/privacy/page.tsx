@@ -19,9 +19,7 @@ export default function PrivacyPage() {
             This privacy policy explains how we collect, use, store, and protect
             your personal data when you use Concerts. It complies with the EU
             General Data Protection Regulation (GDPR) and the German Federal
-            Data Protection Act (BDSG). Last updated:{" "}
-            14 March 2025
-            .
+            Data Protection Act (BDSG). Last updated: 14 March 2025 .
           </p>
 
           <section aria-labelledby="controller-heading">
@@ -29,9 +27,8 @@ export default function PrivacyPage() {
             <p>
               The controller responsible for data processing is [Business Name]
               GBR. For contact details, including our data protection contact,
-              see our{" "}
-              <a href="/imprint">Imprint</a>. For data subject requests, you may
-              contact us at{" "}
+              see our <a href="/imprint">Imprint</a>. For data subject requests,
+              you may contact us at{" "}
               <a href="mailto:privacy@example.com">[privacy@example.com]</a>.
             </p>
             <p>
@@ -43,7 +40,9 @@ export default function PrivacyPage() {
           </section>
 
           <section aria-labelledby="purposes-heading">
-            <h2 id="purposes-heading">2. Purposes and Legal Basis of Processing</h2>
+            <h2 id="purposes-heading">
+              2. Purposes and Legal Basis of Processing
+            </h2>
             <p>
               We process your personal data for the following purposes and legal
               bases (Art. 6 GDPR):
@@ -58,9 +57,9 @@ export default function PrivacyPage() {
               <li>
                 <strong>Authentication via GitHub:</strong> If you sign in with
                 GitHub, we receive your GitHub profile data (e.g. name, email,
-                profile picture) from GitHub.{" "}
-                <em>Legal basis:</em> Contract performance (Art. 6(1)(b) GDPR)
-                and your consent when you authorise GitHub.
+                profile picture) from GitHub. <em>Legal basis:</em> Contract
+                performance (Art. 6(1)(b) GDPR) and your consent when you
+                authorise GitHub.
               </li>
               <li>
                 <strong>Email verification and password reset:</strong> We send
@@ -91,21 +90,21 @@ export default function PrivacyPage() {
                 hosting and infrastructure providers temporarily process IP
                 addresses, timestamps, User-Agent information, requested URLs,
                 and error logs to detect misuse, defend against attacks, and
-                ensure the stability of the service.{" "}
-                <em>Legal basis:</em> Legitimate interest in security, fraud
-                prevention, and service reliability (Art. 6(1)(f) GDPR).
+                ensure the stability of the service. <em>Legal basis:</em>{" "}
+                Legitimate interest in security, fraud prevention, and service
+                reliability (Art. 6(1)(f) GDPR).
               </li>
               <li>
                 <strong>Error and performance monitoring:</strong> We use a
-                third-party service (Sentry) to detect, diagnose and fix
-                errors, and to monitor application performance. When you are
-                logged in and have not opted out, an internal user identifier
-                (no email or name) may be included in error reports so we can
-                associate issues with accounts and fix them faster. You can turn
-                off inclusion of your identifier in error reports at any time in{" "}
-                <a href="/settings">Settings</a>.{" "}
-                <em>Legal basis:</em> Legitimate interest in service stability
-                and quality (Art. 6(1)(f) GDPR).
+                third-party service (Sentry) to detect, diagnose and fix errors,
+                and to monitor application performance. When you are logged in
+                and have not opted out, an internal user identifier (no email or
+                name) may be included in error reports so we can associate
+                issues with accounts and fix them faster. You can turn off
+                inclusion of your identifier in error reports at any time in{" "}
+                <a href="/settings">Settings</a>. <em>Legal basis:</em>{" "}
+                Legitimate interest in service stability and quality (Art.
+                6(1)(f) GDPR).
               </li>
             </ul>
           </section>
@@ -131,8 +130,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Email:</strong> Resend Inc. – transactional emails
-                (verification, password reset). Resend processes data in the USA;
-                transfers are governed by Standard Contractual Clauses or
+                (verification, password reset). Resend processes data in the
+                USA; transfers are governed by Standard Contractual Clauses or
                 equivalent safeguards.
               </li>
               <li>
@@ -148,14 +147,14 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Error and performance monitoring:</strong> Sentry
-                (Sentry Inc. / Functional Software Inc.) – we send error
-                reports and performance data to Sentry. When you are logged in
-                and have not opted out in Settings, an internal user ID (no
-                email) is included so we can correlate errors with accounts.
-                Data may be processed in the USA; transfers are governed by
-                Standard Contractual Clauses or the EU-US Data Privacy Framework.
-                We have a data processing agreement with Sentry in accordance
-                with Art. 28 GDPR.
+                (Sentry Inc. / Functional Software Inc.) – we send error reports
+                and performance data to Sentry. When you are logged in and have
+                not opted out in Settings, an internal user ID (no email) is
+                included so we can correlate errors with accounts. Data may be
+                processed in the USA; transfers are governed by Standard
+                Contractual Clauses or the EU-US Data Privacy Framework. We have
+                a data processing agreement with Sentry in accordance with Art.
+                28 GDPR.
               </li>
               <li>
                 <strong>Optional services</strong> (only if enabled in your
@@ -169,8 +168,8 @@ export default function PrivacyPage() {
                     <strong>Photon (OpenStreetMap):</strong> Venue search and
                     reverse geocoding (only venue/city-related data).
                     Approximate geographic coordinates derived from your IP
-                    address may be used to bias venue search results toward
-                    your location. This data is not stored.
+                    address may be used to bias venue search results toward your
+                    location. This data is not stored.
                   </li>
                   <li>
                     <strong>Map tiles:</strong> Map tiles may be loaded from
@@ -183,7 +182,9 @@ export default function PrivacyPage() {
           </section>
 
           <section aria-labelledby="third-countries-heading">
-            <h2 id="third-countries-heading">4. Transfers to Third Countries</h2>
+            <h2 id="third-countries-heading">
+              4. Transfers to Third Countries
+            </h2>
             <p>
               Some processors (e.g. Vercel, Resend, GitHub, Sentry) may process
               data in the USA or other non‑EEA countries. We ensure appropriate
@@ -261,13 +262,15 @@ export default function PrivacyPage() {
               <li>
                 <strong>Withdrawal of consent (Art. 7(3)):</strong> If
                 processing is based on consent, you may withdraw it at any time
-                without affecting the lawfulness of processing before withdrawal.
+                without affecting the lawfulness of processing before
+                withdrawal.
               </li>
               <li>
                 <strong>Right to lodge a complaint (Art. 77):</strong> You have
                 the right to lodge a complaint with a supervisory authority in
-                your country. For Germany: the competent Landesdatenschutzbehörde
-                or the Federal Commissioner for Data Protection (BfDI),{" "}
+                your country. For Germany: the competent
+                Landesdatenschutzbehörde or the Federal Commissioner for Data
+                Protection (BfDI),{" "}
                 <a
                   href="https://www.bfdi.bund.de"
                   target="_blank"
@@ -281,23 +284,26 @@ export default function PrivacyPage() {
             <p>
               To exercise these rights, contact us at{" "}
               <a href="mailto:privacy@example.com">[privacy@example.com]</a> or
-              via the address in our{" "}
-              <a href="/imprint">Imprint</a>.
+              via the address in our <a href="/imprint">Imprint</a>.
             </p>
           </section>
 
           <section aria-labelledby="necessity-heading">
-            <h2 id="necessity-heading">7. Statutory or Contractual Requirement</h2>
+            <h2 id="necessity-heading">
+              7. Statutory or Contractual Requirement
+            </h2>
             <p>
               The provision of personal data for account creation and use of the
-            service is necessary to perform the contract. Without it, we cannot
-            provide the service. There is no obligation to provide data for
-              optional features (e.g. public profile, username).
+              service is necessary to perform the contract. Without it, we
+              cannot provide the service. There is no obligation to provide data
+              for optional features (e.g. public profile, username).
             </p>
           </section>
 
           <section aria-labelledby="automated-heading">
-            <h2 id="automated-heading">8. Automated Decision-Making and Profiling</h2>
+            <h2 id="automated-heading">
+              8. Automated Decision-Making and Profiling
+            </h2>
             <p>
               We do not use automated decision-making or profiling that produces
               legal effects concerning you or similarly significantly affects
@@ -325,8 +331,8 @@ export default function PrivacyPage() {
             <p>
               We may update this privacy policy from time to time. Material
               changes will be communicated via the website or by email where
-              appropriate. Continued use of the service after changes constitutes
-              acceptance of the updated policy.
+              appropriate. Continued use of the service after changes
+              constitutes acceptance of the updated policy.
             </p>
           </section>
         </article>

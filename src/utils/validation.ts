@@ -12,24 +12,24 @@ export function validateWebsiteUrl(
   url: string | null | undefined
 ): string | null {
   if (!url || typeof url !== "string") {
-    return null;
+    return null
   }
 
-  const trimmed = url.trim();
+  const trimmed = url.trim()
   if (!trimmed) {
-    return null;
+    return null
   }
 
   try {
-    const parsed = new URL(trimmed);
+    const parsed = new URL(trimmed)
 
     // Only allow http and https protocols (prevent javascript:, data:, etc.)
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return null;
+      return null
     }
 
-    return parsed.toString();
+    return parsed.toString()
   } catch {
-    return null;
+    return null
   }
 }

@@ -178,13 +178,20 @@ export default function SettingsPage() {
             </span>
           </div>
 
-          <div className={`settings__url-display ${isPublic ? "settings__url-display--visible" : ""}`}>
+          <div
+            className={`settings__url-display ${isPublic ? "settings__url-display--visible" : ""}`}
+          >
             <div className="settings__url-display-inner">
               {username ? (
                 <>
-                  <span className="settings__url-label">Your public profile URL:</span>
+                  <span className="settings__url-label">
+                    Your public profile URL:
+                  </span>
                   <div className="settings__url-row">
-                    <Link href={`/u/${username}`} className="settings__url-link">
+                    <Link
+                      href={`/u/${username}`}
+                      className="settings__url-link"
+                    >
                       /u/{username}
                     </Link>
                     <button
@@ -211,7 +218,9 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className={`settings__privacy-options ${isPublic ? "settings__privacy-options--visible" : ""}`}>
+          <div
+            className={`settings__privacy-options ${isPublic ? "settings__privacy-options--visible" : ""}`}
+          >
             <div className="settings__privacy-options-inner">
               <div className="settings__field settings__checkbox">
                 <label>
@@ -223,10 +232,16 @@ export default function SettingsPage() {
                   Hide location data on public profile
                 </label>
                 <span className="settings__hint">
-                  Venue names, city names, the city statistics chart, the concert map, and dates of future concerts will be hidden from your public profile.
+                  Venue names, city names, the city statistics chart, the
+                  concert map, and dates of future concerts will be hidden from
+                  your public profile.
                 </span>
                 <div className="settings__info-warning">
-                  <strong>Privacy note:</strong> Sharing location data for future concerts reveals when you will be at specific venues and when you are not at home. Even just a band name and date is enough to find the exact venue and time. We recommend keeping this enabled.
+                  <strong>Privacy note:</strong> Sharing location data for
+                  future concerts reveals when you will be at specific venues
+                  and when you are not at home. Even just a band name and date
+                  is enough to find the exact venue and time. We recommend
+                  keeping this enabled.
                 </div>
               </div>
 

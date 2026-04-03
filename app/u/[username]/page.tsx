@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getConcertsPaginated, getUserConcerts, getUserConcertStatistics, getUserConcertCounts, getUserUniqueBandCount } from "@/lib/concerts"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
+import { getUserConcerts } from "@/lib/concerts/read"
+import {
+  getUserConcertStatistics,
+  getUserConcertCounts,
+  getUserUniqueBandCount,
+} from "@/lib/concerts/stats"
 import Header from "@/components/Header/header"
 import ConcertListInfinite from "@/components/ConcertList/ConcertListInfinite"
 import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidgetServer"
@@ -61,18 +67,23 @@ export default async function PublicProfilePage({
   }
 
   // Fetch initial paginated concerts
-  const initialData = await getConcertsPaginated(
-    cursor,
-    20,
-    'forward',
-    { userId: user.id, isPublic: true }
-  )
+  const initialData = await getConcertsPaginated(cursor, 20, "forward", {
+    userId: user.id,
+    isPublic: true,
+  })
 
   const hideLocation = user.hideLocationPublic
   const hideCost = user.hideCostPublic
 
   // Calculate statistics using separate count/aggregation queries
-  const [uniqueBands, userConcertCoords, uniqueYearsData, userStats, userCounts, allUserConcerts] = await Promise.all([
+  const [
+    uniqueBands,
+    userConcertCoords,
+    uniqueYearsData,
+    userStats,
+    userCounts,
+    allUserConcerts,
+  ] = await Promise.all([
     getUserUniqueBandCount(user.id),
     hideLocation
       ? Promise.resolve([])
@@ -90,13 +101,13 @@ export default async function PublicProfilePage({
     }),
     getUserConcertStatistics(user.id),
     getUserConcertCounts(user.id),
-    hideLocation
-      ? Promise.resolve([])
-      : getUserConcerts(user.id),
+    hideLocation ? Promise.resolve([]) : getUserConcerts(user.id),
   ])
 
   const uniqueCities = userConcertCoords.length
-  const years = new Set(uniqueYearsData.map((c) => new Date(c.date).getFullYear()))
+  const years = new Set(
+    uniqueYearsData.map((c) => new Date(c.date).getFullYear())
+  )
 
   const concertsForMap = allUserConcerts.map((c) => ({
     ...c,
@@ -144,7 +155,12 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
-          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} hideCityChart={hideLocation} />}
+          {userStats.totalPast > 0 && (
+            <StatisticsWidgetServer
+              statistics={userStats}
+              hideCityChart={hideLocation}
+            />
+          )}
 
           <div className="public-profile__stats">
             <StatCard value={userCounts.past} label="Concerts" />

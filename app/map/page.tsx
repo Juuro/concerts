@@ -2,7 +2,8 @@ import React from "react"
 import { redirect } from "next/navigation"
 import Layout from "../../src/components/layout-client"
 import MapClient from "../../src/components/MapClient"
-import { getUserConcerts, getUserConcertCounts } from "@/lib/concerts"
+import { getUserConcerts } from "@/lib/concerts/read"
+import { getUserConcertCounts } from "@/lib/concerts/stats"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
@@ -13,7 +14,9 @@ export const metadata: Metadata = {
 }
 
 export default async function MapPage() {
-  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
+  const session = await auth.api
+    .getSession({ headers: await headers() })
+    .catch(() => null)
 
   if (!session?.user) {
     redirect("/login")

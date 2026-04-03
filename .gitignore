@@ -62,6 +62,11 @@ build
 public
 .cache
 
+# Claude Code (local/user machine config)
+.claude/settings.local.json
+.claude/**/.temp/
+.claude/**/__pycache__/
+
 # Old Gatsby files
 src/pages.old-gatsby/
 src/templates.old-gatsby/

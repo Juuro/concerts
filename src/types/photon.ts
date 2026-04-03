@@ -4,10 +4,10 @@
  */
 
 export interface PhotonSearchParams {
-  q: string          // Search query
-  limit?: number     // Max results (default 10)
-  lat?: number       // Bias results near this latitude
-  lon?: number       // Bias results near this longitude
+  q: string // Search query
+  limit?: number // Max results (default 10)
+  lat?: number // Bias results near this latitude
+  lon?: number // Bias results near this longitude
   osm_tags?: string[] // Filter by OSM tags (e.g., ["amenity:theatre", "leisure:stadium"])
 }
 
@@ -25,7 +25,7 @@ export interface PhotonSearchFeature {
     city?: string
     state?: string
     country?: string
-    osm_type?: string  // "node", "way", or "relation"
+    osm_type?: string // "node", "way", or "relation"
     osm_id?: number
     osm_key?: string
     osm_value?: string
@@ -39,8 +39,8 @@ export interface PhotonSearchResponse {
 }
 
 export interface PhotonSearchResult {
-  name: string          // Venue name
-  displayName: string   // Formatted display address
+  name: string // Venue name
+  displayName: string // Formatted display address
   street?: string
   housenumber?: string
   postcode?: string
@@ -56,7 +56,7 @@ export interface PhotonSearchResult {
 /**
  * Venue source identifier for multi-source search
  */
-export type VenueSource = 'database' | 'ticketmaster' | 'photon'
+export type VenueSource = "database" | "ticketmaster" | "photon"
 
 /**
  * Enhanced venue result with multi-source support and user personalization.

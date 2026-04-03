@@ -49,7 +49,11 @@ function getTargetInfo(
 ): { href: string | null; label: string } | null {
   switch (targetType) {
     case "band": {
-      if (action === "band_merge" && details?.sourceBand && details?.targetBand) {
+      if (
+        action === "band_merge" &&
+        details?.sourceBand &&
+        details?.targetBand
+      ) {
         const source = details.sourceBand as { name: string }
         const target = details.targetBand as { name: string }
         return { href: null, label: `${source.name} → ${target.name}` }
@@ -124,11 +128,20 @@ export default function ActivityLog() {
       <div className="activity-log">
         <ul className="activity-log__list">
           {[1, 2, 3].map((i) => (
-            <li key={i} className="activity-log__item activity-log__item--skeleton">
+            <li
+              key={i}
+              className="activity-log__item activity-log__item--skeleton"
+            >
               <span className="activity-log__dot" aria-hidden="true" />
               <div className="activity-log__content">
-                <span className="admin-list__skeleton" style={{ width: 40, height: 14 }} />
-                <span className="admin-list__skeleton" style={{ width: 120, height: 14 }} />
+                <span
+                  className="admin-list__skeleton"
+                  style={{ width: 40, height: 14 }}
+                />
+                <span
+                  className="admin-list__skeleton"
+                  style={{ width: 120, height: 14 }}
+                />
               </div>
             </li>
           ))}
@@ -172,7 +185,9 @@ export default function ActivityLog() {
                     {targetInfo.label}
                   </Link>
                 ) : targetInfo ? (
-                  <span className="activity-log__target">{targetInfo.label}</span>
+                  <span className="activity-log__target">
+                    {targetInfo.label}
+                  </span>
                 ) : null}
               </div>
             </li>

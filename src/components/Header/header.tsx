@@ -1,15 +1,15 @@
-import Link from 'next/link';
-import React from 'react';
-import ConcertCount from '../ConcertCount/concertCount';
-import HeaderAuth from './HeaderAuth';
-import './header.scss';
+import Link from "next/link"
+import React from "react"
+import ConcertCount from "../ConcertCount/concertCount"
+import HeaderAuth from "./HeaderAuth"
+import "./header.scss"
 
 interface HeaderProps {
-  siteTitle?: string;
+  siteTitle?: string
   concertCounts?: {
-    past: number;
-    future: number;
-  };
+    past: number
+    future: number
+  }
 }
 
 const Header: React.FC<HeaderProps> = ({ siteTitle = "", concertCounts }) => (
@@ -27,6 +27,6 @@ const Header: React.FC<HeaderProps> = ({ siteTitle = "", concertCounts }) => (
       </nav>
     </div>
   </header>
-);
+)
 
-export default Header;
+export default Header

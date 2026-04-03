@@ -1,10 +1,10 @@
-import React from "react";
+import React from "react"
 
 interface ConcertCountProps {
   counts: {
-    past: number;
-    future: number;
-  };
+    past: number
+    future: number
+  }
 }
 
 const ConcertCount: React.FC<ConcertCountProps> = ({ counts }) => {
@@ -21,7 +21,7 @@ const ConcertCount: React.FC<ConcertCountProps> = ({ counts }) => {
       </span>
       {counts.future}
     </span>
-  );
-};
+  )
+}
 
-export default ConcertCount;
+export default ConcertCount

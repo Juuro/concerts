@@ -23,10 +23,7 @@ export async function POST(
 
   // Prevent self-ban
   if (id === session.user.id) {
-    return NextResponse.json(
-      { error: "Cannot ban yourself" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Cannot ban yourself" }, { status: 400 })
   }
 
   try {
@@ -51,7 +48,9 @@ export async function POST(
 
     // Sanitize reason (basic XSS prevention)
     const sanitizedReason = reason
-      ? String(reason).slice(0, 500).replace(/<[^>]*>/g, "")
+      ? String(reason)
+          .slice(0, 500)
+          .replace(/<[^>]*>/g, "")
       : null
 
     // Parse expires date if provided
@@ -97,10 +96,7 @@ export async function POST(
   } catch (error) {
     Sentry.captureException(error)
     console.error("Error banning user:", error)
-    return NextResponse.json(
-      { error: "Failed to ban user" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to ban user" }, { status: 500 })
   }
 }
 
@@ -124,7 +120,13 @@ export async function DELETE(
   try {
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, name: true, email: true, banned: true, banReason: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        banned: true,
+        banReason: true,
+      },
     })
 
     if (!user) {
@@ -132,10 +134,7 @@ export async function DELETE(
     }
 
     if (!user.banned) {
-      return NextResponse.json(
-        { error: "User is not banned" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "User is not banned" }, { status: 400 })
     }
 
     // Update user and log activity
@@ -175,9 +174,6 @@ export async function DELETE(
   } catch (error) {
     Sentry.captureException(error)
     console.error("Error unbanning user:", error)
-    return NextResponse.json(
-      { error: "Failed to unban user" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to unban user" }, { status: 500 })
   }
 }

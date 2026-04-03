@@ -6,63 +6,63 @@
  * MusicBrainz requires max 1 request per second and a descriptive User-Agent.
  */
 
-import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags";
+import { isFeatureEnabled, FEATURE_FLAGS } from "./featureFlags"
 import type {
   MusicBrainzArtistSearchResponse,
   MusicBrainzArtistLookupResponse,
   MusicBrainzEventSearchResponse,
   WikidataEntitiesResponse,
   WikimediaCommonsQueryResponse,
-} from "../types/musicbrainz";
+} from "../types/musicbrainz"
 
-const USER_AGENT = "ConcertsApp/1.0.0 (https://github.com/Juuro/concerts)";
-const IMAGE_THUMBNAIL_WIDTH = 500;
+const USER_AGENT = "ConcertsApp/1.0.0 (https://github.com/Juuro/concerts)"
+const IMAGE_THUMBNAIL_WIDTH = 500
 
 // Rate limiting infrastructure (MusicBrainz: max 1 req/sec)
-const MIN_REQUEST_INTERVAL = 1100; // slightly over 1s to stay safe
-const GLOBAL_RATE_LIMIT_COOLDOWN = 120_000; // 2 minutes
-const MAX_NETWORK_RETRIES = 2;
-const MAX_RATE_LIMIT_RETRIES = 1;
-const RATE_LIMIT_RETRY_DELAY = 15_000;
-const FETCH_TIMEOUT = 10_000; // 10 seconds
+const MIN_REQUEST_INTERVAL = 1100 // slightly over 1s to stay safe
+const GLOBAL_RATE_LIMIT_COOLDOWN = 120_000 // 2 minutes
+const MAX_NETWORK_RETRIES = 2
+const MAX_RATE_LIMIT_RETRIES = 1
+const RATE_LIMIT_RETRY_DELAY = 15_000
+const FETCH_TIMEOUT = 10_000 // 10 seconds
 
 // Build-time cache to prevent duplicate API calls during static generation
-const imageCache = new Map<string, string | null>();
+const imageCache = new Map<string, string | null>()
 // Track pending requests to prevent duplicate concurrent calls
-const pendingRequests = new Map<string, Promise<string | null>>();
+const pendingRequests = new Map<string, Promise<string | null>>()
 
 // Separate caches for website URL lookups
-const websiteCache = new Map<string, string | null>();
-const websitePendingRequests = new Map<string, Promise<string | null>>();
+const websiteCache = new Map<string, string | null>()
+const websitePendingRequests = new Map<string, Promise<string | null>>()
 
 /**
  * Data returned from MusicBrainz artist lookup.
  */
 interface MusicBrainzArtistData {
-  wikidataId: string | null;
-  officialHomepage: string | null;
+  wikidataId: string | null
+  officialHomepage: string | null
 }
 
-let globalRateLimitUntil = 0;
-let lastGlobalRateLimitLogAt = 0;
+let globalRateLimitUntil = 0
+let lastGlobalRateLimitLogAt = 0
 
-const MAX_CONCURRENT_REQUESTS = 1;
-let inFlightRequests = 0;
-const requestWaiters: Array<() => void> = [];
-let nextAllowedRequestAt = 0;
+const MAX_CONCURRENT_REQUESTS = 1
+let inFlightRequests = 0
+const requestWaiters: Array<() => void> = []
+let nextAllowedRequestAt = 0
 
 async function sleep(ms: number): Promise<void> {
-  if (ms <= 0) return;
-  await new Promise((resolve) => setTimeout(resolve, ms));
+  if (ms <= 0) return
+  await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
  * Check if an error is a transient network error that should be retried.
  */
 function isRetryableNetworkError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message.toLowerCase() : "";
-  const code = (error as NodeJS.ErrnoException)?.code;
-  const name = error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message.toLowerCase() : ""
+  const code = (error as NodeJS.ErrnoException)?.code
+  const name = error instanceof Error ? error.name : ""
 
   return (
     name === "AbortError" ||
@@ -72,7 +72,7 @@ function isRetryableNetworkError(error: unknown): boolean {
     ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "ENOTFOUND"].includes(
       code || ""
     )
-  );
+  )
 }
 
 /**
@@ -82,37 +82,37 @@ async function fetchWithTimeout(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
 
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    return await fetch(url, { ...options, signal: controller.signal })
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
   }
 }
 
 async function acquireRequestSlot(): Promise<void> {
   if (inFlightRequests < MAX_CONCURRENT_REQUESTS) {
-    inFlightRequests += 1;
-    return;
+    inFlightRequests += 1
+    return
   }
-  await new Promise<void>((resolve) => requestWaiters.push(resolve));
-  inFlightRequests += 1;
+  await new Promise<void>((resolve) => requestWaiters.push(resolve))
+  inFlightRequests += 1
 }
 
 function releaseRequestSlot(): void {
-  inFlightRequests = Math.max(0, inFlightRequests - 1);
-  const next = requestWaiters.shift();
-  if (next) next();
+  inFlightRequests = Math.max(0, inFlightRequests - 1)
+  const next = requestWaiters.shift()
+  if (next) next()
 }
 
 async function waitForNextRequestWindow(): Promise<void> {
-  const now = Date.now();
+  const now = Date.now()
   if (now < nextAllowedRequestAt) {
-    await sleep(nextAllowedRequestAt - now);
+    await sleep(nextAllowedRequestAt - now)
   }
-  nextAllowedRequestAt = Date.now() + MIN_REQUEST_INTERVAL;
+  nextAllowedRequestAt = Date.now() + MIN_REQUEST_INTERVAL
 }
 
 /**
@@ -121,36 +121,36 @@ async function waitForNextRequestWindow(): Promise<void> {
 export async function searchMusicBrainzArtist(
   artistName: string
 ): Promise<{ mbid: string; name: string } | null> {
-  const encoded = encodeURIComponent(artistName);
-  const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=5`;
+  const encoded = encodeURIComponent(artistName)
+  const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=5`
 
   const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
     },
-  });
+  })
 
   if (response.status === 503) {
-    throw new Error("MusicBrainz rate limit (503)");
+    throw new Error("MusicBrainz rate limit (503)")
   }
 
   if (!response.ok) {
-    throw new Error(`MusicBrainz search failed: ${response.status}`);
+    throw new Error(`MusicBrainz search failed: ${response.status}`)
   }
 
-  const data: MusicBrainzArtistSearchResponse = await response.json();
-  const artists = data.artists || [];
+  const data: MusicBrainzArtistSearchResponse = await response.json()
+  const artists = data.artists || []
 
-  if (artists.length === 0) return null;
+  if (artists.length === 0) return null
 
   // Prefer exact case-insensitive name match, fall back to highest score
   const exactMatch = artists.find(
     (a) => a.name.toLowerCase() === artistName.toLowerCase()
-  );
-  const bestMatch = exactMatch || artists[0];
+  )
+  const bestMatch = exactMatch || artists[0]
 
-  return { mbid: bestMatch.id, name: bestMatch.name };
+  return { mbid: bestMatch.id, name: bestMatch.name }
 }
 
 /**
@@ -161,46 +161,48 @@ export async function searchMusicBrainzArtists(
   artistName: string,
   limit: number
 ): Promise<{ mbid: string; name: string }[]> {
-  const trimmed = artistName.trim();
-  if (!trimmed || limit <= 0) return [];
+  const trimmed = artistName.trim()
+  if (!trimmed || limit <= 0) return []
 
-  if (Date.now() < globalRateLimitUntil) return [];
+  if (Date.now() < globalRateLimitUntil) return []
 
-  const safeLimit = Math.min(Math.max(limit, 1), 25);
-  const encoded = encodeURIComponent(trimmed);
-  const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=${safeLimit}`;
+  const safeLimit = Math.min(Math.max(limit, 1), 25)
+  const encoded = encodeURIComponent(trimmed)
+  const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=${safeLimit}`
 
-  await waitForNextRequestWindow();
+  await waitForNextRequestWindow()
 
-  let response: Response;
+  let response: Response
   try {
     response = await fetchWithTimeout(url, {
       headers: {
         "User-Agent": USER_AGENT,
         Accept: "application/json",
       },
-    });
+    })
   } catch {
-    return [];
+    return []
   }
 
   if (response.status === 503) {
     globalRateLimitUntil = Math.max(
       globalRateLimitUntil,
       Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
-    );
-    return [];
+    )
+    return []
   }
 
   if (!response.ok) {
-    console.error(`MusicBrainz artist search (suggest) failed: ${response.status}`);
-    return [];
+    console.error(
+      `MusicBrainz artist search (suggest) failed: ${response.status}`
+    )
+    return []
   }
 
-  const data: MusicBrainzArtistSearchResponse = await response.json();
-  const artists = data.artists || [];
+  const data: MusicBrainzArtistSearchResponse = await response.json()
+  const artists = data.artists || []
 
-  return artists.slice(0, safeLimit).map((a) => ({ mbid: a.id, name: a.name }));
+  return artists.slice(0, safeLimit).map((a) => ({ mbid: a.id, name: a.name }))
 }
 
 /**
@@ -210,48 +212,48 @@ export async function searchMusicBrainzArtists(
 export async function searchMusicBrainzEvent(
   eventName: string
 ): Promise<{ name: string } | null> {
-  if (!eventName.trim()) return null;
+  if (!eventName.trim()) return null
 
   // Check global circuit breaker
-  if (Date.now() < globalRateLimitUntil) return null;
+  if (Date.now() < globalRateLimitUntil) return null
 
-  const encoded = encodeURIComponent(eventName);
-  const url = `https://musicbrainz.org/ws/2/event?query=${encoded}&fmt=json&limit=5`;
+  const encoded = encodeURIComponent(eventName)
+  const url = `https://musicbrainz.org/ws/2/event?query=${encoded}&fmt=json&limit=5`
 
-  await waitForNextRequestWindow();
+  await waitForNextRequestWindow()
 
   const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
     },
-  });
+  })
 
   if (response.status === 503) {
     globalRateLimitUntil = Math.max(
       globalRateLimitUntil,
       Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
-    );
-    return null;
+    )
+    return null
   }
 
   if (!response.ok) {
-    console.error(`MusicBrainz event search failed: ${response.status}`);
-    return null;
+    console.error(`MusicBrainz event search failed: ${response.status}`)
+    return null
   }
 
-  const data: MusicBrainzEventSearchResponse = await response.json();
-  const events = data.events || [];
+  const data: MusicBrainzEventSearchResponse = await response.json()
+  const events = data.events || []
 
-  if (events.length === 0) return null;
+  if (events.length === 0) return null
 
   // Prefer exact case-insensitive name match, fall back to highest score
   const exactMatch = events.find(
     (e) => e.name.toLowerCase() === eventName.toLowerCase()
-  );
-  const bestMatch = exactMatch || events[0];
+  )
+  const bestMatch = exactMatch || events[0]
 
-  return { name: bestMatch.name };
+  return { name: bestMatch.name }
 }
 
 /**
@@ -260,45 +262,43 @@ export async function searchMusicBrainzEvent(
 async function lookupMusicBrainzArtist(
   mbid: string
 ): Promise<MusicBrainzArtistData> {
-  await waitForNextRequestWindow();
+  await waitForNextRequestWindow()
 
-  const url = `https://musicbrainz.org/ws/2/artist/${mbid}?fmt=json&inc=url-rels`;
+  const url = `https://musicbrainz.org/ws/2/artist/${mbid}?fmt=json&inc=url-rels`
 
   const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": USER_AGENT,
       Accept: "application/json",
     },
-  });
+  })
 
   if (response.status === 503) {
-    throw new Error("MusicBrainz rate limit (503)");
+    throw new Error("MusicBrainz rate limit (503)")
   }
 
   if (!response.ok) {
-    throw new Error(`MusicBrainz lookup failed: ${response.status}`);
+    throw new Error(`MusicBrainz lookup failed: ${response.status}`)
   }
 
-  const data: MusicBrainzArtistLookupResponse = await response.json();
-  const relations = data.relations || [];
+  const data: MusicBrainzArtistLookupResponse = await response.json()
+  const relations = data.relations || []
 
   // Extract Wikidata ID
-  const wikidataRelation = relations.find((r) => r.type === "wikidata");
-  let wikidataId: string | null = null;
+  const wikidataRelation = relations.find((r) => r.type === "wikidata")
+  let wikidataId: string | null = null
   if (wikidataRelation) {
     // Extract entity ID from URL like "https://www.wikidata.org/wiki/Q483"
-    const wikidataUrl = wikidataRelation.url.resource;
-    const entityId = wikidataUrl.split("/").pop();
-    wikidataId = entityId && entityId.startsWith("Q") ? entityId : null;
+    const wikidataUrl = wikidataRelation.url.resource
+    const entityId = wikidataUrl.split("/").pop()
+    wikidataId = entityId && entityId.startsWith("Q") ? entityId : null
   }
 
   // Extract official homepage URL
-  const homepageRelation = relations.find(
-    (r) => r.type === "official homepage"
-  );
-  const officialHomepage = homepageRelation?.url.resource || null;
+  const homepageRelation = relations.find((r) => r.type === "official homepage")
+  const officialHomepage = homepageRelation?.url.resource || null
 
-  return { wikidataId, officialHomepage };
+  return { wikidataId, officialHomepage }
 }
 
 /**
@@ -307,24 +307,24 @@ async function lookupMusicBrainzArtist(
 async function getWikidataImageFilename(
   wikidataId: string
 ): Promise<string | null> {
-  const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidataId}&props=claims&format=json`;
+  const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidataId}&props=claims&format=json`
 
   const response = await fetchWithTimeout(url, {
     headers: { Accept: "application/json" },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Wikidata lookup failed: ${response.status}`);
+    throw new Error(`Wikidata lookup failed: ${response.status}`)
   }
 
-  const data: WikidataEntitiesResponse = await response.json();
-  const entity = data.entities?.[wikidataId];
-  const p18Claims = entity?.claims?.P18;
+  const data: WikidataEntitiesResponse = await response.json()
+  const entity = data.entities?.[wikidataId]
+  const p18Claims = entity?.claims?.P18
 
-  if (!p18Claims || p18Claims.length === 0) return null;
+  if (!p18Claims || p18Claims.length === 0) return null
 
-  const filename = p18Claims[0]?.mainsnak?.datavalue?.value;
-  return filename || null;
+  const filename = p18Claims[0]?.mainsnak?.datavalue?.value
+  return filename || null
 }
 
 /**
@@ -334,26 +334,26 @@ async function getWikimediaCommonsUrl(
   filename: string,
   width = IMAGE_THUMBNAIL_WIDTH
 ): Promise<string | null> {
-  const encoded = encodeURIComponent(filename);
-  const url = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encoded}&prop=imageinfo&iiprop=url&iiurlwidth=${width}&format=json`;
+  const encoded = encodeURIComponent(filename)
+  const url = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encoded}&prop=imageinfo&iiprop=url&iiurlwidth=${width}&format=json`
 
   const response = await fetchWithTimeout(url, {
     headers: { Accept: "application/json" },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Wikimedia Commons lookup failed: ${response.status}`);
+    throw new Error(`Wikimedia Commons lookup failed: ${response.status}`)
   }
 
-  const data: WikimediaCommonsQueryResponse = await response.json();
-  const pages = data.query?.pages;
-  if (!pages) return null;
+  const data: WikimediaCommonsQueryResponse = await response.json()
+  const pages = data.query?.pages
+  if (!pages) return null
 
-  const pageId = Object.keys(pages)[0];
-  if (!pageId || pageId === "-1") return null;
+  const pageId = Object.keys(pages)[0]
+  if (!pageId || pageId === "-1") return null
 
-  const imageInfo = pages[pageId]?.imageinfo?.[0];
-  return imageInfo?.thumburl || imageInfo?.url || null;
+  const imageInfo = pages[pageId]?.imageinfo?.[0]
+  return imageInfo?.thumburl || imageInfo?.url || null
 }
 
 /**
@@ -366,148 +366,143 @@ export async function getArtistImageUrl(
   retryCount = 0
 ): Promise<string | null> {
   if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ_IMAGES, false)) {
-    return null;
+    return null
   }
 
   if (!artistName.trim()) {
-    return null;
+    return null
   }
 
   // Global circuit breaker
   if (Date.now() < globalRateLimitUntil) {
     if (Date.now() - lastGlobalRateLimitLogAt > 10_000) {
-      lastGlobalRateLimitLogAt = Date.now();
+      lastGlobalRateLimitLogAt = Date.now()
       console.warn(
         `MusicBrainz calls paused due to recent rate limiting (cooldown ends in ${Math.max(0, globalRateLimitUntil - Date.now())}ms)`
-      );
+      )
     }
-    return null;
+    return null
   }
 
-  const cacheKey = artistName.toLowerCase().trim();
+  const cacheKey = artistName.toLowerCase().trim()
 
   // Return cached result
   if (imageCache.has(cacheKey)) {
-    return imageCache.get(cacheKey) ?? null;
+    return imageCache.get(cacheKey) ?? null
   }
 
   // Return pending request
   if (pendingRequests.has(cacheKey)) {
-    return pendingRequests.get(cacheKey)!;
+    return pendingRequests.get(cacheKey)!
   }
 
   const requestPromise = (async (): Promise<string | null> => {
-    await acquireRequestSlot();
+    await acquireRequestSlot()
     try {
       // Re-check circuit breaker inside slot
       if (Date.now() < globalRateLimitUntil) {
-        return null;
+        return null
       }
 
-      await waitForNextRequestWindow();
+      await waitForNextRequestWindow()
 
       // Step 1: Search MusicBrainz for the artist
-      const searchResult = await searchMusicBrainzArtist(artistName);
+      const searchResult = await searchMusicBrainzArtist(artistName)
       if (!searchResult) {
-        console.warn(
-          `Artist "${artistName}" not found in MusicBrainz`
-        );
-        imageCache.set(cacheKey, null);
-        return null;
+        console.warn(`Artist "${artistName}" not found in MusicBrainz`)
+        imageCache.set(cacheKey, null)
+        return null
       }
 
       // Step 2: Look up relations to find Wikidata ID
-      const artistData = await lookupMusicBrainzArtist(searchResult.mbid);
+      const artistData = await lookupMusicBrainzArtist(searchResult.mbid)
       if (!artistData.wikidataId) {
-        imageCache.set(cacheKey, null);
-        return null;
+        imageCache.set(cacheKey, null)
+        return null
       }
 
       // Step 3: Get image filename from Wikidata
-      const filename = await getWikidataImageFilename(artistData.wikidataId);
+      const filename = await getWikidataImageFilename(artistData.wikidataId)
       if (!filename) {
-        imageCache.set(cacheKey, null);
-        return null;
+        imageCache.set(cacheKey, null)
+        return null
       }
 
       // Step 4: Get thumbnail URL from Wikimedia Commons
-      const imageUrl = await getWikimediaCommonsUrl(filename);
-      imageCache.set(cacheKey, imageUrl);
-      return imageUrl;
+      const imageUrl = await getWikimediaCommonsUrl(filename)
+      imageCache.set(cacheKey, imageUrl)
+      return imageUrl
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error)
 
       // Handle MusicBrainz rate limiting (HTTP 503)
       if (/rate limit|503/i.test(message)) {
         globalRateLimitUntil = Math.max(
           globalRateLimitUntil,
           Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
-        );
+        )
 
         if (retryCount < MAX_RATE_LIMIT_RETRIES) {
           const backoffDelay = Math.min(
             RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount),
             60_000
-          );
+          )
           console.warn(
             `MusicBrainz rate limit for "${artistName}". Retrying after ${backoffDelay}ms...`
-          );
+          )
 
-          pendingRequests.delete(cacheKey);
-          await sleep(backoffDelay);
+          pendingRequests.delete(cacheKey)
+          await sleep(backoffDelay)
           globalRateLimitUntil = Math.max(
             globalRateLimitUntil,
             Date.now() + backoffDelay
-          );
+          )
 
-          return getArtistImageUrl(artistName, retryCount + 1);
+          return getArtistImageUrl(artistName, retryCount + 1)
         }
 
-        console.warn(
-          `MusicBrainz rate limit for "${artistName}". Skipping.`
-        );
-        imageCache.set(cacheKey, null);
-        return null;
+        console.warn(`MusicBrainz rate limit for "${artistName}". Skipping.`)
+        imageCache.set(cacheKey, null)
+        return null
       }
 
       // Handle transient network errors (ECONNRESET, timeouts, etc.)
       if (isRetryableNetworkError(error)) {
         if (retryCount < MAX_NETWORK_RETRIES) {
-          const retryDelay = 1000 * Math.pow(2, retryCount); // 1s, 2s, 4s
+          const retryDelay = 1000 * Math.pow(2, retryCount) // 1s, 2s, 4s
           console.warn(
             `MusicBrainz network error for "${artistName}". Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_NETWORK_RETRIES})`
-          );
+          )
 
-          pendingRequests.delete(cacheKey);
-          await sleep(retryDelay);
-          return getArtistImageUrl(artistName, retryCount + 1);
+          pendingRequests.delete(cacheKey)
+          await sleep(retryDelay)
+          return getArtistImageUrl(artistName, retryCount + 1)
         }
 
         console.error(
           `MusicBrainz network error for "${artistName}" after ${MAX_NETWORK_RETRIES} retries. Giving up.`
-        );
+        )
         // Don't cache transient errors - allow retry on next page visit
-        return null;
+        return null
       }
 
       console.error(
         `Error fetching MusicBrainz image for "${artistName}":`,
         error
-      );
+      )
       // Only cache permanent errors (non-network failures)
       if (!isRetryableNetworkError(error)) {
-        imageCache.set(cacheKey, null);
+        imageCache.set(cacheKey, null)
       }
-      return null;
+      return null
     } finally {
-      pendingRequests.delete(cacheKey);
-      releaseRequestSlot();
+      pendingRequests.delete(cacheKey)
+      releaseRequestSlot()
     }
-  })();
+  })()
 
-  pendingRequests.set(cacheKey, requestPromise);
-  return requestPromise;
+  pendingRequests.set(cacheKey, requestPromise)
+  return requestPromise
 }
 
 /**
@@ -520,129 +515,128 @@ export async function getArtistWebsiteUrl(
   retryCount = 0
 ): Promise<string | null> {
   if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ_IMAGES, false)) {
-    return null;
+    return null
   }
 
   if (!artistName.trim()) {
-    return null;
+    return null
   }
 
   // Global circuit breaker
   if (Date.now() < globalRateLimitUntil) {
     if (Date.now() - lastGlobalRateLimitLogAt > 10_000) {
-      lastGlobalRateLimitLogAt = Date.now();
+      lastGlobalRateLimitLogAt = Date.now()
       console.warn(
         `MusicBrainz calls paused due to recent rate limiting (cooldown ends in ${Math.max(0, globalRateLimitUntil - Date.now())}ms)`
-      );
+      )
     }
-    return null;
+    return null
   }
 
-  const cacheKey = artistName.toLowerCase().trim();
+  const cacheKey = artistName.toLowerCase().trim()
 
   // Return cached result
   if (websiteCache.has(cacheKey)) {
-    return websiteCache.get(cacheKey) ?? null;
+    return websiteCache.get(cacheKey) ?? null
   }
 
   // Return pending request
   if (websitePendingRequests.has(cacheKey)) {
-    return websitePendingRequests.get(cacheKey)!;
+    return websitePendingRequests.get(cacheKey)!
   }
 
   const requestPromise = (async (): Promise<string | null> => {
-    await acquireRequestSlot();
+    await acquireRequestSlot()
     try {
       // Re-check circuit breaker inside slot
       if (Date.now() < globalRateLimitUntil) {
-        return null;
+        return null
       }
 
-      await waitForNextRequestWindow();
+      await waitForNextRequestWindow()
 
       // Step 1: Search MusicBrainz for the artist
-      const searchResult = await searchMusicBrainzArtist(artistName);
+      const searchResult = await searchMusicBrainzArtist(artistName)
       if (!searchResult) {
-        websiteCache.set(cacheKey, null);
-        return null;
+        websiteCache.set(cacheKey, null)
+        return null
       }
 
       // Step 2: Look up relations to find official homepage
-      const artistData = await lookupMusicBrainzArtist(searchResult.mbid);
-      websiteCache.set(cacheKey, artistData.officialHomepage);
-      return artistData.officialHomepage;
+      const artistData = await lookupMusicBrainzArtist(searchResult.mbid)
+      websiteCache.set(cacheKey, artistData.officialHomepage)
+      return artistData.officialHomepage
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error)
 
       // Handle MusicBrainz rate limiting (HTTP 503)
       if (/rate limit|503/i.test(message)) {
         globalRateLimitUntil = Math.max(
           globalRateLimitUntil,
           Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
-        );
+        )
 
         if (retryCount < MAX_RATE_LIMIT_RETRIES) {
           const backoffDelay = Math.min(
             RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount),
             60_000
-          );
+          )
           console.warn(
             `MusicBrainz rate limit for "${artistName}" (website). Retrying after ${backoffDelay}ms...`
-          );
+          )
 
-          websitePendingRequests.delete(cacheKey);
-          await sleep(backoffDelay);
+          websitePendingRequests.delete(cacheKey)
+          await sleep(backoffDelay)
           globalRateLimitUntil = Math.max(
             globalRateLimitUntil,
             Date.now() + backoffDelay
-          );
+          )
 
-          return getArtistWebsiteUrl(artistName, retryCount + 1);
+          return getArtistWebsiteUrl(artistName, retryCount + 1)
         }
 
         console.warn(
           `MusicBrainz rate limit for "${artistName}" (website). Skipping.`
-        );
-        websiteCache.set(cacheKey, null);
-        return null;
+        )
+        websiteCache.set(cacheKey, null)
+        return null
       }
 
       // Handle transient network errors (ECONNRESET, timeouts, etc.)
       if (isRetryableNetworkError(error)) {
         if (retryCount < MAX_NETWORK_RETRIES) {
-          const retryDelay = 1000 * Math.pow(2, retryCount); // 1s, 2s, 4s
+          const retryDelay = 1000 * Math.pow(2, retryCount) // 1s, 2s, 4s
           console.warn(
             `MusicBrainz network error for "${artistName}" (website). Retrying after ${retryDelay}ms... (attempt ${retryCount + 1}/${MAX_NETWORK_RETRIES})`
-          );
+          )
 
-          websitePendingRequests.delete(cacheKey);
-          await sleep(retryDelay);
-          return getArtistWebsiteUrl(artistName, retryCount + 1);
+          websitePendingRequests.delete(cacheKey)
+          await sleep(retryDelay)
+          return getArtistWebsiteUrl(artistName, retryCount + 1)
         }
 
         console.error(
           `MusicBrainz network error for "${artistName}" (website) after ${MAX_NETWORK_RETRIES} retries. Giving up.`
-        );
+        )
         // Don't cache transient errors - allow retry on next page visit
-        return null;
+        return null
       }
 
       console.error(
         `Error fetching MusicBrainz website for "${artistName}":`,
         error
-      );
+      )
       // Only cache permanent errors (non-network failures)
       if (!isRetryableNetworkError(error)) {
-        websiteCache.set(cacheKey, null);
+        websiteCache.set(cacheKey, null)
       }
-      return null;
+      return null
     } finally {
-      websitePendingRequests.delete(cacheKey);
-      releaseRequestSlot();
+      websitePendingRequests.delete(cacheKey)
+      releaseRequestSlot()
     }
-  })();
+  })()
 
-  websitePendingRequests.set(cacheKey, requestPromise);
-  return requestPromise;
+  websitePendingRequests.set(cacheKey, requestPromise)
+  return requestPromise
 }

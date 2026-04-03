@@ -4,7 +4,10 @@ import "./concertCardSkeleton.scss"
 const ConcertCardSkeleton: React.FC = () => {
   return (
     <li className="concert-card-skeleton card">
-      <div className="concert-card-skeleton-image skeleton-pulse" aria-hidden="true" />
+      <div
+        className="concert-card-skeleton-image skeleton-pulse"
+        aria-hidden="true"
+      />
       <div className="concert-card-skeleton-body">
         <div className="skeleton-title skeleton-pulse" />
         <div className="skeleton-date skeleton-pulse" />

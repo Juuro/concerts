@@ -28,6 +28,12 @@ yarn lint             # ESLint with next/core-web-vitals
 yarn format           # Prettier formatting
 yarn release          # Semantic versioning with standard-version
 
+# Testing commands
+yarn test             # Run unit tests with Vitest
+yarn test:watch       # Run tests in watch mode
+yarn test:coverage    # Generate coverage report
+# See TESTING.md for writing tests, mocking patterns, and GDPR compliance guidelines
+
 # Database commands
 yarn db:generate      # Generate Prisma client
 yarn db:migrate       # Run database migrations

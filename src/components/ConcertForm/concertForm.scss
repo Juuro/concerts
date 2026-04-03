@@ -141,7 +141,8 @@
   }
 
   &__results {
-    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate both;
+    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate
+      both;
     background-color: variables.$color-white;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -242,7 +243,8 @@
     justify-content: center;
     margin-left: 0.5rem;
     padding: 0;
-    transition: background-color variables.$transition-duration ease,
+    transition:
+      background-color variables.$transition-duration ease,
       color variables.$transition-duration ease;
     width: 24px;
 
@@ -320,7 +322,8 @@
     height: 22px;
     justify-content: center;
     margin-left: auto;
-    transition: background-color variables.$transition-duration ease,
+    transition:
+      background-color variables.$transition-duration ease,
       color variables.$transition-duration ease;
     width: 22px;
 

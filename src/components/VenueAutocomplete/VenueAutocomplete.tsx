@@ -232,7 +232,11 @@ export default function VenueAutocomplete({
         >
           {results.map((result, index) => (
             <button
-              key={result.osmId != null ? `osm:${result.osmId}` : `${result.source}:${result.name}:${result.lat}:${result.lon}`}
+              key={
+                result.osmId != null
+                  ? `osm:${result.osmId}`
+                  : `${result.source}:${result.name}:${result.lat}:${result.lon}`
+              }
               type="button"
               role="option"
               id={`venue-option-${index}`}
@@ -247,12 +251,18 @@ export default function VenueAutocomplete({
                 <span className="venue-autocomplete__item-name-text">
                   {renderPredictiveText(result.name)}
                 </span>
-                <span className={`venue-autocomplete__source-badge venue-autocomplete__source-badge--${result.source}`}>
-                  {result.source.charAt(0).toUpperCase() + result.source.slice(1)}
+                <span
+                  className={`venue-autocomplete__source-badge venue-autocomplete__source-badge--${result.source}`}
+                >
+                  {result.source.charAt(0).toUpperCase() +
+                    result.source.slice(1)}
                 </span>
                 {result.isUserVenue && (
                   <span className="venue-autocomplete__visited-badge">
-                    Visited{result.userVisitCount && result.userVisitCount > 1 ? ` ${result.userVisitCount}x` : ""}
+                    Visited
+                    {result.userVisitCount && result.userVisitCount > 1
+                      ? ` ${result.userVisitCount}x`
+                      : ""}
                   </span>
                 )}
               </div>
@@ -264,11 +274,14 @@ export default function VenueAutocomplete({
         </div>
       )}
 
-      {isOpen && !isSearching && searchTerm.length >= 3 && results.length === 0 && (
-        <div className="venue-autocomplete__no-results">
-          No venues found. Try a different search.
-        </div>
-      )}
+      {isOpen &&
+        !isSearching &&
+        searchTerm.length >= 3 &&
+        results.length === 0 && (
+          <div className="venue-autocomplete__no-results">
+            No venues found. Try a different search.
+          </div>
+        )}
     </div>
   )
 }

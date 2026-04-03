@@ -158,9 +158,7 @@ export default function ConcertManagement() {
 
   if (concerts.length === 0) {
     return (
-      <div className="admin-list__empty">
-        No concerts missing city data
-      </div>
+      <div className="admin-list__empty">No concerts missing city data</div>
     )
   }
 
@@ -193,10 +191,12 @@ export default function ConcertManagement() {
         <label>
           <input
             type="checkbox"
-            checked={selectedIds.size === concerts.length && concerts.length > 0}
+            checked={
+              selectedIds.size === concerts.length && concerts.length > 0
+            }
             onChange={toggleSelectAll}
-          />
-          {" "}Select all ({total} total)
+          />{" "}
+          Select all ({total} total)
         </label>
       </div>
 

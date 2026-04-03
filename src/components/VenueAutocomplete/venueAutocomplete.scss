@@ -74,7 +74,8 @@
   }
 
   &__dropdown {
-    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate both;
+    animation: dropdown-fade-in 150ms variables.$transition-easing-decelerate
+      both;
     position: absolute;
     top: calc(100% + 0.25rem);
     left: 0;

@@ -1,28 +1,28 @@
-import { getSession } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect, notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getEffectiveBandsForForm } from "@/lib/concerts";
-import { ConcertForm } from "@/components/ConcertForm";
-import "./edit-concert.scss";
+import { getSession } from "@/lib/auth"
+import { headers } from "next/headers"
+import { redirect, notFound } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+import { getEffectiveBandsForForm } from "@/lib/concerts/read"
+import { ConcertForm } from "@/components/ConcertForm"
+import "./edit-concert.scss"
 
 export const metadata = {
   title: "Edit Concert - My Concerts",
   description: "Edit concert details",
-};
+}
 
 export default async function EditConcertPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const session = await getSession(await headers());
+  const session = await getSession(await headers())
 
   if (!session?.user) {
-    redirect("/login");
+    redirect("/login")
   }
 
-  const { id } = await params;
+  const { id } = await params
 
   // Verify user has attendance (is linked to this concert via UserConcert junction)
   const attendance = await prisma.userConcert.findUnique({
@@ -32,10 +32,10 @@ export default async function EditConcertPage({
         concertId: id,
       },
     },
-  });
+  })
 
   if (!attendance) {
-    notFound();
+    notFound()
   }
 
   // Fetch the shared concert data
@@ -48,18 +48,18 @@ export default async function EditConcertPage({
       },
       festival: true,
     },
-  });
+  })
 
   if (!concert) {
-    notFound();
+    notFound()
   }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { currency: true },
-  });
+  })
 
-  const effectiveBands = await getEffectiveBandsForForm(concert, attendance);
+  const effectiveBands = await getEffectiveBandsForForm(concert, attendance)
 
   return (
     <div className="edit-concert">
@@ -83,5 +83,5 @@ export default async function EditConcertPage({
         }}
       />
     </div>
-  );
+  )
 }
