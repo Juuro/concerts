@@ -213,7 +213,7 @@ describe("lastfm", () => {
       expect(mockGetInfo).toHaveBeenCalledTimes(1)
     })
 
-    it("test_getArtistInfo_rate_limit_triggers_retry_and_global_cooldown", async () => {
+    it("test_getArtistInfo_rate_limit_triggers_retry_and_allows_later_calls", async () => {
       const getArtistInfo = await loadGetArtistInfo()
       vi.useFakeTimers()
       vi.stubEnv("ENABLE_LASTFM", "true")
@@ -238,10 +238,10 @@ describe("lastfm", () => {
       const p = getArtistInfo("Rate Band")
       await vi.advanceTimersByTimeAsync(18000)
       const result = await p
-      expect(result).toBeNull()
+      expect(result?.name).toBe("Rate Band")
 
       const blocked = await getArtistInfo("Another Artist")
-      expect(blocked).toBeNull()
+      expect(blocked?.name).toBe("Another Artist")
     })
 
     it("test_getArtistInfo_timeout_retry_then_success", async () => {
@@ -411,6 +411,132 @@ describe("lastfm", () => {
         "https://example.com/extralarge.jpg"
       )
       expect(result?.images.mega).toBe("https://example.com/mega.jpg")
+    })
+
+    it("test_getArtistInfo_more_than_two_concurrent_requests_queues_until_slot_is_released", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.useFakeTimers()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementation((params: any, callback: any) => {
+        setTimeout(() => {
+          callback(null, {
+            artist: {
+              name: params.artist,
+              url: "u",
+              image: [],
+              bio: {},
+              tags: { tag: [] },
+            },
+          })
+        }, 5000)
+      })
+
+      const p1 = getArtistInfo("Queued Artist 1")
+      const p2 = getArtistInfo("Queued Artist 2")
+      const p3 = getArtistInfo("Queued Artist 3")
+
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(mockGetInfo).toHaveBeenCalledTimes(2)
+
+      await vi.advanceTimersByTimeAsync(12000)
+      const [r1, r2, r3] = await Promise.all([p1, p2, p3])
+      expect(r1?.name).toBe("Queued Artist 1")
+      expect(r2?.name).toBe("Queued Artist 2")
+      expect(r3?.name).toBe("Queued Artist 3")
+      expect(mockGetInfo).toHaveBeenCalledTimes(3)
+    })
+
+    it("test_getArtistInfo_global_circuit_breaker_logs_once_per_window_and_returns_null", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.useFakeTimers()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(new Error("Rate limit exceeded (Code 29)"), null)
+      })
+
+      await getArtistInfo("Global Cooldown Trigger", 1)
+
+      vi.mocked(console.warn).mockClear()
+      const blocked1 = await getArtistInfo("Blocked Artist One")
+      const warnCallsAfterFirstBlocked = vi.mocked(console.warn).mock.calls
+        .length
+      const blocked2 = await getArtistInfo("Blocked Artist Two")
+
+      expect(blocked1).toBeNull()
+      expect(blocked2).toBeNull()
+      expect(warnCallsAfterFirstBlocked).toBe(1)
+      expect(vi.mocked(console.warn).mock.calls.length).toBe(1)
+      expect(vi.mocked(console.warn).mock.calls[0]?.[0]).toContain(
+        "Last.fm calls paused due to recent rate limiting"
+      )
+      expect(mockGetInfo).toHaveBeenCalledTimes(1)
+    })
+
+    it("test_getArtistInfo_cached_rate_limit_error_returns_null_during_cooldown_without_new_call", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+      const nowSpy = vi.spyOn(Date, "now")
+      nowSpy.mockReturnValue(1_000_000)
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(new Error("Rate limit exceeded (Code 29)"), null)
+      })
+
+      const first = await getArtistInfo("Cooldown Cached Artist", 1)
+
+      nowSpy
+        .mockReturnValueOnce(1_060_001)
+        .mockReturnValueOnce(1_010_000)
+      const second = await getArtistInfo("cooldown cached artist")
+      nowSpy.mockRestore()
+
+      expect(first).toBeNull()
+      expect(second).toBeNull()
+      expect(mockGetInfo).toHaveBeenCalledTimes(1)
+    })
+
+    it("test_getArtistInfo_queued_request_returns_null_when_global_cooldown_trips_before_slot_execution", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.useFakeTimers()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo
+        .mockImplementationOnce((_params: any, callback: any) => {
+          setTimeout(() => {
+            callback(new Error("Rate limit exceeded (Code 29)"), null)
+          }, 10)
+        })
+        .mockImplementationOnce((params: any, callback: any) => {
+          setTimeout(() => {
+            callback(null, {
+              artist: {
+                name: params.artist,
+                url: "u",
+                image: [],
+                bio: {},
+                tags: { tag: [] },
+              },
+            })
+          }, 10)
+        })
+
+      const p1 = getArtistInfo("Trip Global Cooldown", 1)
+      const p2 = getArtistInfo("Second In Flight")
+      const p3 = getArtistInfo("Queued While Cooldown Trips")
+
+      await vi.advanceTimersByTimeAsync(2000)
+      const queuedResult = await p3
+      expect(queuedResult).toBeNull()
+      expect(mockGetInfo).toHaveBeenCalledTimes(2)
+
+      await vi.advanceTimersByTimeAsync(3000)
+      await Promise.all([p1, p2])
     })
   })
 })
