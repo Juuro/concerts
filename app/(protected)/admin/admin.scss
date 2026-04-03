@@ -1,0 +1,2562 @@
+@use "../../../src/styles/variables.scss";
+
+// ============================================
+// Admin Dashboard - Pink Ink Editorial
+// Light mode with bold pink accents
+// ============================================
+
+// Animations
+@keyframes stat-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes section-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// Page Layout
+// ============================================
+
+.admin-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.admin-dashboard {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ============================================
+// Header
+// ============================================
+
+.admin-header {
+  margin-bottom: 3rem;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
+  }
+}
+
+.admin-header__title {
+  font-family: variables.$font-family-heading;
+  font-size: 3rem;
+  font-weight: 800;
+  color: variables.$admin-text;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.admin-header__subtitle {
+  font-size: 1.125rem;
+  color: variables.$admin-text-secondary;
+  margin-top: 0.5rem;
+}
+
+// ============================================
+// Bento Grid Layout
+// ============================================
+
+.admin-dashboard__bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2rem;
+}
+
+.admin-dashboard__section {
+  background: variables.$admin-surface;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: variables.$admin-shadow-md;
+  min-width: 0; // Prevent grid blowout
+  overflow: hidden;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
+  }
+}
+
+.admin-dashboard__section--stats {
+  grid-column: span 7;
+  animation-delay: 50ms;
+
+  @media screen and (max-width: 1024px) {
+    grid-column: span 12;
+  }
+}
+
+.admin-dashboard__section--activity {
+  grid-column: span 5;
+  animation-delay: 100ms;
+
+  @media screen and (max-width: 1024px) {
+    grid-column: span 12;
+  }
+}
+
+.admin-dashboard__bento-item--wide {
+  grid-column: span 12;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  animation-delay: 150ms;
+}
+
+.admin-dashboard__section--log {
+  grid-column: span 7;
+  animation-delay: 200ms;
+
+  @media screen and (max-width: 1024px) {
+    grid-column: span 12;
+  }
+}
+
+.admin-dashboard__section--health {
+  grid-column: span 5;
+  animation-delay: 250ms;
+
+  @media screen and (max-width: 1024px) {
+    grid-column: span 12;
+  }
+}
+
+// Section header with pink accent bar
+.admin-dashboard__section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  min-width: 0; // Prevent flex blowout
+
+  &::before {
+    content: "";
+    width: 4px;
+    height: 32px;
+    background: variables.$admin-pink-gradient;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  > div {
+    flex: 1;
+    min-width: 0; // Prevent flex blowout in child
+  }
+}
+
+.admin-dashboard__section-icon {
+  display: none; // Hide icons, using pink bar instead
+}
+
+.admin-dashboard__section-title {
+  font-family: variables.$font-family-heading;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+  margin: 0;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.admin-dashboard__section-desc {
+  font-size: 0.875rem;
+  color: variables.$admin-text-secondary;
+  margin-top: 0.25rem;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+// ============================================
+// Admin Stats - Editorial Minimal Strip
+// ============================================
+
+.admin-stats {
+  width: 100%;
+}
+
+.admin-stats__row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 3rem;
+
+  @media screen and (max-width: 768px) {
+    gap: 2rem;
+  }
+
+  @media screen and (max-width: 480px) {
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+  }
+}
+
+.admin-stats__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+
+  // Staggered entrance animation
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 4 {
+      &:nth-child(#{$i}) {
+        animation: stat-enter
+          500ms
+          variables.$transition-easing-decelerate
+          both;
+        animation-delay: #{($i - 1) * 100}ms;
+      }
+    }
+  }
+}
+
+.admin-stats__value {
+  font-family: variables.$font-family-heading;
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: variables.$admin-pink-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  // Dynamic typography: scale down for longer numbers to prevent overflow
+  &[data-value-length="3"] {
+    font-size: 2.75rem;
+  }
+
+  &[data-value-length="4"] {
+    font-size: 2.25rem;
+  }
+
+  &[data-value-length="5"] {
+    font-size: 1.875rem;
+  }
+
+  &[data-value-length="6"] {
+    font-size: 1.5rem;
+  }
+
+  &[data-value-length="7"],
+  &[data-value-length="8"],
+  &[data-value-length="9"],
+  &[data-value-length="10"] {
+    font-size: 1.25rem;
+  }
+
+  @media screen and (max-width: 768px) {
+    font-size: 2.75rem;
+
+    &[data-value-length="3"] {
+      font-size: 2.25rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="5"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    font-size: 2.25rem;
+
+    &[data-value-length="3"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="5"],
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.admin-stats__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  margin-top: 0.375rem;
+}
+
+// ============================================
+// Admin Overview - Hero + Cards Layout
+// ============================================
+
+.admin-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// Primary metric - Concerts (hero stat)
+.admin-overview__primary {
+  text-align: center;
+  padding: 1.75rem 1.25rem;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 6, 102, 0.03) 0%,
+    rgba(255, 107, 163, 0.06) 100%
+  );
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+
+  // Decorative corner accent
+  &::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: variables.$admin-pink-gradient;
+    opacity: 0.06;
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    width: 60px;
+    height: 60px;
+    background: variables.$admin-pink-gradient;
+    opacity: 0.04;
+    border-radius: 50%;
+  }
+}
+
+.admin-overview__icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 0.75rem;
+  color: variables.$admin-pink-500;
+  opacity: 0.5;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: subtle-float 4s ease-in-out infinite;
+  }
+}
+
+.admin-overview__value {
+  font-family: variables.$font-family-heading;
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: variables.$admin-pink-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: metric-value-enter 600ms variables.$transition-easing-decelerate
+      both;
+  }
+}
+
+.admin-overview__label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  margin-top: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+// Secondary stats row
+.admin-overview__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+}
+
+// Individual overview cards
+.admin-overview-card {
+  background: variables.$admin-surface-alt;
+  border-radius: 14px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  position: relative;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration ease,
+    background-color variables.$transition-duration ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: variables.$admin-shadow-sm;
+    background: linear-gradient(
+      145deg,
+      variables.$admin-surface-alt 0%,
+      rgba(255, 6, 102, 0.02) 100%
+    );
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 3 {
+      &:nth-child(#{$i}) {
+        animation: metric-value-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
+        animation-delay: #{150 + ($i * 100)}ms;
+      }
+    }
+  }
+}
+
+.admin-overview-card__icon {
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 0.5rem;
+  color: variables.$admin-pink-400;
+  opacity: 0.6;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.admin-overview-card__value {
+  font-family: variables.$font-family-heading;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+  line-height: 1;
+}
+
+.admin-overview-card__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  margin-top: 0.375rem;
+  white-space: nowrap;
+}
+
+// Responsive adjustments
+@media screen and (max-width: 640px) {
+  .admin-overview__value {
+    font-size: 3.5rem;
+  }
+
+  .admin-overview__primary {
+    padding: 1.5rem 1rem;
+  }
+
+  .admin-overview__row {
+    gap: 0.625rem;
+  }
+
+  .admin-overview-card {
+    padding: 0.875rem 0.625rem;
+  }
+
+  .admin-overview-card__value {
+    font-size: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .admin-overview__row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .admin-overview-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+    padding: 0.875rem 1rem;
+  }
+
+  .admin-overview-card__icon {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .admin-overview-card__label {
+    margin-top: 0;
+    flex: 1;
+  }
+
+  .admin-overview-card__value {
+    font-size: 1.375rem;
+  }
+}
+
+// ============================================
+// Activity Compact - Horizontal Strip
+// ============================================
+
+.activity-compact {
+  display: flex;
+  align-items: baseline;
+  gap: 2.5rem;
+
+  @media screen and (max-width: 640px) {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+}
+
+.activity-compact__primary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: stat-enter 500ms variables.$transition-easing-decelerate both;
+  }
+}
+
+.activity-compact__value {
+  font-family: variables.$font-family-heading;
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: variables.$admin-pink-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  // Dynamic typography: scale down for longer numbers to prevent overflow
+  &[data-value-length="3"] {
+    font-size: 2.75rem;
+  }
+
+  &[data-value-length="4"] {
+    font-size: 2.25rem;
+  }
+
+  &[data-value-length="5"] {
+    font-size: 1.875rem;
+  }
+
+  &[data-value-length="6"] {
+    font-size: 1.5rem;
+  }
+
+  &[data-value-length="7"],
+  &[data-value-length="8"],
+  &[data-value-length="9"],
+  &[data-value-length="10"] {
+    font-size: 1.25rem;
+  }
+
+  @media screen and (max-width: 768px) {
+    font-size: 2.75rem;
+
+    &[data-value-length="3"] {
+      font-size: 2.25rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="5"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    font-size: 2.25rem;
+
+    &[data-value-length="3"] {
+      font-size: 1.875rem;
+    }
+
+    &[data-value-length="4"] {
+      font-size: 1.5rem;
+    }
+
+    &[data-value-length="5"],
+    &[data-value-length="6"],
+    &[data-value-length="7"],
+    &[data-value-length="8"],
+    &[data-value-length="9"],
+    &[data-value-length="10"] {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.activity-compact__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  margin-top: 0.375rem;
+  white-space: nowrap;
+}
+
+.activity-compact__secondary {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+
+  @media screen and (max-width: 640px) {
+    gap: 2rem;
+  }
+
+  @media screen and (max-width: 400px) {
+    gap: 1.5rem;
+  }
+}
+
+.activity-compact__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 3 {
+      &:nth-child(#{$i}) {
+        animation: stat-enter
+          500ms
+          variables.$transition-easing-decelerate
+          both;
+        animation-delay: #{$i * 100}ms;
+      }
+    }
+  }
+}
+
+.activity-compact__item-value {
+  font-family: variables.$font-family-heading;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+  line-height: 1;
+  white-space: nowrap;
+
+  @media screen and (max-width: 480px) {
+    font-size: 1.5rem;
+  }
+}
+
+.activity-compact__item-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  margin-top: 0.25rem;
+  white-space: nowrap;
+}
+
+// ============================================
+// Activity Chart - Pink Bars (legacy)
+// ============================================
+
+.activity-chart {
+  width: 100%;
+}
+
+.activity-chart__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-chart__row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.activity-chart__label {
+  font-size: 0.8125rem;
+  color: variables.$admin-text-secondary;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.activity-chart__bar-wrapper {
+  height: 36px;
+  background: variables.$admin-surface-alt;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.activity-chart__bar {
+  height: 100%;
+  background: variables.$admin-pink-gradient;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.75rem;
+  min-width: 40px;
+  transition: filter variables.$transition-duration ease;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+
+  // Staggered entrance animation
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 7 {
+      &[data-index="#{$i - 1}"] {
+        animation: bar-grow 400ms variables.$transition-easing-decelerate both;
+        animation-delay: #{($i - 1) * 50}ms;
+      }
+    }
+  }
+}
+
+.activity-chart__value {
+  font-family: variables.$font-family-heading;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: white;
+}
+
+// ============================================
+// Activity Metrics - Modern Card Layout
+// ============================================
+
+@keyframes metric-value-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.activity-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// Primary metric - This Year (hero stat)
+.activity-metrics__primary {
+  text-align: center;
+  padding: 1.75rem 1.25rem;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 6, 102, 0.03) 0%,
+    rgba(255, 107, 163, 0.06) 100%
+  );
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+
+  // Decorative corner accent
+  &::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: variables.$admin-pink-gradient;
+    opacity: 0.06;
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    width: 60px;
+    height: 60px;
+    background: variables.$admin-pink-gradient;
+    opacity: 0.04;
+    border-radius: 50%;
+  }
+}
+
+.activity-metrics__icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 0.75rem;
+  color: variables.$admin-pink-500;
+  opacity: 0.5;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: subtle-float 4s ease-in-out infinite;
+  }
+}
+
+.activity-metrics__value {
+  font-family: variables.$font-family-heading;
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: variables.$admin-pink-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: metric-value-enter 600ms variables.$transition-easing-decelerate
+      both;
+  }
+}
+
+.activity-metrics__label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  margin-top: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+// Secondary metrics row
+.activity-metrics__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+}
+
+// Individual activity cards
+.activity-card {
+  background: variables.$admin-surface-alt;
+  border-radius: 14px;
+  padding: 1.125rem 1rem;
+  text-align: center;
+  position: relative;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration ease,
+    background-color variables.$transition-duration ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: variables.$admin-shadow-sm;
+    background: linear-gradient(
+      145deg,
+      variables.$admin-surface-alt 0%,
+      rgba(255, 6, 102, 0.02) 100%
+    );
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 3 {
+      &:nth-child(#{$i}) {
+        animation: metric-value-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
+        animation-delay: #{150 + ($i * 100)}ms;
+      }
+    }
+  }
+}
+
+.activity-card__value {
+  font-family: variables.$font-family-heading;
+  font-size: 2rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+  line-height: 1;
+
+  .activity-card--empty & {
+    color: variables.$admin-text-muted;
+    opacity: 0.6;
+  }
+}
+
+.activity-card__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+}
+
+// Empty state styling
+.activity-card--empty {
+  background: linear-gradient(
+    145deg,
+    variables.$admin-surface-alt 0%,
+    rgba(250, 249, 247, 0.8) 100%
+  );
+}
+
+.activity-card__empty-icon {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  width: 14px;
+  height: 14px;
+  color: variables.$admin-text-muted;
+  opacity: 0.25;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: subtle-float 3s ease-in-out infinite;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 640px) {
+  .activity-metrics__value {
+    font-size: 3.5rem;
+  }
+
+  .activity-metrics__primary {
+    padding: 1.5rem 1rem;
+  }
+
+  .activity-metrics__row {
+    gap: 0.625rem;
+  }
+
+  .activity-card {
+    padding: 1rem 0.75rem;
+  }
+
+  .activity-card__value {
+    font-size: 1.625rem;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .activity-metrics__row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .activity-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: 0.875rem 1rem;
+  }
+
+  .activity-card__label {
+    order: -1;
+    margin-top: 0;
+  }
+
+  .activity-card__value {
+    font-size: 1.5rem;
+  }
+
+  .activity-card__empty-icon {
+    position: static;
+    margin-left: 0.5rem;
+  }
+}
+
+// ============================================
+// Admin Attention - Cluster Cards (actual component classes)
+// ============================================
+
+@keyframes attention-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.admin-attention-cluster {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+
+  @media screen and (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media screen and (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-attention-card {
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: variables.$admin-shadow-sm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration
+      variables.$transition-easing-decelerate;
+
+  // Staggered entrance animation
+  @media (prefers-reduced-motion: no-preference) {
+    @for $i from 1 through 4 {
+      &:nth-child(#{$i}) {
+        animation: attention-card-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
+        animation-delay: #{150 + ($i - 1) * 80}ms;
+      }
+    }
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: variables.$admin-shadow-md;
+  }
+
+  &--warning {
+    background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%);
+  }
+
+  &--danger {
+    background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+  }
+
+  &--success {
+    background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+}
+
+.admin-attention-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+  color: variables.$admin-text;
+  margin-bottom: 0.25rem;
+
+  svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .admin-attention-card--warning & {
+    background: linear-gradient(
+      135deg,
+      rgba(217, 119, 6, 0.15) 0%,
+      rgba(245, 158, 11, 0.1) 100%
+    );
+    color: #b45309;
+  }
+
+  .admin-attention-card--danger & {
+    background: linear-gradient(
+      135deg,
+      rgba(220, 38, 38, 0.15) 0%,
+      rgba(239, 68, 68, 0.1) 100%
+    );
+    color: #b91c1c;
+  }
+
+  .admin-attention-card--success & {
+    background: linear-gradient(
+      135deg,
+      rgba(5, 150, 105, 0.15) 0%,
+      rgba(16, 185, 129, 0.1) 100%
+    );
+    color: #047857;
+  }
+}
+
+.admin-attention-card__value {
+  font-family: variables.$font-family-heading;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+
+  .admin-attention-card--warning & {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .admin-attention-card--danger & {
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .admin-attention-card--success & {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.admin-attention-card__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: variables.$admin-text-secondary;
+}
+
+.admin-attention-card__actions {
+  margin-top: 0.5rem;
+}
+
+.admin-attention-card__all-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: variables.$admin-success;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ============================================
+// Activity Log - Live Feed
+// ============================================
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes activity-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+    background-color: rgba(255, 6, 102, 0.08);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background-color: transparent;
+  }
+}
+
+.activity-log {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: variables.$admin-surface-alt;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
+// Title with live badge - flex layout for flush left/right alignment
+.admin-dashboard__section-title:has(.activity-log__live-badge) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.activity-log__live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background: variables.$admin-pink-100;
+  border-radius: 100px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: variables.$admin-pink-600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background: variables.$admin-pink-600;
+    border-radius: 50%;
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+}
+
+.activity-log__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.activity-log__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background-color 150ms ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: rgba(255, 6, 102, 0.06);
+
+    .activity-log__dot {
+      box-shadow: 0 0 0 4px rgba(255, 6, 102, 0.15);
+    }
+  }
+
+  &[data-new="true"] {
+    animation: activity-item-enter 300ms variables.$transition-easing-decelerate;
+  }
+
+  &--skeleton {
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}
+
+.activity-log__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: variables.$admin-pink-gradient;
+  margin-top: 5px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(255, 6, 102, 0.1);
+  transition: box-shadow 150ms ease;
+}
+
+.activity-log__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.activity-log__time {
+  color: variables.$admin-text-muted;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.activity-log__separator {
+  color: variables.$admin-text-muted;
+  font-size: 0.75rem;
+}
+
+.activity-log__action {
+  color: variables.$admin-text-secondary;
+
+  &::after {
+    content: ":";
+  }
+}
+
+.activity-log__target {
+  font-weight: 600;
+  color: variables.$admin-text;
+  word-break: break-word;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color variables.$transition-duration ease;
+
+    &:hover {
+      color: variables.$admin-pink-600;
+    }
+  }
+}
+
+// ============================================
+// Health Score - The Pulse
+// ============================================
+
+.health-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.health-score__ring {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.health-score__svg {
+  transform: rotate(-90deg);
+}
+
+.health-score__track {
+  fill: none;
+  stroke: variables.$admin-surface-alt;
+  stroke-width: 12;
+}
+
+.health-score__progress {
+  fill: none;
+  stroke: url(#health-gradient);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 600ms variables.$transition-easing-decelerate;
+}
+
+.health-score__value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.health-score__percentage {
+  font-family: variables.$font-family-heading;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  background: variables.$admin-pink-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.health-score__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: variables.$admin-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.health-score__breakdown {
+  width: 100%;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.health-score__breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.health-score__breakdown-label {
+  color: variables.$admin-text-secondary;
+}
+
+.health-score__breakdown-value {
+  font-family: variables.$font-family-heading;
+  font-weight: 700;
+  color: variables.$admin-text;
+}
+
+// ============================================
+// Management Tabs - Control Strip
+// ============================================
+
+.admin-management {
+  margin-top: 3rem;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
+    animation-delay: 300ms;
+  }
+}
+
+// Connected management container
+.admin-management--connected {
+  .admin-management-tabs {
+    margin-bottom: 0;
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    padding: 0;
+    gap: 2px;
+
+    @media screen and (max-width: 768px) {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+  }
+
+  .admin-management-tabs__tab {
+    background: variables.$admin-surface-alt;
+    border-radius: 14px 14px 0 0;
+    padding: 1rem 1.5rem;
+
+    &:first-child {
+      border-top-left-radius: 16px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 16px;
+    }
+
+    @media screen and (max-width: 768px) {
+      padding: 0.875rem 1.25rem;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .admin-management-tabs__tab--active {
+    background: variables.$admin-surface;
+    box-shadow: none;
+    position: relative;
+    z-index: 3;
+  }
+
+  .admin-management-tabs__panel {
+    background: variables.$admin-surface;
+    border-radius: 0 16px 16px 16px;
+    padding: 2rem;
+    box-shadow: variables.$admin-shadow-md;
+    position: relative;
+    z-index: 1;
+    margin-top: -1px; // Overlap slightly to hide gap
+
+    // When first tab is active, panel connects at top-left
+    &[data-active-tab="enrichment"] {
+      border-top-left-radius: 0;
+    }
+
+    // When last tab is active, panel connects at top-right
+    &[data-active-tab="users"] {
+      border-radius: 16px 0 16px 16px;
+    }
+
+    // Middle tab - small radius where tabs end
+    &[data-active-tab="cleanup"] {
+      border-radius: 16px 16px 16px 16px;
+    }
+
+    @media screen and (max-width: 768px) {
+      padding: 1.5rem;
+      border-radius: 0 0 16px 16px;
+
+      &[data-active-tab="enrichment"],
+      &[data-active-tab="users"],
+      &[data-active-tab="cleanup"] {
+        border-radius: 0 0 16px 16px;
+      }
+    }
+  }
+}
+
+// Management tabs container and tabs (new class names)
+.admin-management-tabs {
+  display: inline-flex;
+  background: variables.$admin-surface-alt;
+  border-radius: 16px;
+  padding: 6px;
+  margin-bottom: 2rem;
+
+  @media screen and (max-width: 768px) {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.admin-management-tabs__tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-family: variables.$font-family-heading;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
+  white-space: nowrap;
+
+  &:hover:not(&--active) {
+    color: variables.$admin-text;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &--active {
+    background: variables.$admin-surface;
+    color: variables.$admin-pink-600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: color variables.$transition-duration ease;
+  }
+
+  &--active svg {
+    color: variables.$admin-pink-600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.admin-management-tabs__panel {
+  background: transparent;
+}
+
+.admin-management-tabs__content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+
+  @media screen and (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+
+  // Ensure sections within the grid have proper width
+  .admin-dashboard__section {
+    min-width: 0; // Prevent grid blowout
+    overflow: hidden;
+  }
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: variables.$admin-surface-alt;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.admin-tabs__tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  font-family: variables.$font-family-heading;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
+  white-space: nowrap;
+
+  &:hover:not(&--active) {
+    color: variables.$admin-text;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &--active {
+    background: variables.$admin-surface;
+    color: variables.$admin-pink-600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: color variables.$transition-duration ease;
+  }
+
+  &--active svg {
+    color: variables.$admin-pink-600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+// Tab content panels
+.admin-tabs__panel {
+  background: variables.$admin-surface;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: variables.$admin-shadow-md;
+}
+
+.admin-tabs__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-tabs__panel-title {
+  font-family: variables.$font-family-heading;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+  margin: 0;
+}
+
+// ============================================
+// Inline Filters (text link style)
+// ============================================
+
+.admin-inline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-inline-filters__separator {
+  color: variables.$admin-text-muted;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.admin-inline-filter {
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition:
+    color variables.$transition-duration ease,
+    border-color variables.$transition-duration ease;
+
+  &:hover:not(&--active) {
+    color: variables.$admin-text;
+  }
+
+  &--active {
+    color: variables.$admin-pink-600;
+    border-bottom-color: variables.$admin-pink-600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+// ============================================
+// Data Tables
+// ============================================
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table__header {
+  text-align: left;
+  padding: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+  border-bottom: 2px solid variables.$admin-surface-alt;
+}
+
+.admin-table__row {
+  transition: background-color variables.$transition-duration ease;
+
+  &:hover {
+    background-color: variables.$admin-pink-100;
+  }
+}
+
+.admin-table__cell {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: variables.$admin-text;
+  font-size: 0.9375rem;
+
+  &--muted {
+    color: variables.$admin-text-secondary;
+  }
+
+  &--actions {
+    text-align: right;
+  }
+}
+
+// ============================================
+// Buttons & Actions
+// ============================================
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  font-family: variables.$font-family-text;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all variables.$transition-duration ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.admin-btn--primary {
+  background: variables.$admin-pink-gradient;
+  color: white;
+  border: none;
+  font-weight: 700; // Bold for WCAG AA "large text" (3:1 contrast threshold)
+
+  // Ensure color applies to links too
+  &,
+  &:link,
+  &:visited {
+    color: white;
+    text-decoration: none;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #e8055c 0%, #ff5090 100%);
+    box-shadow: 0 4px 12px rgba(255, 6, 102, 0.3);
+    transform: translateY(-1px);
+    color: white;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(255, 6, 102, 0.3);
+  }
+}
+
+.admin-btn--secondary {
+  background: variables.$admin-surface;
+  color: variables.$admin-text;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  &,
+  &:link,
+  &:visited {
+    color: variables.$admin-text;
+    text-decoration: none;
+  }
+
+  &:hover {
+    background: variables.$admin-surface-alt;
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    color: variables.$admin-text;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.admin-btn--danger {
+  background: variables.$admin-danger-bg;
+  color: variables.$admin-danger;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+
+  &,
+  &:link,
+  &:visited {
+    color: variables.$admin-danger;
+    text-decoration: none;
+  }
+
+  &:hover {
+    background: #fecaca;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    transform: translateY(-1px);
+    color: variables.$admin-danger;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+  }
+}
+
+.admin-btn--small {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ============================================
+// Search & Filters
+// ============================================
+
+.admin-search {
+  position: relative;
+  max-width: 320px;
+}
+
+.admin-search__input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  background: variables.$admin-surface;
+  color: variables.$admin-text;
+  transition:
+    border-color variables.$transition-duration ease,
+    box-shadow variables.$transition-duration ease;
+
+  &::placeholder {
+    color: variables.$admin-text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: variables.$admin-pink-600;
+    box-shadow: 0 0 0 3px rgba(255, 6, 102, 0.1);
+  }
+}
+
+.admin-search__icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: variables.$admin-text-muted;
+  pointer-events: none;
+}
+
+// ============================================
+// Pagination
+// ============================================
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.admin-pagination__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: variables.$admin-surface;
+  color: variables.$admin-text;
+  font-family: variables.$font-family-heading;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all variables.$transition-duration ease;
+
+  &:hover:not(:disabled) {
+    background: variables.$admin-surface-alt;
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    background: variables.$admin-pink-gradient;
+    color: white;
+    border-color: transparent;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ============================================
+// Empty States
+// ============================================
+
+.admin-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.admin-empty__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  color: variables.$admin-text-muted;
+  opacity: 0.5;
+}
+
+.admin-empty__title {
+  font-family: variables.$font-family-heading;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: variables.$admin-text;
+  margin: 0 0 0.5rem;
+}
+
+.admin-empty__description {
+  color: variables.$admin-text-secondary;
+  margin: 0;
+}
+
+// ============================================
+// Admin Lists & Filters (for management sections)
+// ============================================
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-list__item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 1rem;
+  background: variables.$admin-surface-alt;
+  border-radius: 10px;
+  transition: background-color variables.$transition-duration ease;
+
+  &:hover {
+    background: rgba(255, 6, 102, 0.04);
+  }
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: variables.$admin-pink-600;
+    flex-shrink: 0;
+  }
+}
+
+.admin-list__info {
+  flex: 1 1 150px; // Allow wrapping but prefer staying on one line
+  min-width: 0;
+}
+
+.admin-list__name {
+  font-weight: 600;
+  color: variables.$admin-text;
+  margin: 0;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.admin-list__meta {
+  font-size: 0.8125rem;
+  color: variables.$admin-text-secondary;
+  margin: 0.25rem 0 0;
+}
+
+.admin-list__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-list__username {
+  opacity: 0.6;
+}
+
+.admin-status-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+
+  &--active {
+    background-color: variables.$admin-success;
+    box-shadow: 0 0 0 2px variables.$admin-success-bg;
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: status-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  &--banned {
+    background-color: variables.$admin-danger;
+    box-shadow: 0 0 0 2px variables.$admin-danger-bg;
+  }
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.admin-badge {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  background: #e7f3ff;
+  color: variables.$admin-info;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+// Visually hidden but accessible to screen readers
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-list__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: variables.$admin-text-secondary;
+  font-size: 0.9375rem;
+}
+
+.admin-list__skeleton {
+  height: 60px;
+  background: linear-gradient(
+    90deg,
+    variables.$admin-surface-alt 25%,
+    #f0efed 50%,
+    variables.$admin-surface-alt 75%
+  );
+  background-size: 200% 100%;
+  border-radius: 10px;
+  animation: skeleton-pulse 1.5s infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.admin-filter {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: variables.$admin-surface-alt;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: variables.$admin-text-secondary;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  input[type="checkbox"] {
+    accent-color: variables.$admin-pink-600;
+  }
+}
+
+.admin-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: variables.$admin-pink-100;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 6, 102, 0.2);
+}
+
+.admin-bulk-actions__count {
+  font-weight: 600;
+  color: variables.$admin-pink-600;
+}
+
+// ============================================
+// Sub-tabs within sections (BandManagement tabs)
+// ============================================
+
+.admin-sub-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.admin-sub-tab {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: variables.$admin-text-secondary;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all variables.$transition-duration ease;
+
+  &:hover:not(&--active) {
+    color: variables.$admin-text;
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &--active {
+    color: variables.$admin-pink-600;
+    background: variables.$admin-pink-100;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+// ============================================
+// Utility: Visually Hidden
+// ============================================
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ============================================
+// Quick Actions (from AdminQuickActions)
+// ============================================
+
+.admin-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-quick-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: variables.$admin-surface;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: variables.$admin-shadow-md;
+    border-color: rgba(255, 6, 102, 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.admin-quick-action__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: variables.$admin-pink-100;
+  color: variables.$admin-pink-600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.admin-quick-action__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-quick-action__title {
+  font-family: variables.$font-family-heading;
+  font-weight: 600;
+  color: variables.$admin-text;
+  margin: 0;
+}
+
+.admin-quick-action__desc {
+  font-size: 0.8125rem;
+  color: variables.$admin-text-secondary;
+  margin-top: 0.125rem;
+}
+
+// ============================================
+// Badge / Status indicators
+// ============================================
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  &--success {
+    background: variables.$admin-success-bg;
+    color: variables.$admin-success;
+  }
+
+  &--warning {
+    background: variables.$admin-warning-bg;
+    color: variables.$admin-warning;
+  }
+
+  &--danger {
+    background: variables.$admin-danger-bg;
+    color: variables.$admin-danger;
+  }
+
+  &--info {
+    background: variables.$admin-info-bg;
+    color: variables.$admin-info;
+  }
+}
+
+// ============================================
+// User list styling (for admin user management)
+// ============================================
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: variables.$admin-surface-alt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &--placeholder {
+    color: variables.$admin-text-muted;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.admin-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-user-name {
+  font-weight: 600;
+  color: variables.$admin-text;
+}
+
+.admin-user-email {
+  font-size: 0.8125rem;
+  color: variables.$admin-text-secondary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ============================================
+// Responsive adjustments
+// ============================================
+
+@media screen and (max-width: 768px) {
+  .admin-page {
+    padding: 1rem;
+  }
+
+  .admin-header__title {
+    font-size: 2rem;
+  }
+
+  .admin-dashboard__bento-grid {
+    gap: 1rem;
+  }
+
+  .admin-dashboard__section {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .admin-stats__value--lead {
+    font-size: 3rem;
+  }
+
+  .admin-tabs__panel {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .admin-header__title {
+    font-size: 1.75rem;
+  }
+
+  .admin-stats__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats__card--lead {
+    grid-row: span 1;
+  }
+
+  .admin-attention__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs {
+    padding: 4px;
+  }
+
+  .admin-tabs__tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}

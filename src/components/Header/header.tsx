@@ -1,29 +1,32 @@
-import Link from 'next/link';
-import React from 'react';
-import ConcertCount from '../ConcertCount/concertCount';
-import type { Concert } from '../../types/concert';
-import './header.scss';
+import Link from "next/link"
+import React from "react"
+import ConcertCount from "../ConcertCount/concertCount"
+import HeaderAuth from "./HeaderAuth"
+import "./header.scss"
 
 interface HeaderProps {
-  siteTitle?: string;
-  concerts?: Concert[];
+  siteTitle?: string
+  concertCounts?: {
+    past: number
+    future: number
+  }
 }
 
-const Header: React.FC<HeaderProps> = ({ siteTitle = "", concerts }) => (
+const Header: React.FC<HeaderProps> = ({ siteTitle = "", concertCounts }) => (
   <header className="bg-light shadow-sm">
     <div className="container">
       <h1>
         <Link href="/">{siteTitle}</Link>
       </h1>
       <wbr />
-      {concerts && <ConcertCount concerts={{ edges: concerts.map(c => ({ node: c })), totalCount: concerts.length }} />}
+      {concertCounts && <ConcertCount counts={concertCounts} />}
 
       <nav>
         <Link href="/">Home</Link>
-        <Link href="/map">Map</Link>
+        <HeaderAuth />
       </nav>
     </div>
   </header>
-);
+)
 
-export default Header;
+export default Header

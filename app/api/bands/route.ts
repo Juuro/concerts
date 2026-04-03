@@ -1,0 +1,63 @@
+import * as Sentry from "@sentry/nextjs"
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+import { createBand, enrichBandData, type CreateBandInput } from "@/lib/bands"
+import { slugify } from "@/utils/helpers"
+
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  try {
+    const body = await request.json()
+
+    if (!body.name) {
+      return NextResponse.json(
+        { error: "Band name is required" },
+        { status: 400 }
+      )
+    }
+
+    // Generate slug from name if not provided
+    const slug = body.slug || slugify(body.name)
+
+    const input: CreateBandInput = {
+      name: body.name,
+      slug,
+      websiteUrl: body.websiteUrl,
+      lastfmUrl: body.lastfmUrl,
+      genres: body.genres,
+      bio: body.bio,
+      createdById: session.user.id,
+    }
+
+    const band = await createBand(input)
+
+    // Fire-and-forget enrichment (Last.fm metadata + MusicBrainz/Wikimedia image)
+    enrichBandData(band.id, band.name)
+
+    return NextResponse.json(band, { status: 201 })
+  } catch (error: any) {
+    Sentry.captureException(error)
+    console.error("Error creating band:", error)
+
+    // Handle unique constraint violation
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "A band with this name/slug already exists" },
+        { status: 409 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create band" },
+      { status: 500 }
+    )
+  }
+}
