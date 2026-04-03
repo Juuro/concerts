@@ -43,7 +43,7 @@ export function parseSupportingActIds(
   return out.sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
-type ConcertWithRelations = PrismaConcert & {
+export type ConcertWithRelations = PrismaConcert & {
   bands: (ConcertBand & { band: PrismaBand })[]
   festival: PrismaFestival | null
   attendees?: UserConcert[]
@@ -51,7 +51,7 @@ type ConcertWithRelations = PrismaConcert & {
 }
 
 // Type for concert with a specific user's attendance
-type ConcertWithAttendance = ConcertWithRelations & {
+export type ConcertWithAttendance = ConcertWithRelations & {
   userAttendance?: UserConcert | null
 }
 

@@ -199,7 +199,7 @@ export async function getEffectiveBandsForForm(
   { bandId: string; name: string; slug: string; isHeadliner: boolean }[]
 > {
   // Headliner always comes from ConcertBand (shared)
-  const sortedCore = concert.bands.sort(
+  const sortedCore = [...concert.bands].sort(
     (
       a: ConcertBand & { band: PrismaBand },
       b: ConcertBand & { band: PrismaBand }

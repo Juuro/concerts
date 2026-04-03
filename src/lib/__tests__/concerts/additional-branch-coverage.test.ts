@@ -98,8 +98,8 @@ describe("Additional Branch Coverage", () => {
           where: expect.objectContaining({
             concert: expect.objectContaining({
               date: {
-                gte: new Date(2023, 0, 1),
-                lte: new Date(2023, 11, 31, 23, 59, 59, 999),
+                gte: new Date(Date.UTC(2023, 0, 1, 0, 0, 0, 0)),
+                lte: new Date(Date.UTC(2023, 11, 31, 23, 59, 59, 999)),
               },
             }),
           }),

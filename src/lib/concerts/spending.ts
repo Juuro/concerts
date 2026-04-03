@@ -23,7 +23,7 @@ export async function getUserTotalSpent(
       type Row = { total: number | null }
       const yearClause =
         filters.year != null
-          ? Prisma.sql`AND c."date" >= ${new Date(filters.year, 0, 1)} AND c."date" <= ${new Date(filters.year, 11, 31, 23, 59, 59, 999)}`
+          ? Prisma.sql`AND c."date" >= ${new Date(Date.UTC(filters.year, 0, 1, 0, 0, 0, 0))} AND c."date" <= ${new Date(Date.UTC(filters.year, 11, 31, 23, 59, 59, 999))}`
           : Prisma.empty
       const cityClause =
         filters.city != null
@@ -68,22 +68,25 @@ export async function getUserTotalSpent(
   }
 
   // Build concert filter conditions (Prisma path)
-  const concertWhere: any = {}
+  const concertWhere: Prisma.ConcertWhereInput = {}
   if (filters?.city) {
     concertWhere.normalizedCity = filters.city
   }
+  const dateFilter: Prisma.DateTimeFilter = {}
   if (filters?.year) {
-    const yearStart = new Date(filters.year, 0, 1)
-    const yearEnd = new Date(filters.year, 11, 31, 23, 59, 59, 999)
-    concertWhere.date = { gte: yearStart, lte: yearEnd }
+    const yearStart = new Date(Date.UTC(filters.year, 0, 1, 0, 0, 0, 0))
+    const yearEnd = new Date(Date.UTC(filters.year, 11, 31, 23, 59, 59, 999))
+    dateFilter.gte = yearStart
+    dateFilter.lte = yearEnd
   }
   if (filters?.pastOnly) {
-    concertWhere.date = concertWhere.date
-      ? { ...concertWhere.date, lt: now }
-      : { lt: now }
+    dateFilter.lt = now
+  }
+  if (Object.keys(dateFilter).length > 0) {
+    concertWhere.date = dateFilter
   }
 
-  const where: any = {
+  const where: Prisma.UserConcertWhereInput = {
     userId,
     cost: { not: null },
     ...(Object.keys(concertWhere).length > 0 && { concert: concertWhere }),

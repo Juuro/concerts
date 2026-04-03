@@ -1,27 +1,14 @@
 import { prisma } from "../../prisma"
-import {
-  type Concert as PrismaConcert,
-  type Band as PrismaBand,
-  type Festival as PrismaFestival,
-  type ConcertBand,
-  type UserConcert,
-} from "@/generated/prisma/client"
+import { type UserConcert } from "@/generated/prisma/client"
 import { getGeocodingData } from "@/utils/data"
 import type {
   CreateConcertInput,
   SupportingActItem,
   TransformedConcert,
 } from "../types"
-import { transformConcert } from "../transform"
+import { type ConcertWithRelations, transformConcert } from "../transform"
 import { findMatchingConcert, getHeadliner } from "../matching"
 import { ConcertAlreadyExistsError } from "../errors"
-
-type ConcertWithRelations = PrismaConcert & {
-  bands: (ConcertBand & { band: PrismaBand })[]
-  festival: PrismaFestival | null
-  attendees?: UserConcert[]
-  _count?: { attendees: number }
-}
 
 /**
  * Create a new concert for a user.
@@ -101,7 +88,7 @@ export async function createConcert(
     userConcert = concert.attendees![0]
   }
 
-  return await transformConcert(concert as any, userConcert)
+  return await transformConcert(concert, userConcert)
 }
 
 /** Create a new Concert + UserConcert (no matching). */

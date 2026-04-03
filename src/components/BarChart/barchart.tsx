@@ -14,7 +14,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, max, title, category }) => {
     absolute: number,
     dings: number
   ): number | undefined => {
-    if (dings >= 0) {
+    if (dings > 0) {
       const percentage = Math.round((absolute * 100) / dings)
       return percentage
     }
