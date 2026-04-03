@@ -11,7 +11,7 @@ describe("helpers", () => {
     })
 
     it("test_cityToSlug_special_characters_removed", () => {
-      expect(cityToSlug("São Paulo")).toBe("sao-paulo") // Diacritics preserved as base character
+      expect(cityToSlug("São Paulo")).toBe("sao-paulo") // Diacritics stripped/transliterated to base characters
       expect(cityToSlug("Paris, France")).toBe("paris-france")
       expect(cityToSlug("New York!")).toBe("new-york")
     })
