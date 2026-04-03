@@ -53,7 +53,8 @@ export async function GET(request: NextRequest) {
         slug: festival.slug,
         url: festival.url,
         createdAt: festival.createdAt,
-        createdBy: festival.createdBy?.name || festival.createdBy?.email || null,
+        createdBy:
+          festival.createdBy?.name || festival.createdBy?.email || null,
       })),
       total,
       limit,

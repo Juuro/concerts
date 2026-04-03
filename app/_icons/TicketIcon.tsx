@@ -2,40 +2,40 @@ export function TicketIcon() {
   return (
     <div
       style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #ff0666 0%, #ff6ba3 100%)',
-        borderRadius: '22%',
-        position: 'relative',
-        overflow: 'hidden',
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #ff0666 0%, #ff6ba3 100%)",
+        borderRadius: "22%",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* Shine overlay */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           right: 0,
           bottom: 0,
           left: 0,
           background:
-            'radial-gradient(circle at 28% 18%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 55%)',
+            "radial-gradient(circle at 28% 18%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 55%)",
         }}
       />
 
       {/* Border */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           right: 0,
           bottom: 0,
           left: 0,
-          boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.18)',
-          borderRadius: '22%',
+          boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.18)",
+          borderRadius: "22%",
         }}
       />
 
@@ -45,8 +45,8 @@ export function TicketIcon() {
         height="256"
         viewBox="0 0 256 256"
         style={{
-          width: '70%',
-          height: '70%',
+          width: "70%",
+          height: "70%",
         }}
       >
         {/* Ticket body with notched edge */}
@@ -113,5 +113,5 @@ export function TicketIcon() {
         />
       </svg>
     </div>
-  );
+  )
 }

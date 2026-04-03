@@ -55,7 +55,9 @@ export default function UserManagement() {
     const init = async () => {
       // Auto-unban expired users before fetching
       try {
-        const response = await fetch("/api/admin/users/cleanup-expired-bans", { method: "POST" })
+        const response = await fetch("/api/admin/users/cleanup-expired-bans", {
+          method: "POST",
+        })
         if (response.ok) {
           const data = await response.json()
           if (data.unbannedCount > 0) {
@@ -170,7 +172,8 @@ export default function UserManagement() {
     } catch (error) {
       console.error("Error unbanning user:", error)
       showToast({
-        message: error instanceof Error ? error.message : "Failed to unban user",
+        message:
+          error instanceof Error ? error.message : "Failed to unban user",
         type: "error",
       })
     } finally {
@@ -237,12 +240,18 @@ export default function UserManagement() {
                 <p className="admin-list__name">
                   {user.name || "No name"}
                   {user.username && (
-                    <span className="admin-list__username">@{user.username}</span>
+                    <span className="admin-list__username">
+                      @{user.username}
+                    </span>
                   )}
                   <span
                     className={`admin-status-dot ${user.banned ? "admin-status-dot--banned" : "admin-status-dot--active"}`}
                     role="status"
-                    aria-label={user.banned ? "Account status: Banned" : "Account status: Active"}
+                    aria-label={
+                      user.banned
+                        ? "Account status: Banned"
+                        : "Account status: Active"
+                    }
                   >
                     <span className="visually-hidden">
                       {user.banned ? "Banned" : "Active"}
@@ -318,7 +327,10 @@ export default function UserManagement() {
         onClose={closeBanDialog}
       >
         <div className="admin-confirm-dialog__message">
-          <label htmlFor="ban-reason" style={{ display: "block", marginBottom: 8 }}>
+          <label
+            htmlFor="ban-reason"
+            style={{ display: "block", marginBottom: 8 }}
+          >
             Reason (optional):
           </label>
           <input

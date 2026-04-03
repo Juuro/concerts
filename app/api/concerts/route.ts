@@ -44,11 +44,21 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle username filter (convert to userId, requires public profile)
-  let publicProfileUser: { id: string; isPublic: boolean; hideLocationPublic: boolean; hideCostPublic: boolean } | null = null
+  let publicProfileUser: {
+    id: string
+    isPublic: boolean
+    hideLocationPublic: boolean
+    hideCostPublic: boolean
+  } | null = null
   if (username) {
     publicProfileUser = await prisma.user.findUnique({
       where: { username },
-      select: { id: true, isPublic: true, hideLocationPublic: true, hideCostPublic: true },
+      select: {
+        id: true,
+        isPublic: true,
+        hideLocationPublic: true,
+        hideCostPublic: true,
+      },
     })
 
     if (!publicProfileUser || !publicProfileUser.isPublic) {
@@ -95,7 +105,9 @@ export async function GET(request: NextRequest) {
       ...(publicProfileUser!.hideLocationPublic && {
         venue: null,
         city: { lat: 0, lon: 0 },
-        fields: { geocoderAddressFields: { _normalized_city: "" } as GeocodingData },
+        fields: {
+          geocoderAddressFields: { _normalized_city: "" } as GeocodingData,
+        },
         ...(item.date > now && { date: "" }),
       }),
       ...(publicProfileUser!.hideCostPublic && { cost: null }),
@@ -128,7 +140,11 @@ export async function POST(request: NextRequest) {
     // Resolve festival: use provided ID or create from name
     let resolvedFestivalId = body.festivalId
     if (body.isFestival && body.festivalName && !body.festivalId) {
-      const festival = await getOrCreateFestival(body.festivalName, undefined, session.user.id)
+      const festival = await getOrCreateFestival(
+        body.festivalName,
+        undefined,
+        session.user.id
+      )
       resolvedFestivalId = festival.id
     }
 
@@ -162,7 +178,8 @@ export async function POST(request: NextRequest) {
     if (error instanceof ConcertAlreadyExistsError) {
       return NextResponse.json(
         {
-          error: "This concert is already in your list. Do you want to edit it?",
+          error:
+            "This concert is already in your list. Do you want to edit it?",
           concertId: error.concertId,
           editPath: `/concerts/edit/${error.concertId}`,
         },

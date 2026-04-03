@@ -29,7 +29,9 @@ function AttentionCard({
   return (
     <div className={`admin-attention-card admin-attention-card--${priority}`}>
       <div className="admin-attention-card__icon">{icon}</div>
-      <div className="admin-attention-card__value">{value.toLocaleString()}</div>
+      <div className="admin-attention-card__value">
+        {value.toLocaleString()}
+      </div>
       <div className="admin-attention-card__label">{label}</div>
       <div className="admin-attention-card__actions">
         {needsAction ? (
@@ -63,7 +65,12 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
       value: stats.bandsWithoutImages,
       total: stats.totalBands,
       label: "Missing Images",
-      priority: stats.bandsWithoutImages > 50 ? "danger" : stats.bandsWithoutImages > 0 ? "warning" : "success",
+      priority:
+        stats.bandsWithoutImages > 50
+          ? "danger"
+          : stats.bandsWithoutImages > 0
+            ? "warning"
+            : "success",
       manageHref: "/admin?tab=enrichment#management",
       manageLabel: "Manage Bands",
       icon: (
@@ -88,7 +95,12 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
       value: stats.concertsWithoutCity,
       total: stats.totalConcerts,
       label: "No City Data",
-      priority: stats.concertsWithoutCity > 20 ? "danger" : stats.concertsWithoutCity > 0 ? "warning" : "success",
+      priority:
+        stats.concertsWithoutCity > 20
+          ? "danger"
+          : stats.concertsWithoutCity > 0
+            ? "warning"
+            : "success",
       manageHref: "/admin?tab=enrichment#management",
       manageLabel: "Manage Concerts",
       icon: (
@@ -112,7 +124,12 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
       value: stats.orphanedFestivals,
       total: stats.totalFestivals,
       label: "Orphan Festivals",
-      priority: stats.orphanedFestivals > 10 ? "danger" : stats.orphanedFestivals > 0 ? "warning" : "success",
+      priority:
+        stats.orphanedFestivals > 10
+          ? "danger"
+          : stats.orphanedFestivals > 0
+            ? "warning"
+            : "success",
       manageHref: "/admin?tab=cleanup#management",
       manageLabel: "Manage Festivals",
       icon: (
@@ -141,7 +158,12 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
       value: stats.bannedUsers,
       total: stats.totalUsers,
       label: "Banned Users",
-      priority: stats.bannedUsers > 5 ? "danger" : stats.bannedUsers > 0 ? "warning" : "success",
+      priority:
+        stats.bannedUsers > 5
+          ? "danger"
+          : stats.bannedUsers > 0
+            ? "warning"
+            : "success",
       manageHref: "/admin?tab=users#management",
       manageLabel: "Manage Users",
       icon: (
@@ -168,7 +190,9 @@ interface AdminAttentionClientProps {
   initialStats: AttentionStats
 }
 
-export default function AdminAttentionClient({ initialStats }: AdminAttentionClientProps) {
+export default function AdminAttentionClient({
+  initialStats,
+}: AdminAttentionClientProps) {
   const [stats, setStats] = useState<AttentionStats>(initialStats)
 
   const fetchStats = useCallback(async () => {
@@ -188,7 +212,8 @@ export default function AdminAttentionClient({ initialStats }: AdminAttentionCli
     }
 
     window.addEventListener("admin-data-changed", handleAdminDataChange)
-    return () => window.removeEventListener("admin-data-changed", handleAdminDataChange)
+    return () =>
+      window.removeEventListener("admin-data-changed", handleAdminDataChange)
   }, [fetchStats])
 
   // Cleanup expired bans on mount and refresh stats if any were cleared

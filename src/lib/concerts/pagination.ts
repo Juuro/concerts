@@ -27,7 +27,9 @@ function userListConcertAndParts(
   return parts
 }
 
-function buildUserListWhere(filters: ConcertFilters): Prisma.UserConcertWhereInput {
+function buildUserListWhere(
+  filters: ConcertFilters
+): Prisma.UserConcertWhereInput {
   const parts = userListConcertAndParts(filters)
   const where: Prisma.UserConcertWhereInput = {
     userId: filters.userId!,
@@ -146,7 +148,9 @@ async function nonUserHasNewerConcertsThan(
         {
           OR: [
             { date: { gt: firstConcertDate } },
-            { AND: [{ date: firstConcertDate }, { id: { gt: firstConcertId } }] },
+            {
+              AND: [{ date: firstConcertDate }, { id: { gt: firstConcertId } }],
+            },
           ],
         },
       ],
@@ -208,9 +212,10 @@ function excludeAnchorFromBackwardUserConcerts<
   return items.filter((row) => row.concert.id !== cursor && row.id !== cursor)
 }
 
-function excludeAnchorConcertFromBackwardPlain<
-  T extends { id: string },
->(items: T[], anchorConcertId: string | undefined): T[] {
+function excludeAnchorConcertFromBackwardPlain<T extends { id: string }>(
+  items: T[],
+  anchorConcertId: string | undefined
+): T[] {
   if (!anchorConcertId) return items
   return items.filter((row) => row.id !== anchorConcertId)
 }
@@ -622,7 +627,7 @@ async function getConcertsPaginatedForUser(
           : null,
     prevCursor:
       direction === "backward" && hasExtra
-        ? items[0]?.concert.id ?? null
+        ? (items[0]?.concert.id ?? null)
         : direction === "forward" && cursor
           ? (items[0]?.concert.id ?? null)
           : null,

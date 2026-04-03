@@ -29,8 +29,7 @@ const messages = [
   },
   {
     heading: "No encore here",
-    subtext:
-      "This page has left the building. Time to find a better show.",
+    subtext: "This page has left the building. Time to find a better show.",
   },
   {
     heading: "Lost in the mosh pit",
@@ -48,9 +47,21 @@ export default function NotFound() {
         <div className="container">
           <section className="not-found-hero">
             <div className="not-found-hero__code">
-              <span className="not-found-hero__emoji" role="img" aria-hidden="true">🎸</span>
+              <span
+                className="not-found-hero__emoji"
+                role="img"
+                aria-hidden="true"
+              >
+                🎸
+              </span>
               <span className="not-found-hero__number">404</span>
-              <span className="not-found-hero__emoji" role="img" aria-hidden="true">🥁</span>
+              <span
+                className="not-found-hero__emoji"
+                role="img"
+                aria-hidden="true"
+              >
+                🥁
+              </span>
             </div>
             <h2>{message.heading}</h2>
             <p>{message.subtext}</p>

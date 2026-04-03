@@ -78,7 +78,8 @@ export default function BandMerge() {
     } catch (error) {
       console.error("Error merging bands:", error)
       showToast({
-        message: error instanceof Error ? error.message : "Failed to merge bands",
+        message:
+          error instanceof Error ? error.message : "Failed to merge bands",
         type: "error",
       })
     } finally {
@@ -104,7 +105,11 @@ export default function BandMerge() {
     return (
       <div className="admin-list">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="admin-list__skeleton" style={{ height: 120 }} />
+          <div
+            key={i}
+            className="admin-list__skeleton"
+            style={{ height: 120 }}
+          />
         ))}
       </div>
     )
@@ -120,20 +125,30 @@ export default function BandMerge() {
 
   return (
     <div>
-      <p style={{ marginBottom: "1rem", color: "rgba(0,0,0,0.6)", fontSize: "0.875rem" }}>
-        Found {duplicates.length} potential duplicate pairs. Review and merge as needed.
+      <p
+        style={{
+          marginBottom: "1rem",
+          color: "rgba(0,0,0,0.6)",
+          fontSize: "0.875rem",
+        }}
+      >
+        Found {duplicates.length} potential duplicate pairs. Review and merge as
+        needed.
       </p>
 
       {duplicates.map((pair) => {
         const pairKey1 = `${pair.band1.id}-${pair.band2.id}`
         const pairKey2 = `${pair.band2.id}-${pair.band1.id}`
-        const isProcessing = processingPair === pairKey1 || processingPair === pairKey2
+        const isProcessing =
+          processingPair === pairKey1 || processingPair === pairKey2
 
         return (
           <div key={pairKey1} className="admin-merge__pair">
             <div className="admin-merge__band">
               <p className="admin-merge__name">
-                <Link href={`/band/${pair.band1.slug}/`}>{pair.band1.name}</Link>
+                <Link href={`/band/${pair.band1.slug}/`}>
+                  {pair.band1.name}
+                </Link>
               </p>
               <p className="admin-merge__meta">
                 {pair.band1.concertCount} concerts
@@ -162,7 +177,9 @@ export default function BandMerge() {
 
             <div className="admin-merge__band">
               <p className="admin-merge__name">
-                <Link href={`/band/${pair.band2.slug}/`}>{pair.band2.name}</Link>
+                <Link href={`/band/${pair.band2.slug}/`}>
+                  {pair.band2.name}
+                </Link>
               </p>
               <p className="admin-merge__meta">
                 {pair.band2.concertCount} concerts
@@ -183,7 +200,13 @@ export default function BandMerge() {
               </div>
             </div>
 
-            <div style={{ gridColumn: "1 / -1", textAlign: "center", marginTop: "0.5rem" }}>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                textAlign: "center",
+                marginTop: "0.5rem",
+              }}
+            >
               <button
                 type="button"
                 className="admin-btn admin-btn--secondary"

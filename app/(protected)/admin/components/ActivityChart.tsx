@@ -52,19 +52,10 @@ async function getActivityStats() {
   }
 }
 
-function StatValue({
-  value,
-  className,
-}: {
-  value: number
-  className: string
-}) {
+function StatValue({ value, className }: { value: number; className: string }) {
   const displayValue = value.toLocaleString()
   return (
-    <span
-      className={className}
-      data-value-length={displayValue.length}
-    >
+    <span className={className} data-value-length={displayValue.length}>
       {displayValue}
     </span>
   )

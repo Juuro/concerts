@@ -62,7 +62,8 @@
   margin-bottom: 3rem;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: section-fade-in 400ms variables.$transition-easing-decelerate both;
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
   }
 }
 
@@ -100,7 +101,8 @@
   overflow: hidden;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: section-fade-in 400ms variables.$transition-easing-decelerate both;
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
   }
 }
 
@@ -228,7 +230,10 @@
   @media (prefers-reduced-motion: no-preference) {
     @for $i from 1 through 4 {
       &:nth-child(#{$i}) {
-        animation: stat-enter 500ms variables.$transition-easing-decelerate both;
+        animation: stat-enter
+          500ms
+          variables.$transition-easing-decelerate
+          both;
         animation-delay: #{($i - 1) * 100}ms;
       }
     }
@@ -405,7 +410,8 @@
   background-clip: text;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: metric-value-enter 600ms variables.$transition-easing-decelerate both;
+    animation: metric-value-enter 600ms variables.$transition-easing-decelerate
+      both;
   }
 }
 
@@ -431,9 +437,11 @@
   padding: 1rem 0.75rem;
   text-align: center;
   position: relative;
-  transition: transform variables.$transition-duration variables.$transition-easing-decelerate,
-              box-shadow variables.$transition-duration ease,
-              background-color variables.$transition-duration ease;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration ease,
+    background-color variables.$transition-duration ease;
 
   &:hover {
     transform: translateY(-3px);
@@ -448,7 +456,10 @@
   @media (prefers-reduced-motion: no-preference) {
     @for $i from 1 through 3 {
       &:nth-child(#{$i}) {
-        animation: metric-value-enter 450ms variables.$transition-easing-decelerate both;
+        animation: metric-value-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
         animation-delay: #{150 + ($i * 100)}ms;
       }
     }
@@ -679,7 +690,10 @@
   @media (prefers-reduced-motion: no-preference) {
     @for $i from 1 through 3 {
       &:nth-child(#{$i}) {
-        animation: stat-enter 500ms variables.$transition-easing-decelerate both;
+        animation: stat-enter
+          500ms
+          variables.$transition-easing-decelerate
+          both;
         animation-delay: #{$i * 100}ms;
       }
     }
@@ -793,8 +807,13 @@
 }
 
 @keyframes subtle-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .activity-metrics {
@@ -872,7 +891,8 @@
   position: relative;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: metric-value-enter 600ms variables.$transition-easing-decelerate both;
+    animation: metric-value-enter 600ms variables.$transition-easing-decelerate
+      both;
   }
 }
 
@@ -898,9 +918,11 @@
   padding: 1.125rem 1rem;
   text-align: center;
   position: relative;
-  transition: transform variables.$transition-duration variables.$transition-easing-decelerate,
-              box-shadow variables.$transition-duration ease,
-              background-color variables.$transition-duration ease;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration ease,
+    background-color variables.$transition-duration ease;
 
   &:hover {
     transform: translateY(-3px);
@@ -915,7 +937,10 @@
   @media (prefers-reduced-motion: no-preference) {
     @for $i from 1 through 3 {
       &:nth-child(#{$i}) {
-        animation: metric-value-enter 450ms variables.$transition-easing-decelerate both;
+        animation: metric-value-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
         animation-delay: #{150 + ($i * 100)}ms;
       }
     }
@@ -1063,14 +1088,20 @@
   align-items: center;
   text-align: center;
   gap: 0.75rem;
-  transition: transform variables.$transition-duration variables.$transition-easing-decelerate,
-              box-shadow variables.$transition-duration variables.$transition-easing-decelerate;
+  transition:
+    transform variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration
+      variables.$transition-easing-decelerate;
 
   // Staggered entrance animation
   @media (prefers-reduced-motion: no-preference) {
     @for $i from 1 through 4 {
       &:nth-child(#{$i}) {
-        animation: attention-card-enter 450ms variables.$transition-easing-decelerate both;
+        animation: attention-card-enter
+          450ms
+          variables.$transition-easing-decelerate
+          both;
         animation-delay: #{150 + ($i - 1) * 80}ms;
       }
     }
@@ -1111,17 +1142,29 @@
   }
 
   .admin-attention-card--warning & {
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(217, 119, 6, 0.15) 0%,
+      rgba(245, 158, 11, 0.1) 100%
+    );
     color: #b45309;
   }
 
   .admin-attention-card--danger & {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(220, 38, 38, 0.15) 0%,
+      rgba(239, 68, 68, 0.1) 100%
+    );
     color: #b91c1c;
   }
 
   .admin-attention-card--success & {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(5, 150, 105, 0.15) 0%,
+      rgba(16, 185, 129, 0.1) 100%
+    );
     color: #047857;
   }
 }
@@ -1467,7 +1510,8 @@
   margin-top: 3rem;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: section-fade-in 400ms variables.$transition-easing-decelerate both;
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
     animation-delay: 300ms;
   }
 }
@@ -1589,7 +1633,8 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all variables.$transition-duration variables.$transition-easing-decelerate;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
   white-space: nowrap;
 
   &:hover:not(&--active) {
@@ -1663,7 +1708,8 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all variables.$transition-duration variables.$transition-easing-decelerate;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
   white-space: nowrap;
 
   &:hover:not(&--active) {
@@ -1745,8 +1791,9 @@
   color: variables.$admin-text-secondary;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: color variables.$transition-duration ease,
-              border-color variables.$transition-duration ease;
+  transition:
+    color variables.$transition-duration ease,
+    border-color variables.$transition-duration ease;
 
   &:hover:not(&--active) {
     color: variables.$admin-text;
@@ -1939,8 +1986,9 @@
   font-size: 0.9375rem;
   background: variables.$admin-surface;
   color: variables.$admin-text;
-  transition: border-color variables.$transition-duration ease,
-              box-shadow variables.$transition-duration ease;
+  transition:
+    border-color variables.$transition-duration ease,
+    box-shadow variables.$transition-duration ease;
 
   &::placeholder {
     color: variables.$admin-text-muted;
@@ -2137,8 +2185,13 @@
 }
 
 @keyframes status-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .admin-badge {
@@ -2172,15 +2225,24 @@
 
 .admin-list__skeleton {
   height: 60px;
-  background: linear-gradient(90deg, variables.$admin-surface-alt 25%, #f0efed 50%, variables.$admin-surface-alt 75%);
+  background: linear-gradient(
+    90deg,
+    variables.$admin-surface-alt 25%,
+    #f0efed 50%,
+    variables.$admin-surface-alt 75%
+  );
   background-size: 200% 100%;
   border-radius: 10px;
   animation: skeleton-pulse 1.5s infinite;
 }
 
 @keyframes skeleton-pulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .admin-filter {
@@ -2296,7 +2358,8 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 12px;
   text-decoration: none;
-  transition: all variables.$transition-duration variables.$transition-easing-decelerate;
+  transition: all variables.$transition-duration
+    variables.$transition-easing-decelerate;
 
   &:hover {
     transform: translateY(-2px);

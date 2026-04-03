@@ -14,7 +14,9 @@ export const metadata: Metadata = {
 }
 
 export default async function MapPage() {
-  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null)
+  const session = await auth.api
+    .getSession({ headers: await headers() })
+    .catch(() => null)
 
   if (!session?.user) {
     redirect("/login")

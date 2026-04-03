@@ -136,7 +136,6 @@ export const getArtistInfo = async (
     await acquireRequestSlot()
     try {
       // Global circuit breaker (checked again inside slot to avoid races).
-      /* c8 ignore next */
       if (Date.now() < globalRateLimitUntil) {
         return null
       }
@@ -241,22 +240,25 @@ export const getArtistInfo = async (
 
       // Handle rate limit errors with retry logic
       if (errorCode === 29 || /rate\s*limit/i.test(message)) {
-        // Trip global circuit breaker to avoid blocking/banning.
-        globalRateLimitUntil = Math.max(
-          globalRateLimitUntil,
-          Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
-        )
+        const now = Date.now()
 
         if (retryCount < MAX_RATE_LIMIT_RETRIES) {
-          // Cache rate limit error with timestamp
-          rateLimitErrors.set(cacheKey, Date.now())
-          artistCache.set(cacheKey, null)
-
-          // Wait before retrying with exponential backoff
+          // Compute backoff delay first so the global circuit breaker aligns with the retry window.
           const backoffDelay = Math.min(
             RATE_LIMIT_RETRY_DELAY * Math.pow(2, retryCount),
             60000
           )
+
+          // Trip global circuit breaker for the duration of the backoff to avoid hammering the API.
+          globalRateLimitUntil = Math.max(
+            globalRateLimitUntil,
+            now + backoffDelay
+          )
+
+          // Cache rate limit error with timestamp
+          rateLimitErrors.set(cacheKey, now)
+          artistCache.set(cacheKey, null)
+
           console.warn(
             `Last.fm rate limit exceeded for ${artistName}. Retrying after ${backoffDelay}ms...`
           )
@@ -266,22 +268,21 @@ export const getArtistInfo = async (
 
           await new Promise((resolve) => setTimeout(resolve, backoffDelay))
 
-          // Extend global cooldown to at least cover the per-request backoff too.
-          globalRateLimitUntil = Math.max(
-            globalRateLimitUntil,
-            Date.now() + backoffDelay
-          )
-
           // Retry the request (will create new pending request)
           return getArtistInfo(artistName, retryCount + 1)
-        } else {
-          console.warn(
-            `Last.fm rate limit exceeded for ${artistName}. Skipping to avoid clogging the API.`
-          )
-          rateLimitErrors.set(cacheKey, Date.now())
-          artistCache.set(cacheKey, null)
-          return null
         }
+
+        // No more retries left: trip a longer global cooldown and return null.
+        globalRateLimitUntil = Math.max(
+          globalRateLimitUntil,
+          now + GLOBAL_RATE_LIMIT_COOLDOWN
+        )
+        console.warn(
+          `Last.fm rate limit exceeded for ${artistName}. Skipping to avoid clogging the API.`
+        )
+        rateLimitErrors.set(cacheKey, now)
+        artistCache.set(cacheKey, null)
+        return null
       }
 
       // Handle timeout errors with retry

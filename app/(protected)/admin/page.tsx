@@ -60,7 +60,10 @@ async function AdminDashboard() {
                 <path d="M8 17v-3" />
               </svg>
               <div>
-                <h2 id="stats-heading" className="admin-dashboard__section-title">
+                <h2
+                  id="stats-heading"
+                  className="admin-dashboard__section-title"
+                >
                   Overview
                 </h2>
                 <p className="admin-dashboard__section-desc">
@@ -89,7 +92,10 @@ async function AdminDashboard() {
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
               <div>
-                <h2 id="chart-heading" className="admin-dashboard__section-title">
+                <h2
+                  id="chart-heading"
+                  className="admin-dashboard__section-title"
+                >
                   Recent Activity
                 </h2>
                 <p className="admin-dashboard__section-desc">
@@ -161,7 +167,10 @@ async function AdminDashboard() {
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
               <div>
-                <h2 id="health-heading" className="admin-dashboard__section-title">
+                <h2
+                  id="health-heading"
+                  className="admin-dashboard__section-title"
+                >
                   Health Score
                 </h2>
                 <p className="admin-dashboard__section-desc">
@@ -171,7 +180,6 @@ async function AdminDashboard() {
             </div>
             <HealthScore />
           </section>
-
         </div>
 
         {/* Zone B: Management - Tabbed Interface */}

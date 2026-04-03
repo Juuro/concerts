@@ -466,12 +466,9 @@ describe("Pagination (Cursor-Based)", () => {
       .mockResolvedValueOnce(null as any)
     vi.mocked(prisma.band.findMany).mockResolvedValue([])
 
-    const result = await getConcertsPaginated(
-      mockConcertA.id,
-      20,
-      "forward",
-      { userId: "u1" }
-    )
+    const result = await getConcertsPaginated(mockConcertA.id, 20, "forward", {
+      userId: "u1",
+    })
 
     expect(result.items).toHaveLength(1)
     expect(result.items[0].id).toBe(mockConcertA.id)

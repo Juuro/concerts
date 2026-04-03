@@ -55,7 +55,7 @@
     "build": "prisma generate && next build",
     "dev": "prisma generate && next dev",
     "start": "next start",
-    "format": "prettier --write ./src/**/*.{js,jsx,ts,tsx,scss}",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,scss}\" --ignore-path .gitignore",
     "lint": "eslint .",
     "release": "standard-version",
     "test": "vitest run",

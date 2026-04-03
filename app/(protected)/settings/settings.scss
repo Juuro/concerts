@@ -117,15 +117,19 @@
     grid-template-rows: 0fr;
     opacity: 0;
     transition:
-      grid-template-rows variables.$transition-duration variables.$transition-easing-accelerate,
-      opacity variables.$transition-duration variables.$transition-easing-accelerate;
+      grid-template-rows variables.$transition-duration
+        variables.$transition-easing-accelerate,
+      opacity variables.$transition-duration
+        variables.$transition-easing-accelerate;
 
     &--visible {
       grid-template-rows: 1fr;
       opacity: 1;
       transition:
-        grid-template-rows variables.$transition-duration variables.$transition-easing-decelerate,
-        opacity variables.$transition-duration variables.$transition-easing-decelerate;
+        grid-template-rows variables.$transition-duration
+          variables.$transition-easing-decelerate,
+        opacity variables.$transition-duration
+          variables.$transition-easing-decelerate;
     }
   }
 
@@ -200,7 +204,8 @@
     }
 
     &--copied {
-      animation: copy-pulse variables.$transition-duration variables.$transition-easing-decelerate;
+      animation: copy-pulse variables.$transition-duration
+        variables.$transition-easing-decelerate;
       border-color: #28a745;
       color: #28a745;
     }
@@ -211,15 +216,19 @@
     grid-template-rows: 0fr;
     opacity: 0;
     transition:
-      grid-template-rows variables.$transition-duration variables.$transition-easing-accelerate,
-      opacity variables.$transition-duration variables.$transition-easing-accelerate;
+      grid-template-rows variables.$transition-duration
+        variables.$transition-easing-accelerate,
+      opacity variables.$transition-duration
+        variables.$transition-easing-accelerate;
 
     &--visible {
       grid-template-rows: 1fr;
       opacity: 1;
       transition:
-        grid-template-rows variables.$transition-duration variables.$transition-easing-decelerate,
-        opacity variables.$transition-duration variables.$transition-easing-decelerate;
+        grid-template-rows variables.$transition-duration
+          variables.$transition-easing-decelerate,
+        opacity variables.$transition-duration
+          variables.$transition-easing-decelerate;
     }
   }
 
