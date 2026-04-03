@@ -4,7 +4,7 @@ export async function deleteConcert(
   id: string,
   userId: string
 ): Promise<boolean> {
-  return prisma.$transaction(async tx => {
+  return prisma.$transaction(async (tx) => {
     // Verify user has attendance.
     const attendance = await tx.userConcert.findUnique({
       where: { userId_concertId: { userId, concertId: id } },

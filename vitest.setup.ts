@@ -9,7 +9,12 @@ const normalizeImageSrc = (src: ImageProps["src"]): string => {
     return src
   }
 
-  if (src && typeof src === "object" && "src" in src && typeof src.src === "string") {
+  if (
+    src &&
+    typeof src === "object" &&
+    "src" in src &&
+    typeof src.src === "string"
+  ) {
     return src.src
   }
 
