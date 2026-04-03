@@ -152,6 +152,26 @@ export async function getConcertById(
   id: string,
   userId?: string
 ): Promise<TransformedConcert | null> {
+  if (userId) {
+    const concert = await prisma.concert.findUnique({
+      where: { id },
+      include: {
+        bands: {
+          include: { band: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        festival: true,
+        attendees: { where: { userId }, take: 1 },
+        _count: { select: { attendees: true } },
+      },
+    })
+
+    if (!concert) return null
+
+    const attendance = concert.attendees[0]
+    return await transformConcert(concert, attendance)
+  }
+
   const concert = await prisma.concert.findUnique({
     where: { id },
     include: {
@@ -160,15 +180,12 @@ export async function getConcertById(
         orderBy: { sortOrder: "asc" },
       },
       festival: true,
-      ...(userId && { attendees: { where: { userId } } }),
       _count: { select: { attendees: true } },
     },
   })
 
   if (!concert) return null
-
-  const attendance = userId ? (concert as any).attendees?.[0] : undefined
-  return await transformConcert(concert, attendance)
+  return await transformConcert(concert)
 }
 
 /**

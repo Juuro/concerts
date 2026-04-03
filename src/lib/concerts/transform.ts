@@ -102,7 +102,7 @@ function transformConcertSync(
 
   const attendance = userAttendance ?? concert.userAttendance
 
-  const coreBands = concert.bands.sort(
+  const coreBands = [...concert.bands].sort(
     (
       a: ConcertBand & { band: PrismaBand },
       b: ConcertBand & { band: PrismaBand }

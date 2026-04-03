@@ -134,7 +134,7 @@ describe("Edge Cases & Error Handling", () => {
     expect(result).toBe(false)
     // Verify no delete operations were called (security check)
     expect(prisma.userConcert.delete).not.toHaveBeenCalled()
-    expect(prisma.concert.delete).not.toHaveBeenCalled()
+    expect(prisma.concert.deleteMany).not.toHaveBeenCalled()
   })
 
   test("test_getConcertsPaginated_with_invalid_cursor_handles_gracefully", async () => {
@@ -271,12 +271,9 @@ describe("Edge Cases & Error Handling", () => {
       supportingActIds: [],
     } as any)
 
-    // Mock: after delete, no remaining attendees (orphaned concert)
-    vi.mocked(prisma.userConcert.count).mockResolvedValue(0)
-
     // Mock delete operations
     vi.mocked(prisma.userConcert.delete).mockResolvedValue({} as any)
-    vi.mocked(prisma.concert.delete).mockResolvedValue({} as any)
+    vi.mocked(prisma.concert.deleteMany).mockResolvedValue({ count: 1 } as any)
 
     const result = await deleteConcert(concertId, userId)
 
@@ -286,8 +283,13 @@ describe("Edge Cases & Error Handling", () => {
       where: { id: attendanceId },
     })
     // Verify orphaned concert was deleted
-    expect(prisma.concert.delete).toHaveBeenCalledWith({
-      where: { id: concertId },
+    expect(prisma.concert.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: concertId,
+        attendees: {
+          none: {},
+        },
+      },
     })
   })
 
@@ -308,11 +310,9 @@ describe("Edge Cases & Error Handling", () => {
       supportingActIds: [],
     } as any)
 
-    // Mock: after delete, 2 attendees remain (NOT orphaned)
-    vi.mocked(prisma.userConcert.count).mockResolvedValue(2)
-
     // Mock delete operations
     vi.mocked(prisma.userConcert.delete).mockResolvedValue({} as any)
+    vi.mocked(prisma.concert.deleteMany).mockResolvedValue({ count: 0 } as any)
 
     const result = await deleteConcert(concertId, userId)
 
@@ -322,6 +322,13 @@ describe("Edge Cases & Error Handling", () => {
       where: { id: attendanceId },
     })
     // Verify concert was NOT deleted (still has attendees)
-    expect(prisma.concert.delete).not.toHaveBeenCalled()
+    expect(prisma.concert.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: concertId,
+        attendees: {
+          none: {},
+        },
+      },
+    })
   })
 })

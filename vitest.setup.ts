@@ -4,11 +4,23 @@ import type { LinkProps } from "next/link"
 import { vi } from "vitest"
 import React from "react"
 
+const normalizeImageSrc = (src: ImageProps["src"]): string => {
+  if (typeof src === "string") {
+    return src
+  }
+
+  if (src && typeof src === "object" && "src" in src && typeof src.src === "string") {
+    return src.src
+  }
+
+  return ""
+}
+
 // Mock Next.js Image component (strip Next-only props so React does not forward invalid DOM attributes)
 vi.mock("next/image", () => ({
   default: (props: ImageProps) => {
     const {
-      fill: _f,
+      fill,
       priority: _p,
       placeholder: _ph,
       blurDataURL: _b,
@@ -25,9 +37,18 @@ vi.mock("next/image", () => ({
       lazyRoot: _lazyRoot,
       ...imgProps
     } = props
+
+    const normalizedSrc = normalizeImageSrc(props.src)
+    const fallbackDimensions =
+      !fill && imgProps.width == null && imgProps.height == null
+        ? { width: 1, height: 1 }
+        : {}
+
     return React.createElement("img", {
       ...(imgProps as React.ImgHTMLAttributes<HTMLImageElement>),
+      src: normalizedSrc,
       alt: props.alt ?? "",
+      ...fallbackDimensions,
     })
   },
 }))
@@ -62,6 +83,7 @@ vi.mock("@/lib/prisma", () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
       count: vi.fn(),
       groupBy: vi.fn(),
     },
