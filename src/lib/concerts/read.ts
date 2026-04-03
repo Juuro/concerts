@@ -190,7 +190,7 @@ export async function getConcertById(
 
 /**
  * Returns effective bands for a user's concert (for edit form).
- * Headliner comes from ConcertBand (shared), support acts from UserConcert.supportingActIds (per-user).
+ * Co-headliners come from ConcertBand (shared); support acts from UserConcert.supportingActIds (per-user).
  */
 export async function getEffectiveBandsForForm(
   concert: { bands: (ConcertBand & { band: PrismaBand })[] },
@@ -198,14 +198,13 @@ export async function getEffectiveBandsForForm(
 ): Promise<
   { bandId: string; name: string; slug: string; isHeadliner: boolean }[]
 > {
-  // Headliner always comes from ConcertBand (shared)
   const sortedCore = [...concert.bands].sort(
     (
       a: ConcertBand & { band: PrismaBand },
       b: ConcertBand & { band: PrismaBand }
     ) => a.sortOrder - b.sortOrder
   )
-  const headliner = sortedCore.find((cb) => cb.isHeadliner)
+  const headliners = sortedCore.filter((cb) => cb.isHeadliner)
 
   // Support acts come from UserConcert.supportingActIds (per-user).
   // Legacy fallback: if parsing yields null for an existing attendance record,
@@ -234,16 +233,12 @@ export async function getEffectiveBandsForForm(
   const bandsById = new Map(supportingActBands.map((b) => [b.id, b]))
 
   return [
-    ...(headliner
-      ? [
-          {
-            bandId: headliner.band.id,
-            name: headliner.band.name,
-            slug: headliner.band.slug,
-            isHeadliner: true,
-          },
-        ]
-      : []),
+    ...headliners.map((cb) => ({
+      bandId: cb.band.id,
+      name: cb.band.name,
+      slug: cb.band.slug,
+      isHeadliner: true,
+    })),
     ...(legacySupportingActs ??
       (parsedSupportingActs ?? [])
         .map((o) => {

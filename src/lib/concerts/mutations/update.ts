@@ -13,7 +13,14 @@ import type {
   UpdateConcertInput,
 } from "../types"
 import { parseSupportingActIds, transformConcert } from "../transform"
-import { findMatchingConcert, getHeadliner } from "../matching"
+import {
+  findMatchingConcert,
+  getHeadliner,
+  getHeadlinerBandIdsInOrder,
+  getHeadlinerIdsFromConcertBands,
+  headlinerOrdersEqual,
+  headlinerSetsEqual,
+} from "../matching"
 
 type ConcertWithRelations = PrismaConcert & {
   bands: (ConcertBand & { band: PrismaBand })[]
@@ -45,24 +52,19 @@ async function forkConcertForUser(
       ? geocodingData._normalized_city
       : null
 
-  // Determine the user's band selection for the fork
-  // Priority: input.bandIds > user's current view (headliner + supportingActIds)
-  let headlinerBandId: string | undefined
+  let orderedHeadlinerBandIds: string[]
   let supportingActIds: SupportingActItem[]
 
   if (input.bandIds) {
-    // User is changing bands - use their new selection
-    const headliner = input.bandIds.find((b) => b.isHeadliner)
-    headlinerBandId = headliner?.bandId
+    orderedHeadlinerBandIds = getHeadlinerBandIdsInOrder(input.bandIds)
     supportingActIds = input.bandIds
       .filter((b) => !b.isHeadliner)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
   } else {
-    // User is NOT changing bands - preserve their current view
-    // Headliner from original concert's ConcertBand
-    const originalHeadliner = originalConcert.bands.find((b) => b.isHeadliner)
-    headlinerBandId = originalHeadliner?.bandId
-    // Support acts from user's supportingActIds (per-user data)
+    orderedHeadlinerBandIds = [...originalConcert.bands]
+      .filter((b) => b.isHeadliner)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((b) => b.bandId)
     supportingActIds =
       parseSupportingActIds(currentAttendance.supportingActIds) ?? []
   }
@@ -77,7 +79,7 @@ async function forkConcertForUser(
     })
 
     // 2. Create new concert with edited data
-    // Only headliner goes in ConcertBand (shared), support acts go in UserConcert (per-user)
+    // All co-headliners in ConcertBand (shared); support acts in UserConcert (per-user)
     const newConcert = await tx.concert.create({
       data: {
         date: input.date ?? originalConcert.date,
@@ -88,15 +90,16 @@ async function forkConcertForUser(
         isFestival: input.isFestival ?? originalConcert.isFestival,
         festivalId: input.festivalId ?? originalConcert.festivalId,
         createdById: userId,
-        bands: headlinerBandId
-          ? {
-              create: {
-                bandId: headlinerBandId,
-                isHeadliner: true,
-                sortOrder: 0,
-              },
-            }
-          : undefined,
+        bands:
+          orderedHeadlinerBandIds.length > 0
+            ? {
+                create: orderedHeadlinerBandIds.map((bandId, index) => ({
+                  bandId,
+                  isHeadliner: true,
+                  sortOrder: index,
+                })),
+              }
+            : undefined,
         attendees: {
           create: {
             userId,
@@ -218,19 +221,33 @@ export async function updateConcert(
     return null
   }
 
-  // Check if fork-triggering fields changed (date, venue/location, headliner)
-  // Only headliner changes trigger fork, not supporting act changes
-  const existingHeadlinerId = getHeadliner(existing.bands)?.bandId
-  const inputHeadlinerId = input.bandIds
-    ? getHeadliner(
+  // Fork on shared headliner *set* change (co-headliners), not only the primary id
+  const existingHeadlinerIds = getHeadlinerIdsFromConcertBands(
+    existing.bands.map((b) => ({
+      bandId: b.bandId,
+      isHeadliner: b.isHeadliner,
+    }))
+  )
+  const inputHeadlinerIds = input.bandIds
+    ? getHeadlinerBandIdsInOrder(
         input.bandIds.map((b) => ({
           bandId: b.bandId,
           isHeadliner: b.isHeadliner || false,
         }))
-      )?.bandId
+      )
     : undefined
   const headlinerChanged =
-    input.bandIds !== undefined && inputHeadlinerId !== existingHeadlinerId
+    input.bandIds !== undefined &&
+    !headlinerSetsEqual(inputHeadlinerIds!, existingHeadlinerIds)
+
+  const existingHeadlinerOrder = [...existing.bands]
+    .filter((b) => b.isHeadliner)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((b) => b.bandId)
+  const headlinerOrderChanged =
+    input.bandIds !== undefined &&
+    headlinerSetsEqual(inputHeadlinerIds!, existingHeadlinerIds) &&
+    !headlinerOrdersEqual(inputHeadlinerIds!, existingHeadlinerOrder)
 
   const forkTriggerFieldsChanged =
     (input.date !== undefined &&
@@ -249,6 +266,35 @@ export async function updateConcert(
     })
   }
 
+  // Same co-headliner set but different order → rewrite shared ConcertBand.sortOrder (no fork).
+  if (input.bandIds && headlinerOrderChanged) {
+    const newHeadliners = input.bandIds.filter((b) => b.isHeadliner)
+    const newSupportingActs: SupportingActItem[] = input.bandIds
+      .filter((b) => !b.isHeadliner)
+      .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
+
+    await prisma.userConcert.update({
+      where: { id: attendance.id },
+      data: { supportingActIds: newSupportingActs },
+    })
+
+    await prisma.concertBand.deleteMany({
+      where: { concertId: id },
+    })
+    if (newHeadliners.length > 0) {
+      await prisma.concertBand.createMany({
+        data: newHeadliners.map((b, index) => ({
+          concertId: id,
+          bandId: b.bandId,
+          isHeadliner: true,
+          sortOrder: index,
+        })),
+      })
+    }
+
+    input = { ...input, bandIds: undefined }
+  }
+
   // Support-act-only edit: same headliner, no core field change → update only UserConcert.supportingActIds
   const noCoreFieldChanged =
     (input.date === undefined ||
@@ -262,10 +308,13 @@ export async function updateConcert(
       (input.festivalId ?? null) === (existing.festivalId ?? null))
 
   const onlyBandsChanged =
-    input.bandIds !== undefined && !headlinerChanged && noCoreFieldChanged
+    input.bandIds !== undefined &&
+    !headlinerChanged &&
+    !headlinerOrderChanged &&
+    noCoreFieldChanged
   if (onlyBandsChanged) {
     const supportActOverrides: SupportingActItem[] = input
-      .bandIds!.filter((b) => b.bandId !== inputHeadlinerId)
+      .bandIds!.filter((b) => !b.isHeadliner)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
     await prisma.userConcert.update({
@@ -298,9 +347,8 @@ export async function updateConcert(
   // This prevents core ConcertBand corruption if noCoreFieldChanged comparison fails
   // (e.g. floating-point precision, date representation, null vs empty-string).
   if (existing._count.attendees > 1 && input.bandIds && !headlinerChanged) {
-    const headlinerId = inputHeadlinerId ?? existingHeadlinerId
     const supportActOverrides: SupportingActItem[] = input.bandIds
-      .filter((b) => b.bandId !== headlinerId)
+      .filter((b) => !b.isHeadliner)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
     await prisma.userConcert.update({
@@ -321,32 +369,29 @@ export async function updateConcert(
     })
   }
 
-  // If updating bands (single-attendee concert), only headliner goes in ConcertBand
-  // Support acts go in UserConcert.supportingActIds
+  // If updating bands (single-attendee concert), all co-headliners go in ConcertBand
   if (input.bandIds) {
-    const newHeadliner = input.bandIds.find((b) => b.isHeadliner)
+    const newHeadliners = input.bandIds.filter((b) => b.isHeadliner)
     const newSupportingActs: SupportingActItem[] = input.bandIds
       .filter((b) => !b.isHeadliner)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
-    // Update user's supportingActIds
     await prisma.userConcert.update({
       where: { id: attendance.id },
       data: { supportingActIds: newSupportingActs },
     })
 
-    // Delete existing ConcertBand entries and create only headliner
     await prisma.concertBand.deleteMany({
       where: { concertId: id },
     })
-    if (newHeadliner) {
-      await prisma.concertBand.create({
-        data: {
+    if (newHeadliners.length > 0) {
+      await prisma.concertBand.createMany({
+        data: newHeadliners.map((b, index) => ({
           concertId: id,
-          bandId: newHeadliner.bandId,
+          bandId: b.bandId,
           isHeadliner: true,
-          sortOrder: 0,
-        },
+          sortOrder: index,
+        })),
       })
     }
 
@@ -393,11 +438,21 @@ export async function updateConcert(
     // Check if the updated concert now matches a different existing concert
     const updatedConcert = await prisma.concert.findUnique({
       where: { id },
-      include: { bands: { select: { bandId: true, isHeadliner: true } } },
+      include: {
+        bands: {
+          select: { bandId: true, isHeadliner: true, sortOrder: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
     })
 
     if (updatedConcert) {
-      const updatedHeadliner = updatedConcert.bands.find((b) => b.isHeadliner)
+      const updatedHeadliner = getHeadliner(
+        updatedConcert.bands.map((b) => ({
+          bandId: b.bandId,
+          isHeadliner: b.isHeadliner,
+        }))
+      )
       const updatedHeadlinerId = updatedHeadliner?.bandId ?? null
       if (updatedHeadlinerId) {
         const matchingConcert = await findMatchingConcert(

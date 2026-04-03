@@ -128,7 +128,8 @@ describe("createConcert Happy Paths", () => {
     )
     // User does NOT already attend
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(null)
-    // Link user
+    vi.mocked(prisma.concertBand.upsert).mockResolvedValue({} as any)
+    // Link user (inside $transaction)
     vi.mocked(prisma.userConcert.create).mockResolvedValue({
       id: "uc-link-1",
       userId,
@@ -212,6 +213,7 @@ describe("createConcert Happy Paths", () => {
       existingWithBands as any
     )
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.concertBand.upsert).mockResolvedValue({} as any)
     vi.mocked(prisma.userConcert.create).mockResolvedValue({
       id: "uc-link-2",
       userId,
@@ -250,6 +252,90 @@ describe("createConcert Happy Paths", () => {
             { bandId: supportBandIdA, sortOrder: 0 },
             { bandId: supportBandIdB, sortOrder: 1 },
           ],
+        }),
+      })
+    )
+  })
+
+  test("test_createConcert_new_concert_persists_multiple_co_headliners", async () => {
+    const userId = "user-cohead"
+    const bandA = "band-a"
+    const bandB = "band-b"
+    const supportId = "band-s"
+    const date = new Date("2025-12-01")
+
+    const createdConcert = {
+      id: "concert-co",
+      date,
+      latitude: 50,
+      longitude: 10,
+      venue: "Venue",
+      normalizedCity: "City",
+      isFestival: false,
+      festivalId: null,
+      bands: [
+        {
+          concertId: "concert-co",
+          bandId: bandA,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: { id: bandA, name: "A", slug: "a" },
+        },
+        {
+          concertId: "concert-co",
+          bandId: bandB,
+          isHeadliner: true,
+          sortOrder: 1,
+          band: { id: bandB, name: "B", slug: "b" },
+        },
+      ],
+      festival: null,
+      attendees: [
+        {
+          id: "uc-co",
+          userId,
+          concertId: "concert-co",
+          cost: null,
+          notes: null,
+          supportingActIds: [{ bandId: supportId, sortOrder: 0 }],
+        },
+      ],
+      _count: { attendees: 1 },
+    }
+
+    vi.mocked(prisma.concert.findMany).mockResolvedValue([])
+    vi.mocked(prisma.concert.create).mockResolvedValue(createdConcert as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([
+      { id: supportId, name: "S", slug: "s" },
+    ] as any)
+
+    await createConcert({
+      userId,
+      date,
+      latitude: 50,
+      longitude: 10,
+      venue: "Venue",
+      bandIds: [
+        { bandId: bandA, isHeadliner: true },
+        { bandId: bandB, isHeadliner: true },
+        { bandId: supportId, isHeadliner: false },
+      ],
+    })
+
+    expect(prisma.concert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          bands: {
+            create: [
+              { bandId: bandA, isHeadliner: true, sortOrder: 0 },
+              { bandId: bandB, isHeadliner: true, sortOrder: 1 },
+            ],
+          },
+          attendees: {
+            create: expect.objectContaining({
+              supportingActIds: [{ bandId: supportId, sortOrder: 0 }],
+            }),
+          },
         }),
       })
     )

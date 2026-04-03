@@ -85,6 +85,82 @@ describe("transform.ts dedicated coverage", () => {
     ])
   })
 
+  test("transformConcert includes all co_headliners when attendance has supportingActIds", async () => {
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([
+      {
+        id: "support-1",
+        name: "Support One",
+        slug: "support-one",
+        imageUrl: null,
+        imageEnrichedAt: null,
+        lastfmUrl: null,
+        websiteUrl: null,
+        genres: [],
+        bio: null,
+      },
+    ] as any)
+
+    const concert: any = {
+      id: "c-co",
+      date: new Date("2024-06-01T00:00:00.000Z"),
+      latitude: 1,
+      longitude: 2,
+      normalizedCity: "Berlin",
+      venue: "Venue",
+      isFestival: false,
+      festival: null,
+      bands: [
+        {
+          bandId: "h1",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: {
+            id: "h1",
+            name: "Head One",
+            slug: "head-one",
+            imageUrl: null,
+            websiteUrl: null,
+            lastfmUrl: null,
+            genres: [],
+            bio: null,
+          },
+        },
+        {
+          bandId: "h2",
+          isHeadliner: true,
+          sortOrder: 1,
+          band: {
+            id: "h2",
+            name: "Head Two",
+            slug: "head-two",
+            imageUrl: null,
+            websiteUrl: null,
+            lastfmUrl: null,
+            genres: [],
+            bio: null,
+          },
+        },
+      ],
+      _count: { attendees: 1 },
+    }
+    const attendance: any = {
+      id: "att-co",
+      userId: "u1",
+      cost: null,
+      notes: null,
+      supportingActIds: [{ bandId: "support-1", sortOrder: 0 }],
+    }
+
+    const transformed = await transformConcert(concert, attendance)
+    expect(
+      transformed.bands.map((b) => ({ slug: b.slug, hl: b.isHeadliner }))
+    ).toEqual([
+      { slug: "head-one", hl: true },
+      { slug: "head-two", hl: true },
+      { slug: "support-one", hl: false },
+    ])
+  })
+
   test("transformConcertsBatch keeps empty prefetch map path when no supporting acts", async () => {
     const concert: any = {
       id: "c2",

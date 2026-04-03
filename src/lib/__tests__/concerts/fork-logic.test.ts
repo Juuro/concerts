@@ -320,10 +320,122 @@ describe("Fork Logic (Multi-Tenant)", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           bands: expect.objectContaining({
-            create: expect.objectContaining({
-              bandId: "band-4",
-              isHeadliner: true,
-            }),
+            create: [
+              expect.objectContaining({
+                bandId: "band-4",
+                isHeadliner: true,
+                sortOrder: 0,
+              }),
+            ],
+          }),
+        }),
+      })
+    )
+  })
+
+  test("test_updateConcert_when_multi_attendee_adds_co_headliner_forks", async () => {
+    const userId = "user-co-fork"
+    const band3 = mkBand({ id: "band-3", name: "C", slug: "c" })
+    const band4 = mkBand({ id: "band-4", name: "D", slug: "d" })
+
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "att-co-fork",
+      userId,
+      concertId: "concert-co-1",
+      cost: null,
+      notes: null,
+      supportingActIds: [],
+    } as any)
+
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-co-1",
+      date: new Date("2024-08-10"),
+      latitude: 48.8566,
+      longitude: 2.3522,
+      venue: "Arena",
+      normalizedCity: "paris",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: "band-3",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: band3,
+        },
+      ],
+      _count: { attendees: 2 },
+    } as any)
+
+    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
+
+    const forkedConcert = {
+      id: "concert-co-2",
+      date: new Date("2024-08-10"),
+      latitude: 48.8566,
+      longitude: 2.3522,
+      venue: "Arena",
+      normalizedCity: "Test City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: "band-3",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: band3,
+        },
+        {
+          bandId: "band-4",
+          isHeadliner: true,
+          sortOrder: 1,
+          band: band4,
+        },
+      ],
+      attendees: [
+        {
+          id: "att-co-fork-new",
+          userId,
+          concertId: "concert-co-2",
+          cost: null,
+          notes: null,
+          supportingActIds: [],
+        },
+      ],
+      _count: { attendees: 1 },
+    }
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      return await callback(prisma as any)
+    })
+    vi.mocked(prisma.userConcert.delete).mockResolvedValueOnce({} as any)
+    vi.mocked(prisma.concert.create).mockResolvedValueOnce(forkedConcert as any)
+
+    await updateConcert("concert-co-1", userId, {
+      bandIds: [
+        { bandId: "band-3", isHeadliner: true },
+        { bandId: "band-4", isHeadliner: true },
+      ],
+    })
+
+    expect(prisma.concert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          bands: expect.objectContaining({
+            create: [
+              expect.objectContaining({
+                bandId: "band-3",
+                isHeadliner: true,
+                sortOrder: 0,
+              }),
+              expect.objectContaining({
+                bandId: "band-4",
+                isHeadliner: true,
+                sortOrder: 1,
+              }),
+            ],
           }),
         }),
       })
