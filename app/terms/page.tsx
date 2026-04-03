@@ -23,10 +23,10 @@ export default function TermsPage() {
           <section aria-labelledby="scope-heading">
             <h2 id="scope-heading">§ 1 Scope</h2>
             <p>
-              These terms and conditions apply to all contracts between [Business
-              Name] GBR and the user regarding the use of the Concerts platform.
-              Deviating or supplementary terms of the user do not apply unless
-              explicitly agreed in writing.
+              These terms and conditions apply to all contracts between
+              [Business Name] GBR and the user regarding the use of the Concerts
+              platform. Deviating or supplementary terms of the user do not
+              apply unless explicitly agreed in writing.
             </p>
           </section>
 
@@ -110,24 +110,23 @@ export default function TermsPage() {
               <strong>Withdrawal period:</strong> You may withdraw from this
               contract within fourteen (14) days without giving reasons. The
               withdrawal period begins on the day of contract conclusion. To
-              exercise your right of withdrawal, you must inform us (
-              [Business Name] GBR,{" "}
+              exercise your right of withdrawal, you must inform us ( [Business
+              Name] GBR,{" "}
               <a href="mailto:contact@example.com">contact@example.com</a>) by
-              means of a clear statement
-              (e.g. a letter sent by post or email) of your decision to withdraw
-              from the contract.
+              means of a clear statement (e.g. a letter sent by post or email)
+              of your decision to withdraw from the contract.
             </p>
             <p>
               <strong>Consequences of withdrawal:</strong> If you withdraw, we
               will refund all payments received from you without undue delay and
-              no later than fourteen days from the day we receive your withdrawal
-              notice. We will use the same means of payment that you used for the
-              original transaction unless otherwise agreed; you will not be
-              charged any fees for the refund. If you have requested that
-              performance of the service begin during the withdrawal period, you
-              must pay us a reasonable amount corresponding to the proportion of
-              services already provided up to the time you notify us of your
-              withdrawal.
+              no later than fourteen days from the day we receive your
+              withdrawal notice. We will use the same means of payment that you
+              used for the original transaction unless otherwise agreed; you
+              will not be charged any fees for the refund. If you have requested
+              that performance of the service begin during the withdrawal
+              period, you must pay us a reasonable amount corresponding to the
+              proportion of services already provided up to the time you notify
+              us of your withdrawal.
             </p>
             <p>
               <strong>Digital content:</strong> If the contract concerns the
@@ -148,9 +147,9 @@ export default function TermsPage() {
             <p>
               The collection and processing of personal data is governed by our{" "}
               <a href="/privacy">privacy policy</a> and the applicable data
-              protection regulations (GDPR, BDSG – German Federal Data Protection
-              Act). The user agrees to the
-              processing of their data as described therein.
+              protection regulations (GDPR, BDSG – German Federal Data
+              Protection Act). The user agrees to the processing of their data
+              as described therein.
             </p>
           </section>
 
@@ -177,9 +176,10 @@ export default function TermsPage() {
             <h2 id="final-heading">§ 11 Final Provisions</h2>
             <p>
               Should individual provisions be or become invalid, the validity of
-              the remaining provisions remains unaffected (severability clause). Amendments to these terms will be communicated in
-              advance; continued use after the effective date constitutes
-              acceptance. For questions, contact{" "}
+              the remaining provisions remains unaffected (severability clause).
+              Amendments to these terms will be communicated in advance;
+              continued use after the effective date constitutes acceptance. For
+              questions, contact{" "}
               <a href="mailto:contact@example.com">[contact@example.com]</a>.
             </p>
           </section>

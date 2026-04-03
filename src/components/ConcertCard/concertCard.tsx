@@ -4,7 +4,7 @@ import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { cityToSlug, extractCityName } from "../../utils/helpers"
-import type { TransformedConcert } from "@/lib/concerts"
+import type { TransformedConcert } from "@/lib/concerts/types"
 import "./concertCard.scss"
 
 interface ConcertCardProps {
@@ -95,7 +95,9 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
   }
 
   return (
-    <li className={`concert-card card ${isInTheFuture()} ${animated ? "concert-card--animated" : ""}`}>
+    <li
+      className={`concert-card card ${isInTheFuture()} ${animated ? "concert-card--animated" : ""}`}
+    >
       <div className="concert-card-image" aria-hidden="true">
         {getImageSrc() ? (
           <Image
@@ -114,7 +116,10 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
         <div className="concert-card-meta">
           {!(hideLocation && isInTheFuture()) && <span>{getDate()}</span>}
           {concert.attendeeCount && concert.attendeeCount > 1 && (
-            <span className="concert-card-attendees" title={`${concert.attendeeCount} people attended`}>
+            <span
+              className="concert-card-attendees"
+              title={`${concert.attendeeCount} people attended`}
+            >
               {concert.attendeeCount} attended
             </span>
           )}
@@ -136,14 +141,21 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
             </>
           )}
           {!hideCost && concert.cost && (
-            <div className="concert-card-cost">{concert.cost} {currency}</div>
+            <div className="concert-card-cost">
+              {concert.cost} {currency}
+            </div>
           )}
         </div>
-        {showEditButton && (concert.attendance?.userId === currentUserId || concert.userId === currentUserId) && (
-          <Link href={`/concerts/edit/${concert.id}`} className="concert-card-edit-btn">
-            Edit
-          </Link>
-        )}
+        {showEditButton &&
+          (concert.attendance?.userId === currentUserId ||
+            concert.userId === currentUserId) && (
+            <Link
+              href={`/concerts/edit/${concert.id}`}
+              className="concert-card-edit-btn"
+            >
+              Edit
+            </Link>
+          )}
       </div>
     </li>
   )

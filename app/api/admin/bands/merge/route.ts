@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
         where: { bandId: targetId },
         select: { concertId: true },
       })
-      const targetConcertIdSet = new Set(targetConcertIds.map((c) => c.concertId))
+      const targetConcertIdSet = new Set(
+        targetConcertIds.map((c) => c.concertId)
+      )
 
       // Move non-duplicate concert relations to target
       for (const relation of sourceConcertBands) {
@@ -131,7 +133,9 @@ export async function POST(request: NextRequest) {
             if (item.bandId === sourceId) return { ...item, bandId: targetId }
             return item
           })
-          .filter((item, i, a) => a.findIndex((x) => x.bandId === item.bandId) === i) // dedupe by bandId
+          .filter(
+            (item, i, a) => a.findIndex((x) => x.bandId === item.bandId) === i
+          ) // dedupe by bandId
         await tx.userConcert.update({
           where: { id: uc.id },
           data: { supportingActIds: updated },
@@ -187,8 +191,11 @@ export async function POST(request: NextRequest) {
               name: targetBand.name,
               concertCount: targetBand._count.concerts,
             },
-            movedConcerts: sourceConcertBands.length -
-              sourceConcertBands.filter((c) => targetConcertIdSet.has(c.concertId)).length,
+            movedConcerts:
+              sourceConcertBands.length -
+              sourceConcertBands.filter((c) =>
+                targetConcertIdSet.has(c.concertId)
+              ).length,
           },
         },
       })

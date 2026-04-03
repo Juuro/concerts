@@ -6,12 +6,14 @@ interface Stat {
 }
 
 async function getTotalStats() {
-  const [userCount, concertCount, bandCount, festivalCount] = await Promise.all([
-    prisma.user.count(),
-    prisma.concert.count(),
-    prisma.band.count(),
-    prisma.festival.count(),
-  ])
+  const [userCount, concertCount, bandCount, festivalCount] = await Promise.all(
+    [
+      prisma.user.count(),
+      prisma.concert.count(),
+      prisma.band.count(),
+      prisma.festival.count(),
+    ]
+  )
 
   return { userCount, concertCount, bandCount, festivalCount }
 }

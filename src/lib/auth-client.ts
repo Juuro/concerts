@@ -53,4 +53,5 @@ export function useTypedSession() {
   }
 }
 
-export const { signIn, signOut, signUp, useSession, sendVerificationEmail } = authClient
+export const { signIn, signOut, signUp, useSession, sendVerificationEmail } =
+  authClient

@@ -77,8 +77,7 @@
   color: rgba(0, 0, 0, 0.6);
   background: transparent;
   border: 0;
-  transition:
-    color 200ms ease-out;
+  transition: color 200ms ease-out;
 
   svg {
     width: 1.25rem;
@@ -175,4 +174,3 @@
     transform: rotate(360deg);
   }
 }
-

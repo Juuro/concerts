@@ -10,7 +10,9 @@ interface EmailSignInFormProps {
   callbackUrl?: string
 }
 
-export default function EmailSignInForm({ callbackUrl = "/" }: EmailSignInFormProps) {
+export default function EmailSignInForm({
+  callbackUrl = "/",
+}: EmailSignInFormProps) {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -42,7 +44,10 @@ export default function EmailSignInForm({ callbackUrl = "/" }: EmailSignInFormPr
         <div className="email-form__error">
           {error}
           {error.toLowerCase().includes("email not verified") && (
-            <Link href="/resend-verification" className="email-form__resend-link">
+            <Link
+              href="/resend-verification"
+              className="email-form__resend-link"
+            >
               Resend verification email
             </Link>
           )}
@@ -78,11 +83,7 @@ export default function EmailSignInForm({ callbackUrl = "/" }: EmailSignInFormPr
         <Link href="/forgot-password">Forgot password?</Link>
       </div>
 
-      <button
-        type="submit"
-        className="email-form__submit"
-        disabled={isLoading}
-      >
+      <button type="submit" className="email-form__submit" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign In"}
       </button>
 

@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { searchBands } from "@/lib/bands";
+import { NextRequest, NextResponse } from "next/server"
+import { searchBands } from "@/lib/bands"
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q") || "";
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const { searchParams } = new URL(request.url)
+  const query = searchParams.get("q") || ""
+  const limit = parseInt(searchParams.get("limit") || "10", 10)
 
   if (!query || query.length < 2) {
-    return NextResponse.json([]);
+    return NextResponse.json([])
   }
 
-  const bands = await searchBands(query, Math.min(limit, 50));
-  return NextResponse.json(bands);
+  const bands = await searchBands(query, Math.min(limit, 50))
+  return NextResponse.json(bands)
 }

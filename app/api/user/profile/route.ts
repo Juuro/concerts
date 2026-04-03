@@ -1,20 +1,20 @@
-import * as Sentry from "@sentry/nextjs";
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import * as Sentry from "@sentry/nextjs"
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+import { prisma } from "@/lib/prisma"
 
 export async function PUT(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),
-  });
+  })
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
-    const body = await request.json();
+    const body = await request.json()
     const {
       username,
       isPublic,
@@ -22,25 +22,34 @@ export async function PUT(request: NextRequest) {
       hideLocationPublic,
       hideCostPublic,
       includeUserIdInErrorReports,
-    } = body;
+    } = body
 
     // Validate currency if provided
     const VALID_CURRENCIES = [
-      "EUR", "USD", "GBP", "SEK", "NOK", "DKK", "CHF", "PLN", "CZK", "HUF",
-    ];
+      "EUR",
+      "USD",
+      "GBP",
+      "SEK",
+      "NOK",
+      "DKK",
+      "CHF",
+      "PLN",
+      "CZK",
+      "HUF",
+    ]
     if (currency && !VALID_CURRENCIES.includes(currency)) {
-      return NextResponse.json(
-        { error: "Invalid currency" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid currency" }, { status: 400 })
     }
 
     // Validate username format
     if (username && !/^[a-z0-9-]+$/.test(username)) {
       return NextResponse.json(
-        { error: "Username can only contain lowercase letters, numbers, and hyphens" },
+        {
+          error:
+            "Username can only contain lowercase letters, numbers, and hyphens",
+        },
         { status: 400 }
-      );
+      )
     }
 
     // Check username uniqueness (if changed)
@@ -50,10 +59,13 @@ export async function PUT(request: NextRequest) {
           username,
           id: { not: session.user.id },
         },
-      });
+      })
 
       if (existingUser) {
-        return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
+        return NextResponse.json(
+          { error: "Username is already taken" },
+          { status: 409 }
+        )
       }
     }
 
@@ -70,7 +82,7 @@ export async function PUT(request: NextRequest) {
         }),
         ...(currency && { currency }),
       },
-    });
+    })
 
     return NextResponse.json({
       id: updatedUser.id,
@@ -82,15 +94,21 @@ export async function PUT(request: NextRequest) {
       hideLocationPublic: updatedUser.hideLocationPublic,
       hideCostPublic: updatedUser.hideCostPublic,
       includeUserIdInErrorReports: updatedUser.includeUserIdInErrorReports,
-    });
+    })
   } catch (error: any) {
-    Sentry.captureException(error);
-    console.error("Error updating profile:", error);
+    Sentry.captureException(error)
+    console.error("Error updating profile:", error)
 
     if (error.code === "P2002") {
-      return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Username is already taken" },
+        { status: 409 }
+      )
     }
 
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 }
+    )
   }
 }

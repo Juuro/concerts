@@ -69,8 +69,8 @@ export default function BannedClient({ reason, expiresAt }: BannedClientProps) {
 
         {!expiresAt && (
           <p className="banned-page__permanent">
-            This suspension is permanent. If you believe this is an error, please
-            contact support.
+            This suspension is permanent. If you believe this is an error,
+            please contact support.
           </p>
         )}
 

@@ -105,7 +105,10 @@ export default function AdminManagementTabs({
   }
 
   return (
-    <div id="management" className="admin-management admin-management--connected">
+    <div
+      id="management"
+      className="admin-management admin-management--connected"
+    >
       <div
         className="admin-management-tabs"
         role="tablist"
@@ -121,7 +124,13 @@ export default function AdminManagementTabs({
             className={`admin-management-tabs__tab admin-management-tabs__tab--${tab.id} ${
               activeTab === tab.id ? "admin-management-tabs__tab--active" : ""
             }`}
-            data-position={index === 0 ? "first" : index === TABS.length - 1 ? "last" : "middle"}
+            data-position={
+              index === 0
+                ? "first"
+                : index === TABS.length - 1
+                  ? "last"
+                  : "middle"
+            }
             onClick={() => handleTabClick(tab.id)}
           >
             {tab.icon}

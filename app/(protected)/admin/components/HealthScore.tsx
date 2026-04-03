@@ -25,9 +25,16 @@ async function calculateHealthScore(): Promise<{
     prisma.festival.count({ where: { concerts: { some: {} } } }),
   ])
 
-  const bandScore = totalBands > 0 ? Math.round((bandsWithImages / totalBands) * 100) : 100
-  const concertScore = totalConcerts > 0 ? Math.round((concertsWithCity / totalConcerts) * 100) : 100
-  const festivalScore = totalFestivals > 0 ? Math.round((activeFestivals / totalFestivals) * 100) : 100
+  const bandScore =
+    totalBands > 0 ? Math.round((bandsWithImages / totalBands) * 100) : 100
+  const concertScore =
+    totalConcerts > 0
+      ? Math.round((concertsWithCity / totalConcerts) * 100)
+      : 100
+  const festivalScore =
+    totalFestivals > 0
+      ? Math.round((activeFestivals / totalFestivals) * 100)
+      : 100
 
   const overall = Math.round((bandScore + concertScore + festivalScore) / 3)
 
@@ -54,8 +61,18 @@ export default async function HealthScore() {
 
   // Determine gradient colors based on health level
   // High health (80+): pink gradient, Medium (50-79): amber, Low (<50): red
-  const gradientStart = health.overall >= 80 ? "#ff0666" : health.overall >= 50 ? "#f59e0b" : "#ef4444"
-  const gradientEnd = health.overall >= 80 ? "#ff6ba3" : health.overall >= 50 ? "#fbbf24" : "#f87171"
+  const gradientStart =
+    health.overall >= 80
+      ? "#ff0666"
+      : health.overall >= 50
+        ? "#f59e0b"
+        : "#ef4444"
+  const gradientEnd =
+    health.overall >= 80
+      ? "#ff6ba3"
+      : health.overall >= 50
+        ? "#fbbf24"
+        : "#f87171"
 
   return (
     <div className="health-score">
@@ -67,7 +84,13 @@ export default async function HealthScore() {
           viewBox={`0 0 ${size} ${size}`}
         >
           <defs>
-            <linearGradient id="health-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient
+              id="health-gradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
               <stop offset="0%" stopColor={gradientStart} />
               <stop offset="100%" stopColor={gradientEnd} />
             </linearGradient>
@@ -95,8 +118,12 @@ export default async function HealthScore() {
       <div className="health-score__breakdown">
         {health.metrics.map((metric) => (
           <div key={metric.label} className="health-score__breakdown-item">
-            <span className="health-score__breakdown-label">{metric.label}</span>
-            <span className="health-score__breakdown-value">{metric.score}%</span>
+            <span className="health-score__breakdown-label">
+              {metric.label}
+            </span>
+            <span className="health-score__breakdown-value">
+              {metric.score}%
+            </span>
           </div>
         ))}
       </div>

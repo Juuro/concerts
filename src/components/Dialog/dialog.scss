@@ -41,7 +41,8 @@
     background: transparent;
     color: rgba(0, 0, 0, 0.5);
     cursor: pointer;
-    transition: background variables.$transition-duration ease,
+    transition:
+      background variables.$transition-duration ease,
       color variables.$transition-duration ease;
 
     &:hover {

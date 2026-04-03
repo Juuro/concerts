@@ -9,7 +9,9 @@ interface EmailSignUpFormProps {
   callbackUrl?: string
 }
 
-export default function EmailSignUpForm({ callbackUrl = "/" }: EmailSignUpFormProps) {
+export default function EmailSignUpForm({
+  callbackUrl = "/",
+}: EmailSignUpFormProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -114,11 +116,7 @@ export default function EmailSignUpForm({ callbackUrl = "/" }: EmailSignUpFormPr
         />
       </div>
 
-      <button
-        type="submit"
-        className="email-form__submit"
-        disabled={isLoading}
-      >
+      <button type="submit" className="email-form__submit" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </button>
 

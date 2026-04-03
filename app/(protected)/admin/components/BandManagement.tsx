@@ -14,7 +14,11 @@ interface Band {
   createdBy?: string | null
 }
 
-type TabType = "missing-images" | "enrichment-failed" | "missing-lastfm" | "orphaned"
+type TabType =
+  | "missing-images"
+  | "enrichment-failed"
+  | "missing-lastfm"
+  | "orphaned"
 
 const TABS: { id: TabType; label: string }[] = [
   { id: "missing-images", label: "Missing Images" },
@@ -118,7 +122,8 @@ export default function BandManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bandIds,
-          imageOnly: activeTab === "missing-images" || activeTab === "enrichment-failed",
+          imageOnly:
+            activeTab === "missing-images" || activeTab === "enrichment-failed",
         }),
       })
 
@@ -194,7 +199,8 @@ export default function BandManagement() {
     } catch (error) {
       console.error("Error deleting band:", error)
       showToast({
-        message: error instanceof Error ? error.message : "Failed to delete band",
+        message:
+          error instanceof Error ? error.message : "Failed to delete band",
         type: "error",
       })
     } finally {
@@ -232,7 +238,10 @@ export default function BandManagement() {
         {TABS.map((tab, index) => (
           <Fragment key={tab.id}>
             {index > 0 && (
-              <span className="admin-inline-filters__separator" aria-hidden="true">
+              <span
+                className="admin-inline-filters__separator"
+                aria-hidden="true"
+              >
                 ·
               </span>
             )}
@@ -283,7 +292,8 @@ export default function BandManagement() {
         ) : bands.length === 0 ? (
           <div className="admin-list__empty">
             {activeTab === "missing-images" && "No bands missing images"}
-            {activeTab === "enrichment-failed" && "No bands with failed enrichment"}
+            {activeTab === "enrichment-failed" &&
+              "No bands with failed enrichment"}
             {activeTab === "missing-lastfm" && "No bands missing Last.fm data"}
             {activeTab === "orphaned" && "No orphaned bands found"}
           </div>
@@ -293,10 +303,12 @@ export default function BandManagement() {
               <label>
                 <input
                   type="checkbox"
-                  checked={selectedIds.size === bands.length && bands.length > 0}
+                  checked={
+                    selectedIds.size === bands.length && bands.length > 0
+                  }
                   onChange={toggleSelectAll}
-                />
-                {" "}Select all ({total} total)
+                />{" "}
+                Select all ({total} total)
               </label>
             </div>
             <ul className="admin-list">
@@ -324,7 +336,11 @@ export default function BandManagement() {
                         type="button"
                         className="admin-btn admin-btn--primary"
                         onClick={() =>
-                          handleEnrich(band.id, activeTab === "missing-images" || activeTab === "enrichment-failed")
+                          handleEnrich(
+                            band.id,
+                            activeTab === "missing-images" ||
+                              activeTab === "enrichment-failed"
+                          )
                         }
                         disabled={processingIds.has(band.id)}
                         aria-label={`Enrich ${band.name}`}

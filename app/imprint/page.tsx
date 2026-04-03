@@ -62,7 +62,9 @@ export default function ImprintPage() {
           </section>
 
           <section aria-labelledby="data-protection-heading">
-            <h2 id="data-protection-heading">Data Protection / LGPD (Brazil)</h2>
+            <h2 id="data-protection-heading">
+              Data Protection / LGPD (Brazil)
+            </h2>
             <p>Data controller: [Business Name]</p>
             <p>CNPJ (if applicable): [CNPJ]</p>
             <p>
@@ -83,9 +85,7 @@ export default function ImprintPage() {
 
           <section aria-labelledby="copyright-heading">
             <h2 id="copyright-heading">Copyright</h2>
-            <p>
-              © 2025 [Business Name]. All rights reserved.
-            </p>
+            <p>© 2025 [Business Name]. All rights reserved.</p>
           </section>
         </article>
       </main>

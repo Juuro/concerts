@@ -33,7 +33,10 @@ export default function FestivalManagement() {
       setTotal(data.total)
     } catch (error) {
       console.error("Error fetching festivals:", error)
-      showToast({ message: "Failed to fetch orphaned festivals", type: "error" })
+      showToast({
+        message: "Failed to fetch orphaned festivals",
+        type: "error",
+      })
     } finally {
       setLoading(false)
     }
@@ -44,7 +47,11 @@ export default function FestivalManagement() {
   }, [fetchFestivals])
 
   const handleDelete = async (festivalIds: string[]) => {
-    if (!confirm(`Delete ${festivalIds.length} festival(s)? This cannot be undone.`)) {
+    if (
+      !confirm(
+        `Delete ${festivalIds.length} festival(s)? This cannot be undone.`
+      )
+    ) {
       return
     }
 
@@ -111,11 +118,7 @@ export default function FestivalManagement() {
   }
 
   if (festivals.length === 0) {
-    return (
-      <div className="admin-list__empty">
-        No orphaned festivals found
-      </div>
-    )
+    return <div className="admin-list__empty">No orphaned festivals found</div>
   }
 
   return (
@@ -147,10 +150,12 @@ export default function FestivalManagement() {
         <label>
           <input
             type="checkbox"
-            checked={selectedIds.size === festivals.length && festivals.length > 0}
+            checked={
+              selectedIds.size === festivals.length && festivals.length > 0
+            }
             onChange={toggleSelectAll}
-          />
-          {" "}Select all ({total} total)
+          />{" "}
+          Select all ({total} total)
         </label>
       </div>
 
@@ -166,7 +171,11 @@ export default function FestivalManagement() {
             <div className="admin-list__info">
               <p className="admin-list__name">
                 {festival.url ? (
-                  <a href={festival.url} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={festival.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {festival.name}
                   </a>
                 ) : (

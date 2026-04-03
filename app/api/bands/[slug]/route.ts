@@ -79,7 +79,7 @@ export async function PUT(
 
     return NextResponse.json(updated)
   } catch (error: unknown) {
-    Sentry.captureException(error);
+    Sentry.captureException(error)
     console.error("Error updating band:", error)
 
     if (

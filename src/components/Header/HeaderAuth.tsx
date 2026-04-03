@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useSession } from "@/lib/auth-client";
-import { UserMenu } from "../Auth";
-import "./headerAuth.scss";
+import Link from "next/link"
+import { useSession } from "@/lib/auth-client"
+import { UserMenu } from "../Auth"
+import "./headerAuth.scss"
 
 export default function HeaderAuth() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = useSession()
 
   if (isPending) {
-    return <div className="header-auth header-auth--loading" />;
+    return <div className="header-auth header-auth--loading" />
   }
 
   if (!session?.user) {
@@ -17,7 +17,7 @@ export default function HeaderAuth() {
       <Link href="/login" className="header-auth__login">
         Sign In
       </Link>
-    );
+    )
   }
 
   return (
@@ -32,5 +32,5 @@ export default function HeaderAuth() {
       )}
       <UserMenu />
     </div>
-  );
+  )
 }

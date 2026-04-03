@@ -1,6 +1,6 @@
 import React from "react"
 import BarChart from "../BarChart/barchart"
-import type { ConcertStatistics } from "@/lib/concerts"
+import type { ConcertStatistics } from "@/lib/concerts/types"
 import "./statisticsWidget.scss"
 
 interface StatisticsWidgetServerProps {

@@ -6,14 +6,14 @@ import StatCard from "@/components/StatCard/StatCard"
 import FeatureCard from "@/components/FeatureCard/FeatureCard"
 import { ConcertListInfinite } from "../src/components/ConcertList"
 import {
-  getConcertsPaginated,
   getUserConcertStatistics,
   getUserConcertCounts,
-  getUserTotalSpentCached,
   getGlobalAppStats,
   getUserUniqueBandCount,
   getUserDashboardCounts,
-} from "@/lib/concerts"
+} from "@/lib/concerts/stats"
+import { getUserTotalSpentCached } from "@/lib/concerts/spending"
+import { getConcertsPaginated } from "@/lib/concerts/pagination"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
@@ -40,7 +40,11 @@ function HomePageFallback() {
   )
 }
 
-async function HomeContent({ searchParams }: { searchParams: Promise<{ cursor?: string }> }) {
+async function HomeContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ cursor?: string }>
+}) {
   const { cursor } = await searchParams
   const session = await auth.api.getSession({ headers: await headers() })
 
@@ -93,7 +97,9 @@ async function LoggedInHome({
             </Link>
           </div>
 
-          {userStats.totalPast > 0 && <StatisticsWidgetServer statistics={userStats} />}
+          {userStats.totalPast > 0 && (
+            <StatisticsWidgetServer statistics={userStats} />
+          )}
 
           <div className="home-dashboard-stats">
             <StatCard value={userCounts.past} label="Concerts" />
@@ -101,14 +107,20 @@ async function LoggedInHome({
             <StatCard value={dashboardCounts.uniqueCities} label="Cities" />
             <StatCard value={dashboardCounts.uniqueYears} label="Years" />
             {totalSpent.total > 0 && (
-              <StatCard value={Math.round(totalSpent.total)} label={totalSpent.currency} />
+              <StatCard
+                value={Math.round(totalSpent.total)}
+                label={totalSpent.currency}
+              />
             )}
           </div>
 
           {initialData.items.length === 0 && !cursor ? (
             <div className="home-empty">
               <h2>No concerts yet</h2>
-              <p>Start building your concert collection by adding your first concert.</p>
+              <p>
+                Start building your concert collection by adding your first
+                concert.
+              </p>
               <Link href="/concerts/new" className="home-btn">
                 Add Your First Concert
               </Link>
@@ -152,9 +164,18 @@ async function LandingPage() {
           <section className="home-stats">
             <h3>Join the community</h3>
             <div className="home-stats__grid">
-              <StatCard value={stats.concertCount.toLocaleString()} label="Concerts tracked" />
-              <StatCard value={stats.bandCount.toLocaleString()} label="Bands" />
-              <StatCard value={stats.userCount.toLocaleString()} label="Music fans" />
+              <StatCard
+                value={stats.concertCount.toLocaleString()}
+                label="Concerts tracked"
+              />
+              <StatCard
+                value={stats.bandCount.toLocaleString()}
+                label="Bands"
+              />
+              <StatCard
+                value={stats.userCount.toLocaleString()}
+                label="Music fans"
+              />
             </div>
           </section>
 
