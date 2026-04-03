@@ -107,14 +107,10 @@ describe("Additional Branch Coverage", () => {
       )
     })
 
-    test("test_getUserTotalSpent_bandSlug_not_found_falls_through_to_aggregate", async () => {
+    test("test_getUserTotalSpent_bandSlug_not_found_returns_zero_without_aggregate", async () => {
       const userId = "user-no-band"
 
-      // Band not found by slug
       vi.mocked(prisma.band.findUnique).mockResolvedValue(null)
-      vi.mocked(prisma.userConcert.aggregate).mockResolvedValue({
-        _sum: { cost: 100 },
-      } as any)
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         currency: "EUR",
       } as any)
@@ -123,9 +119,9 @@ describe("Additional Branch Coverage", () => {
         bandSlug: "nonexistent",
       })
 
-      expect(result.total).toBe(100)
-      // Falls through to aggregate path since band not found
-      expect(prisma.userConcert.aggregate).toHaveBeenCalled()
+      expect(result.total).toBe(0)
+      expect(result.currency).toBe("EUR")
+      expect(prisma.userConcert.aggregate).not.toHaveBeenCalled()
     })
   })
 

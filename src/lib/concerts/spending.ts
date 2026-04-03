@@ -19,51 +19,60 @@ export async function getUserTotalSpent(
       where: { slug: filters.bandSlug },
       select: { id: true },
     })
-    if (band) {
-      type Row = { total: number | null }
-      const yearClause =
-        filters.year != null
-          ? Prisma.sql`AND c."date" >= ${new Date(Date.UTC(filters.year, 0, 1, 0, 0, 0, 0))} AND c."date" <= ${new Date(Date.UTC(filters.year, 11, 31, 23, 59, 59, 999))}`
-          : Prisma.empty
-      const cityClause =
-        filters.city != null
-          ? Prisma.sql`AND c."normalizedCity" = ${filters.city}`
-          : Prisma.empty
-      const pastClause = filters.pastOnly
-        ? Prisma.sql`AND c."date" < ${now}`
-        : Prisma.empty
-
-      const rows = await prisma.$queryRaw<Row[]>`
-        SELECT COALESCE(SUM(uc.cost), 0)::float AS total
-        FROM user_concert uc
-        JOIN concert c ON c.id = uc."concertId"
-        WHERE uc."userId" = ${userId}
-          AND uc.cost IS NOT NULL
-          ${pastClause}
-          AND (
-            EXISTS (
-              SELECT 1 FROM concert_band cb
-              WHERE cb."concertId" = c.id AND cb."bandId" = ${band.id}
-            )
-            OR (
-              uc."supportingActIds" IS NOT NULL
-              AND EXISTS (
-                SELECT 1 FROM jsonb_array_elements(uc."supportingActIds") AS elem
-                WHERE (elem->>'bandId') = ${band.id}
-              )
-            )
-          )
-          ${yearClause}
-          ${cityClause}
-      `
+    if (!band) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { currency: true },
       })
       return {
-        total: Number(rows[0]?.total ?? 0),
+        total: 0,
         currency: user?.currency || "EUR",
       }
+    }
+
+    type Row = { total: number | null }
+    const yearClause =
+      filters.year != null
+        ? Prisma.sql`AND c."date" >= ${new Date(Date.UTC(filters.year, 0, 1, 0, 0, 0, 0))} AND c."date" <= ${new Date(Date.UTC(filters.year, 11, 31, 23, 59, 59, 999))}`
+        : Prisma.empty
+    const cityClause =
+      filters.city != null
+        ? Prisma.sql`AND c."normalizedCity" = ${filters.city}`
+        : Prisma.empty
+    const pastClause = filters.pastOnly
+      ? Prisma.sql`AND c."date" < ${now}`
+      : Prisma.empty
+
+    const rows = await prisma.$queryRaw<Row[]>`
+      SELECT COALESCE(SUM(uc.cost), 0)::float AS total
+      FROM user_concert uc
+      JOIN concert c ON c.id = uc."concertId"
+      WHERE uc."userId" = ${userId}
+        AND uc.cost IS NOT NULL
+        ${pastClause}
+        AND (
+          EXISTS (
+            SELECT 1 FROM concert_band cb
+            WHERE cb."concertId" = c.id AND cb."bandId" = ${band.id}
+          )
+          OR (
+            uc."supportingActIds" IS NOT NULL
+            AND EXISTS (
+              SELECT 1 FROM jsonb_array_elements(uc."supportingActIds") AS elem
+              WHERE (elem->>'bandId') = ${band.id}
+            )
+          )
+        )
+        ${yearClause}
+        ${cityClause}
+    `
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    })
+    return {
+      total: Number(rows[0]?.total ?? 0),
+      currency: user?.currency || "EUR",
     }
   }
 

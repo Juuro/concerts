@@ -10,7 +10,10 @@ describe("deleteConcert", () => {
   test("test_deleteConcert_non_attendee_returns_false", async () => {
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(null)
     const result = await deleteConcert("concert-1", "user-2")
-    expect(result).toBe(false)
+    expect(result).toEqual({
+      removedAttendance: false,
+      deletedConcert: false,
+    })
   })
 
   test("test_deleteConcert_removes_attendance_and_orphaned_concert", async () => {
@@ -22,7 +25,10 @@ describe("deleteConcert", () => {
     vi.mocked(prisma.userConcert.delete).mockResolvedValue({} as any)
     vi.mocked(prisma.concert.deleteMany).mockResolvedValue({ count: 1 } as any)
     const result = await deleteConcert("concert-1", "user-1")
-    expect(result).toBe(true)
+    expect(result).toEqual({
+      removedAttendance: true,
+      deletedConcert: true,
+    })
     expect(prisma.concert.deleteMany).toHaveBeenCalledWith({
       where: {
         id: "concert-1",

@@ -138,8 +138,8 @@ describe("Query Functions", () => {
         expect.objectContaining({
           where: {
             date: {
-              gte: new Date(2024, 0, 1),
-              lte: new Date(2024, 11, 31, 23, 59, 59, 999),
+              gte: new Date(Date.UTC(2024, 0, 1)),
+              lte: new Date(Date.UTC(2024, 11, 31, 23, 59, 59, 999)),
             },
           },
         })
@@ -159,8 +159,8 @@ describe("Query Functions", () => {
         expect.objectContaining({
           where: {
             date: {
-              gte: new Date(2024, 0, 1),
-              lte: new Date(2024, 11, 31, 23, 59, 59, 999),
+              gte: new Date(Date.UTC(2024, 0, 1)),
+              lte: new Date(Date.UTC(2024, 11, 31, 23, 59, 59, 999)),
             },
           },
         })

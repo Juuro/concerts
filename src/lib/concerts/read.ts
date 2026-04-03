@@ -79,8 +79,8 @@ export async function getConcertsByYear(
   year: number | string
 ): Promise<TransformedConcert[]> {
   const yearNum = typeof year === "string" ? parseInt(year, 10) : year
-  const startDate = new Date(yearNum, 0, 1)
-  const endDate = new Date(yearNum, 11, 31, 23, 59, 59, 999)
+  const startDate = new Date(Date.UTC(yearNum, 0, 1))
+  const endDate = new Date(Date.UTC(yearNum, 11, 31, 23, 59, 59, 999))
 
   const concerts = await prisma.concert.findMany({
     where: {

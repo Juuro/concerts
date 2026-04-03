@@ -114,9 +114,9 @@ export async function DELETE(
 
   const { id } = await params
 
-  const deleted = await deleteConcert(id, session.user.id)
+  const deleteResult = await deleteConcert(id, session.user.id)
 
-  if (!deleted) {
+  if (!deleteResult.removedAttendance) {
     return NextResponse.json(
       { error: "Concert not found or not authorized" },
       { status: 404 }
@@ -131,5 +131,8 @@ export async function DELETE(
   revalidateTag(`user-unique-bands-${session.user.id}`, "max")
   revalidateTag(`user-total-spent-${session.user.id}`, "max")
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({
+    success: true,
+    deletedConcert: deleteResult.deletedConcert,
+  })
 }

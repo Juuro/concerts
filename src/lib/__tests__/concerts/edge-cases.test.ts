@@ -131,7 +131,10 @@ describe("Edge Cases & Error Handling", () => {
     const result = await deleteConcert(concertId, nonAttendeeUserId)
 
     // Must return false when attendance lookup fails in delete authorization flow.
-    expect(result).toBe(false)
+    expect(result).toEqual({
+      removedAttendance: false,
+      deletedConcert: false,
+    })
     // Verify no delete operations were called (security check)
     expect(prisma.userConcert.delete).not.toHaveBeenCalled()
     expect(prisma.concert.deleteMany).not.toHaveBeenCalled()
@@ -277,7 +280,10 @@ describe("Edge Cases & Error Handling", () => {
 
     const result = await deleteConcert(concertId, userId)
 
-    expect(result).toBe(true)
+    expect(result).toEqual({
+      removedAttendance: true,
+      deletedConcert: true,
+    })
     // Verify attendance was deleted
     expect(prisma.userConcert.delete).toHaveBeenCalledWith({
       where: { id: attendanceId },
@@ -316,7 +322,10 @@ describe("Edge Cases & Error Handling", () => {
 
     const result = await deleteConcert(concertId, userId)
 
-    expect(result).toBe(true)
+    expect(result).toEqual({
+      removedAttendance: true,
+      deletedConcert: false,
+    })
     // Verify attendance was deleted
     expect(prisma.userConcert.delete).toHaveBeenCalledWith({
       where: { id: attendanceId },

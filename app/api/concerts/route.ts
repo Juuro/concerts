@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 
   // Strip hidden data from public profile responses (defense in depth)
   if (publicProfileUser) {
-    const now = new Date().toISOString()
+    const now = new Date()
     result.items = result.items.map((item) => ({
       ...item,
       ...(publicProfileUser!.hideLocationPublic && {
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         fields: {
           geocoderAddressFields: { _normalized_city: "" } as GeocodingData,
         },
-        ...(item.date > now && { date: "" }),
+        ...(new Date(item.date) > now && { date: "" }),
       }),
       ...(publicProfileUser!.hideCostPublic && { cost: null }),
     }))

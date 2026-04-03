@@ -1,9 +1,14 @@
 import { prisma } from "../../prisma"
 
+export type DeleteConcertResult = {
+  removedAttendance: boolean
+  deletedConcert: boolean
+}
+
 export async function deleteConcert(
   id: string,
   userId: string
-): Promise<boolean> {
+): Promise<DeleteConcertResult> {
   return prisma.$transaction(async (tx) => {
     // Verify user has attendance.
     const attendance = await tx.userConcert.findUnique({
@@ -11,7 +16,10 @@ export async function deleteConcert(
     })
 
     if (!attendance) {
-      return false
+      return {
+        removedAttendance: false,
+        deletedConcert: false,
+      }
     }
 
     // Delete the user's attendance (unlink from concert).
@@ -20,7 +28,7 @@ export async function deleteConcert(
     })
 
     // Atomically delete orphaned concert, if no attendees remain.
-    await tx.concert.deleteMany({
+    const deletedConcert = await tx.concert.deleteMany({
       where: {
         id,
         attendees: {
@@ -29,6 +37,9 @@ export async function deleteConcert(
       },
     })
 
-    return true
+    return {
+      removedAttendance: true,
+      deletedConcert: deletedConcert.count > 0,
+    }
   })
 }
