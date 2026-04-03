@@ -424,6 +424,164 @@ describe("Fork Logic (Multi-Tenant)", () => {
     )
   })
 
+  test("test_updateConcert_when_fork_merges_into_matching_concert_creates_new_attendance_preserving_fields", async () => {
+    const userId = "user-merge"
+
+    const headlinerBand = mkBand({
+      id: "band-merge",
+      name: "Merge Band",
+      slug: "merge-band",
+    })
+
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "attendance-merge-original",
+      userId,
+      concertId: "concert-merge-original",
+      cost: 120,
+      notes: "Merge flow",
+      supportingActIds: [{ bandId: "support-merge", sortOrder: 0 }],
+    } as any)
+
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-merge-original",
+      date: new Date("2025-01-10"),
+      latitude: 35.0,
+      longitude: -120.0,
+      venue: "Merge Venue",
+      normalizedCity: "merge-city",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: headlinerBand.id,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: headlinerBand,
+        },
+      ],
+      _count: { attendees: 2 },
+    } as any)
+
+    // Matching concert exists after fork
+    vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
+      { id: "concert-merge-target" },
+    ] as any)
+
+    const forkedConcert = {
+      id: "concert-merge-forked",
+      date: new Date("2025-01-11"),
+      latitude: 35.0,
+      longitude: -120.0,
+      venue: "Merge Venue",
+      normalizedCity: "Test City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: headlinerBand.id,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: headlinerBand,
+        },
+      ],
+      attendees: [
+        {
+          id: "attendance-merge-forked",
+          userId,
+          concertId: "concert-merge-forked",
+          cost: 120,
+          notes: "Merge flow",
+          supportingActIds: [{ bandId: "support-merge", sortOrder: 0 }],
+        },
+      ],
+      _count: { attendees: 1 },
+    }
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      return await callback(prisma as any)
+    })
+    vi.mocked(prisma.userConcert.delete).mockResolvedValueOnce({} as any)
+    vi.mocked(prisma.concert.create).mockResolvedValueOnce(forkedConcert as any)
+
+    // No existing attendance on the matching concert, so a new one is created
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce(null)
+    vi.mocked(prisma.userConcert.create).mockResolvedValue({} as any)
+    vi.mocked(prisma.userConcert.delete).mockResolvedValue({} as any)
+
+    vi.mocked(prisma.concert.delete).mockResolvedValue({} as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      id: "concert-merge-target",
+      date: new Date("2025-01-11"),
+      latitude: 35.0,
+      longitude: -120.0,
+      venue: "Merge Venue",
+      normalizedCity: "Test City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        {
+          bandId: headlinerBand.id,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: headlinerBand,
+        },
+      ],
+      attendees: [
+        {
+          id: "attendance-merge-target",
+          userId,
+          concertId: "concert-merge-target",
+          cost: 120,
+          notes: "Merge flow",
+          supportingActIds: [{ bandId: "support-merge", sortOrder: 0 }],
+        },
+      ],
+      _count: { attendees: 2 },
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([
+      {
+        id: "support-merge",
+        name: "Support Merge",
+        slug: "support-merge",
+        imageUrl: null,
+        imageEnrichedAt: null,
+        lastfmUrl: null,
+        websiteUrl: null,
+        genres: [],
+        bio: null,
+        createdById: "user-test",
+        updatedById: null,
+      },
+    ] as any)
+
+    const result = await updateConcert("concert-merge-original", userId, {
+      date: new Date("2025-01-11"),
+    })
+
+    expect(result).not.toBeNull()
+    expect(result!.id).toBe("concert-merge-target")
+    expect(prisma.userConcert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId,
+          concertId: "concert-merge-target",
+          cost: 120,
+          notes: "Merge flow",
+          supportingActIds: [{ bandId: "support-merge", sortOrder: 0 }],
+        }),
+      })
+    )
+    expect(prisma.userConcert.delete).toHaveBeenCalledWith({
+      where: { id: "attendance-merge-forked" },
+    })
+    expect(prisma.concert.delete).toHaveBeenCalledWith({
+      where: { id: "concert-merge-forked" },
+    })
+  })
+
   test("test_updateConcert_when_fork_preserves_user_cost_and_notes", async () => {
     const userId = "user-preserve"
     const userCost = 150

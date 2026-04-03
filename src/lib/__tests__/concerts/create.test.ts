@@ -165,6 +165,94 @@ describe("createConcert Happy Paths", () => {
     expect(prisma.concert.create).not.toHaveBeenCalled()
   })
 
+  test("test_createConcert_match_found_maps_supporting_acts_with_incrementing_sort_order", async () => {
+    const userId = "user-link-2"
+    const headlinerBandId = "band-headliner-1"
+    const supportBandIdA = "band-support-1"
+    const supportBandIdB = "band-support-2"
+    const concertId = "concert-existing-2"
+    const date = new Date("2025-10-02")
+
+    const existingConcert = {
+      id: concertId,
+      date,
+      latitude: 40.7128,
+      longitude: -74.006,
+      venue: "NY Arena",
+      normalizedCity: "New York",
+      isFestival: false,
+      festivalId: null,
+      createdById: "other-user",
+      updatedById: null,
+    }
+
+    const existingWithBands = {
+      ...existingConcert,
+      bands: [
+        {
+          concertId,
+          bandId: headlinerBandId,
+          isHeadliner: true,
+          sortOrder: 0,
+          band: {
+            id: headlinerBandId,
+            name: "Headliner Band",
+            slug: "headliner-band",
+          },
+        },
+      ],
+      festival: null,
+      _count: { attendees: 2 },
+    }
+
+    vi.mocked(prisma.concert.findMany).mockResolvedValue([existingConcert] as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValue(
+      existingWithBands as any
+    )
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.userConcert.create).mockResolvedValue({
+      id: "uc-link-2",
+      userId,
+      concertId,
+      cost: 45,
+      notes: null,
+      supportingActIds: [
+        { bandId: supportBandIdA, sortOrder: 0 },
+        { bandId: supportBandIdB, sortOrder: 1 },
+      ],
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValue([] as any)
+
+    const input: CreateConcertInput = {
+      userId,
+      date,
+      latitude: 40.7128,
+      longitude: -74.006,
+      venue: "NY Arena",
+      cost: 45,
+      bandIds: [
+        { bandId: supportBandIdA, isHeadliner: false },
+        { bandId: headlinerBandId, isHeadliner: true },
+        { bandId: supportBandIdB, isHeadliner: false },
+      ],
+    }
+
+    await createConcert(input)
+
+    expect(prisma.userConcert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId,
+          concertId,
+          supportingActIds: [
+            { bandId: supportBandIdA, sortOrder: 0 },
+            { bandId: supportBandIdB, sortOrder: 1 },
+          ],
+        }),
+      })
+    )
+  })
+
   test("test_createConcert_no_headliner_creates_new_concert", async () => {
     const userId = "user-no-headliner"
     const date = new Date("2025-11-01")

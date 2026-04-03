@@ -489,9 +489,7 @@ describe("lastfm", () => {
 
       const first = await getArtistInfo("Cooldown Cached Artist", 1)
 
-      nowSpy
-        .mockReturnValueOnce(1_060_001)
-        .mockReturnValueOnce(1_010_000)
+      nowSpy.mockReturnValueOnce(1_060_001).mockReturnValueOnce(1_010_000)
       const second = await getArtistInfo("cooldown cached artist")
       nowSpy.mockRestore()
 

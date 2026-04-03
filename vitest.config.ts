@@ -21,6 +21,8 @@ export default defineConfig({
         "**/*.test.*",
         "**/types/**",
         "**/__tests__/**",
+        "**/*.scss",
+        "**/*.css",
       ],
       thresholds: {
         lines: 80,
