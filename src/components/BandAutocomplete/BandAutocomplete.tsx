@@ -110,8 +110,15 @@ export default function BandAutocomplete({
           })
           setSearchResults(filtered)
           setIsOpen(filtered.length > 0 || searchTerm.length >= 2)
+        } else {
+          setSearchResults([])
+          setIsOpen(false)
+          setHighlightedIndex(-1)
         }
       } catch (err) {
+        setSearchResults([])
+        setIsOpen(false)
+        setHighlightedIndex(-1)
         console.error("Band search error:", err)
       } finally {
         setIsSearching(false)
