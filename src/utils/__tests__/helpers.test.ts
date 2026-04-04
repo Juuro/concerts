@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { cityToSlug, extractCityName, findCityBySlug } from "../helpers"
+import {
+  cityToSlug,
+  extractCityName,
+  findCityBySlug,
+  haversineDistance,
+} from "../helpers"
 import type { GeocodingData } from "../../types/geocoding"
 
 describe("helpers", () => {
@@ -65,6 +70,19 @@ describe("helpers", () => {
 
     it("test_findCityBySlug_empty_array_returns_null", () => {
       expect(findCityBySlug("new-york", [])).toBeNull()
+    })
+  })
+
+  describe("haversineDistance", () => {
+    it("test_haversineDistance_identical_points_is_zero", () => {
+      expect(haversineDistance(52.52, 13.405, 52.52, 13.405)).toBe(0)
+    })
+
+    it("test_haversineDistance_known_cities_matches_expected_km", () => {
+      // Berlin ↔ Paris ≈ 878 km (great-circle)
+      const km = haversineDistance(52.52, 13.405, 48.8566, 2.3522)
+      expect(km).toBeGreaterThan(870)
+      expect(km).toBeLessThan(890)
     })
   })
 })

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { LastFMArtist } from "lastfm-ts-api"
 
 // Hoisted with the mock factory so the factory does not close over a TDZ-bound const.
-const { mockGetInfo } = vi.hoisted(() => {
+const { mockGetInfo, mockSearch } = vi.hoisted(() => {
   const mockGetInfo = vi.fn(
     (
       params: { artist: string; autocorrect?: 0 | 1 },
@@ -19,13 +20,27 @@ const { mockGetInfo } = vi.hoisted(() => {
       })
     }
   )
-  return { mockGetInfo }
+  const mockSearch = vi.fn(
+    (
+      params: { artist: string; limit: number },
+      callback: (err: unknown, res: unknown) => void
+    ) => {
+      callback(null, {
+        results: {
+          artistmatches: {
+            artist: [{ name: params.artist, listeners: "1000" }],
+          },
+        },
+      })
+    }
+  )
+  return { mockGetInfo, mockSearch }
 })
 
 // Vitest 4+ requires a real `function` (or class) when code uses `new` on the mock.
 vi.mock("lastfm-ts-api", () => ({
   LastFMArtist: vi.fn(function LastFMArtist(_apiKey: string, _secret?: string) {
-    return { getInfo: mockGetInfo }
+    return { getInfo: mockGetInfo, search: mockSearch }
   }),
 }))
 
@@ -35,6 +50,12 @@ async function loadGetArtistInfo() {
   return mod.getArtistInfo
 }
 
+async function loadSearchLastFmArtists() {
+  vi.resetModules()
+  const mod = await import("../lastfm")
+  return mod.searchLastFmArtists
+}
+
 describe("lastfm", () => {
   describe("getArtistInfo", () => {
     beforeEach(() => {
@@ -42,6 +63,21 @@ describe("lastfm", () => {
       vi.spyOn(console, "error").mockImplementation(() => {})
       vi.unstubAllEnvs()
       mockGetInfo.mockReset()
+      mockSearch.mockReset()
+      mockSearch.mockImplementation(
+        (
+          params: { artist: string; limit: number },
+          callback: (err: unknown, res: unknown) => void
+        ) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: [{ name: params.artist, listeners: "1000" }],
+              },
+            },
+          })
+        }
+      )
       mockGetInfo.mockImplementation(
         (
           params: { artist: string; autocorrect?: 0 | 1 },
@@ -197,6 +233,19 @@ describe("lastfm", () => {
       const result = await getArtistInfo("Missing Artist")
       expect(result).toBeNull()
       expect(console.warn).toHaveBeenCalled()
+    })
+
+    it("test_getArtistInfo_artist_not_found_code_7_returns_null", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(new Error("Not found (Code 7)"), null)
+      })
+
+      const result = await getArtistInfo("Missing Seven")
+      expect(result).toBeNull()
     })
 
     it("test_getArtistInfo_invalid_key_code_returns_null_without_retry", async () => {
@@ -383,6 +432,101 @@ describe("lastfm", () => {
       expect(second?.name).toBe("Cooldown Artist")
     })
 
+    it("test_getArtistInfo_omits_image_uses_empty_array_and_optional_tags", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(null, {
+          artist: {
+            name: "Bare",
+            url: "u",
+            bio: {},
+          },
+        })
+      })
+
+      const result = await getArtistInfo("Bare")
+      expect(result?.images.large).toBeNull()
+      expect(result?.genres).toEqual([])
+    })
+
+    it("test_getArtistInfo_image_entries_skip_unknown_size_or_missing_url", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(null, {
+          artist: {
+            name: "Pick",
+            url: "u",
+            image: [
+              {},
+              { size: "bogus", "#text": "https://example.com/odd.jpg" },
+              { size: "large", "#text": "https://example.com/l.jpg" },
+            ],
+            bio: {},
+            tags: {},
+          },
+        })
+      })
+
+      const result = await getArtistInfo("Pick")
+      expect(result?.images.large).toBe("https://example.com/l.jpg")
+    })
+
+    it("test_getArtistInfo_non_array_image_skips_forEach", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(null, {
+          artist: {
+            name: "Obj Img",
+            url: "u",
+            image: { size: "large", url: "https://example.com/l.jpg" },
+            bio: {},
+            tags: { tag: { name: "solo-tag" } },
+          },
+        })
+      })
+
+      const result = await getArtistInfo("Obj Img")
+      expect(result?.images.large).toBeNull()
+      expect(result?.genres).toEqual([])
+    })
+
+    it("test_getArtistInfo_maps_small_medium_from_text_and_url_fallback", async () => {
+      const getArtistInfo = await loadGetArtistInfo()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "test-api-key")
+
+      mockGetInfo.mockImplementationOnce((_params: any, callback: any) => {
+        callback(null, {
+          artist: {
+            name: "Img Mix",
+            url: "u",
+            image: [
+              { size: "small", url: "https://example.com/s.png" },
+              { "#text": "https://example.com/m.png" },
+            ],
+            bio: {},
+            tags: {
+              tag: [{ name: "electronic" }, "rock"],
+            },
+          },
+        })
+      })
+
+      const result = await getArtistInfo("Img Mix")
+      expect(result?.images.small).toBe("https://example.com/s.png")
+      expect(result?.images.medium).toBe("https://example.com/m.png")
+      expect(result?.genres).toEqual(["electronic", "rock"])
+    })
+
     it("test_getArtistInfo_maps_extralarge_and_mega_images", async () => {
       const getArtistInfo = await loadGetArtistInfo()
       vi.stubEnv("ENABLE_LASTFM", "true")
@@ -535,6 +679,311 @@ describe("lastfm", () => {
 
       await vi.advanceTimersByTimeAsync(3000)
       await Promise.all([p1, p2])
+    })
+  })
+
+  describe("searchLastFmArtists", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "warn").mockImplementation(() => {})
+      vi.spyOn(console, "error").mockImplementation(() => {})
+      vi.unstubAllEnvs()
+      mockSearch.mockReset()
+      mockSearch.mockImplementation(
+        (
+          params: { artist: string; limit: number },
+          callback: (err: unknown, res: unknown) => void
+        ) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: [{ name: params.artist, listeners: "1000" }],
+              },
+            },
+          })
+        }
+      )
+      vi.useRealTimers()
+    })
+
+    afterEach(() => {
+      vi.mocked(console.warn).mockRestore()
+      vi.mocked(console.error).mockRestore()
+      vi.unstubAllEnvs()
+    })
+
+    it("test_searchLastFmArtists_when_feature_disabled_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "false")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      await expect(searchLastFmArtists("radio", 10)).resolves.toEqual([])
+      expect(mockSearch).not.toHaveBeenCalled()
+    })
+
+    it("test_searchLastFmArtists_when_api_key_missing_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+
+      await expect(searchLastFmArtists("radio", 10)).resolves.toEqual([])
+      expect(mockSearch).not.toHaveBeenCalled()
+    })
+
+    it("test_searchLastFmArtists_blank_query_or_non_positive_limit_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      await expect(searchLastFmArtists("   ", 5)).resolves.toEqual([])
+      await expect(searchLastFmArtists("x", 0)).resolves.toEqual([])
+      expect(mockSearch).not.toHaveBeenCalled()
+    })
+
+    it("test_searchLastFmArtists_maps_array_hits_and_clamps_limit", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: [
+                  { name: "Alpha", listeners: "12" },
+                  { name: "Beta", listeners: 34 },
+                  { name: "Gamma", listeners: "nope" },
+                  null,
+                  { name: 123 },
+                ],
+              },
+            },
+          })
+        }
+      )
+
+      const hits = await searchLastFmArtists("ab", 99)
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({ artist: "ab", limit: 30 }),
+        expect.any(Function)
+      )
+      expect(hits).toEqual([
+        { name: "Alpha", listeners: 12 },
+        { name: "Beta", listeners: 34 },
+        { name: "Gamma", listeners: undefined },
+      ])
+    })
+
+    it("test_searchLastFmArtists_single_artist_object_normalizes_to_array", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: { name: "Solo", listeners: "500" },
+              },
+            },
+          })
+        }
+      )
+
+      await expect(searchLastFmArtists("so", 5)).resolves.toEqual([
+        { name: "Solo", listeners: 500 },
+      ])
+    })
+
+    it("test_searchLastFmArtists_missing_matches_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, {})
+        }
+      )
+
+      await expect(searchLastFmArtists("q", 5)).resolves.toEqual([])
+    })
+
+    it("test_searchLastFmArtists_uses_secret_constructor_when_set", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+      vi.stubEnv("LASTFM_SECRET", "sec")
+      vi.mocked(LastFMArtist).mockClear()
+
+      await searchLastFmArtists("z", 3)
+      expect(vi.mocked(LastFMArtist)).toHaveBeenCalledWith("key", "sec")
+    })
+
+    it("test_searchLastFmArtists_rate_limit_error_sets_global_cooldown_and_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(new Error("Rate limit exceeded (Code 29)"), null)
+        }
+      )
+
+      await expect(searchLastFmArtists("rl", 5)).resolves.toEqual([])
+
+      await expect(searchLastFmArtists("rl2", 5)).resolves.toEqual([])
+      expect(mockSearch).toHaveBeenCalledTimes(1)
+    })
+
+    it("test_searchLastFmArtists_not_found_error_does_not_console_error", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(new Error("Artist not found (Code 6)"), null)
+        }
+      )
+
+      await searchLastFmArtists("missing", 5)
+      expect(console.error).not.toHaveBeenCalled()
+    })
+
+    it("test_searchLastFmArtists_other_error_logs_and_returns_empty", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(new Error("network down"), null)
+        }
+      )
+
+      await searchLastFmArtists("x", 5)
+      expect(console.error).toHaveBeenCalled()
+    })
+
+    it("test_searchLastFmArtists_null_response_resolves_to_empty_hits", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, null)
+        }
+      )
+
+      await expect(searchLastFmArtists("nil", 5)).resolves.toEqual([])
+    })
+
+    it("test_searchLastFmArtists_rate_limit_message_without_code_sets_cooldown", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(new Error("Sorry, rate limit"), null)
+        }
+      )
+
+      await expect(searchLastFmArtists("rlmsg", 5)).resolves.toEqual([])
+      await expect(searchLastFmArtists("rlmsg2", 5)).resolves.toEqual([])
+      expect(mockSearch).toHaveBeenCalledTimes(1)
+    })
+
+    it("test_searchLastFmArtists_numeric_listeners_only", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: [{ name: "Num", listeners: 42 }],
+              },
+            },
+          })
+        }
+      )
+
+      await expect(searchLastFmArtists("num", 5)).resolves.toEqual([
+        { name: "Num", listeners: 42 },
+      ])
+    })
+
+    it("test_searchLastFmArtists_non_numeric_non_string_listeners_omitted", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch.mockImplementationOnce(
+        (_params: { artist: string; limit: number }, callback: any) => {
+          callback(null, {
+            results: {
+              artistmatches: {
+                artist: [{ name: "Weird", listeners: null }],
+              },
+            },
+          })
+        }
+      )
+
+      await expect(searchLastFmArtists("weird", 5)).resolves.toEqual([
+        { name: "Weird", listeners: undefined },
+      ])
+    })
+
+    it("test_searchLastFmArtists_queued_call_sees_global_cooldown_after_slot_acquire", async () => {
+      const searchLastFmArtists = await loadSearchLastFmArtists()
+      vi.useFakeTimers()
+      vi.stubEnv("ENABLE_LASTFM", "true")
+      vi.stubEnv("LASTFM_API_KEY", "key")
+
+      mockSearch
+        .mockImplementationOnce(
+          (_params: { artist: string; limit: number }, callback: any) => {
+            setTimeout(
+              () => callback(new Error("Rate limit exceeded (Code 29)"), null),
+              30
+            )
+          }
+        )
+        .mockImplementationOnce(
+          (params: { artist: string; limit: number }, callback: any) => {
+            setTimeout(
+              () =>
+                callback(null, {
+                  results: {
+                    artistmatches: {
+                      artist: [{ name: params.artist, listeners: "1" }],
+                    },
+                  },
+                }),
+              5000
+            )
+          }
+        )
+
+      const pFirst = searchLastFmArtists("first", 5)
+      const pSecond = searchLastFmArtists("second", 5)
+      const pQueued = searchLastFmArtists("queued", 5)
+
+      await vi.advanceTimersByTimeAsync(50)
+      const queuedResult = await pQueued
+      expect(queuedResult).toEqual([])
+
+      await vi.runAllTimersAsync()
+      await Promise.all([pFirst, pSecond])
+
+      expect(mockSearch).toHaveBeenCalledTimes(2)
     })
   })
 })
