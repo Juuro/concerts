@@ -47,7 +47,8 @@ function checkRateLimit(ip: string): boolean {
  */
 export async function GET(request: NextRequest) {
   // Rate limiting
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous"
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous"
   if (!checkRateLimit(ip)) {
     return new NextResponse("Too many requests", {
       status: 429,
@@ -91,9 +92,17 @@ export async function GET(request: NextRequest) {
   // Coordinates are used transiently for result biasing only — never stored or logged (GDPR).
   if (lat === undefined && lon === undefined) {
     const geoLat = parseFloat(request.headers.get("x-vercel-ip-latitude") || "")
-    const geoLon = parseFloat(request.headers.get("x-vercel-ip-longitude") || "")
-    if (!isNaN(geoLat) && geoLat >= -90 && geoLat <= 90 &&
-        !isNaN(geoLon) && geoLon >= -180 && geoLon <= 180) {
+    const geoLon = parseFloat(
+      request.headers.get("x-vercel-ip-longitude") || ""
+    )
+    if (
+      !isNaN(geoLat) &&
+      geoLat >= -90 &&
+      geoLat <= 90 &&
+      !isNaN(geoLon) &&
+      geoLon >= -180 &&
+      geoLon <= 180
+    ) {
       lat = geoLat
       lon = geoLon
     }

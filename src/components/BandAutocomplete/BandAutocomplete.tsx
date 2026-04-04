@@ -45,11 +45,16 @@ export default function BandAutocomplete({
   // Chip navigation state
   const [focusedChipIndex, setFocusedChipIndex] = useState(-1)
   const [grabbedChipIndex, setGrabbedChipIndex] = useState<number | null>(null)
-  const [originalOrderBeforeGrab, setOriginalOrderBeforeGrab] = useState<SelectedBand[] | null>(null)
+  const [originalOrderBeforeGrab, setOriginalOrderBeforeGrab] = useState<
+    SelectedBand[] | null
+  >(null)
 
   // Drag state for pointer events
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
-  const [dropTarget, setDropTarget] = useState<{ index: number; side: "before" | "after" } | null>(null)
+  const [dropTarget, setDropTarget] = useState<{
+    index: number
+    side: "before" | "after"
+  } | null>(null)
 
   // Announcement for screen readers
   const [announcement, setAnnouncement] = useState("")
@@ -158,7 +163,8 @@ export default function BandAutocomplete({
       if (!trimmed || !onCreateBand) return
       if (
         selectedBands.some(
-          (sb) => normalizeBandSearchKey(sb.name) === normalizeBandSearchKey(trimmed)
+          (sb) =>
+            normalizeBandSearchKey(sb.name) === normalizeBandSearchKey(trimmed)
         )
       ) {
         return
@@ -358,7 +364,9 @@ export default function BandAutocomplete({
             )
             setFocusedChipIndex(originalIndex >= 0 ? originalIndex : index)
           }
-          announce(`Reordering cancelled. ${band.name} returned to original position`)
+          announce(
+            `Reordering cancelled. ${band.name} returned to original position`
+          )
           setGrabbedChipIndex(null)
           setOriginalOrderBeforeGrab(null)
           break
@@ -479,7 +487,9 @@ export default function BandAutocomplete({
       if (!container) return
 
       const chips = Array.from(
-        container.querySelectorAll(".band-chip:not(.band-chip--ghost):not(.band-chip--dragging)")
+        container.querySelectorAll(
+          ".band-chip:not(.band-chip--ghost):not(.band-chip--dragging)"
+        )
       )
       const mouseX = e.clientX
       const mouseY = e.clientY
@@ -487,7 +497,11 @@ export default function BandAutocomplete({
       // Build candidate list: chips in the same headliner group with their rects
       const candidates: { index: number; rect: DOMRect }[] = []
       chips.forEach((chip, i) => {
-        if (selectedBands[i]?.isHeadliner !== selectedBands[draggingIndex].isHeadliner) return
+        if (
+          selectedBands[i]?.isHeadliner !==
+          selectedBands[draggingIndex].isHeadliner
+        )
+          return
         candidates.push({ index: i, rect: chip.getBoundingClientRect() })
       })
 
@@ -509,7 +523,8 @@ export default function BandAutocomplete({
       let closestRow = rows[0][1]
       let minRowDist = Infinity
       for (const [, rowCandidates] of rows) {
-        const midY = rowCandidates[0].rect.top + rowCandidates[0].rect.height / 2
+        const midY =
+          rowCandidates[0].rect.top + rowCandidates[0].rect.height / 2
         const dist = Math.abs(mouseY - midY)
         if (dist < minRowDist) {
           minRowDist = dist
@@ -647,7 +662,9 @@ export default function BandAutocomplete({
           aria-expanded={isOpen && searchResults.length > 0}
           aria-controls="band-listbox"
           aria-activedescendant={
-            highlightedIndex >= 0 ? `band-option-${highlightedIndex}` : undefined
+            highlightedIndex >= 0
+              ? `band-option-${highlightedIndex}`
+              : undefined
           }
           aria-autocomplete="list"
           aria-haspopup="listbox"
@@ -674,78 +691,81 @@ export default function BandAutocomplete({
           id="band-listbox"
           aria-label="Band search results"
         >
-          {searchResults.length > 0 ? (
-            searchResults.slice(0, 10).map((row, index) => {
-              const key =
-                row.kind === "db"
-                  ? row.id
-                  : `suggestion-${row.source}-${row.externalId ?? row.name}`
-              const sourceLabel =
-                row.kind === "suggestion"
-                  ? row.source === "musicbrainz"
-                    ? "MusicBrainz"
-                    : "Last.fm"
-                  : null
-              return (
-                <li
-                  key={key}
-                  role="option"
-                  id={`band-option-${index}`}
-                  aria-selected={index === highlightedIndex}
-                  aria-label={
-                    sourceLabel
-                      ? `${row.name}, suggested from ${sourceLabel}`
-                      : row.name
-                  }
-                  className={`band-autocomplete__option ${
-                    index === highlightedIndex ? "band-autocomplete__option--highlighted" : ""
-                  }`}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                  onClick={() => {
-                    if (row.kind === "db") {
-                      handleAddBand({
-                        id: row.id,
-                        name: row.name,
-                        slug: row.slug,
-                      })
-                    } else {
-                      void handleSelectSuggestion(row.name)
+          {searchResults.length > 0
+            ? searchResults.slice(0, 10).map((row, index) => {
+                const key =
+                  row.kind === "db"
+                    ? row.id
+                    : `suggestion-${row.source}-${row.externalId ?? row.name}`
+                const sourceLabel =
+                  row.kind === "suggestion"
+                    ? row.source === "musicbrainz"
+                      ? "MusicBrainz"
+                      : "Last.fm"
+                    : null
+                return (
+                  <li
+                    key={key}
+                    role="option"
+                    id={`band-option-${index}`}
+                    aria-selected={index === highlightedIndex}
+                    aria-label={
+                      sourceLabel
+                        ? `${row.name}, suggested from ${sourceLabel}`
+                        : row.name
                     }
-                  }}
-                >
-                  <span className="band-autocomplete__option-row">
-                    <span className="band-autocomplete__option-name">
-                      {renderPredictiveText(row.name)}
-                    </span>
-                    {sourceLabel && (
-                      <span className="band-autocomplete__option-source" aria-hidden="true">
-                        {sourceLabel}
-                      </span>
-                    )}
-                  </span>
-                </li>
-              )
-            })
-          ) : (
-            !isSearching &&
-            searchTerm.length >= 2 && (
-              <li className="band-autocomplete__no-results">
-                <span>No bands found.</span>
-                {onCreateBand && (
-                  <button
-                    type="button"
+                    className={`band-autocomplete__option ${
+                      index === highlightedIndex
+                        ? "band-autocomplete__option--highlighted"
+                        : ""
+                    }`}
+                    onMouseEnter={() => setHighlightedIndex(index)}
                     onClick={() => {
-                      onCreateBand(searchTerm)
-                      setSearchTerm("")
-                      setIsOpen(false)
+                      if (row.kind === "db") {
+                        handleAddBand({
+                          id: row.id,
+                          name: row.name,
+                          slug: row.slug,
+                        })
+                      } else {
+                        void handleSelectSuggestion(row.name)
+                      }
                     }}
                   >
-                    Create &quot;{searchTerm}&quot;
-                  </button>
-                )}
-              </li>
-            )
-          )}
+                    <span className="band-autocomplete__option-row">
+                      <span className="band-autocomplete__option-name">
+                        {renderPredictiveText(row.name)}
+                      </span>
+                      {sourceLabel && (
+                        <span
+                          className="band-autocomplete__option-source"
+                          aria-hidden="true"
+                        >
+                          {sourceLabel}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                )
+              })
+            : !isSearching &&
+              searchTerm.length >= 2 && (
+                <li className="band-autocomplete__no-results">
+                  <span>No bands found.</span>
+                  {onCreateBand && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onCreateBand(searchTerm)
+                        setSearchTerm("")
+                        setIsOpen(false)
+                      }}
+                    >
+                      Create &quot;{searchTerm}&quot;
+                    </button>
+                  )}
+                </li>
+              )}
         </ul>
       )}
 
@@ -783,11 +803,17 @@ export default function BandAutocomplete({
             return (
               <Fragment key={band.bandId}>
                 {showSeparator && (
-                  <div className="band-autocomplete__separator" aria-hidden="true" />
+                  <div
+                    className="band-autocomplete__separator"
+                    aria-hidden="true"
+                  />
                 )}
                 {/* Ghost placeholder at original position */}
                 {isOriginalPosition && (
-                  <div className="band-chip band-chip--ghost" aria-hidden="true">
+                  <div
+                    className="band-chip band-chip--ghost"
+                    aria-hidden="true"
+                  >
                     <span className="band-chip__drag-handle">
                       <svg viewBox="0 0 24 24" width="16" height="16">
                         <circle cx="9" cy="6" r="1.5" />
@@ -865,11 +891,17 @@ export default function BandAutocomplete({
                   <button
                     type="button"
                     className={`band-chip__headliner-toggle ${
-                      band.isHeadliner ? "band-chip__headliner-toggle--active" : ""
+                      band.isHeadliner
+                        ? "band-chip__headliner-toggle--active"
+                        : ""
                     }`}
                     aria-label={`Mark ${band.name} as headliner`}
                     aria-pressed={band.isHeadliner}
-                    title={band.isHeadliner ? "Remove headliner status" : "Mark as headliner"}
+                    title={
+                      band.isHeadliner
+                        ? "Remove headliner status"
+                        : "Mark as headliner"
+                    }
                     onClick={() => handleToggleHeadliner(band.bandId)}
                     tabIndex={-1}
                   >

@@ -156,7 +156,10 @@ export async function searchTicketmasterVenues(
     // Validate response schema
     const parsed = TicketmasterResponseSchema.safeParse(json)
     if (!parsed.success) {
-      console.error("Invalid Ticketmaster response schema:", parsed.error.message)
+      console.error(
+        "Invalid Ticketmaster response schema:",
+        parsed.error.message
+      )
       Sentry.captureMessage("Invalid Ticketmaster response schema", {
         level: "warning",
         extra: { error: parsed.error.message },

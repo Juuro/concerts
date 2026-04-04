@@ -291,11 +291,7 @@ export async function searchVenuesEnhanced(
   // Search all 3 sources in parallel with individual timeouts
   const [dbResult, tmResult, photonResult, userLocations] = await Promise.all([
     withTimeout(searchDatabaseVenues(query, userId), 3000, []),
-    withTimeout(
-      searchTicketmasterVenues(query, { lat, lon }),
-      3000,
-      []
-    ),
+    withTimeout(searchTicketmasterVenues(query, { lat, lon }), 3000, []),
     withTimeout(
       searchVenues(
         query,
