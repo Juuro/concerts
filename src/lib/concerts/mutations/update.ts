@@ -267,30 +267,34 @@ export async function updateConcert(
   }
 
   // Same co-headliner set but different order → rewrite shared ConcertBand.sortOrder (no fork).
+  // Wrap in transaction to keep the reorder atomic.
   if (input.bandIds && headlinerOrderChanged) {
     const newHeadliners = input.bandIds.filter((b) => b.isHeadliner)
     const newSupportingActs: SupportingActItem[] = input.bandIds
       .filter((b) => !b.isHeadliner)
       .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
-    await prisma.userConcert.update({
-      where: { id: attendance.id },
-      data: { supportingActIds: newSupportingActs },
-    })
-
-    await prisma.concertBand.deleteMany({
-      where: { concertId: id },
-    })
-    if (newHeadliners.length > 0) {
-      await prisma.concertBand.createMany({
-        data: newHeadliners.map((b, index) => ({
-          concertId: id,
-          bandId: b.bandId,
-          isHeadliner: true,
-          sortOrder: index,
-        })),
+    await prisma.$transaction(async (tx) => {
+      await tx.userConcert.update({
+        where: { id: attendance.id },
+        data: { supportingActIds: newSupportingActs },
       })
-    }
+
+      await tx.concertBand.deleteMany({
+        where: { concertId: id },
+      })
+
+      if (newHeadliners.length > 0) {
+        await tx.concertBand.createMany({
+          data: newHeadliners.map((b, index) => ({
+            concertId: id,
+            bandId: b.bandId,
+            isHeadliner: true,
+            sortOrder: index,
+          })),
+        })
+      }
+    })
 
     input = { ...input, bandIds: undefined }
   }
