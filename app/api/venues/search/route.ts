@@ -8,9 +8,38 @@ import { searchVenuesEnhanced } from "@/lib/venues"
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 30 // 30 requests per minute
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+const RATE_LIMIT_MAX_ENTRIES = 10000 // Cap to prevent unbounded growth
+
+let lastCleanupAt = Date.now()
+
+function cleanupExpiredEntries(): void {
+  const now = Date.now()
+  for (const [ip, entry] of rateLimitMap) {
+    if (entry.resetAt < now) {
+      rateLimitMap.delete(ip)
+    }
+  }
+  lastCleanupAt = now
+}
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
+
+  // Periodic cleanup of expired entries to prevent unbounded memory growth
+  if (now - lastCleanupAt > RATE_LIMIT_CLEANUP_INTERVAL_MS) {
+    cleanupExpiredEntries()
+  }
+
+  // Hard cap on map size as additional safeguard
+  if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES && !rateLimitMap.has(ip)) {
+    cleanupExpiredEntries()
+    // If still at capacity after cleanup, allow request but don't track
+    if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
+      return true
+    }
+  }
+
   const entry = rateLimitMap.get(ip)
 
   if (!entry || now > entry.resetAt) {
