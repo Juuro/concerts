@@ -272,7 +272,22 @@ export default function BandAutocomplete({
     if (searchTerm.length >= 2 && searchResults.length === 0 && !isSearching) {
       if (e.key === "Enter" && onCreateBand) {
         e.preventDefault()
-        void onCreateBand(searchTerm)
+        const trimmed = searchTerm.trim()
+        // Skip creation if the band name already exists in selectedBands
+        // (can happen when all search results were filtered out as already-selected)
+        if (
+          selectedBands.some(
+            (sb) =>
+              normalizeBandSearchKey(sb.name) === normalizeBandSearchKey(trimmed)
+          )
+        ) {
+          setSearchTerm("")
+          setSearchResults([])
+          setIsOpen(false)
+          setHighlightedIndex(-1)
+          return
+        }
+        void onCreateBand(trimmed)
         setSearchTerm("")
         setSearchResults([])
         setIsOpen(false)
