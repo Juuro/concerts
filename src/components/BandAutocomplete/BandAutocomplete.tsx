@@ -489,7 +489,7 @@ export default function BandAutocomplete({
       const container = chipsContainerRef.current
       if (!container) return
 
-      const chips = Array.from(
+      const visibleChips = Array.from(
         container.querySelectorAll(
           ".band-chip:not(.band-chip--ghost):not(.band-chip--dragging)"
         )
@@ -498,14 +498,19 @@ export default function BandAutocomplete({
       const mouseY = e.clientY
 
       // Build candidate list: chips in the same headliner group with their rects
+      // Use data-band-index attribute to get the correct index (NodeList indices shift when dragged chip is excluded)
       const candidates: { index: number; rect: DOMRect }[] = []
-      chips.forEach((chip, i) => {
+      visibleChips.forEach((chip) => {
+        const indexAttr = (chip as HTMLElement).dataset.bandIndex
+        if (indexAttr === undefined) return
+        const index = parseInt(indexAttr, 10)
+        if (isNaN(index)) return
         if (
-          selectedBands[i]?.isHeadliner !==
+          selectedBands[index]?.isHeadliner !==
           selectedBands[draggingIndex].isHeadliner
         )
           return
-        candidates.push({ index: i, rect: chip.getBoundingClientRect() })
+        candidates.push({ index, rect: chip.getBoundingClientRect() })
       })
 
       if (candidates.length === 0) {
@@ -852,6 +857,7 @@ export default function BandAutocomplete({
                     if (el) chipRefs.current.set(index, el)
                     else chipRefs.current.delete(index)
                   }}
+                  data-band-index={index}
                   className={`band-chip ${
                     draggingIndex === index ? "band-chip--dragging" : ""
                   } ${grabbedChipIndex === index ? "band-chip--grabbed" : ""} ${
