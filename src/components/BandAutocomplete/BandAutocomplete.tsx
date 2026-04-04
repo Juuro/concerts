@@ -791,8 +791,10 @@ export default function BandAutocomplete({
                     <button
                       type="button"
                       onClick={() => {
-                        onCreateBand(searchTerm)
+                        void onCreateBand(searchTerm)
                         setSearchTerm("")
+                        setSearchResults([])
+                        setHighlightedIndex(-1)
                         setIsOpen(false)
                       }}
                     >
