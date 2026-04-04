@@ -199,6 +199,9 @@ export async function getUserVisitedLocations(
  * Apply proximity scoring to venues based on user's visited locations.
  * Venues closer to places the user has visited get higher scores.
  *
+ * Note: Database venues are skipped because they already have personalized
+ * scoring based on user visit history.
+ *
  * @param venues - Venues to score
  * @param userLocations - User's visited locations
  * @returns Venues with updated scores
@@ -212,6 +215,11 @@ function applyProximityScoring(
   }
 
   return venues.map((venue) => {
+    // Skip database venues - they already have personalized scoring
+    if (venue.source === "database") {
+      return venue
+    }
+
     // Find minimum distance to any user-visited location
     const minDistance = Math.min(
       ...userLocations.map((loc) =>
