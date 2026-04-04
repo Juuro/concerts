@@ -250,8 +250,11 @@ export default function BandAutocomplete({
     if (searchTerm.length >= 2 && searchResults.length === 0 && !isSearching) {
       if (e.key === "Enter" && onCreateBand) {
         e.preventDefault()
-        onCreateBand(searchTerm)
+        void onCreateBand(searchTerm)
         setSearchTerm("")
+        setSearchResults([])
+        setIsOpen(false)
+        setHighlightedIndex(-1)
         return
       }
     }
