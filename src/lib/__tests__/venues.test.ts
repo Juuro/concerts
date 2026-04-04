@@ -325,9 +325,145 @@ describe("Venues Search Module", () => {
         expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score!)
       }
     })
+
+    test("handles source errors gracefully with fallback", async () => {
+      // Ticketmaster throws an error - should fallback to empty array
+      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
+      vi.mocked(searchTicketmasterVenues).mockRejectedValueOnce(
+        new Error("Ticketmaster API error")
+      )
+      vi.mocked(searchVenues).mockResolvedValueOnce([
+        {
+          name: "Photon Venue",
+          displayName: "Photon Venue, Berlin",
+          lat: 52.52,
+          lon: 13.405,
+          city: "Berlin",
+          source: "photon",
+          score: 10,
+        },
+      ])
+
+      const results = await searchVenuesEnhanced("venue", { userId: "user-1" })
+
+      // Should still return Photon results even though Ticketmaster failed
+      expect(results.length).toBe(1)
+      expect(results[0].source).toBe("photon")
+    })
+
+    test("passes lat/lon to Photon when both are provided", async () => {
+      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([])
+      vi.mocked(searchVenues).mockResolvedValueOnce([])
+
+      await searchVenuesEnhanced("venue", { lat: 52.52, lon: 13.405 })
+
+      expect(searchVenues).toHaveBeenCalledWith("venue", { lat: 52.52, lon: 13.405 })
+    })
+
+    test("passes undefined to Photon when only lat is provided", async () => {
+      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([])
+      vi.mocked(searchVenues).mockResolvedValueOnce([])
+
+      await searchVenuesEnhanced("venue", { lat: 52.52 })
+
+      expect(searchVenues).toHaveBeenCalledWith("venue", undefined)
+    })
+
+    test("handles venues without scores in deduplication", async () => {
+      // Two venues with same location, one without score
+      const venueWithScore: EnhancedVenueResult = {
+        name: "Test Venue",
+        displayName: "Test Venue",
+        lat: 52.52,
+        lon: 13.405,
+        source: "ticketmaster",
+        score: 30,
+      }
+
+      const venueWithoutScore: EnhancedVenueResult = {
+        name: "Test Venue",
+        displayName: "Test Venue",
+        lat: 52.52,
+        lon: 13.405,
+        source: "photon",
+        // No score property
+      }
+
+      // No userId, so no prisma.concert.findMany mock needed
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([venueWithScore])
+      vi.mocked(searchVenues).mockResolvedValueOnce([venueWithoutScore])
+
+      const results = await searchVenuesEnhanced("test")
+
+      // Should keep the one with score (higher)
+      expect(results.length).toBe(1)
+      expect(results[0].score).toBe(30)
+    })
+
+    test("handles venues without scores in sorting", async () => {
+      const venueWithScore: EnhancedVenueResult = {
+        name: "Venue A",
+        displayName: "Venue A",
+        lat: 52.52,
+        lon: 13.405,
+        source: "ticketmaster",
+        score: 30,
+      }
+
+      const venueWithoutScore: EnhancedVenueResult = {
+        name: "Venue B",
+        displayName: "Venue B",
+        lat: 48.137,
+        lon: 11.576,
+        source: "photon",
+        // No score - should be treated as 0
+      }
+
+      // No userId, so no prisma.concert.findMany mock needed
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([venueWithScore])
+      vi.mocked(searchVenues).mockResolvedValueOnce([venueWithoutScore])
+
+      const results = await searchVenuesEnhanced("venue")
+
+      // Venue with score should come first
+      expect(results[0].name).toBe("Venue A")
+    })
+
+    test("handles proximity scoring for venues without initial score", async () => {
+      const venueWithoutScore: EnhancedVenueResult = {
+        name: "No Score Venue",
+        displayName: "No Score Venue",
+        lat: 52.521, // Very close to user location
+        lon: 13.406,
+        source: "photon",
+        // No score property
+      }
+
+      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([])
+      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
+        { latitude: 52.521, longitude: 13.406 },
+      ])
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([])
+      vi.mocked(searchVenues).mockResolvedValueOnce([venueWithoutScore])
+
+      const results = await searchVenuesEnhanced("venue", { userId: "user-1" })
+
+      // Should have proximity bonus added to 0 base
+      expect(results[0].score).toBeGreaterThan(0)
+    })
   })
 
   describe("searchDatabaseVenues", () => {
+    beforeEach(() => {
+      // Reset $queryRaw mock for these tests
+      vi.mocked(prisma.$queryRaw).mockReset()
+    })
+
     test("returns empty array for queries shorter than 3 characters", async () => {
       const result = await searchDatabaseVenues("ab", "user-1")
       expect(result).toEqual([])
@@ -377,14 +513,30 @@ describe("Venues Search Module", () => {
       expect(result[0].score).toBe(490)
       expect(result[0].userVisitCount).toBe(3)
     })
+
+    test("returns empty array when both queries fail", async () => {
+      // Both pg_trgm query and ILIKE fallback fail
+      vi.mocked(prisma.$queryRaw)
+        .mockRejectedValueOnce(new Error("pg_trgm not available"))
+        .mockRejectedValueOnce(new Error("Database connection failed"))
+
+      const result = await searchDatabaseVenues("failing", "user-1")
+
+      expect(result).toEqual([])
+    })
   })
 
   describe("getUserVisitedLocations", () => {
+    beforeEach(() => {
+      // Reset prisma.concert.findMany mock specifically for these tests
+      vi.mocked(prisma.concert.findMany).mockReset()
+    })
+
     test("returns unique locations from user concerts", async () => {
       vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([
         { latitude: 52.52, longitude: 13.405 },
         { latitude: 48.137, longitude: 11.576 },
-      ])
+      ] as any)
 
       const result = await getUserVisitedLocations("user-1")
 
@@ -395,7 +547,7 @@ describe("Venues Search Module", () => {
     })
 
     test("returns empty array when user has no concerts", async () => {
-      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([])
+      vi.mocked(prisma.concert.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getUserVisitedLocations("user-1")
 
