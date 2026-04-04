@@ -659,7 +659,7 @@ export default function BandAutocomplete({
           type="text"
           id="bandSearch"
           role="combobox"
-          aria-expanded={isOpen && searchResults.length > 0}
+          aria-expanded={isOpen}
           aria-controls="band-listbox"
           aria-activedescendant={
             highlightedIndex >= 0

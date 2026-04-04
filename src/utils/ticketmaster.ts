@@ -88,6 +88,20 @@ function formatDisplayName(venue: TicketmasterVenue): string {
 }
 
 /**
+ * Parse Ticketmaster lat/lon strings; returns null if either value is missing or not finite.
+ */
+function parseVenueLatLon(
+  location: NonNullable<TicketmasterVenue["location"]>
+): { lat: number; lon: number } | null {
+  const lat = parseFloat(location.latitude)
+  const lon = parseFloat(location.longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null
+  }
+  return { lat, lon }
+}
+
+/**
  * Search Ticketmaster Discovery API for concert venues.
  *
  * @param query - Search query string (minimum 3 characters)
@@ -133,58 +147,65 @@ export async function searchTicketmasterVenues(
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5s timeout
 
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeoutId)
-
-    if (!res.ok) {
-      // CRITICAL: Never log URL (contains API key)
-      console.error(`Ticketmaster error: ${res.status} ${res.statusText}`)
-      Sentry.captureMessage("Ticketmaster API error", {
-        level: "warning",
-        extra: { status: res.status, statusText: res.statusText },
+    try {
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
       })
-      return []
-    }
 
-    const json = await res.json()
+      if (!res.ok) {
+        // CRITICAL: Never log URL (contains API key)
+        console.error(`Ticketmaster error: ${res.status} ${res.statusText}`)
+        Sentry.captureMessage("Ticketmaster API error", {
+          level: "warning",
+          extra: { status: res.status, statusText: res.statusText },
+        })
+        return []
+      }
 
-    // Validate response schema
-    const parsed = TicketmasterResponseSchema.safeParse(json)
-    if (!parsed.success) {
-      console.error(
-        "Invalid Ticketmaster response schema:",
-        parsed.error.message
-      )
-      Sentry.captureMessage("Invalid Ticketmaster response schema", {
-        level: "warning",
-        extra: { error: parsed.error.message },
+      const json = await res.json()
+
+      // Validate response schema
+      const parsed = TicketmasterResponseSchema.safeParse(json)
+      if (!parsed.success) {
+        console.error(
+          "Invalid Ticketmaster response schema:",
+          parsed.error.message
+        )
+        Sentry.captureMessage("Invalid Ticketmaster response schema", {
+          level: "warning",
+          extra: { error: parsed.error.message },
+        })
+        return []
+      }
+
+      const venues = parsed.data._embedded?.venues || []
+
+      // Transform to EnhancedVenueResult format (omit venues without finite coordinates)
+      return venues.flatMap((venue) => {
+        if (!venue.location) return []
+        const coords = parseVenueLatLon(venue.location)
+        if (!coords) return []
+        return [
+          {
+            name: venue.name,
+            displayName: formatDisplayName(venue),
+            street: venue.address?.line1,
+            postcode: venue.postalCode,
+            city: venue.city?.name,
+            state: venue.state?.name,
+            country: venue.country?.name,
+            lat: coords.lat,
+            lon: coords.lon,
+            source: "ticketmaster" as const,
+            score: 30, // Base score for Ticketmaster results
+          },
+        ]
       })
-      return []
+    } finally {
+      clearTimeout(timeoutId)
     }
-
-    const venues = parsed.data._embedded?.venues || []
-
-    // Transform to EnhancedVenueResult format
-    return venues
-      .filter((venue) => venue.location?.latitude && venue.location?.longitude)
-      .map((venue) => ({
-        name: venue.name,
-        displayName: formatDisplayName(venue),
-        street: venue.address?.line1,
-        postcode: venue.postalCode,
-        city: venue.city?.name,
-        state: venue.state?.name,
-        country: venue.country?.name,
-        lat: parseFloat(venue.location!.latitude),
-        lon: parseFloat(venue.location!.longitude),
-        source: "ticketmaster" as const,
-        score: 30, // Base score for Ticketmaster results
-      }))
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       console.error("Ticketmaster request timed out")

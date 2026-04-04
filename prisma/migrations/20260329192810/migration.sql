@@ -1,4 +1,6 @@
--- Ensure trigram GIN index for concert venues exists
+-- Ensure trigram GIN index for concert venue names exists (concert.venue, not a concert_venue table).
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE INDEX IF NOT EXISTS "concert_venue_trgm_idx"
-    ON "concert_venue"
-    USING GIN ("name" gin_trgm_ops);
+    ON "concert"
+    USING GIN ("venue" gin_trgm_ops);

@@ -195,9 +195,10 @@ export async function searchVenues(
   if (query.length < 3) return []
 
   const osm_tags = options?.osm_tags ?? DEFAULT_VENUE_TAGS
+  const osmTagsKey = [...osm_tags].sort().join("|")
 
   // Check for pending request with same parameters
-  const cacheKey = `parallel:${query}:${options?.lat || ""}:${options?.lon || ""}`
+  const cacheKey = `parallel:${query}:${options?.lat || ""}:${options?.lon || ""}:${osmTagsKey}`
   const existing = pendingPhotonRequests.get(cacheKey)
   if (existing) return existing
 
