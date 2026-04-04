@@ -305,6 +305,12 @@ describe("update.ts dedicated coverage", () => {
       _count: { attendees: 1 },
     }
 
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      if (typeof callback === "function") {
+        return callback(prisma)
+      }
+      return Promise.all(callback)
+    })
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "att-r1",
       userId,
@@ -365,7 +371,7 @@ describe("update.ts dedicated coverage", () => {
         },
       ],
     })
-    expect(prisma.$transaction).not.toHaveBeenCalled()
+    expect(prisma.$transaction).toHaveBeenCalled()
   })
 
   test("multi-attendee co-headliner reorder persists shared ConcertBand sortOrder", async () => {
@@ -389,6 +395,12 @@ describe("update.ts dedicated coverage", () => {
       _count: { attendees: 2 },
     }
 
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      if (typeof callback === "function") {
+        return callback(prisma)
+      }
+      return Promise.all(callback)
+    })
     vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
       id: "att-r2",
       userId,
@@ -452,7 +464,7 @@ describe("update.ts dedicated coverage", () => {
         },
       ],
     })
-    expect(prisma.$transaction).not.toHaveBeenCalled()
+    expect(prisma.$transaction).toHaveBeenCalled()
   })
 
   test("single-attendee band rewrite and shared geo update execute band and geocoding branches", async () => {
