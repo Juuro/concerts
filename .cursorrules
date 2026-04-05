@@ -61,9 +61,10 @@ yarn dev/build/lint/test/clean
 ### Feature flags
 
 - In .env feature flags can turned on or turned off
-- There are currently these feature flags:
+  - There are currently these feature flags:
   - ENABLE_LASTFM
   - ENABLE_GEOCODING
+  - ENABLE_EXTERNAL_BAND_SUGGEST
 
 ### Last.fm for artist genres
 

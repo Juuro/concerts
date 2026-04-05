@@ -66,11 +66,13 @@
     "test:coverage": "vitest run --coverage",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "migrate:shared-concerts": "tsx --env-file=.env scripts/migrate-to-shared-concerts.ts",
-    "migrate:supporting-acts": "tsx --env-file=.env scripts/migrate-supporting-acts.ts"
+    "migrate:supporting-acts": "tsx --env-file=.env scripts/migrate-supporting-acts.ts",
+    "cleanup:screenshots": "node scripts/cleanup-screenshots.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,scss}": "prettier --write --ignore-path .gitignore"

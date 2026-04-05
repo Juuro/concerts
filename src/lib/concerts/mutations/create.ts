@@ -7,7 +7,11 @@ import type {
   TransformedConcert,
 } from "../types"
 import { type ConcertWithRelations, transformConcert } from "../transform"
-import { findMatchingConcert, getHeadliner } from "../matching"
+import {
+  findMatchingConcert,
+  getHeadlinerBandIdsInOrder,
+  getPrimaryHeadlinerBandId,
+} from "../matching"
 import { ConcertAlreadyExistsError } from "../errors"
 
 /**
@@ -19,19 +23,13 @@ import { ConcertAlreadyExistsError } from "../errors"
 export async function createConcert(
   input: CreateConcertInput
 ): Promise<TransformedConcert> {
-  const headliner = getHeadliner(
-    input.bandIds.map((b) => ({
-      bandId: b.bandId,
-      isHeadliner: b.isHeadliner ?? false,
-    }))
-  )
-  const headlinerBandId = headliner?.bandId
+  const headlinerBandId = getPrimaryHeadlinerBandId(input.bandIds)
 
   let concert: ConcertWithRelations
   let userConcert: UserConcert
 
   if (headlinerBandId) {
-    // Try to find an existing concert with same date, location, and headliner
+    // Try to find an existing concert with same date, location, and primary headliner
     const existingConcert = await findMatchingConcert(
       input.date,
       input.latitude,
@@ -40,7 +38,6 @@ export async function createConcert(
     )
 
     if (existingConcert) {
-      // Fetch full concert to compare support acts
       const existingWithBands = await prisma.concert.findUnique({
         where: { id: existingConcert.id },
         include: {
@@ -51,7 +48,6 @@ export async function createConcert(
       })
       if (!existingWithBands) throw new Error("Concert not found")
 
-      // Check if user already attends this concert (avoid unique constraint)
       const existingAttendance = await prisma.userConcert.findUnique({
         where: {
           userId_concertId: {
@@ -64,21 +60,79 @@ export async function createConcert(
         throw new ConcertAlreadyExistsError(existingConcert.id)
       }
 
-      // Always set supportingActIds for linkers so they never see core support acts
+      const orderedHeadliners = getHeadlinerBandIdsInOrder(input.bandIds)
       const supportingActIds: SupportingActItem[] = input.bandIds
-        .filter((b) => b.bandId !== headlinerBandId)
+        .filter((b) => !b.isHeadliner)
         .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
 
-      userConcert = await prisma.userConcert.create({
-        data: {
-          userId: input.userId,
-          concertId: existingConcert.id,
-          cost: input.cost !== undefined ? input.cost : undefined,
-          supportingActIds,
-        },
-      })
+      // Check if the existing concert has other attendees
+      const hasOtherAttendees = existingWithBands._count.attendees > 0
 
-      concert = existingWithBands
+      // Get existing headliner band IDs in order
+      const existingHeadlinerIds = existingWithBands.bands
+        .filter((cb) => cb.isHeadliner)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((cb) => cb.bandId)
+
+      // Check if headliner set and order match
+      const headlinersMatch =
+        orderedHeadliners.length === existingHeadlinerIds.length &&
+        orderedHeadliners.every((id, i) => id === existingHeadlinerIds[i])
+
+      // If there are other attendees AND headliners don't match, create a new concert (fork)
+      // to avoid mutating shared data for other users
+      if (hasOtherAttendees && !headlinersMatch) {
+        concert = await createNewConcertWithUser(input)
+        userConcert = concert.attendees![0]
+      } else {
+        // Safe to link: either no other attendees, or headliners already match
+        userConcert = await prisma.$transaction(async (tx) => {
+          // Only upsert headliners if they don't already match (no other attendees case)
+          if (!headlinersMatch) {
+            for (let i = 0; i < orderedHeadliners.length; i++) {
+              const bandId = orderedHeadliners[i]
+              await tx.concertBand.upsert({
+                where: {
+                  concertId_bandId: {
+                    concertId: existingConcert.id,
+                    bandId,
+                  },
+                },
+                create: {
+                  concertId: existingConcert.id,
+                  bandId,
+                  isHeadliner: true,
+                  sortOrder: i,
+                },
+                update: {
+                  isHeadliner: true,
+                  sortOrder: i,
+                },
+              })
+            }
+          }
+
+          return tx.userConcert.create({
+            data: {
+              userId: input.userId,
+              concertId: existingConcert.id,
+              cost: input.cost !== undefined ? input.cost : undefined,
+              supportingActIds,
+            },
+          })
+        })
+
+        const refreshed = await prisma.concert.findUnique({
+          where: { id: existingConcert.id },
+          include: {
+            bands: { include: { band: true }, orderBy: { sortOrder: "asc" } },
+            festival: true,
+            _count: { select: { attendees: true } },
+          },
+        })
+        if (!refreshed) throw new Error("Concert not found")
+        concert = refreshed
+      }
     } else {
       concert = await createNewConcertWithUser(input)
       userConcert = concert.attendees![0]
@@ -101,10 +155,8 @@ async function createNewConcertWithUser(
       ? geocodingData._normalized_city
       : null
 
-  // Find the headliner band
-  const headliner = input.bandIds.find((b) => b.isHeadliner)
+  const headlinerRows = input.bandIds.filter((b) => b.isHeadliner)
 
-  // Support acts are all non-headliner bands (stored in UserConcert, not ConcertBand)
   const supportingActIds: SupportingActItem[] = input.bandIds
     .filter((b) => !b.isHeadliner)
     .map((b, index) => ({ bandId: b.bandId, sortOrder: index }))
@@ -119,16 +171,16 @@ async function createNewConcertWithUser(
       isFestival: input.isFestival || false,
       festivalId: input.festivalId,
       createdById: input.userId,
-      // Only store headliner in ConcertBand (shared)
-      bands: headliner
-        ? {
-            create: {
-              bandId: headliner.bandId,
-              isHeadliner: true,
-              sortOrder: 0,
-            },
-          }
-        : undefined,
+      bands:
+        headlinerRows.length > 0
+          ? {
+              create: headlinerRows.map((b, index) => ({
+                bandId: b.bandId,
+                isHeadliner: true,
+                sortOrder: index,
+              })),
+            }
+          : undefined,
       attendees: {
         create: {
           userId: input.userId,

@@ -217,6 +217,256 @@ describe("update.ts dedicated coverage", () => {
     expect(prisma.concertBand.deleteMany).not.toHaveBeenCalled()
   })
 
+  test("multi-attendee same co-headliner set only stores non-headliners in supportingActIds", async () => {
+    const userId = "user-co"
+    const b1 = mkBand("band-1", "One", "one")
+    const b2 = mkBand("band-2", "Two", "two")
+    const existing = {
+      id: "c-co",
+      date: new Date("2024-07-01T00:00:00.000Z"),
+      latitude: 50,
+      longitude: 8,
+      venue: "Venue",
+      normalizedCity: "City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: b1 },
+        { bandId: "band-2", isHeadliner: true, sortOrder: 1, band: b2 },
+      ],
+      _count: { attendees: 2 },
+    }
+
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "att-co",
+      userId,
+      concertId: "c-co",
+      cost: null,
+      notes: null,
+      supportingActIds: [],
+    } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(existing as any)
+    vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      ...existing,
+      attendees: [
+        {
+          id: "att-co",
+          userId,
+          concertId: "c-co",
+          cost: null,
+          notes: null,
+          supportingActIds: [{ bandId: "band-s", sortOrder: 0 }],
+        },
+      ],
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([
+      mkBand("band-s", "Support", "support"),
+    ] as any)
+
+    await updateConcert("c-co", userId, {
+      bandIds: [
+        { bandId: "band-1", isHeadliner: true },
+        { bandId: "band-2", isHeadliner: true },
+        { bandId: "band-s", isHeadliner: false },
+      ],
+    })
+
+    expect(prisma.userConcert.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          supportingActIds: [{ bandId: "band-s", sortOrder: 0 }],
+        }),
+      })
+    )
+    expect(prisma.concertBand.deleteMany).not.toHaveBeenCalled()
+    expect(prisma.concertBand.createMany).not.toHaveBeenCalled()
+  })
+
+  test("single-attendee co-headliner reorder persists ConcertBand sortOrder", async () => {
+    const userId = "user-reorder-1"
+    const b1 = mkBand("band-1", "One", "one")
+    const b2 = mkBand("band-2", "Two", "two")
+    const existing = {
+      id: "c-reorder-1",
+      date: new Date("2024-07-01T00:00:00.000Z"),
+      latitude: 50,
+      longitude: 8,
+      venue: "Venue",
+      normalizedCity: "City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: b1 },
+        { bandId: "band-2", isHeadliner: true, sortOrder: 1, band: b2 },
+      ],
+      _count: { attendees: 1 },
+    }
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      if (typeof callback === "function") {
+        return callback(prisma)
+      }
+      return Promise.all(callback)
+    })
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "att-r1",
+      userId,
+      concertId: "c-reorder-1",
+      cost: null,
+      notes: null,
+      supportingActIds: [],
+    } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(existing as any)
+    vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.concertBand.deleteMany).mockResolvedValue({} as any)
+    vi.mocked(prisma.concertBand.createMany).mockResolvedValue({
+      count: 2,
+    } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      ...existing,
+      bands: [
+        { bandId: "band-2", isHeadliner: true, sortOrder: 0, band: b2 },
+        { bandId: "band-1", isHeadliner: true, sortOrder: 1, band: b1 },
+      ],
+      attendees: [
+        {
+          id: "att-r1",
+          userId,
+          concertId: "c-reorder-1",
+          cost: null,
+          notes: null,
+          supportingActIds: [],
+        },
+      ],
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([] as any)
+
+    const result = await updateConcert("c-reorder-1", userId, {
+      bandIds: [
+        { bandId: "band-2", isHeadliner: true },
+        { bandId: "band-1", isHeadliner: true },
+      ],
+    })
+
+    expect(result?.id).toBe("c-reorder-1")
+    expect(prisma.concertBand.deleteMany).toHaveBeenCalledWith({
+      where: { concertId: "c-reorder-1" },
+    })
+    expect(prisma.concertBand.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          concertId: "c-reorder-1",
+          bandId: "band-2",
+          isHeadliner: true,
+          sortOrder: 0,
+        },
+        {
+          concertId: "c-reorder-1",
+          bandId: "band-1",
+          isHeadliner: true,
+          sortOrder: 1,
+        },
+      ],
+    })
+    expect(prisma.$transaction).toHaveBeenCalled()
+  })
+
+  test("multi-attendee co-headliner reorder persists shared ConcertBand sortOrder", async () => {
+    const userId = "user-reorder-2"
+    const b1 = mkBand("band-1", "One", "one")
+    const b2 = mkBand("band-2", "Two", "two")
+    const existing = {
+      id: "c-reorder-2",
+      date: new Date("2024-07-01T00:00:00.000Z"),
+      latitude: 50,
+      longitude: 8,
+      venue: "Venue",
+      normalizedCity: "City",
+      isFestival: false,
+      festivalId: null,
+      festival: null,
+      bands: [
+        { bandId: "band-1", isHeadliner: true, sortOrder: 0, band: b1 },
+        { bandId: "band-2", isHeadliner: true, sortOrder: 1, band: b2 },
+      ],
+      _count: { attendees: 2 },
+    }
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      if (typeof callback === "function") {
+        return callback(prisma)
+      }
+      return Promise.all(callback)
+    })
+    vi.mocked(prisma.userConcert.findUnique).mockResolvedValueOnce({
+      id: "att-r2",
+      userId,
+      concertId: "c-reorder-2",
+      cost: null,
+      notes: null,
+      supportingActIds: [],
+    } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(existing as any)
+    vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.concertBand.deleteMany).mockResolvedValue({} as any)
+    vi.mocked(prisma.concertBand.createMany).mockResolvedValue({
+      count: 2,
+    } as any)
+    vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce({
+      ...existing,
+      bands: [
+        { bandId: "band-2", isHeadliner: true, sortOrder: 0, band: b2 },
+        { bandId: "band-1", isHeadliner: true, sortOrder: 1, band: b1 },
+      ],
+      attendees: [
+        {
+          id: "att-r2",
+          userId,
+          concertId: "c-reorder-2",
+          cost: null,
+          notes: null,
+          supportingActIds: [{ bandId: "band-s", sortOrder: 0 }],
+        },
+      ],
+    } as any)
+    vi.mocked(prisma.band.findMany).mockResolvedValueOnce([
+      mkBand("band-s", "Support", "support"),
+    ] as any)
+
+    const result = await updateConcert("c-reorder-2", userId, {
+      bandIds: [
+        { bandId: "band-2", isHeadliner: true },
+        { bandId: "band-1", isHeadliner: true },
+        { bandId: "band-s", isHeadliner: false },
+      ],
+    })
+
+    expect(result?.id).toBe("c-reorder-2")
+    expect(prisma.concertBand.deleteMany).toHaveBeenCalledWith({
+      where: { concertId: "c-reorder-2" },
+    })
+    expect(prisma.concertBand.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          concertId: "c-reorder-2",
+          bandId: "band-2",
+          isHeadliner: true,
+          sortOrder: 0,
+        },
+        {
+          concertId: "c-reorder-2",
+          bandId: "band-1",
+          isHeadliner: true,
+          sortOrder: 1,
+        },
+      ],
+    })
+    expect(prisma.$transaction).toHaveBeenCalled()
+  })
+
   test("single-attendee band rewrite and shared geo update execute band and geocoding branches", async () => {
     const userId = "user-3"
     const oldHeadliner = mkBand("band-old", "Old", "old")
@@ -253,7 +503,9 @@ describe("update.ts dedicated coverage", () => {
     vi.mocked(prisma.concert.findUnique).mockResolvedValueOnce(existing as any)
     vi.mocked(prisma.userConcert.update).mockResolvedValue({} as any)
     vi.mocked(prisma.concertBand.deleteMany).mockResolvedValue({} as any)
-    vi.mocked(prisma.concertBand.create).mockResolvedValue({} as any)
+    vi.mocked(prisma.concertBand.createMany).mockResolvedValue({
+      count: 1,
+    } as any)
     vi.mocked(prisma.concert.update).mockResolvedValue({} as any)
 
     // post-update check for potential matching concert
@@ -309,7 +561,16 @@ describe("update.ts dedicated coverage", () => {
     expect(prisma.concertBand.deleteMany).toHaveBeenCalledWith({
       where: { concertId: "c-single" },
     })
-    expect(prisma.concertBand.create).toHaveBeenCalled()
+    expect(prisma.concertBand.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          concertId: "c-single",
+          bandId: "band-new",
+          isHeadliner: true,
+          sortOrder: 0,
+        },
+      ],
+    })
     expect(prisma.concert.update).toHaveBeenCalled()
   })
 })

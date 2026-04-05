@@ -330,3 +330,107 @@ export const getArtistInfo = async (
 
   return requestPromise
 }
+
+export interface LastFmArtistSearchHit {
+  name: string
+  listeners?: number
+}
+
+/**
+ * Last.fm artist.search for autosuggest. Returns [] when disabled, rate-limited, or on error.
+ */
+export async function searchLastFmArtists(
+  query: string,
+  limit: number
+): Promise<LastFmArtistSearchHit[]> {
+  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_LASTFM, true)) {
+    return []
+  }
+
+  if (!process.env.LASTFM_API_KEY) {
+    return []
+  }
+
+  const trimmed = query.trim()
+  if (!trimmed || limit <= 0) {
+    return []
+  }
+
+  if (Date.now() < globalRateLimitUntil) {
+    return []
+  }
+
+  const safeLimit = Math.min(Math.max(limit, 1), 30)
+
+  await acquireRequestSlot()
+  try {
+    if (Date.now() < globalRateLimitUntil) {
+      return []
+    }
+    await waitForNextRequestWindow()
+
+    const apiKey = process.env.LASTFM_API_KEY!
+    const secret = process.env.LASTFM_SECRET
+    const artist = secret
+      ? new LastFMArtist(apiKey, secret)
+      : new LastFMArtist(apiKey)
+
+    const data = await new Promise<Record<string, unknown>>(
+      (resolve, reject) => {
+        artist.search(
+          { artist: trimmed, limit: safeLimit },
+          (err: unknown, res: unknown) => {
+            if (err) reject(err)
+            else resolve((res as Record<string, unknown>) ?? {})
+          }
+        )
+      }
+    )
+
+    const results = data.results as Record<string, unknown> | undefined
+    const matches = results?.artistmatches as
+      | Record<string, unknown>
+      | undefined
+    const raw = matches?.artist
+
+    if (!raw) {
+      return []
+    }
+
+    const list = Array.isArray(raw) ? raw : [raw]
+
+    return list
+      .map((item): LastFmArtistSearchHit | null => {
+        if (!item || typeof item !== "object") return null
+        const o = item as Record<string, unknown>
+        const name = typeof o.name === "string" ? o.name : null
+        if (!name) return null
+        const listenersRaw = o.listeners
+        const listeners =
+          typeof listenersRaw === "string"
+            ? parseInt(listenersRaw, 10)
+            : typeof listenersRaw === "number"
+              ? listenersRaw
+              : undefined
+        return {
+          name,
+          listeners: Number.isFinite(listeners) ? listeners : undefined,
+        }
+      })
+      .filter((x): x is LastFmArtistSearchHit => x !== null)
+  } catch (error: unknown) {
+    const errorCode = getLastFmErrorCode(error)
+    if (errorCode === 29 || /rate\s*limit/i.test(getErrorMessage(error))) {
+      globalRateLimitUntil = Math.max(
+        globalRateLimitUntil,
+        Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
+      )
+    }
+    if (errorCode !== 6 && errorCode !== 7) {
+      console.error(`Last.fm artist.search error for "${trimmed}":`, error)
+    }
+    return []
+  } finally {
+    releaseRequestSlot()
+  }
+}

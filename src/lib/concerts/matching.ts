@@ -49,9 +49,45 @@ export async function findMatchingConcert(
 
 /**
  * Get the headliner band from a list of concert bands.
+ * When multiple co-headliners exist, returns the first by list order.
  */
 export function getHeadliner(
   bands: { bandId: string; isHeadliner: boolean }[]
 ): { bandId: string; isHeadliner: boolean } | undefined {
   return bands.find((b) => b.isHeadliner)
+}
+
+/** Band IDs marked headliner, preserving input order (form / sort order). */
+export function getHeadlinerBandIdsInOrder(
+  bands: { bandId: string; isHeadliner?: boolean }[]
+): string[] {
+  return bands.filter((b) => b.isHeadliner).map((b) => b.bandId)
+}
+
+/** First headliner in form order — used for findMatchingConcert / dedup. */
+export function getPrimaryHeadlinerBandId(
+  bands: { bandId: string; isHeadliner?: boolean }[]
+): string | undefined {
+  return getHeadlinerBandIdsInOrder(bands)[0]
+}
+
+/** Headliner band IDs from persisted ConcertBand rows (any order). */
+export function getHeadlinerIdsFromConcertBands(
+  bands: { bandId: string; isHeadliner: boolean }[]
+): string[] {
+  return bands.filter((b) => b.isHeadliner).map((b) => b.bandId)
+}
+
+/** True iff the two sets of headliner band IDs are equal (order-independent). */
+export function headlinerSetsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const sa = [...a].sort()
+  const sb = [...b].sort()
+  return sa.every((id, i) => id === sb[i])
+}
+
+/** True iff headliner band ID sequences match element-wise (same order). */
+export function headlinerOrdersEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((id, i) => id === b[i])
 }

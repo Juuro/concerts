@@ -108,10 +108,9 @@ function transformConcertSync(
       b: ConcertBand & { band: PrismaBand }
     ) => a.sortOrder - b.sortOrder
   )
-  const headliner = coreBands.find((cb) => cb.isHeadliner)
-  const headlinerBand = headliner
-    ? bandToTransformed(headliner.band, true)
-    : null
+  const headlinerBandsTransformed = coreBands
+    .filter((cb) => cb.isHeadliner)
+    .map((cb) => bandToTransformed(cb.band, true))
 
   const supportingActs = attendance
     ? parseSupportingActIds(
@@ -122,7 +121,7 @@ function transformConcertSync(
     supportingActs === null
       ? coreBands.map((cb) => bandToTransformed(cb.band, cb.isHeadliner))
       : [
-          ...(headlinerBand ? [headlinerBand] : []),
+          ...headlinerBandsTransformed,
           ...supportingActs
             .map((o) => prefetchedBands.get(o.bandId))
             .filter((b): b is PrismaBand => b != null)
