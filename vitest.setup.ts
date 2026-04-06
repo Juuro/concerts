@@ -132,6 +132,7 @@ vi.mock("@/lib/prisma", () => {
       findMany: vi.fn(),
       create: vi.fn(),
       createMany: vi.fn(),
+      upsert: vi.fn(),
       deleteMany: vi.fn(),
       groupBy: vi.fn(),
       count: vi.fn(),

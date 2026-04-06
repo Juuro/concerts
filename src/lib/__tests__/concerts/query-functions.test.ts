@@ -309,6 +309,44 @@ describe("getEffectiveBandsForForm", () => {
     const result = await getEffectiveBandsForForm(concert as any, attendance)
     expect(result).toHaveLength(3)
   })
+
+  test("test_getEffectiveBandsForForm_two_co_headliners_with_supporting_acts", async () => {
+    const concert = {
+      bands: [
+        {
+          concertId: "c-3",
+          bandId: "band-h1",
+          isHeadliner: true,
+          sortOrder: 0,
+          band: { id: "band-h1", name: "Co 1", slug: "co-1" },
+        },
+        {
+          concertId: "c-3",
+          bandId: "band-h2",
+          isHeadliner: true,
+          sortOrder: 1,
+          band: { id: "band-h2", name: "Co 2", slug: "co-2" },
+        },
+      ],
+    }
+    const attendance = {
+      supportingActIds: [{ bandId: "band-support-1", sortOrder: 0 }],
+    }
+    vi.mocked(prisma.band.findMany).mockResolvedValue([
+      { id: "band-support-1", name: "Opener", slug: "opener" },
+    ] as any)
+    const { getEffectiveBandsForForm } = await import("@/lib/concerts/read")
+    const result = await getEffectiveBandsForForm(concert as any, attendance)
+    expect(result).toHaveLength(3)
+    expect(result.filter((b) => b.isHeadliner).map((b) => b.bandId)).toEqual([
+      "band-h1",
+      "band-h2",
+    ])
+    expect(result[2]).toMatchObject({
+      bandId: "band-support-1",
+      isHeadliner: false,
+    })
+  })
 })
 
 describe("getConcertById", () => {

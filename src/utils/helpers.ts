@@ -157,3 +157,38 @@ export function extractCityName(
 export function findCityBySlug(slug: string, cities: string[]): string | null {
   return cities.find((city) => cityToSlug(city) === slug) || null
 }
+
+/**
+ * Calculate the great-circle distance between two geographic coordinates
+ * using the Haversine formula.
+ *
+ * @param lat1 - Latitude of point A in degrees (-90 to 90)
+ * @param lon1 - Longitude of point A in degrees (-180 to 180)
+ * @param lat2 - Latitude of point B in degrees (-90 to 90)
+ * @param lon2 - Longitude of point B in degrees (-180 to 180)
+ * @returns Distance in kilometers (>= 0)
+ */
+export function haversineDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371 // Earth's radius in kilometers
+
+  const toRad = (deg: number): number => deg * (Math.PI / 180)
+
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return R * c
+}

@@ -154,6 +154,58 @@ export async function searchMusicBrainzArtist(
 }
 
 /**
+ * Search MusicBrainz for artists and return up to `limit` matches (for autosuggest).
+ * Rate-limited; returns empty array on cooldown or error (non-throwing for UX).
+ */
+export async function searchMusicBrainzArtists(
+  artistName: string,
+  limit: number
+): Promise<{ mbid: string; name: string }[]> {
+  const trimmed = artistName.trim()
+  if (!trimmed || limit <= 0) return []
+
+  if (Date.now() < globalRateLimitUntil) return []
+
+  const safeLimit = Math.min(Math.max(limit, 1), 25)
+  const encoded = encodeURIComponent(trimmed)
+  const url = `https://musicbrainz.org/ws/2/artist/?query=artist:${encoded}&fmt=json&limit=${safeLimit}`
+
+  await waitForNextRequestWindow()
+
+  let response: Response
+  try {
+    response = await fetchWithTimeout(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+      },
+    })
+  } catch {
+    return []
+  }
+
+  if (response.status === 503) {
+    globalRateLimitUntil = Math.max(
+      globalRateLimitUntil,
+      Date.now() + GLOBAL_RATE_LIMIT_COOLDOWN
+    )
+    return []
+  }
+
+  if (!response.ok) {
+    console.error(
+      `MusicBrainz artist search (suggest) failed: ${response.status}`
+    )
+    return []
+  }
+
+  const data: MusicBrainzArtistSearchResponse = await response.json()
+  const artists = data.artists || []
+
+  return artists.slice(0, safeLimit).map((a) => ({ mbid: a.id, name: a.name }))
+}
+
+/**
  * Search MusicBrainz for an event (festival) by name.
  * Returns the matched event name or null if not found.
  */

@@ -4,9 +4,12 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import VenueAutocomplete from "@/components/VenueAutocomplete/VenueAutocomplete"
+import BandAutocomplete, {
+  type SelectedBand,
+} from "@/components/BandAutocomplete"
 import BandEditForm from "@/components/BandEditForm/BandEditForm"
 import Dialog from "@/components/Dialog/Dialog"
-import type { PhotonSearchResult } from "@/types/photon"
+import type { EnhancedVenueResult } from "@/types/photon"
 import "./concertForm.scss"
 
 interface Band {
@@ -90,12 +93,8 @@ export default function ConcertForm({
   const [isFestival, setIsFestival] = useState(concert?.isFestival || false)
   const [festivalId, setFestivalId] = useState(concert?.festivalId || "")
 
-  // Band search
-  const [bandSearch, setBandSearch] = useState("")
-  const [bandResults, setBandResults] = useState<Band[]>([])
-  const [selectedBands, setSelectedBands] = useState<
-    { bandId: string; name: string; slug: string; isHeadliner: boolean }[]
-  >(
+  // Band selection
+  const [selectedBands, setSelectedBands] = useState<SelectedBand[]>(
     concert?.bands?.map((b) => ({
       bandId: b.bandId,
       name: b.name,
@@ -103,8 +102,6 @@ export default function ConcertForm({
       isHeadliner: b.isHeadliner || false,
     })) || []
   )
-  const [isSearching, setIsSearching] = useState(false)
-  const [bandHighlightedIndex, setBandHighlightedIndex] = useState(-1)
   const [editingBandSlug, setEditingBandSlug] = useState<string | null>(null)
 
   // Festival search
@@ -130,37 +127,6 @@ export default function ConcertForm({
   const [festivalValidation, setFestivalValidation] =
     useState<FestivalValidationState>({ type: "idle" })
   const [pendingFestivalName, setPendingFestivalName] = useState("")
-
-  // Debounced band search
-  useEffect(() => {
-    if (bandSearch.length < 2) {
-      setBandResults([])
-      return
-    }
-
-    const timer = setTimeout(async () => {
-      setIsSearching(true)
-      try {
-        const res = await fetch(
-          `/api/bands/search?q=${encodeURIComponent(bandSearch)}`
-        )
-        if (res.ok) {
-          const data = await res.json()
-          setBandResults(data)
-        }
-      } catch (err) {
-        console.error("Band search error:", err)
-      } finally {
-        setIsSearching(false)
-      }
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [bandSearch])
-
-  useEffect(() => {
-    setBandHighlightedIndex(-1)
-  }, [bandResults])
 
   // Debounced festival search
   useEffect(() => {
@@ -206,21 +172,6 @@ export default function ConcertForm({
         },
       ]
     })
-    setBandSearch("")
-    setBandResults([])
-    setBandHighlightedIndex(-1)
-  }, [])
-
-  const handleRemoveBand = useCallback((bandId: string) => {
-    setSelectedBands((prev) => prev.filter((b) => b.bandId !== bandId))
-  }, [])
-
-  const handleToggleHeadliner = useCallback((bandId: string) => {
-    setSelectedBands((prev) =>
-      prev.map((b) =>
-        b.bandId === bandId ? { ...b, isHeadliner: !b.isHeadliner } : b
-      )
-    )
   }, [])
 
   const handleSelectFestival = useCallback((festival: Festival) => {
@@ -262,8 +213,8 @@ export default function ConcertForm({
     }
   }
 
-  const handleCreateBand = async () => {
-    const name = bandSearch.trim()
+  const handleCreateBand = async (bandName: string) => {
+    const name = bandName.trim()
     if (!name) return
 
     setPendingBandName(name)
@@ -324,59 +275,6 @@ export default function ConcertForm({
     setPendingBandName("")
   }
 
-  const handleBandKeyDown = (e: React.KeyboardEvent) => {
-    const totalItems = bandResults.length
-
-    if (totalItems === 0) {
-      if (e.key === "Escape") {
-        setBandSearch("")
-        setBandResults([])
-      }
-      return
-    }
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault()
-        setBandHighlightedIndex((prev) =>
-          prev < totalItems - 1 ? prev + 1 : prev
-        )
-        break
-      case "ArrowUp":
-        e.preventDefault()
-        setBandHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0))
-        break
-      case "Enter":
-        e.preventDefault()
-        if (
-          bandHighlightedIndex >= 0 &&
-          bandHighlightedIndex < bandResults.length
-        ) {
-          handleAddBand(bandResults[bandHighlightedIndex])
-        }
-        break
-      case " ":
-        if (
-          bandHighlightedIndex >= 0 &&
-          bandHighlightedIndex < bandResults.length
-        ) {
-          e.preventDefault()
-          handleAddBand(bandResults[bandHighlightedIndex])
-        }
-        break
-      case "Escape":
-        e.preventDefault()
-        setBandSearch("")
-        setBandResults([])
-        setBandHighlightedIndex(-1)
-        break
-      case "Tab":
-        setBandResults([])
-        setBandHighlightedIndex(-1)
-        break
-    }
-  }
-
   const handleFestivalKeyDown = (e: React.KeyboardEvent) => {
     const totalItems = festivalResults.length
 
@@ -430,7 +328,7 @@ export default function ConcertForm({
     }
   }
 
-  const handleVenueSelect = (result: PhotonSearchResult) => {
+  const handleVenueSelect = (result: EnhancedVenueResult) => {
     setVenue(result.name)
     setLatitude(result.lat)
     setLongitude(result.lon)
@@ -676,145 +574,14 @@ export default function ConcertForm({
         <div className="concert-form__section">
           <h3>Bands *</h3>
 
-          <div className="concert-form__field">
-            <label htmlFor="bandSearch">Search or add bands</label>
-            <div className="concert-form__search">
-              <input
-                type="text"
-                id="bandSearch"
-                role="combobox"
-                aria-expanded={bandResults.length > 0}
-                aria-controls="band-listbox"
-                aria-activedescendant={
-                  bandHighlightedIndex >= 0
-                    ? `band-option-${bandHighlightedIndex}`
-                    : undefined
-                }
-                aria-autocomplete="list"
-                aria-haspopup="listbox"
-                value={bandSearch}
-                onChange={(e) => setBandSearch(e.target.value)}
-                onKeyDown={handleBandKeyDown}
-                placeholder="Type to search bands..."
-              />
-              {isSearching && (
-                <span className="concert-form__searching">Searching...</span>
-              )}
-            </div>
-
-            {bandResults.length > 0 && (
-              <ul
-                className="concert-form__results"
-                role="listbox"
-                id="band-listbox"
-                aria-label="Band search results"
-              >
-                {bandResults.map((band, index) => (
-                  <li
-                    key={band.id}
-                    role="option"
-                    id={`band-option-${index}`}
-                    aria-selected={index === bandHighlightedIndex}
-                    className={
-                      index === bandHighlightedIndex ? "highlighted" : ""
-                    }
-                    onMouseEnter={() => setBandHighlightedIndex(index)}
-                  >
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => handleAddBand(band)}
-                    >
-                      {band.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {bandSearch.length >= 2 &&
-              bandResults.length === 0 &&
-              !isSearching && (
-                <div className="concert-form__no-results">
-                  <span>No bands found.</span>
-                  <button type="button" onClick={handleCreateBand}>
-                    Create &quot;{bandSearch}&quot;
-                  </button>
-                </div>
-              )}
-          </div>
-
-          {selectedBands.length > 0 && (
-            <div className="concert-form__selected-bands">
-              {selectedBands.map((band) => (
-                <div key={band.bandId} className="concert-form__band-tag">
-                  <span>{band.name}</span>
-                  <label className="concert-form__headliner">
-                    <input
-                      type="checkbox"
-                      checked={band.isHeadliner}
-                      onChange={() => handleToggleHeadliner(band.bandId)}
-                    />
-                    Headliner
-                  </label>
-                  {isAdmin && band.slug && (
-                    <button
-                      type="button"
-                      className="concert-form__band-edit"
-                      onClick={() => setEditingBandSlug(band.slug)}
-                      aria-label={`Edit ${band.name}`}
-                      title={`Edit ${band.name}`}
-                    >
-                      <svg
-                        aria-hidden="true"
-                        focusable="false"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M16.474 5.408l2.118 2.118m-.756-3.982L12.109 9.27a2.118 2.118 0 00-.58 1.082L11 13l2.648-.53a2.118 2.118 0 001.082-.58l5.727-5.727a1.853 1.853 0 10-2.621-2.621z"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M19 15v3a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h3"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="concert-form__band-remove"
-                    onClick={() => handleRemoveBand(band.bandId)}
-                    aria-label={`Remove ${band.name}`}
-                    title={`Remove ${band.name}`}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      focusable="false"
-                      viewBox="0 0 24 24"
-                      width="12"
-                      height="12"
-                    >
-                      <path
-                        d="M18 6L6 18M6 6l12 12"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <BandAutocomplete
+            selectedBands={selectedBands}
+            onBandsChange={setSelectedBands}
+            onCreateBand={handleCreateBand}
+            disabled={isSubmitting}
+            isAdmin={isAdmin}
+            onEditBand={setEditingBandSlug}
+          />
         </div>
 
         <div className="concert-form__section">

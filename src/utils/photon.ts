@@ -13,27 +13,8 @@ import type {
 
 // Rate limiting configuration (same as reverse geocoding)
 const PHOTON_MIN_REQUEST_INTERVAL = 700 // 700ms between requests
-let photonLastRequestAt = 0
-let photonQueue: Promise<void> = Promise.resolve()
+let photonNextAvailableAt = 0
 const pendingPhotonRequests = new Map<string, Promise<PhotonSearchResult[]>>()
-
-/**
- * Queue manager for Photon API requests
- * Ensures requests are serialized with minimum interval
- */
-async function withPhotonQueue<T>(fn: () => Promise<T>): Promise<T> {
-  const prev = photonQueue
-  let releaseNext!: () => void
-  photonQueue = new Promise<void>((resolve) => {
-    releaseNext = resolve
-  })
-  await prev
-  try {
-    return await fn()
-  } finally {
-    releaseNext()
-  }
-}
 
 /**
  * Format a display name from Photon feature properties
@@ -74,16 +55,14 @@ function formatDisplayName(props: PhotonSearchFeature["properties"]): string {
 async function fetchPhotonSearch(
   params: PhotonSearchParams
 ): Promise<PhotonSearchResult[]> {
-  // Rate limiting: wait if needed
+  // Rate limiting: reserve the next time slot BEFORE awaiting to prevent
+  // concurrent requests from computing the same waitMs (DA2 race fix)
   const now = Date.now()
-  const waitMs = Math.max(
-    0,
-    photonLastRequestAt + PHOTON_MIN_REQUEST_INTERVAL - now
-  )
+  const waitMs = Math.max(0, photonNextAvailableAt - now)
+  photonNextAvailableAt = now + waitMs + PHOTON_MIN_REQUEST_INTERVAL
   if (waitMs > 0) {
     await new Promise((resolve) => setTimeout(resolve, waitMs))
   }
-  photonLastRequestAt = Date.now()
 
   // Build API URL
   const baseUrl = process.env.PHOTON_BASE_URL || "https://photon.komoot.io"
@@ -176,14 +155,34 @@ const DEFAULT_VENUE_TAGS = [
   "amenity:concert_hall",
   "amenity:arts_centre",
   "amenity:events_venue",
+  "amenity:events_centre",
+  "amenity:music_venue",
   "amenity:nightclub",
   "amenity:community_centre",
   "leisure:stadium",
 ]
 
 /**
- * Search for venues using Photon API
- * Includes request deduplication, rate limiting, and venue-specific filtering
+ * Deduplicate Photon results by name + rounded coordinates.
+ * Keeps the first occurrence (tagged results should be inserted first).
+ */
+function deduplicatePhotonResults(
+  results: PhotonSearchResult[]
+): PhotonSearchResult[] {
+  const seen = new Map<string, PhotonSearchResult>()
+  for (const r of results) {
+    const key = `${r.name.toLowerCase()}:${r.lat.toFixed(3)}:${r.lon.toFixed(3)}`
+    if (!seen.has(key)) {
+      seen.set(key, r)
+    }
+  }
+  return Array.from(seen.values())
+}
+
+/**
+ * Search for venues using Photon API with parallel tagged + untagged strategy.
+ * Runs both a venue-tagged search and an untagged search in parallel, then
+ * merges results with tagged results first (preferred on dedup).
  *
  * @param query Search query string (minimum 3 characters)
  * @param options Optional lat/lon to bias results, osm_tags to filter by
@@ -193,49 +192,44 @@ export async function searchVenues(
   query: string,
   options?: { lat?: number; lon?: number; osm_tags?: string[] }
 ): Promise<PhotonSearchResult[]> {
-  // Require minimum 3 characters
   if (query.length < 3) return []
 
   const osm_tags = options?.osm_tags ?? DEFAULT_VENUE_TAGS
+  const osmTagsKey = [...osm_tags].sort().join("|")
 
   // Check for pending request with same parameters
-  const cacheKey = `${query}:${options?.lat || ""}:${options?.lon || ""}:${osm_tags.join(",")}`
+  const cacheKey = `parallel:${query}:${options?.lat || ""}:${options?.lon || ""}:${osmTagsKey}`
   const existing = pendingPhotonRequests.get(cacheKey)
   if (existing) return existing
 
-  // Create new request with venue filtering
-  const promise = withPhotonQueue(async () => {
-    // First, try with venue-specific tags
-    const filteredResults = await fetchPhotonSearch({
-      q: query,
-      limit: 10,
-      lat: options?.lat,
-      lon: options?.lon,
-      osm_tags,
-    })
+  // Run tagged and untagged searches in parallel (rate limiter serializes them)
+  const promise = (async () => {
+    const [taggedResults, untaggedResults] = await Promise.all([
+      fetchPhotonSearch({
+        q: query,
+        limit: 10,
+        lat: options?.lat,
+        lon: options?.lon,
+        osm_tags,
+      }),
+      fetchPhotonSearch({
+        q: query,
+        limit: 5,
+        lat: options?.lat,
+        lon: options?.lon,
+      }),
+    ])
 
-    // If we got results, return them
-    if (filteredResults.length > 0) {
-      return filteredResults
-    }
+    // Merge: tagged first (get dedup preference), then untagged
+    const merged = [...taggedResults, ...untaggedResults]
+    return deduplicatePhotonResults(merged).slice(0, 10)
+  })()
 
-    // Fallback: if no tagged venues found, search without tag filtering
-    // This catches venues that exist in OSM but aren't properly tagged
-    return fetchPhotonSearch({
-      q: query,
-      limit: 10,
-      lat: options?.lat,
-      lon: options?.lon,
-    })
-  })
-
-  // Store pending request for deduplication
   pendingPhotonRequests.set(cacheKey, promise)
 
   try {
     return await promise
   } finally {
-    // Clean up after request completes
     pendingPhotonRequests.delete(cacheKey)
   }
 }
