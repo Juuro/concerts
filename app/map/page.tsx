@@ -26,9 +26,9 @@ export default async function MapPage() {
 
   const isMapEnabled = isFeatureEnabled(FEATURE_FLAGS.ENABLE_MAP_PAGE, false)
   const userId = session.user.id
-  const userCounts = await getUserConcertCounts(userId)
 
   if (!isMapEnabled) {
+    const userCounts = await getUserConcertCounts(userId)
     return (
       <Layout concertCounts={userCounts}>
         <section aria-labelledby="map-paywall-title">
@@ -45,7 +45,10 @@ export default async function MapPage() {
     )
   }
 
-  const concerts = await getUserConcerts(userId)
+  const [userCounts, concerts] = await Promise.all([
+    getUserConcertCounts(userId),
+    getUserConcerts(userId),
+  ])
 
   // Transform for map
   const concertsFormatted = concerts.map((c) => ({
