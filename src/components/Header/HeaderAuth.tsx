@@ -5,7 +5,11 @@ import { useSession } from "@/lib/auth-client"
 import { UserMenu } from "../Auth"
 import "./headerAuth.scss"
 
-export default function HeaderAuth() {
+interface HeaderAuthProps {
+  showMapLink: boolean
+}
+
+export default function HeaderAuth({ showMapLink }: HeaderAuthProps) {
   const { data: session, isPending } = useSession()
 
   if (isPending) {
@@ -22,9 +26,11 @@ export default function HeaderAuth() {
 
   return (
     <div className="header-auth">
-      <Link href="/map" className="header-auth__link">
-        Map
-      </Link>
+      {showMapLink && (
+        <Link href="/map" className="header-auth__link">
+          Map
+        </Link>
+      )}
       {session.user.role === "admin" && (
         <Link href="/admin" className="header-auth__link">
           Admin

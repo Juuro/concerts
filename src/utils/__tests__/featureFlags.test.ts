@@ -55,5 +55,9 @@ describe("featureFlags", () => {
       vi.stubEnv("ENABLE_GEOCODING", "False")
       expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_GEOCODING)).toBe(false)
     })
+
+    it("test_isFeatureEnabled_when_map_flag_is_unset_defaults_to_false", () => {
+      expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_MAP_PAGE, false)).toBe(false)
+    })
   })
 })
