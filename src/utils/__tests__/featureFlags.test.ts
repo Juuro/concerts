@@ -57,7 +57,18 @@ describe("featureFlags", () => {
     })
 
     it("test_isFeatureEnabled_when_map_flag_is_unset_defaults_to_false", () => {
-      expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_MAP_PAGE, false)).toBe(false)
+      const originalEnableMapPage = process.env.ENABLE_MAP_PAGE
+      delete process.env.ENABLE_MAP_PAGE
+
+      try {
+        expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_MAP_PAGE)).toBe(false)
+      } finally {
+        if (originalEnableMapPage === undefined) {
+          delete process.env.ENABLE_MAP_PAGE
+        } else {
+          process.env.ENABLE_MAP_PAGE = originalEnableMapPage
+        }
+      }
     })
   })
 })
