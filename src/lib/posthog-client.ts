@@ -19,17 +19,22 @@ export async function initPostHogIfConsented(): Promise<boolean> {
   if (!canUsePostHog()) return false
 
   if (!initPromise) {
-    initPromise = import("posthog-js").then(({ default: posthog }) => {
-      const key = process.env.NEXT_PUBLIC_POSTHOG_KEY!.trim()
-      posthog.init(key, {
-        api_host: getPostHogApiHost(),
-        autocapture: false,
-        capture_exceptions: false,
-        capture_pageview: "history_change",
-        disable_session_recording: !isPostHogSessionReplayEnabled(),
-        persistence: "localStorage",
+    initPromise = import("posthog-js")
+      .then(({ default: posthog }) => {
+        const key = process.env.NEXT_PUBLIC_POSTHOG_KEY!.trim()
+        posthog.init(key, {
+          api_host: getPostHogApiHost(),
+          autocapture: false,
+          capture_exceptions: false,
+          capture_pageview: "history_change",
+          disable_session_recording: !isPostHogSessionReplayEnabled(),
+          persistence: "localStorage",
+        })
       })
-    })
+      .catch((error) => {
+        initPromise = null
+        throw error
+      })
   }
 
   await initPromise
