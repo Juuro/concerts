@@ -21,9 +21,14 @@ export function hasPostHogConsent(): boolean {
 
 export function setPostHogConsentState(
   state: Exclude<PostHogConsentState, null>
-) {
-  if (typeof window === "undefined") return
+): boolean {
+  if (typeof window === "undefined") return false
 
-  window.localStorage.setItem(POSTHOG_CONSENT_STORAGE_KEY, state)
-  window.dispatchEvent(new Event(POSTHOG_CONSENT_EVENT))
+  try {
+    window.localStorage.setItem(POSTHOG_CONSENT_STORAGE_KEY, state)
+    window.dispatchEvent(new Event(POSTHOG_CONSENT_EVENT))
+    return true
+  } catch {
+    return false
+  }
 }
