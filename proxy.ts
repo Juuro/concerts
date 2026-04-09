@@ -39,14 +39,24 @@ const authRoutes = [
   "/resend-verification",
 ]
 
+const POSTHOG_DEFAULT_HOST = "https://eu.i.posthog.com"
+
+function isPostHogAnalyticsEnabled(): boolean {
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()
+  if (!key) return false
+  const flag = process.env.NEXT_PUBLIC_POSTHOG_ENABLED?.toLowerCase()
+  return flag === "true" || flag === "1" || flag === "yes"
+}
+
 function getPostHogConnectSrc(): string {
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim()
-  if (!host) return ""
+  if (!isPostHogAnalyticsEnabled()) return ""
+
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || POSTHOG_DEFAULT_HOST
   try {
     const url = new URL(host)
     return ` ${url.origin}`
   } catch {
-    return ""
+    return ` ${POSTHOG_DEFAULT_HOST}`
   }
 }
 
