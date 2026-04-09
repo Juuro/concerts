@@ -44,13 +44,17 @@ export async function initPostHogIfConsented(): Promise<boolean> {
 export async function applyPostHogConsentState(consented: boolean) {
   if (!isPostHogAnalyticsEnabled() || typeof window === "undefined") return
 
-  const { default: posthog } = await import("posthog-js")
   if (consented) {
     await initPostHogIfConsented()
+    const { default: posthog } = await import("posthog-js")
     posthog.opt_in_capturing()
     return
   }
 
+  if (!initPromise) return
+
+  await initPromise
+  const { default: posthog } = await import("posthog-js")
   posthog.opt_out_capturing()
   posthog.reset()
 }
