@@ -38,8 +38,14 @@ export default function PostHogConsentBanner() {
 
   const handleConsentChange = async (consented: boolean) => {
     setPostHogConsentState(consented ? "granted" : "denied")
-    await applyPostHogConsentState(consented)
-    setShowBanner(false)
+
+    try {
+      await applyPostHogConsentState(consented)
+    } catch (error) {
+      console.error("Failed to apply PostHog consent state", error)
+    } finally {
+      setShowBanner(false)
+    }
   }
 
   if (!isReady || !showBanner) return null
