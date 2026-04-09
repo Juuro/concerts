@@ -25,11 +25,15 @@ export default function PrivacyPage() {
           <section aria-labelledby="controller-heading">
             <h2 id="controller-heading">1. Controller Identity and Contact</h2>
             <p>
-              The controller responsible for data processing is [Business Name]
-              GBR. For contact details, including our data protection contact,
-              see our <a href="/imprint">Imprint</a>. For data subject requests,
-              you may contact us at{" "}
-              <a href="mailto:privacy@example.com">[privacy@example.com]</a>.
+              The controller responsible for data processing is Juuronina GbR
+              (Sebastian Engel, Janina Michl). For contact details, including
+              our data protection contact, see our{" "}
+              <a href="/imprint">Imprint</a>. For data subject requests, you may
+              contact us at{" "}
+              <a href="mailto:privacy@concertivity.app">
+                privacy@concertivity.app
+              </a>
+              .
             </p>
             <p>
               We are currently not obliged to appoint a data protection officer
@@ -283,8 +287,10 @@ export default function PrivacyPage() {
             </ul>
             <p>
               To exercise these rights, contact us at{" "}
-              <a href="mailto:privacy@example.com">[privacy@example.com]</a> or
-              via the address in our <a href="/imprint">Imprint</a>.
+              <a href="mailto:privacy@concertivity.app">
+                privacy@concertivity.app
+              </a>{" "}
+              or via the address in our <a href="/imprint">Imprint</a>.
             </p>
           </section>
 
