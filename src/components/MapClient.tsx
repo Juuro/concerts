@@ -69,7 +69,7 @@ function getConcertsAtLngLat(
   })
 }
 
-/** Resolve concerts at the same venue as the clicked map feature (geometry can differ slightly from props). */
+/** Resolve all concerts at the same map point as the clicked feature (matches by stored coordinates, not by venue). */
 function getConcertsForClickedPoint(
   concerts: Concert[],
   feature: GeoJSON.Feature

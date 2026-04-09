@@ -91,8 +91,8 @@ describe("ConcertCard", () => {
   it("test_ConcertCard_when_rendered_shows_locale_formatted_date", () => {
     render(<ConcertCard concert={mockConcert} />)
 
-    // Date formatted as German locale: "15. Juni 2024"
-    expect(screen.getByText(/juni 2024/i)).toBeInTheDocument()
+    // Date formatted as British English locale: "15 June 2024"
+    expect(screen.getByText(/june 2024/i)).toBeInTheDocument()
   })
 
   describe("future vs past CSS class", () => {

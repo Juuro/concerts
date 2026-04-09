@@ -80,7 +80,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
 
   const getDate = () => {
     const date = new Date(concert.date)
-    return date.toLocaleDateString("de-DE", {
+    return date.toLocaleDateString("en-GB", {
       year: "numeric",
       month: "long",
       day: "numeric",
