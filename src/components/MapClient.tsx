@@ -47,11 +47,49 @@ function getConcertsAtLngLat(
   lng: number,
   lat: number
 ): Concert[] {
-  return concerts.filter(
-    (c) =>
-      Math.abs(c.city.lon - lng) < COORD_EPS &&
-      Math.abs(c.city.lat - lat) < COORD_EPS
-  )
+  const lngN = Number(lng)
+  const latN = Number(lat)
+  if (!Number.isFinite(lngN) || !Number.isFinite(latN)) {
+    return []
+  }
+  return concerts.filter((c) => {
+    const clon = Number(c.city.lon)
+    const clat = Number(c.city.lat)
+    return (
+      Number.isFinite(clon) &&
+      Number.isFinite(clat) &&
+      Math.abs(clon - lngN) < COORD_EPS &&
+      Math.abs(clat - latN) < COORD_EPS
+    )
+  })
+}
+
+/** Resolve concerts at the same venue as the clicked map feature (geometry can differ slightly from props). */
+function getConcertsForClickedPoint(
+  concerts: Concert[],
+  feature: GeoJSON.Feature
+): Concert[] {
+  const props = feature.properties as Record<string, unknown> | null
+  const rawId = props?.id
+  const clickedId = rawId != null && rawId !== "" ? String(rawId) : null
+
+  const coords = (feature.geometry as GeoJSON.Point).coordinates
+  const lng = Number(coords[0])
+  const lat = Number(coords[1])
+
+  if (clickedId) {
+    const anchor = concerts.find((c) => String(c.id) === clickedId)
+    if (anchor) {
+      const sameSpot = getConcertsAtLngLat(
+        concerts,
+        anchor.city.lon,
+        anchor.city.lat
+      )
+      return sameSpot.length > 0 ? sameSpot : [anchor]
+    }
+  }
+
+  return getConcertsAtLngLat(concerts, lng, lat)
 }
 
 function appendLinkedTitle(
@@ -271,21 +309,24 @@ export default function MapClient({
         // Click point -> show popup (all concerts that share this lat/lon)
         map.on("click", "unclustered-point", (e) => {
           if (!e.features?.length) return
-          const feature = e.features[0]
+          const feature = e.features[0] as GeoJSON.Feature
           const coords = (
             feature.geometry as GeoJSON.Point
           ).coordinates.slice() as [number, number]
 
-          // Handle world-wrap
+          // Handle world-wrap (popup anchor only; matching uses props.id + DB coords)
           while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
             coords[0] += e.lngLat.lng > coords[0] ? 360 : -360
           }
 
-          const atSpot = getConcertsAtLngLat(concerts, coords[0], coords[1])
+          const atSpot = getConcertsForClickedPoint(concerts, feature)
             .slice()
             .sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
             )
+          if (atSpot.length === 0) {
+            return
+          }
           const rows: MapPopupRow[] = atSpot.map((c) => ({
             name: getName(c),
             venue: c.venue || "",
