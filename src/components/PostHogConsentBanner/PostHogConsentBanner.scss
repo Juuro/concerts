@@ -17,6 +17,16 @@
     margin: 0 0 0.75rem;
   }
 
+  &__error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    font-size: 0.875rem;
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
   &__actions {
     display: flex;
     gap: 0.5rem;

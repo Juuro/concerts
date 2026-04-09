@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 
 import {
   getPostHogConsentState,
@@ -9,53 +9,75 @@ import {
   setPostHogConsentState,
 } from "@/lib/posthog-consent"
 import { applyPostHogConsentState } from "@/lib/posthog-client"
-import { isPostHogAnalyticsEnabled } from "@/lib/posthog-env"
+import {
+  isPostHogAnalyticsEnabled,
+  isPostHogSessionReplayEnabled,
+} from "@/lib/posthog-env"
 
 import "./PostHogConsentBanner.scss"
 
-export default function PostHogConsentBanner() {
-  const [isReady, setIsReady] = useState(false)
-  const [showBanner, setShowBanner] = useState(false)
+function subscribeToConsentChanges(callback: () => void) {
+  window.addEventListener(POSTHOG_CONSENT_EVENT, callback)
+  return () => window.removeEventListener(POSTHOG_CONSENT_EVENT, callback)
+}
 
-  useEffect(() => {
-    if (!isPostHogAnalyticsEnabled()) {
-      setIsReady(true)
+function getConsentSnapshot() {
+  return getPostHogConsentState()
+}
+
+function getServerSnapshot() {
+  return null
+}
+
+export default function PostHogConsentBanner() {
+  const consentState = useSyncExternalStore(
+    subscribeToConsentChanges,
+    getConsentSnapshot,
+    getServerSnapshot
+  )
+  const [error, setError] = useState<string | null>(null)
+
+  const analyticsEnabled = isPostHogAnalyticsEnabled()
+  const showBanner = analyticsEnabled && consentState === null
+
+  const handleConsentChange = async (consented: boolean) => {
+    setError(null)
+
+    const persisted = setPostHogConsentState(consented ? "granted" : "denied")
+    if (!persisted) {
+      setError(
+        "Could not save your preference. Please check your browser settings."
+      )
       return
     }
 
-    setShowBanner(getPostHogConsentState() === null)
-    setIsReady(true)
-
-    const handleConsentEvent = () => {
-      setShowBanner(getPostHogConsentState() === null)
-    }
-
-    window.addEventListener(POSTHOG_CONSENT_EVENT, handleConsentEvent)
-    return () => {
-      window.removeEventListener(POSTHOG_CONSENT_EVENT, handleConsentEvent)
-    }
-  }, [])
-
-  const handleConsentChange = async (consented: boolean) => {
-    setPostHogConsentState(consented ? "granted" : "denied")
-
     try {
       await applyPostHogConsentState(consented)
-    } catch (error) {
-      console.error("Failed to apply PostHog consent state", error)
-    } finally {
-      setShowBanner(false)
+    } catch (err) {
+      console.error("Failed to apply PostHog consent state", err)
+      setError("Something went wrong. Please try again.")
     }
   }
 
-  if (!isReady || !showBanner) return null
+  if (!showBanner) return null
+
+  const replayEnabled = isPostHogSessionReplayEnabled()
+  const acceptLabel = replayEnabled
+    ? "Accept analytics and replay"
+    : "Accept analytics"
 
   return (
     <aside className="posthog-consent-banner" aria-label="Analytics consent">
       <p className="posthog-consent-banner__text">
-        We use analytics and optional session replay to improve reliability and
-        usability. This is only active with your consent.
+        We use analytics{replayEnabled ? " and optional session replay" : ""} to
+        improve reliability and usability. This is only active with your
+        consent.
       </p>
+      {error && (
+        <p className="posthog-consent-banner__error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="posthog-consent-banner__actions">
         <button
           className="posthog-consent-banner__button posthog-consent-banner__button--secondary"
@@ -69,7 +91,7 @@ export default function PostHogConsentBanner() {
           type="button"
           onClick={() => void handleConsentChange(true)}
         >
-          Accept analytics
+          {acceptLabel}
         </button>
       </div>
       <p className="posthog-consent-banner__meta">

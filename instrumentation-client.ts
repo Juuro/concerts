@@ -30,6 +30,8 @@ Sentry.init({
   sendDefaultPii: false,
 })
 
-void initPostHogIfConsented()
+void initPostHogIfConsented().catch((error) => {
+  console.error("PostHog initialization failed", error)
+})
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

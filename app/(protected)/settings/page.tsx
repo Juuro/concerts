@@ -9,6 +9,7 @@ import {
   setPostHogConsentState,
 } from "@/lib/posthog-consent"
 import { applyPostHogConsentState } from "@/lib/posthog-client"
+import { isPostHogSessionReplayEnabled } from "@/lib/posthog-env"
 import "./settings.scss"
 
 export default function SettingsPage() {
@@ -297,24 +298,39 @@ export default function SettingsPage() {
                       const previousConsented = analyticsConsent
 
                       setAnalyticsConsent(consented)
-                      setPostHogConsentState(consented ? "granted" : "denied")
+                      const persisted = setPostHogConsentState(
+                        consented ? "granted" : "denied"
+                      )
+
+                      if (!persisted) {
+                        setAnalyticsConsent(previousConsented)
+                        return
+                      }
 
                       try {
                         await applyPostHogConsentState(consented)
                       } catch (error) {
-                        console.error("Failed to apply PostHog consent state", error)
+                        console.error(
+                          "Failed to apply PostHog consent state",
+                          error
+                        )
                         setAnalyticsConsent(previousConsented)
                         setPostHogConsentState(
-                          previousConsented ? "granted" : "denied",
+                          previousConsented ? "granted" : "denied"
                         )
                       }
                     }}
                   />
-                  Allow analytics and session replay
+                  {isPostHogSessionReplayEnabled()
+                    ? "Allow analytics and session replay"
+                    : "Allow analytics"}
                 </label>
                 <span className="settings__hint">
-                  Uses PostHog for page analytics and optional session replay.
-                  You can change this at any time.
+                  Uses PostHog for page analytics
+                  {isPostHogSessionReplayEnabled()
+                    ? " and optional session replay"
+                    : ""}
+                  . You can change this at any time.
                 </span>
               </div>
             </div>
