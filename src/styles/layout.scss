@@ -178,17 +178,18 @@ main {
     padding: 0.85rem 1rem 1rem;
   }
 
-  // Omit border on the edge that meets the tip — a full 1px stroke leaves a pink seam
-  // between the card and the triangle (especially anchor-top: tip below the body).
-  .maplibregl-popup-anchor-top .maplibregl-popup-content,
-  .maplibregl-popup-anchor-top-left .maplibregl-popup-content,
-  .maplibregl-popup-anchor-top-right .maplibregl-popup-content {
-    border-bottom: none;
-  }
-
+  // Omit border on the edge that meets the tip. MapLibre anchor names refer to which side
+  // of the popup sits on the lng/lat: anchor-bottom = body above the point, tip points down
+  // → the triangle meets the *bottom* of .maplibregl-popup-content (not the top).
   .maplibregl-popup-anchor-bottom .maplibregl-popup-content,
   .maplibregl-popup-anchor-bottom-left .maplibregl-popup-content,
   .maplibregl-popup-anchor-bottom-right .maplibregl-popup-content {
+    border-bottom: none;
+  }
+
+  .maplibregl-popup-anchor-top .maplibregl-popup-content,
+  .maplibregl-popup-anchor-top-left .maplibregl-popup-content,
+  .maplibregl-popup-anchor-top-right .maplibregl-popup-content {
     border-top: none;
   }
 
