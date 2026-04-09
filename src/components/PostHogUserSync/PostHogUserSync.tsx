@@ -16,18 +16,27 @@ export default function PostHogUserSync({ userId }: PostHogUserSyncProps) {
   const previousUserId = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
-    initPostHogIfConsented().then((isInitialized) => {
-      if (!isInitialized) return
-      import("posthog-js").then(({ default: posthog }) => {
-        if (userId) {
-          posthog.identify(userId)
-        } else if (previousUserId.current) {
-          posthog.reset()
-        }
+    let active = true
 
-        previousUserId.current = userId
-      })
-    })
+    void (async () => {
+      const isInitialized = await initPostHogIfConsented()
+      if (!active || !isInitialized) return
+
+      const { default: posthog } = await import("posthog-js")
+      if (!active) return
+
+      if (userId) {
+        posthog.identify(userId)
+      } else if (previousUserId.current) {
+        posthog.reset()
+      }
+
+      previousUserId.current = userId
+    })()
+
+    return () => {
+      active = false
+    }
   }, [userId])
 
   return null
