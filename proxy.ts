@@ -39,14 +39,36 @@ const authRoutes = [
   "/resend-verification",
 ]
 
+const POSTHOG_DEFAULT_HOST = "https://eu.i.posthog.com"
+
+function isPostHogAnalyticsEnabled(): boolean {
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()
+  if (!key) return false
+  const flag = process.env.NEXT_PUBLIC_POSTHOG_ENABLED?.toLowerCase()
+  return flag === "true" || flag === "1" || flag === "yes"
+}
+
+function getPostHogConnectSrc(): string {
+  if (!isPostHogAnalyticsEnabled()) return ""
+
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || POSTHOG_DEFAULT_HOST
+  try {
+    const url = new URL(host)
+    return ` ${url.origin}`
+  } catch {
+    return ` ${POSTHOG_DEFAULT_HOST}`
+  }
+}
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === "development"
+  const postHogConnectSrc = getPostHogConnectSrc()
 
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://*.ingest.sentry.io https://tiles.openfreemap.org",
+    `connect-src 'self' https://*.ingest.sentry.io https://tiles.openfreemap.org${postHogConnectSrc}`,
     "img-src 'self' blob: data: https://upload.wikimedia.org https://avatars.githubusercontent.com https://tiles.openfreemap.org",
     "font-src 'self' data:",
     "object-src 'none'",
