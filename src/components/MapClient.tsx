@@ -331,7 +331,7 @@ export default function MapClient({
             name: getName(c),
             venue: c.venue || "",
             date: getDate(c.date),
-            bandSlug: c.bands[0]?.slug ?? null,
+            bandSlug: c.isFestival ? null : c.bands[0]?.slug ?? null,
           }))
 
           new maplibregl.Popup({ maxWidth: "320px" })
