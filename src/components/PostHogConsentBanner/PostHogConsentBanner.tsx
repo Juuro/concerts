@@ -69,7 +69,7 @@ export default function PostHogConsentBanner() {
           type="button"
           onClick={() => void handleConsentChange(true)}
         >
-          Accept analytics and replay
+          Accept analytics
         </button>
       </div>
       <p className="posthog-consent-banner__meta">
