@@ -173,7 +173,9 @@ main {
     color: variables.$admin-text;
     font-family: variables.$font-family-text;
     max-width: min(320px, calc(100vw - 2rem));
-    padding: 1rem 2.25rem 1rem 1.1rem;
+    // Symmetric horizontal padding — the old 2.25rem right inset was for the × but
+    // applied to the whole block, leaving a wide empty strip beside the list.
+    padding: 0.85rem 1rem 1rem;
   }
 
   .maplibregl-popup-close-button {
@@ -232,9 +234,11 @@ main {
   }
 
   .map-popup-concerts {
+    box-sizing: border-box;
     font-size: 0.9375rem;
     line-height: 1.45;
-    max-width: 280px;
+    max-width: none;
+    width: 100%;
 
     strong {
       color: variables.$admin-text;
@@ -250,6 +254,17 @@ main {
       font-weight: 700;
       letter-spacing: 0.02em;
       margin: 0 0 0.5rem;
+      // Keep the heading line clear of the ×; list uses full width below.
+      padding-right: 1.5rem;
+    }
+
+    // Single-concert popup: first line sits under the close control
+    > a:first-child,
+    > strong:first-child {
+      box-sizing: border-box;
+      display: inline-block;
+      max-width: 100%;
+      padding-right: 1.5rem;
     }
 
     &__list {
