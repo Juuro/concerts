@@ -6,9 +6,13 @@ export type PostHogConsentState = "granted" | "denied" | null
 export function getPostHogConsentState(): PostHogConsentState {
   if (typeof window === "undefined") return null
 
-  const value = window.localStorage.getItem(POSTHOG_CONSENT_STORAGE_KEY)
-  if (value === "granted" || value === "denied") return value
-  return null
+  try {
+    const value = window.localStorage.getItem(POSTHOG_CONSENT_STORAGE_KEY)
+    if (value === "granted" || value === "denied") return value
+    return null
+  } catch {
+    return null
+  }
 }
 
 export function hasPostHogConsent(): boolean {
