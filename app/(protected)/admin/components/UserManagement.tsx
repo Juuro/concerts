@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/Toast/Toast"
 import Dialog from "@/components/Dialog/Dialog"
+import { DATE_LOCALE } from "@/utils/dateLocale"
 
 interface User {
   id: string
@@ -182,12 +183,12 @@ export default function UserManagement() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    return new Date(dateString).toLocaleDateString(DATE_LOCALE)
   }
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleString(undefined, {
+    return date.toLocaleString(DATE_LOCALE, {
       year: "numeric",
       month: "short",
       day: "numeric",

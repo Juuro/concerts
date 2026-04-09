@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { DATE_LOCALE } from "@/utils/dateLocale"
 
 interface Activity {
   id: string
@@ -39,7 +40,7 @@ function formatTimeAgo(dateString: string): string {
   if (diffMins < 60) return `${diffMins}m`
   if (diffHours < 24) return `${diffHours}h`
   if (diffDays < 7) return `${diffDays}d`
-  return date.toLocaleDateString()
+  return date.toLocaleDateString(DATE_LOCALE)
 }
 
 function getTargetInfo(

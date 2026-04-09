@@ -21,17 +21,16 @@ const STYLE_URL =
   process.env.NEXT_PUBLIC_MAP_STYLE_URL ||
   "https://tiles.openfreemap.org/styles/liberty"
 
-/** British English until app-wide localisation is wired up. */
-const MAP_DATE_LOCALE = "en-GB"
+import { DATE_LOCALE } from "@/utils/dateLocale"
 
 function getYear(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString(MAP_DATE_LOCALE, {
+  return new Date(dateInput).toLocaleDateString(DATE_LOCALE, {
     year: "numeric",
   })
 }
 
 function getDate(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString(MAP_DATE_LOCALE, {
+  return new Date(dateInput).toLocaleDateString(DATE_LOCALE, {
     year: "numeric",
     month: "long",
     day: "numeric",
