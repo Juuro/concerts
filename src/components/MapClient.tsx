@@ -21,12 +21,17 @@ const STYLE_URL =
   process.env.NEXT_PUBLIC_MAP_STYLE_URL ||
   "https://tiles.openfreemap.org/styles/liberty"
 
+/** British English until app-wide localisation is wired up. */
+const MAP_DATE_LOCALE = "en-GB"
+
 function getYear(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString("de-DE", { year: "numeric" })
+  return new Date(dateInput).toLocaleDateString(MAP_DATE_LOCALE, {
+    year: "numeric",
+  })
 }
 
 function getDate(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString("de-DE", {
+  return new Date(dateInput).toLocaleDateString(MAP_DATE_LOCALE, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -124,7 +129,7 @@ function buildPopupDom(rows: MapPopupRow[]): HTMLElement {
     appendLinkedTitle(root, m.name, m.bandSlug)
     root.appendChild(document.createElement("br"))
     const line = document.createElement("span")
-    line.textContent = m.venue.length > 0 ? `${m.venue} am ${m.date}` : m.date
+    line.textContent = m.venue.length > 0 ? `${m.venue} on ${m.date}` : m.date
     root.appendChild(line)
     return root
   }
@@ -331,7 +336,7 @@ export default function MapClient({
             name: getName(c),
             venue: c.venue || "",
             date: getDate(c.date),
-            bandSlug: c.isFestival ? null : c.bands[0]?.slug ?? null,
+            bandSlug: c.isFestival ? null : (c.bands[0]?.slug ?? null),
           }))
 
           new maplibregl.Popup({ maxWidth: "320px" })
