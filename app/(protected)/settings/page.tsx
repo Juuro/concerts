@@ -292,11 +292,22 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={analyticsConsent}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const consented = e.target.checked
+                      const previousConsented = analyticsConsent
+
                       setAnalyticsConsent(consented)
                       setPostHogConsentState(consented ? "granted" : "denied")
-                      void applyPostHogConsentState(consented)
+
+                      try {
+                        await applyPostHogConsentState(consented)
+                      } catch (error) {
+                        console.error("Failed to apply PostHog consent state", error)
+                        setAnalyticsConsent(previousConsented)
+                        setPostHogConsentState(
+                          previousConsented ? "granted" : "denied",
+                        )
+                      }
                     }}
                   />
                   Allow analytics and session replay
