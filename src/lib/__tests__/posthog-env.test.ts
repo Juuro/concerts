@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { isPostHogAnalyticsEnabled, getPostHogApiHost } from "../posthog-env"
+import {
+  isPostHogAnalyticsEnabled,
+  getPostHogApiHost,
+  isPostHogSessionReplayEnabled,
+} from "../posthog-env"
 
 describe("posthog-env", () => {
   beforeEach(() => {
@@ -142,6 +146,31 @@ describe("posthog-env", () => {
     it("returns self-hosted URL when configured", () => {
       vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://analytics.example.com")
       expect(getPostHogApiHost()).toBe("https://analytics.example.com")
+    })
+  })
+
+  describe("isPostHogSessionReplayEnabled", () => {
+    it("returns false when NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED is undefined", () => {
+      expect(isPostHogSessionReplayEnabled()).toBe(false)
+    })
+
+    it("returns false for disabled values", () => {
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED", "false")
+      expect(isPostHogSessionReplayEnabled()).toBe(false)
+
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED", "0")
+      expect(isPostHogSessionReplayEnabled()).toBe(false)
+    })
+
+    it("returns true for explicit enabled values", () => {
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED", "true")
+      expect(isPostHogSessionReplayEnabled()).toBe(true)
+
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED", "1")
+      expect(isPostHogSessionReplayEnabled()).toBe(true)
+
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED", "yes")
+      expect(isPostHogSessionReplayEnabled()).toBe(true)
     })
   })
 })

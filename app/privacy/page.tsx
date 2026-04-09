@@ -338,9 +338,12 @@ export default function PrivacyPage() {
               information as processed by PostHog), and page URLs. If you are
               signed in, we link events to your <strong>internal user</strong>{" "}
               identifier only — we do not send your email address or name to
-              PostHog for this purpose. We have configured PostHog without
-              session replay and without DOM autocapture of clicks or form
-              fields, to limit the data collected.
+              PostHog for this purpose. We configure PostHog without DOM
+              autocapture of clicks or form fields. If you explicitly consent
+              and session replay is enabled in our deployment configuration, we
+              may also process session replay data (for example, page
+              transitions, interaction timeline, and technical rendering state)
+              to diagnose usability and reliability issues.
             </p>
             <p>
               PostHog acts as a <strong>processor</strong> on our instructions.
@@ -362,15 +365,16 @@ export default function PrivacyPage() {
                 posthog.com/dpa
               </a>
               . Analytics is only active when we enable it in our deployment
-              configuration; when disabled, no usage events are sent to PostHog.
+              configuration and when you have granted consent. You can withdraw
+              consent at any time in <a href="/settings">Settings</a>.
             </p>
             <p>
-              <strong>Legal basis:</strong> The appropriate legal basis (for
-              example consent under Art. 6(1)(a) GDPR / § 25 TTDSG, or
-              legitimate interest under Art. 6(1)(f) GDPR with a balancing test)
-              depends on how we roll out analytics in your jurisdiction. This
-              policy will be updated to match the basis we rely on after legal
-              review. We do not use PostHog for behavioural advertising.
+              <strong>Legal basis:</strong> Consent (Art. 6(1)(a) GDPR and,
+              where applicable, § 25 TTDSG for storage/access on your end
+              device). We do not activate PostHog analytics or session replay
+              before your consent. You may withdraw consent at any time for
+              future processing, without affecting processing performed before
+              withdrawal.
             </p>
             <p>
               The use of storage and similar technologies is carried out in
