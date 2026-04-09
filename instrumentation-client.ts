@@ -4,7 +4,7 @@
 
 import * as Sentry from "@sentry/nextjs"
 
-import { getPostHogApiHost, isPostHogAnalyticsEnabled } from "@/lib/posthog-env"
+import { initPostHogIfConsented } from "@/lib/posthog-client"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -30,18 +30,6 @@ Sentry.init({
   sendDefaultPii: false,
 })
 
-if (isPostHogAnalyticsEnabled()) {
-  import("posthog-js").then(({ default: posthog }) => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY!.trim()
-    posthog.init(key, {
-      api_host: getPostHogApiHost(),
-      autocapture: false,
-      capture_exceptions: false,
-      capture_pageview: "history_change",
-      disable_session_recording: true,
-      persistence: "localStorage",
-    })
-  })
-}
+void initPostHogIfConsented()
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

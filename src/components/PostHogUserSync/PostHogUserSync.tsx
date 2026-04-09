@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 
-import { isPostHogAnalyticsEnabled } from "@/lib/posthog-env"
+import { initPostHogIfConsented } from "@/lib/posthog-client"
 
 interface PostHogUserSyncProps {
   userId: string | null
@@ -16,16 +16,17 @@ export default function PostHogUserSync({ userId }: PostHogUserSyncProps) {
   const previousUserId = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
-    if (!isPostHogAnalyticsEnabled()) return
+    initPostHogIfConsented().then((isInitialized) => {
+      if (!isInitialized) return
+      import("posthog-js").then(({ default: posthog }) => {
+        if (userId) {
+          posthog.identify(userId)
+        } else if (previousUserId.current) {
+          posthog.reset()
+        }
 
-    import("posthog-js").then(({ default: posthog }) => {
-      if (userId) {
-        posthog.identify(userId)
-      } else if (previousUserId.current) {
-        posthog.reset()
-      }
-
-      previousUserId.current = userId
+        previousUserId.current = userId
+      })
     })
   }, [userId])
 

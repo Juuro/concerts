@@ -4,6 +4,11 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTypedSession } from "@/lib/auth-client"
+import {
+  getPostHogConsentState,
+  setPostHogConsentState,
+} from "@/lib/posthog-consent"
+import { applyPostHogConsentState } from "@/lib/posthog-client"
 import "./settings.scss"
 
 export default function SettingsPage() {
@@ -21,6 +26,7 @@ export default function SettingsPage() {
     useState(session?.user?.includeUserIdInErrorReports ?? true)
   const [currency, setCurrency] = useState(session?.user?.currency || "EUR")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [analyticsConsent, setAnalyticsConsent] = useState(false)
   const [message, setMessage] = useState<{
     type: "success" | "error"
     text: string
@@ -39,6 +45,10 @@ export default function SettingsPage() {
       )
     }
   }, [session?.user])
+
+  useEffect(() => {
+    setAnalyticsConsent(getPostHogConsentState() === "granted")
+  }, [])
 
   if (isPending) {
     return (
@@ -274,6 +284,26 @@ export default function SettingsPage() {
                 <span className="settings__hint">
                   When enabled, we associate error reports with your account so
                   we can fix problems; you can turn this off at any time.
+                </span>
+              </div>
+
+              <div className="settings__field settings__checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={analyticsConsent}
+                    onChange={(e) => {
+                      const consented = e.target.checked
+                      setAnalyticsConsent(consented)
+                      setPostHogConsentState(consented ? "granted" : "denied")
+                      void applyPostHogConsentState(consented)
+                    }}
+                  />
+                  Allow analytics and session replay
+                </label>
+                <span className="settings__hint">
+                  Uses PostHog for page analytics and optional session replay.
+                  You can change this at any time.
                 </span>
               </div>
             </div>

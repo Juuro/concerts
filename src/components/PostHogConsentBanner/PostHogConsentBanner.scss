@@ -1,0 +1,59 @@
+@use "../../styles/variables.scss";
+
+.posthog-consent-banner {
+  background: variables.$color-white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  bottom: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-width: 560px;
+  padding: 1rem;
+  position: fixed;
+  right: 1rem;
+  width: calc(100% - 2rem);
+  z-index: 1000;
+
+  &__text {
+    margin: 0 0 0.75rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+  }
+
+  &__button {
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: variables.$font-family-text;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    transition:
+      background-color variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      color variables.$transition-duration
+        variables.$transition-easing-decelerate,
+      border-color variables.$transition-duration
+        variables.$transition-easing-decelerate;
+
+    &--primary {
+      background: variables.$color-primary;
+      border: 1px solid variables.$color-primary;
+      color: variables.$color-white;
+    }
+
+    &--secondary {
+      background: variables.$color-white;
+      border: 1px solid #ccc;
+      color: #333;
+    }
+  }
+
+  &__meta {
+    color: #555;
+    font-size: 0.75rem;
+    margin: 0;
+  }
+}

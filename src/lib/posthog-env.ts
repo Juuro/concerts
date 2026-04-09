@@ -14,3 +14,13 @@ export function getPostHogApiHost(): string {
     process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || "https://eu.i.posthog.com"
   )
 }
+
+/**
+ * Session replay is opt-in behind an explicit env flag.
+ * Keep disabled by default until legal and UX controls are in place.
+ */
+export function isPostHogSessionReplayEnabled(): boolean {
+  const flag =
+    process.env.NEXT_PUBLIC_POSTHOG_SESSION_REPLAY_ENABLED?.toLowerCase()
+  return flag === "true" || flag === "1" || flag === "yes"
+}
