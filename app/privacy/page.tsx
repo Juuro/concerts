@@ -312,17 +312,64 @@ export default function PrivacyPage() {
           </section>
 
           <section aria-labelledby="cookies-heading">
-            <h2 id="cookies-heading">9. Cookies</h2>
+            <h2 id="cookies-heading">9. Cookies and usage analytics</h2>
             <p>
               We use strictly necessary cookies for authentication (session
-              cookies). These are required for the service to function and do
-              not require separate consent. Session cookies typically expire
-              after 7 days of inactivity. We do not use advertising or
-              third-party analytics cookies by default. The use of cookies is
-              carried out in accordance with the GDPR and the German
-              Telekommunikation-Telemedien-Datenschutz-Gesetz (TTDSG); strictly
+              cookies). These are required for the service to function. Session
+              cookies typically expire after 7 days of inactivity. Strictly
               necessary cookies such as session cookies do not require consent
-              under § 25(2) TTDSG.
+              under § 25(2) TTDSG where they are essential to provide a service
+              explicitly requested by you.
+            </p>
+            <p>
+              For aggregated usage measurement (for example which pages are
+              viewed and how users navigate the app), we use{" "}
+              <strong>PostHog</strong> (PostHog Inc.), hosted in the{" "}
+              <strong>European Union</strong> (EU Cloud). PostHog receives
+              pseudonymous identifiers (for example a random distinct id stored
+              in <code>localStorage</code> on your device), technical metadata
+              related to your visit (such as browser type and coarse network
+              information as processed by PostHog), and page URLs. If you are
+              signed in, we link events to your <strong>internal user</strong>{" "}
+              identifier only — we do not send your email address or name to
+              PostHog for this purpose. We have configured PostHog without
+              session replay and without DOM autocapture of clicks or form
+              fields, to limit the data collected.
+            </p>
+            <p>
+              PostHog acts as a <strong>processor</strong> on our instructions.
+              Their privacy information and data processing agreement are
+              available at{" "}
+              <a
+                href="https://posthog.com/privacy"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                posthog.com/privacy
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://posthog.com/dpa"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                posthog.com/dpa
+              </a>
+              . Analytics is only active when we enable it in our deployment
+              configuration; when disabled, no usage events are sent to PostHog.
+            </p>
+            <p>
+              <strong>Legal basis:</strong> The appropriate legal basis (for
+              example consent under Art. 6(1)(a) GDPR / § 25 TTDSG, or
+              legitimate interest under Art. 6(1)(f) GDPR with a balancing test)
+              depends on how we roll out analytics in your jurisdiction. This
+              policy will be updated to match the basis we rely on after legal
+              review. We do not use PostHog for behavioural advertising.
+            </p>
+            <p>
+              The use of storage and similar technologies is carried out in
+              accordance with the GDPR and the German
+              Telekommunikation-Telemedien-Datenschutz-Gesetz (TTDSG).
             </p>
           </section>
 

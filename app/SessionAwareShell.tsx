@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import * as Sentry from "@sentry/nextjs"
 import { auth } from "@/lib/auth"
+import PostHogUserSync from "@/components/PostHogUserSync/PostHogUserSync"
 import SentryUserSetter from "@/components/SentryUserSetter/SentryUserSetter"
 
 export default async function SessionAwareShell({
@@ -22,6 +23,7 @@ export default async function SessionAwareShell({
   return (
     <>
       <SentryUserSetter userId={sentryUserId} />
+      <PostHogUserSync userId={sentryUserId} />
       {children}
     </>
   )

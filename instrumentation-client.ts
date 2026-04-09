@@ -3,6 +3,9 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs"
+import posthog from "posthog-js"
+
+import { getPostHogApiHost, isPostHogAnalyticsEnabled } from "@/lib/posthog-env"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -27,5 +30,17 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
   sendDefaultPii: false,
 })
+
+if (isPostHogAnalyticsEnabled()) {
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY!.trim()
+  posthog.init(key, {
+    api_host: getPostHogApiHost(),
+    autocapture: false,
+    capture_exceptions: false,
+    capture_pageview: true,
+    disable_session_recording: true,
+    persistence: "localStorage",
+  })
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

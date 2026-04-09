@@ -44,9 +44,9 @@ function buildCsp(nonce: string): string {
 
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://*.posthog.com https://*.i.posthog.com${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://*.ingest.sentry.io https://tiles.openfreemap.org",
+    "connect-src 'self' https://*.ingest.sentry.io https://tiles.openfreemap.org https://*.posthog.com https://*.i.posthog.com",
     "img-src 'self' blob: data: https://upload.wikimedia.org https://avatars.githubusercontent.com https://tiles.openfreemap.org",
     "font-src 'self' data:",
     "object-src 'none'",
