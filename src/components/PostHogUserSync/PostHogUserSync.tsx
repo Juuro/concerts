@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import posthog from "posthog-js"
 
 import { isPostHogAnalyticsEnabled } from "@/lib/posthog-env"
 
@@ -19,13 +18,15 @@ export default function PostHogUserSync({ userId }: PostHogUserSyncProps) {
   useEffect(() => {
     if (!isPostHogAnalyticsEnabled()) return
 
-    if (userId) {
-      posthog.identify(userId)
-    } else if (previousUserId.current) {
-      posthog.reset()
-    }
+    import("posthog-js").then(({ default: posthog }) => {
+      if (userId) {
+        posthog.identify(userId)
+      } else if (previousUserId.current) {
+        posthog.reset()
+      }
 
-    previousUserId.current = userId
+      previousUserId.current = userId
+    })
   }, [userId])
 
   return null
