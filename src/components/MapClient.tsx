@@ -7,6 +7,8 @@ import "maplibre-gl/dist/maplibre-gl.css"
 interface MapClientProps {
   concerts: Concert[]
   allowFullscreen?: boolean
+  /** When true, popup lines link to /concerts/edit/[id]. Use false on public profiles. */
+  linkConcertsToEdit?: boolean
 }
 
 const STYLE_URL =
@@ -30,6 +32,84 @@ function getName(concert: Concert): string {
     return `${concert.festival?.fields.name || ""} ${getYear(concert.date)}`
   }
   return concert.bands[0]?.name || "Unknown"
+}
+
+const COORD_EPS = 1e-5
+
+function getConcertsAtLngLat(
+  concerts: Concert[],
+  lng: number,
+  lat: number
+): Concert[] {
+  return concerts.filter(
+    (c) =>
+      Math.abs(c.city.lon - lng) < COORD_EPS &&
+      Math.abs(c.city.lat - lat) < COORD_EPS
+  )
+}
+
+function buildPopupDom(
+  rows: { id: string; name: string; venue: string; date: string }[],
+  linkConcertsToEdit: boolean
+): HTMLElement {
+  const root = document.createElement("div")
+  root.className = "map-popup-concerts"
+
+  if (rows.length === 0) {
+    return root
+  }
+
+  if (rows.length === 1) {
+    const m = rows[0]
+    if (linkConcertsToEdit) {
+      const a = document.createElement("a")
+      a.href = `/concerts/edit/${m.id}`
+      const strong = document.createElement("strong")
+      strong.textContent = m.name
+      a.appendChild(strong)
+      root.appendChild(a)
+    } else {
+      const strong = document.createElement("strong")
+      strong.textContent = m.name
+      root.appendChild(strong)
+    }
+    root.appendChild(document.createElement("br"))
+    const line = document.createElement("span")
+    line.textContent = m.venue.length > 0 ? `${m.venue} am ${m.date}` : m.date
+    root.appendChild(line)
+    return root
+  }
+
+  const count = document.createElement("p")
+  count.className = "map-popup-concerts__count"
+  count.textContent = `${rows.length} concerts at this location`
+  root.appendChild(count)
+
+  const ul = document.createElement("ul")
+  ul.className = "map-popup-concerts__list"
+  for (const m of rows) {
+    const li = document.createElement("li")
+    li.className = "map-popup-concerts__item"
+    if (linkConcertsToEdit) {
+      const a = document.createElement("a")
+      a.href = `/concerts/edit/${m.id}`
+      a.textContent = m.name
+      li.appendChild(a)
+    } else {
+      const strong = document.createElement("strong")
+      strong.textContent = m.name
+      li.appendChild(strong)
+    }
+    li.appendChild(document.createElement("br"))
+    const detail = document.createElement("small")
+    detail.className = "map-popup-concerts__detail"
+    detail.textContent = m.venue.length > 0 ? `${m.venue} · ${m.date}` : m.date
+    li.appendChild(detail)
+    ul.appendChild(li)
+  }
+  root.appendChild(ul)
+
+  return root
 }
 
 function concertsToGeoJSON(
@@ -56,6 +136,7 @@ function concertsToGeoJSON(
 export default function MapClient({
   concerts,
   allowFullscreen,
+  linkConcertsToEdit = true,
 }: MapClientProps) {
   const mapInstance = useRef<maplibregl.Map | null>(null)
   const mapContainer = useRef<HTMLDivElement>(null)
@@ -177,23 +258,34 @@ export default function MapClient({
           })
         })
 
-        // Click point -> show popup
+        // Click point -> show popup (all concerts that share this lat/lon)
         map.on("click", "unclustered-point", (e) => {
           if (!e.features?.length) return
           const feature = e.features[0]
           const coords = (
             feature.geometry as GeoJSON.Point
           ).coordinates.slice() as [number, number]
-          const { name, venue, date } = feature.properties!
 
           // Handle world-wrap
           while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
             coords[0] += e.lngLat.lng > coords[0] ? 360 : -360
           }
 
-          new maplibregl.Popup()
+          const atSpot = getConcertsAtLngLat(concerts, coords[0], coords[1])
+            .slice()
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            )
+          const rows = atSpot.map((c) => ({
+            id: c.id,
+            name: getName(c),
+            venue: c.venue || "",
+            date: getDate(c.date),
+          }))
+
+          new maplibregl.Popup({ maxWidth: "320px" })
             .setLngLat(coords)
-            .setHTML(`<strong>${name}</strong><br />${venue} am ${date}`)
+            .setDOMContent(buildPopupDom(rows, linkConcertsToEdit))
             .addTo(map)
         })
 
@@ -233,7 +325,7 @@ export default function MapClient({
         mapInstance.current = null
       }
     }
-  }, [concerts])
+  }, [concerts, linkConcertsToEdit])
 
   return (
     <div
