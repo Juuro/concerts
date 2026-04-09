@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/Toast/Toast"
+import { DATE_LOCALE } from "@/utils/dateLocale"
 
 interface Concert {
   id: string
@@ -139,7 +140,7 @@ export default function ConcertManagement() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    return new Date(dateString).toLocaleDateString(DATE_LOCALE)
   }
 
   const formatCoordinates = (lat: number, lng: number) => {

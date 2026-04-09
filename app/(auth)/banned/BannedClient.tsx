@@ -2,6 +2,7 @@
 
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { DATE_LOCALE } from "@/utils/dateLocale"
 import "./banned.scss"
 
 interface BannedClientProps {
@@ -19,7 +20,7 @@ export default function BannedClient({ reason, expiresAt }: BannedClientProps) {
 
   const formatExpirationDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString(DATE_LOCALE, {
       weekday: "long",
       year: "numeric",
       month: "long",

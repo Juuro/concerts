@@ -4,6 +4,7 @@ import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { cityToSlug, extractCityName } from "../../utils/helpers"
+import { DATE_LOCALE } from "../../utils/dateLocale"
 import type { TransformedConcert } from "@/lib/concerts/types"
 import "./concertCard.scss"
 
@@ -80,7 +81,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
 
   const getDate = () => {
     const date = new Date(concert.date)
-    return date.toLocaleDateString("de-DE", {
+    return date.toLocaleDateString(DATE_LOCALE, {
       year: "numeric",
       month: "long",
       day: "numeric",

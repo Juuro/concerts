@@ -9,16 +9,28 @@ interface MapClientProps {
   allowFullscreen?: boolean
 }
 
+type MapPopupRow = {
+  name: string
+  venue: string
+  date: string
+  /** Headliner / primary act; popup links to `/band/[slug]` when set. */
+  bandSlug: string | null
+}
+
 const STYLE_URL =
   process.env.NEXT_PUBLIC_MAP_STYLE_URL ||
   "https://tiles.openfreemap.org/styles/liberty"
 
+import { DATE_LOCALE } from "@/utils/dateLocale"
+
 function getYear(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString("de-DE", { year: "numeric" })
+  return new Date(dateInput).toLocaleDateString(DATE_LOCALE, {
+    year: "numeric",
+  })
 }
 
 function getDate(dateInput: string): string {
-  return new Date(dateInput).toLocaleDateString("de-DE", {
+  return new Date(dateInput).toLocaleDateString(DATE_LOCALE, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -30,6 +42,127 @@ function getName(concert: Concert): string {
     return `${concert.festival?.fields.name || ""} ${getYear(concert.date)}`
   }
   return concert.bands[0]?.name || "Unknown"
+}
+
+const COORD_EPS = 1e-5
+
+function getConcertsAtLngLat(
+  concerts: Concert[],
+  lng: number,
+  lat: number
+): Concert[] {
+  const lngN = Number(lng)
+  const latN = Number(lat)
+  if (!Number.isFinite(lngN) || !Number.isFinite(latN)) {
+    return []
+  }
+  return concerts.filter((c) => {
+    const clon = Number(c.city.lon)
+    const clat = Number(c.city.lat)
+    return (
+      Number.isFinite(clon) &&
+      Number.isFinite(clat) &&
+      Math.abs(clon - lngN) < COORD_EPS &&
+      Math.abs(clat - latN) < COORD_EPS
+    )
+  })
+}
+
+/** Resolve all concerts at the same map point as the clicked feature (matches by stored coordinates, not by venue). */
+function getConcertsForClickedPoint(
+  concerts: Concert[],
+  feature: GeoJSON.Feature
+): Concert[] {
+  const props = feature.properties as Record<string, unknown> | null
+  const rawId = props?.id
+  const clickedId = rawId != null && rawId !== "" ? String(rawId) : null
+
+  const coords = (feature.geometry as GeoJSON.Point).coordinates
+  const lng = Number(coords[0])
+  const lat = Number(coords[1])
+
+  if (clickedId) {
+    const anchor = concerts.find((c) => String(c.id) === clickedId)
+    if (anchor) {
+      const sameSpot = getConcertsAtLngLat(
+        concerts,
+        anchor.city.lon,
+        anchor.city.lat
+      )
+      return sameSpot.length > 0 ? sameSpot : [anchor]
+    }
+  }
+
+  return getConcertsAtLngLat(concerts, lng, lat)
+}
+
+function appendLinkedTitle(
+  parent: HTMLElement,
+  name: string,
+  bandSlug: string | null
+): void {
+  if (bandSlug) {
+    const a = document.createElement("a")
+    a.href = `/band/${encodeURIComponent(bandSlug)}`
+    const strong = document.createElement("strong")
+    strong.textContent = name
+    a.appendChild(strong)
+    parent.appendChild(a)
+  } else {
+    const strong = document.createElement("strong")
+    strong.textContent = name
+    parent.appendChild(strong)
+  }
+}
+
+function buildPopupDom(rows: MapPopupRow[]): HTMLElement {
+  const root = document.createElement("div")
+  root.className = "map-popup-concerts"
+
+  if (rows.length === 0) {
+    return root
+  }
+
+  if (rows.length === 1) {
+    const m = rows[0]
+    appendLinkedTitle(root, m.name, m.bandSlug)
+    root.appendChild(document.createElement("br"))
+    const line = document.createElement("span")
+    line.textContent = m.venue.length > 0 ? `${m.venue} on ${m.date}` : m.date
+    root.appendChild(line)
+    return root
+  }
+
+  const count = document.createElement("p")
+  count.className = "map-popup-concerts__count"
+  count.textContent = `${rows.length} concerts at this location`
+  root.appendChild(count)
+
+  const ul = document.createElement("ul")
+  ul.className = "map-popup-concerts__list"
+  for (const m of rows) {
+    const li = document.createElement("li")
+    li.className = "map-popup-concerts__item"
+    if (m.bandSlug) {
+      const a = document.createElement("a")
+      a.href = `/band/${encodeURIComponent(m.bandSlug)}`
+      a.textContent = m.name
+      li.appendChild(a)
+    } else {
+      const strong = document.createElement("strong")
+      strong.textContent = m.name
+      li.appendChild(strong)
+    }
+    li.appendChild(document.createElement("br"))
+    const detail = document.createElement("small")
+    detail.className = "map-popup-concerts__detail"
+    detail.textContent = m.venue.length > 0 ? `${m.venue} · ${m.date}` : m.date
+    li.appendChild(detail)
+    ul.appendChild(li)
+  }
+  root.appendChild(ul)
+
+  return root
 }
 
 function concertsToGeoJSON(
@@ -177,23 +310,37 @@ export default function MapClient({
           })
         })
 
-        // Click point -> show popup
+        // Click point -> show popup (all concerts that share this lat/lon)
         map.on("click", "unclustered-point", (e) => {
           if (!e.features?.length) return
-          const feature = e.features[0]
+          const feature = e.features[0] as GeoJSON.Feature
           const coords = (
             feature.geometry as GeoJSON.Point
           ).coordinates.slice() as [number, number]
-          const { name, venue, date } = feature.properties!
 
-          // Handle world-wrap
+          // Handle world-wrap (popup anchor only; matching uses props.id + DB coords)
           while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
             coords[0] += e.lngLat.lng > coords[0] ? 360 : -360
           }
 
-          new maplibregl.Popup()
+          const atSpot = getConcertsForClickedPoint(concerts, feature)
+            .slice()
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            )
+          if (atSpot.length === 0) {
+            return
+          }
+          const rows: MapPopupRow[] = atSpot.map((c) => ({
+            name: getName(c),
+            venue: c.venue || "",
+            date: getDate(c.date),
+            bandSlug: c.isFestival ? null : (c.bands[0]?.slug ?? null),
+          }))
+
+          new maplibregl.Popup({ maxWidth: "320px" })
             .setLngLat(coords)
-            .setHTML(`<strong>${name}</strong><br />${venue} am ${date}`)
+            .setDOMContent(buildPopupDom(rows))
             .addTo(map)
         })
 
