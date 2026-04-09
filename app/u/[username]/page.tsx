@@ -172,11 +172,7 @@ export default async function PublicProfilePage({
           {!hideLocation && concertsForMap.length > 0 && (
             <div className="public-profile__map">
               <h2 className="public-profile__section-title">Concert Map</h2>
-              <MapClient
-                concerts={concertsForMap}
-                allowFullscreen
-                linkConcertsToEdit={false}
-              />
+              <MapClient concerts={concertsForMap} allowFullscreen />
             </div>
           )}
 
