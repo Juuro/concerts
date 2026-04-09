@@ -18,12 +18,14 @@ export default async function SessionAwareShell({
       ? session.user.id
       : null
 
+  const postHogUserId = session?.user?.id ?? null
+
   Sentry.setUser(sentryUserId ? { id: sentryUserId } : null)
 
   return (
     <>
       <SentryUserSetter userId={sentryUserId} />
-      <PostHogUserSync userId={sentryUserId} />
+      <PostHogUserSync userId={postHogUserId} />
       {children}
     </>
   )
