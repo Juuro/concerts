@@ -235,19 +235,6 @@ main {
     font-size: 0.9375rem;
     line-height: 1.45;
     max-width: 280px;
-    padding-top: 0.35rem;
-    position: relative;
-
-    &::before {
-      background: variables.$admin-pink-gradient;
-      border-radius: 2px;
-      content: "";
-      height: 3px;
-      left: 0;
-      position: absolute;
-      right: 0;
-      top: 0;
-    }
 
     strong {
       color: variables.$admin-text;
@@ -257,14 +244,12 @@ main {
     }
 
     &__count {
-      border-bottom: 1px solid rgba(255, 6, 102, 0.12);
       color: variables.$admin-text;
       font-family: variables.$font-family-heading;
       font-size: 0.8125rem;
       font-weight: 700;
       letter-spacing: 0.02em;
-      margin: 0 0 0.65rem;
-      padding-bottom: 0.55rem;
+      margin: 0 0 0.5rem;
     }
 
     &__list {
