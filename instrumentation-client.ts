@@ -37,7 +37,7 @@ if (isPostHogAnalyticsEnabled()) {
       api_host: getPostHogApiHost(),
       autocapture: false,
       capture_exceptions: false,
-      capture_pageview: true,
+      capture_pageview: "history_change",
       disable_session_recording: true,
       persistence: "localStorage",
     })
