@@ -340,7 +340,7 @@ export default function PrivacyPage() {
               identifier only — we do not send your email address or name to
               PostHog for this purpose. We configure PostHog without DOM
               autocapture of clicks or form fields. If you explicitly consent,
-              we may also process session replay data (for example page
+              we may also process session replay data (for example, page
               transitions, interaction timeline, and technical rendering state)
               to diagnose usability and reliability issues.
             </p>
