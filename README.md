@@ -61,6 +61,12 @@ The following environment variables are required:
 
 Without a Last.fm API key, the site will fall back to using Contentful images.
 
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/feedback` | Stores in-app user feedback (bug, feature, general) with server-side validation and rate limiting. |
+
 ## Migration from Gatsby
 
 This project was migrated from Gatsby to Next.js 15. See [MIGRATION.md](MIGRATION.md) for details about the migration process and changes.

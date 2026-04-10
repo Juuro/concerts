@@ -49,6 +49,7 @@ model User {
   festivalsCreated Festival[] @relation("festivalsCreated")
   festivalsUpdated Festival[] @relation("festivalsUpdated")
   adminActivities  AdminActivity[]
+  appFeedback      AppFeedback[]
 
   @@map("user")
 }
@@ -227,4 +228,25 @@ model AdminActivity {
   @@index([createdAt])
   @@index([userId])
   @@map("admin_activity")
+}
+
+enum AppFeedbackCategory {
+  BUG
+  FEATURE
+  GENERAL
+}
+
+model AppFeedback {
+  id        String              @id @default(cuid())
+  createdAt DateTime            @default(now())
+  category  AppFeedbackCategory
+  message   String              @db.Text
+  userId    String?
+  pagePath  String?             @db.VarChar(512)
+  userAgent String?             @db.VarChar(512)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("app_feedback")
 }

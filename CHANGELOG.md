@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [Unreleased]
+
+### Added
+
+- In-app feedback flow with `POST /api/feedback` and `FeedbackModal` UI for bug reports, feature requests, and general feedback.
+- Database persistence for feedback submissions via `AppFeedback` model and migration.
+- Shared Zod validation schema and unit tests for feedback payload validation.
+
+### Changed
+
+- `app/SessionAwareShell.tsx` now mounts the global feedback trigger/modal.
+- `app/privacy/page.tsx` now documents product feedback processing purpose and retention period.
+- `prisma/schema.prisma` now includes feedback enum/model relations.
+
 ## [1.0.0](https://github.com/Juuro/concerts/compare/v0.3.0...v1.0.0) (2022-12-03)
 
 
