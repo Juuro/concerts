@@ -1,4 +1,2 @@
--- No-op: `pg_trgm` extension and `concert_venue_trgm_idx` are created by
--- the earlier migration 20260326000000_add_venue_trigram_index.
--- Keeping this migration empty avoids redundant schema history while
--- preserving migration ordering.
+-- DropIndex
+DROP INDEX "concert_venue_trgm_idx";
