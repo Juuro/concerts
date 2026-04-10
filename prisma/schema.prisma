@@ -50,6 +50,7 @@ model User {
   festivalsUpdated Festival[] @relation("festivalsUpdated")
   adminActivities  AdminActivity[]
   appFeedback      AppFeedback[]
+  feedbackOwned    AppFeedback[] @relation("feedbackOwner")
 
   @@map("user")
 }
@@ -236,17 +237,49 @@ enum AppFeedbackCategory {
   GENERAL
 }
 
-model AppFeedback {
-  id        String              @id @default(cuid())
-  createdAt DateTime            @default(now())
-  category  AppFeedbackCategory
-  message   String              @db.Text
-  userId    String?
-  pagePath  String?             @db.VarChar(512)
-  userAgent String?             @db.VarChar(512)
+enum AppFeedbackTriageStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  DONE
+  DISCARDED
+}
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+enum AppFeedbackPriority {
+  P1
+  P2
+  P3
+  P4
+  P5
+}
+
+model AppFeedback {
+  id                String                   @id @default(cuid())
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  category          AppFeedbackCategory
+  message           String                   @db.Text
+  userId            String?
+  pagePath          String?                  @db.VarChar(512)
+  userAgent         String?                  @db.VarChar(512)
+  triageStatus      AppFeedbackTriageStatus  @default(NEW)
+  priority          AppFeedbackPriority      @default(P3)
+  ownerUserId       String?
+  internalNotes     String?                  @db.Text
+  tags              String[]                 @default([])
+  githubIssueNumber Int?
+  githubIssueUrl    String?                  @db.VarChar(512)
+  githubProjectItemId String?                @db.VarChar(128)
+  triagedAt         DateTime?
+  closedAt          DateTime?
+
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  owner User? @relation("feedbackOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+  @@index([updatedAt])
+  @@index([triageStatus])
+  @@index([priority])
+  @@index([ownerUserId])
   @@map("app_feedback")
 }

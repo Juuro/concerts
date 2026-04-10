@@ -101,6 +101,15 @@ export default function PrivacyPage() {
                 logged in, contract performance (Art. 6(1)(b) GDPR).
               </li>
               <li>
+                <strong>Admin triage and escalation:</strong> Authorized admins
+                may process feedback internally (status, priority, notes,
+                ownership) and may, when necessary to resolve product issues,
+                create a linked GitHub issue from selected feedback. We aim to
+                minimize exported data and avoid unnecessary personal
+                identifiers. <em>Legal basis:</em> Legitimate interest in secure
+                service operation and product improvement (Art. 6(1)(f) GDPR).
+              </li>
+              <li>
                 <strong>Technical logs and security monitoring:</strong> Our
                 hosting and infrastructure providers temporarily process IP
                 addresses, timestamps, User-Agent information, requested URLs,

@@ -2560,3 +2560,221 @@
     font-size: 0.875rem;
   }
 }
+
+// ============================================
+// Feedback Workspace
+// ============================================
+
+.feedback-workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 38%) minmax(420px, 1fr);
+  gap: 1rem;
+
+  @media screen and (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feedback-queue,
+.feedback-detail {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+}
+
+.feedback-queue__controls {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, minmax(100px, 140px));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  @media screen and (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.feedback-queue__controls input,
+.feedback-queue__controls select,
+.feedback-detail input,
+.feedback-detail select,
+.feedback-detail textarea {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+}
+
+.feedback-queue__meta {
+  font-size: 0.8rem;
+  color: variables.$admin-text-secondary;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-queue__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 720px;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feedback-queue__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 10px;
+  padding: 0.65rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color variables.$transition-duration ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: variables.$admin-pink-500;
+    outline: none;
+  }
+}
+
+.feedback-queue__item--active {
+  border-color: variables.$admin-pink-500;
+  box-shadow: 0 0 0 2px rgba(255, 6, 102, 0.12);
+}
+
+.feedback-queue__item-top,
+.feedback-queue__item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.feedback-queue__message {
+  margin: 0.4rem 0;
+  color: variables.$admin-text;
+  line-height: 1.4;
+}
+
+.feedback-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f4f4f5;
+}
+
+.feedback-chip--muted {
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-chip--p1,
+.feedback-chip--p2 {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.feedback-chip--p3 {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.feedback-chip--p4,
+.feedback-chip--p5 {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.feedback-queue__pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.feedback-queue__pagination button,
+.feedback-detail__notes button,
+.feedback-detail__github button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  background: variables.$admin-pink-600;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.feedback-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.feedback-detail--empty {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.feedback-detail__header p {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__message {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.feedback-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 0.7rem;
+
+  @media screen and (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feedback-detail__meta label,
+.feedback-detail__notes label,
+.feedback-detail__github label {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__github {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.75rem;
+}
+
+.feedback-detail__github h3 {
+  margin: 0 0 0.6rem;
+}
+
+.feedback-detail__github-linked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.feedback-detail__github-project {
+  margin: 0;
+  font-size: 0.8rem;
+  color: variables.$admin-text-secondary;
+}

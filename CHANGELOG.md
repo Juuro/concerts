@@ -9,12 +9,16 @@ All notable changes to this project will be documented in this file. See [standa
 - In-app feedback flow with `POST /api/feedback` and `FeedbackModal` UI for bug reports, feature requests, and general feedback.
 - Database persistence for feedback submissions via `AppFeedback` model and migration.
 - Shared Zod validation schema and unit tests for feedback payload validation.
+- Admin feedback operations workspace (`/admin/feedback`) with queue/list triage controls.
+- Admin APIs for feedback queue and detail triage updates (`/api/admin/feedback*`).
+- GitHub issue escalation endpoint for feedback items (`POST /api/admin/feedback/[id]/github`).
 
 ### Changed
 
 - `app/SessionAwareShell.tsx` now mounts the global feedback trigger/modal.
 - `app/privacy/page.tsx` now documents product feedback processing purpose and retention period.
 - `prisma/schema.prisma` now includes feedback enum/model relations.
+- `prisma/schema.prisma` now includes feedback triage metadata (status, priority, owner, notes, GitHub links).
 
 ## [1.0.0](https://github.com/Juuro/concerts/compare/v0.3.0...v1.0.0) (2022-12-03)
 
