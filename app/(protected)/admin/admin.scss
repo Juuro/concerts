@@ -42,6 +42,198 @@
 // Page Layout
 // ============================================
 
+// Sidebar + main content (all /admin/* routes)
+// `main.container` uses `display: grid; justify-items: center` — stretch the shell
+// full-width so the sidebar + dashboard layout is not collapsed to content width (Safari/Chrome).
+main.container > .admin-shell {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-shell {
+  align-items: flex-start;
+  display: flex;
+  gap: 0;
+  justify-self: stretch;
+  max-width: 100%;
+  min-height: calc(100vh - 6rem);
+  min-width: 0;
+  width: 100%;
+
+  @media screen and (max-width: 900px) {
+    flex-direction: column;
+  }
+}
+
+.admin-shell__content {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 2rem 1.25rem;
+
+  @media screen and (max-width: 900px) {
+    padding: 0 1rem 2rem;
+  }
+}
+
+.admin-sidebar {
+  background: variables.$admin-surface;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: variables.$admin-shadow-sm;
+  display: flex;
+  flex: 0 0 15.5rem;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 1rem;
+  max-height: calc(100vh - 6rem);
+  max-width: 100%;
+  padding: 1rem 0 1rem 1rem;
+  position: sticky;
+  top: 1rem;
+  width: 15.5rem;
+
+  @media screen and (max-width: 900px) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-right: none;
+    flex: none;
+    max-height: none;
+    padding: 1rem;
+    position: relative;
+    top: auto;
+    width: 100%;
+  }
+}
+
+.admin-sidebar__brand {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.25rem 0.75rem 0.75rem 0;
+}
+
+.admin-sidebar__brand-icon {
+  align-items: center;
+  color: variables.$admin-pink-600;
+  display: flex;
+  flex-shrink: 0;
+
+  svg {
+    display: block;
+    height: 1.75rem;
+    max-height: 100%;
+    max-width: 100%;
+    width: 1.75rem;
+  }
+}
+
+.admin-sidebar__brand-text {
+  font-family: variables.$font-family-heading;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-sidebar__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: auto;
+  padding-right: 0.75rem;
+}
+
+.admin-sidebar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-sidebar__group-label {
+  color: variables.$admin-text-muted;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.admin-sidebar__link {
+  align-items: center;
+  border-radius: 10px;
+  color: variables.$admin-text-secondary;
+  display: flex;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+  transition:
+    background-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    color variables.$transition-duration variables.$transition-easing-decelerate;
+
+  svg {
+    display: block;
+    flex-shrink: 0;
+    height: 1.2rem;
+    max-height: 1.25rem;
+    max-width: 1.25rem;
+    width: 1.2rem;
+  }
+
+  &:hover {
+    background: variables.$admin-surface-alt;
+    color: variables.$admin-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.admin-sidebar__link--active {
+  background: variables.$admin-pink-100;
+  color: variables.$admin-pink-600;
+}
+
+.admin-sidebar__back {
+  align-items: center;
+  border-radius: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  color: variables.$admin-text-secondary;
+  display: flex;
+  font-size: 0.85rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  margin-right: 0.75rem;
+  margin-top: auto;
+  padding: 0.75rem;
+  text-decoration: none;
+  transition:
+    background-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    color variables.$transition-duration variables.$transition-easing-decelerate;
+
+  svg {
+    flex-shrink: 0;
+    height: 1.1rem;
+    width: 1.1rem;
+  }
+
+  &:hover {
+    background: variables.$admin-surface-alt;
+    color: variables.$admin-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
 .admin-page {
   min-height: 100vh;
   padding: 2rem 1rem;
@@ -50,7 +242,7 @@
 .admin-dashboard {
   position: relative;
   z-index: 1;
-  max-width: 1400px;
+  max-width: min(variables.$admin-dashboard-inner-max-width, 100%);
   margin: 0 auto;
 }
 

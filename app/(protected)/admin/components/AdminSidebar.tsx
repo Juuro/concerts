@@ -4,6 +4,19 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { ReactNode } from "react"
 
+/** Explicit pixel sizes — Safari can blow up SVGs to viewport if only CSS-sized. */
+const NAV_ICON_PROPS = {
+  width: 20,
+  height: 20,
+  viewBox: "0 0 24 24" as const,
+  fill: "none" as const,
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true as const,
+}
+
 interface NavItem {
   href: string
   label: string
@@ -23,15 +36,7 @@ const navGroups: NavGroup[] = [
         href: "/admin",
         label: "Overview",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M3 3v18h18" />
             <path d="M18 17V9" />
             <path d="M13 17V5" />
@@ -48,15 +53,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/bands",
         label: "Bands",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <circle cx="12" cy="12" r="10" />
             <circle cx="12" cy="10" r="3" />
             <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
@@ -67,15 +64,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/festivals",
         label: "Festivals",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M4 12a8 8 0 0 1 16 0" />
             <path d="M12 4v4" />
             <path d="M4 12h16" />
@@ -90,15 +79,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/concerts",
         label: "Concerts",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
@@ -108,15 +89,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/users",
         label: "Users",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -128,15 +101,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/feedback",
         label: "Feedback",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
           </svg>
         ),
@@ -150,15 +115,7 @@ const navGroups: NavGroup[] = [
         href: "/admin/activity",
         label: "Activity Log",
         icon: (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg {...NAV_ICON_PROPS}>
             <path d="M12 8v4l3 3" />
             <circle cx="12" cy="12" r="10" />
           </svg>
@@ -176,11 +133,13 @@ export default function AdminSidebar() {
       <div className="admin-sidebar__brand">
         <div className="admin-sidebar__brand-icon">
           <svg
+            width={28}
+            height={28}
             aria-hidden="true"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -220,11 +179,13 @@ export default function AdminSidebar() {
 
       <Link href="/" className="admin-sidebar__back">
         <svg
+          width={18}
+          height={18}
           aria-hidden="true"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
         >

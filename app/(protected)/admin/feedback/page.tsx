@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import "../admin.scss"
 import FeedbackWorkspace from "../components/FeedbackWorkspace"
 
 export const metadata: Metadata = {

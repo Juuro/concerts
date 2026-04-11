@@ -126,6 +126,18 @@ main {
   justify-items: center;
 }
 
+// Admin: `.container` + `justify-items: center` shrinks `.admin-shell` to max-content (~narrow band).
+// Stretch the grid item and allow a wider max width than default `main` (100rem).
+// See docs/amac-reports/planning-2026-04-11-admin-wide-layout-pink-ink.md
+main.container:has(.admin-shell) {
+  justify-items: stretch;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(variables.$admin-main-max-width, 100%);
+  padding: 1rem clamp(1rem, 2.5vw, 2.5rem) 0;
+  width: 100%;
+}
+
 .bands {
   display: flex;
   flex-wrap: wrap;
