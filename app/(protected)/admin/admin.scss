@@ -2847,6 +2847,14 @@ main.container > .admin-shell {
   color: variables.$admin-text-muted;
 }
 
+.feedback-queue__filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
 .feedback-queue__view-toggle {
   display: inline-flex;
   gap: 0;
@@ -2854,7 +2862,7 @@ main.container > .admin-shell {
   border-radius: 12px;
   background: variables.$admin-surface;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .feedback-queue__toggle {
@@ -2883,12 +2891,14 @@ main.container > .admin-shell {
 }
 
 .feedback-queue__filters-heading {
-  margin: 0 0 0.35rem;
+  margin: 0;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: variables.$admin-text-muted;
+  flex: 1;
+  text-align: center;
 }
 
 .feedback-queue__filter-field {
@@ -2904,15 +2914,16 @@ main.container > .admin-shell {
   color: variables.$admin-text-secondary;
 }
 
-// Default: full-width search, then three equal flexible selects (fits narrow inbox column).
+// Flex row layout for all filters: search + status + priority + category in one line with responsive wrap
 .feedback-queue__controls {
-  display: grid;
+  display: flex;
   gap: 0.5rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex-wrap: wrap;
 }
 
 .feedback-queue__filter-field--search {
-  grid-column: 1 / -1;
+  flex: 1 1 auto;
+  min-width: 120px;
 }
 
 .feedback-queue__search {
@@ -2923,7 +2934,8 @@ main.container > .admin-shell {
 }
 
 .feedback-queue__controls .feedback-queue__filter-field {
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: 80px;
 }
 
 .feedback-queue__controls .feedback-queue__filter-field input,
@@ -2934,29 +2946,49 @@ main.container > .admin-shell {
   width: 100%;
 }
 
-// Very narrow inbox: stack all controls.
+// Very narrow inbox: flex-wrap forces stacking naturally
 @container feedback-inbox (max-width: 380px) {
+  .feedback-queue__filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .feedback-queue__filters-heading {
+    width: 100%;
+    text-align: left;
+  }
+
   .feedback-queue__controls {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .feedback-queue__controls .feedback-queue__filter-field {
+    flex: 1 1 100%;
+    min-width: 0;
   }
 
   .feedback-queue__filter-field--search {
-    grid-column: 1;
+    flex: 1 1 100%;
+    min-width: 0;
   }
 }
 
-// Mid-width inbox: search full width; status + priority row; category full width.
+// Mid-width inbox: search and filters stack appropriately
 @container feedback-inbox (min-width: 381px) and (max-width: 480px) {
   .feedback-queue__controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .feedback-queue__controls .feedback-queue__filter-field {
+    flex: 1 1 45%;
+    min-width: 0;
   }
 
   .feedback-queue__filter-field--search {
-    grid-column: 1 / -1;
-  }
-
-  .feedback-queue__controls .feedback-queue__filter-field--category {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
+    min-width: 0;
   }
 }
 
@@ -2976,6 +3008,8 @@ main.container > .admin-shell {
   font-size: 0.8rem;
   font-weight: 600;
   color: variables.$admin-text-secondary;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .feedback-queue__skeleton {

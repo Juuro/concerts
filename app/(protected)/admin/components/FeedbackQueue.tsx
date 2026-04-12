@@ -108,41 +108,50 @@ export default function FeedbackQueue({
         </p>
       </div>
 
-      <div
-        className="feedback-queue__view-toggle"
-        role="group"
-        aria-label="Queue scope"
-      >
-        <button
-          type="button"
-          className={`feedback-queue__toggle${queueMode === "active" ? " feedback-queue__toggle--active" : ""}`}
-          aria-pressed={queueMode === "active"}
-          onClick={() => {
-            setOffset(0)
-            setQueueMode("active")
-          }}
+      <div className="feedback-queue__filter-bar">
+        <div
+          className="feedback-queue__view-toggle"
+          role="group"
+          aria-label="Queue scope"
         >
-          Active
-        </button>
-        <button
-          type="button"
-          className={`feedback-queue__toggle${queueMode === "all" ? " feedback-queue__toggle--active" : ""}`}
-          aria-pressed={queueMode === "all"}
-          onClick={() => {
-            setOffset(0)
-            setQueueMode("all")
-          }}
+          <button
+            type="button"
+            className={`feedback-queue__toggle${queueMode === "active" ? " feedback-queue__toggle--active" : ""}`}
+            aria-pressed={queueMode === "active"}
+            onClick={() => {
+              setOffset(0)
+              setQueueMode("active")
+            }}
+          >
+            Active
+          </button>
+          <button
+            type="button"
+            className={`feedback-queue__toggle${queueMode === "all" ? " feedback-queue__toggle--active" : ""}`}
+            aria-pressed={queueMode === "all"}
+            onClick={() => {
+              setOffset(0)
+              setQueueMode("all")
+            }}
+          >
+            All
+          </button>
+        </div>
+
+        <h3
+          className="feedback-queue__filters-heading"
+          id="feedback-filters-heading"
         >
-          All
-        </button>
+          Filters
+        </h3>
+
+        <div className="feedback-queue__meta" aria-live="polite">
+          {loading
+            ? "Loading…"
+            : `${total} feedback ${total === 1 ? "item" : "items"}`}
+        </div>
       </div>
 
-      <h3
-        className="feedback-queue__filters-heading"
-        id="feedback-filters-heading"
-      >
-        Filters
-      </h3>
       <div
         className="feedback-queue__controls"
         role="group"
@@ -232,12 +241,6 @@ export default function FeedbackQueue({
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="feedback-queue__meta" aria-live="polite">
-        {loading
-          ? "Loading…"
-          : `${total} feedback ${total === 1 ? "item" : "items"}`}
       </div>
 
       {loading ? (
