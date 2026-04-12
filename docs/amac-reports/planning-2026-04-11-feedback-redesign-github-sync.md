@@ -178,5 +178,6 @@
 
 ## Checkpoint (AMAC)
 
-- **Next step:** Approve slices → implement Slice 1 → Slice 2 → optional Slice 3.  
-- **Estimated effort:** Slice 1: 0.5–1 d; Slice 2: 1–1.5 d; Slice 3: 0.5 d + ops.
+- **Status (2026-04-12):** **Implemented** — Phases 3–5 closed after explicit user approval (“Implement everything”).  
+- **Delivered:** Active/All queue + `queue` query param; `githubIssueState` / `githubSyncedAt`; `POST …/github/sync`; `GET /api/cron/feedback-github-sync` + `vercel.json`; Pink Ink feedback ops UI; `FEEDBACK_GITHUB_CLOSE_SETS_DONE` + `CRON_SECRET` in `.env.example`.  
+- **Verify:** `yarn test` — 317 passed.

@@ -20,7 +20,12 @@ function sanitizeText(input: string): string {
   return input.replace(EMAIL_REGEX, "[redacted-email]").trim()
 }
 
-function getRepoConfig(): { token: string; owner: string; repo: string } {
+/** Repo + token for GitHub REST (issues, issue status). */
+export function getGithubFeedbackRepoConfig(): {
+  token: string
+  owner: string
+  repo: string
+} {
   const token = getGithubFeedbackToken()
   const repoPath = process.env.GITHUB_FEEDBACK_REPO
 
@@ -32,6 +37,10 @@ function getRepoConfig(): { token: string; owner: string; repo: string } {
 
   const [owner, repo] = repoPath.split("/")
   return { token, owner, repo }
+}
+
+function getRepoConfig(): { token: string; owner: string; repo: string } {
+  return getGithubFeedbackRepoConfig()
 }
 
 export async function createFeedbackIssue(

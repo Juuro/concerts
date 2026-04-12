@@ -90,6 +90,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         githubIssueNumber: created.number,
         githubIssueUrl: created.url,
         githubProjectItemId: githubProjectItemId ?? undefined,
+        githubIssueState: "OPEN",
+        githubSyncedAt: new Date(),
         triageStatus:
           feedback.triageStatus === "NEW" ? "TRIAGED" : feedback.triageStatus,
         triagedAt: feedback.triagedAt ?? new Date(),

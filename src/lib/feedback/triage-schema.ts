@@ -10,7 +10,11 @@ export const feedbackStatusSchema = z.enum([
 
 export const feedbackPrioritySchema = z.enum(["P1", "P2", "P3", "P4", "P5"])
 
+export const feedbackQueueModeSchema = z.enum(["active", "all"])
+
 export const feedbackListQuerySchema = z.object({
+  /** Default `active`: hide DONE/DISCARDED and GitHub-closed linked items. */
+  queue: feedbackQueueModeSchema.default("active"),
   status: feedbackStatusSchema.optional(),
   category: z.enum(["BUG", "FEATURE", "GENERAL"]).optional(),
   priority: feedbackPrioritySchema.optional(),

@@ -66,9 +66,11 @@ Without a Last.fm API key, the site will fall back to using Contentful images.
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/feedback` | Stores in-app user feedback (bug, feature, general) with server-side validation and rate limiting. |
-| `GET` | `/api/admin/feedback` | Admin-only queue endpoint for triage filters and pagination. |
+| `GET` | `/api/admin/feedback` | Admin-only queue (`queue=active` default or `all`, plus filters and pagination). |
 | `GET/PATCH` | `/api/admin/feedback/[id]` | Admin-only feedback detail and triage updates (status, priority, owner, notes). |
 | `POST` | `/api/admin/feedback/[id]/github` | Admin-only escalation endpoint creating a linked GitHub issue. |
+| `POST` | `/api/admin/feedback/[id]/github/sync` | Refreshes linked issue open/closed state from GitHub (server token). |
+| `GET` | `/api/cron/feedback-github-sync` | Secured cron (`Authorization: Bearer CRON_SECRET`) to batch-sync stale linked issues. |
 
 ## Migration from Gatsby
 

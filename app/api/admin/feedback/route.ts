@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
+import { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
 import { feedbackListQuerySchema } from "@/lib/feedback/triage-schema"
 
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   const parsed = feedbackListQuerySchema.safeParse({
+    queue: request.nextUrl.searchParams.get("queue") ?? undefined,
     status: request.nextUrl.searchParams.get("status") ?? undefined,
     category: request.nextUrl.searchParams.get("category") ?? undefined,
     priority: request.nextUrl.searchParams.get("priority") ?? undefined,
@@ -32,22 +34,46 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { status, category, priority, q, limit, offset } = parsed.data
+  const { queue, status, category, priority, q, limit, offset } = parsed.data
 
-  const where = {
-    ...(status ? { triageStatus: status } : {}),
-    ...(category ? { category } : {}),
-    ...(priority ? { priority } : {}),
-    ...(q
-      ? {
-          OR: [
-            { message: { contains: q, mode: "insensitive" as const } },
-            { pagePath: { contains: q, mode: "insensitive" as const } },
-            { tags: { has: q } },
-          ],
-        }
-      : {}),
+  const conditions: Prisma.AppFeedbackWhereInput[] = []
+
+  if (status) {
+    conditions.push({ triageStatus: status })
   }
+  if (category) {
+    conditions.push({ category })
+  }
+  if (priority) {
+    conditions.push({ priority })
+  }
+  if (q) {
+    conditions.push({
+      OR: [
+        { message: { contains: q, mode: "insensitive" } },
+        { pagePath: { contains: q, mode: "insensitive" } },
+        { tags: { has: q } },
+      ],
+    })
+  }
+
+  if (!status && queue === "active") {
+    conditions.push({ triageStatus: { notIn: ["DONE", "DISCARDED"] } })
+    conditions.push({
+      OR: [
+        { githubIssueNumber: null },
+        { githubIssueState: null },
+        { githubIssueState: { not: "CLOSED" } },
+      ],
+    })
+  }
+
+  const where: Prisma.AppFeedbackWhereInput =
+    conditions.length === 0
+      ? {}
+      : conditions.length === 1
+        ? conditions[0]!
+        : { AND: conditions }
 
   try {
     const [items, total] = await Promise.all([
@@ -64,6 +90,8 @@ export async function GET(request: NextRequest) {
           tags: true,
           githubIssueNumber: true,
           githubIssueUrl: true,
+          githubIssueState: true,
+          githubSyncedAt: true,
           message: true,
           user: {
             select: {

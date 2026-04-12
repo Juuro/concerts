@@ -15,34 +15,24 @@ export default function FeedbackWorkspace() {
   }, [])
 
   return (
-    <>
+    <div className="feedback-ops">
       <div className="admin-page-header">
-        <h1 className="admin-page-header__title">Feedback Operations</h1>
+        <h1 className="admin-page-header__title">Feedback operations</h1>
         <p className="admin-page-header__desc">
           Triage incoming feedback, prioritize fixes, and escalate actionable
-          items to GitHub.
+          items to GitHub. The <strong>Active</strong> inbox hides completed and
+          GitHub-closed items so your queue stays actionable.
         </p>
       </div>
 
-      <section
-        className="admin-card"
-        aria-labelledby="feedback-workspace-heading"
-      >
-        <div className="admin-card__header">
-          <h2 id="feedback-workspace-heading" className="admin-card__title">
-            Feedback Workspace
-          </h2>
-        </div>
-
-        <div className="feedback-workspace" data-refresh-tick={refreshTick}>
-          <FeedbackQueue
-            key={refreshTick}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-          <FeedbackDetailPanel feedbackId={selectedId} />
-        </div>
-      </section>
-    </>
+      <div className="feedback-ops__workspace" data-refresh-tick={refreshTick}>
+        <FeedbackQueue
+          key={refreshTick}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
+        <FeedbackDetailPanel feedbackId={selectedId} />
+      </div>
+    </div>
   )
 }

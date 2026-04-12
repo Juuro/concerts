@@ -253,6 +253,11 @@ enum AppFeedbackPriority {
   P5
 }
 
+enum GithubIssueState {
+  OPEN
+  CLOSED
+}
+
 model AppFeedback {
   id                String                   @id @default(cuid())
   createdAt         DateTime                 @default(now())
@@ -267,11 +272,13 @@ model AppFeedback {
   ownerUserId       String?
   internalNotes     String?                  @db.Text
   tags              String[]                 @default([])
-  githubIssueNumber Int?
-  githubIssueUrl    String?                  @db.VarChar(512)
-  githubProjectItemId String?                @db.VarChar(128)
-  triagedAt         DateTime?
-  closedAt          DateTime?
+  githubIssueNumber   Int?
+  githubIssueUrl      String?                  @db.VarChar(512)
+  githubProjectItemId String?                  @db.VarChar(128)
+  githubIssueState    GithubIssueState?
+  githubSyncedAt      DateTime?
+  triagedAt           DateTime?
+  closedAt            DateTime?
 
   user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   owner User? @relation("feedbackOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)

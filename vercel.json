@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/feedback-github-sync",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
