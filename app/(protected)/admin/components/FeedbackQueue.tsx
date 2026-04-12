@@ -23,6 +23,7 @@ interface FeedbackItem {
 interface FeedbackQueueProps {
   selectedId: string | null
   onSelect: (id: string) => void
+  refreshTick?: number
 }
 
 const STATUSES = ["NEW", "TRIAGED", "IN_PROGRESS", "DONE", "DISCARDED"] as const
@@ -34,6 +35,7 @@ type QueueMode = "active" | "all"
 export default function FeedbackQueue({
   selectedId,
   onSelect,
+  refreshTick,
 }: FeedbackQueueProps) {
   const [items, setItems] = useState<FeedbackItem[]>([])
   const [total, setTotal] = useState(0)
@@ -81,6 +83,14 @@ export default function FeedbackQueue({
   useEffect(() => {
     fetchQueue()
   }, [fetchQueue])
+
+  // Refetch when an external update fires (e.g. detail panel save) without
+  // remounting the component, so filter state is preserved.
+  useEffect(() => {
+    if (!refreshTick) return
+    fetchQueue()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTick])
 
   useEffect(() => {
     if (items.length === 0) {
@@ -252,19 +262,14 @@ export default function FeedbackQueue({
       ) : (
         <ul
           className="feedback-queue__list"
-          role="listbox"
           aria-label="Feedback queue"
-          {...(selectedId
-            ? { "aria-activedescendant": `feedback-item-${selectedId}` }
-            : {})}
         >
           {items.map((item) => (
-            <li key={item.id} role="presentation">
+            <li key={item.id}>
               <button
                 type="button"
                 id={`feedback-item-${item.id}`}
-                role="option"
-                aria-selected={selectedId === item.id}
+                aria-current={selectedId === item.id ? true : undefined}
                 className={`feedback-queue__item${selectedId === item.id ? " feedback-queue__item--active" : ""}`}
                 onClick={() => onSelect(item.id)}
               >

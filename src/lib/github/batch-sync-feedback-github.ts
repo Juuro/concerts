@@ -26,12 +26,24 @@ export async function batchSyncStaleFeedbackGithub(options?: {
     take: maxItems,
   })
 
+  // Resolve actor once for the whole batch to avoid a DB query per row
+  const actorAdmin = await prisma.user.findFirst({
+    where: { role: "admin" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  })
+  const actorUserId = actorAdmin?.id
+
   let errors = 0
   for (const row of rows) {
     try {
-      await syncAppFeedbackGithubState(row.id, {})
-    } catch {
+      await syncAppFeedbackGithubState(row.id, { actorUserId })
+    } catch (err) {
       errors++
+      console.error(
+        `[batch-sync-feedback] Failed to sync feedback ${row.id}:`,
+        err
+      )
     }
   }
 

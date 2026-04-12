@@ -27,9 +27,9 @@ export default function FeedbackWorkspace() {
 
       <div className="feedback-ops__workspace" data-refresh-tick={refreshTick}>
         <FeedbackQueue
-          key={refreshTick}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          refreshTick={refreshTick}
         />
         <FeedbackDetailPanel feedbackId={selectedId} />
       </div>

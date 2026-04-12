@@ -137,6 +137,17 @@ vi.mock("@/lib/prisma", () => {
       groupBy: vi.fn(),
       count: vi.fn(),
     },
+    appFeedback: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    },
+    adminActivity: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
   }
 
   const prismaMock = {

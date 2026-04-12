@@ -78,18 +78,37 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
-    const nextStatus = parsed.data.triageStatus ?? existing.triageStatus
+    const requestedStatus = parsed.data.triageStatus
+    const nextStatus = requestedStatus ?? existing.triageStatus
     const shouldSetTriagedAt =
       !existing.triagedAt && nextStatus !== "NEW" && nextStatus !== "DISCARDED"
-    const shouldSetClosedAt =
-      nextStatus === "DONE" || nextStatus === "DISCARDED"
+
+    const wasClosed =
+      existing.triageStatus === "DONE" || existing.triageStatus === "DISCARDED"
+    const willBeClosed = nextStatus === "DONE" || nextStatus === "DISCARDED"
+    const isExplicitStatusChange =
+      requestedStatus !== undefined && requestedStatus !== existing.triageStatus
+    const transitionedIntoClosed = isExplicitStatusChange && !wasClosed && willBeClosed
+    const transitionedOutOfClosed = isExplicitStatusChange && wasClosed && !willBeClosed
+
+    // Only update closedAt on explicit status transitions:
+    // - Set to now when transitioning INTO a closed state
+    // - Preserve existing closedAt when already in a closed state
+    // - Clear to null only when explicitly transitioning OUT of a closed state
+    const nextClosedAt = transitionedIntoClosed
+      ? new Date()
+      : willBeClosed
+        ? (existing.closedAt ?? new Date())
+        : transitionedOutOfClosed
+          ? null
+          : existing.closedAt
 
     const updated = await prisma.appFeedback.update({
       where: { id },
       data: {
         ...parsed.data,
         triagedAt: shouldSetTriagedAt ? new Date() : existing.triagedAt,
-        closedAt: shouldSetClosedAt ? new Date() : null,
+        closedAt: nextClosedAt,
       },
       include: {
         user: { select: { id: true, email: true, name: true } },

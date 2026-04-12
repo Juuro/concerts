@@ -56,35 +56,37 @@ export async function syncAppFeedbackGithubState(
     row.triageStatus !== "DONE" &&
     row.triageStatus !== "DISCARDED"
 
-  const updated = await prisma.appFeedback.update({
-    where: { id: feedbackId },
-    data: {
-      githubIssueState: prismaState,
-      githubSyncedAt: syncedAt,
-      ...(autoDone
-        ? {
-            triageStatus: "DONE" as const,
-            closedAt: new Date(),
-          }
-        : {}),
-    },
-  })
-
+  // Resolve actor before the transaction so a missing admin throws early
   const actorId = await resolveActorUserId(options.actorUserId)
 
-  await prisma.adminActivity.create({
-    data: {
-      userId: actorId,
-      action: "feedback_github_sync",
-      targetType: "feedback",
-      targetId: feedbackId,
-      details: {
-        githubIssueNumber: row.githubIssueNumber,
+  const [updated] = await prisma.$transaction([
+    prisma.appFeedback.update({
+      where: { id: feedbackId },
+      data: {
         githubIssueState: prismaState,
-        autoDoneApplied: autoDone,
+        githubSyncedAt: syncedAt,
+        ...(autoDone
+          ? {
+              triageStatus: "DONE" as const,
+              closedAt: new Date(),
+            }
+          : {}),
       },
-    },
-  })
+    }),
+    prisma.adminActivity.create({
+      data: {
+        userId: actorId,
+        action: "feedback_github_sync",
+        targetType: "feedback",
+        targetId: feedbackId,
+        details: {
+          githubIssueNumber: row.githubIssueNumber,
+          githubIssueState: prismaState,
+          autoDoneApplied: autoDone,
+        },
+      },
+    }),
+  ])
 
   return {
     id: updated.id,
