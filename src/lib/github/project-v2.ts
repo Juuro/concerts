@@ -191,9 +191,19 @@ export async function linkIssueToProjectV2(issueNodeId: string): Promise<{
     return null
   }
 
+  let projectNumber: number | undefined
+  if (!nodeIdOverride && numberRaw) {
+    projectNumber = parseInt(numberRaw, 10)
+    if (!Number.isFinite(projectNumber)) {
+      throw new Error(
+        `GITHUB_PROJECT_NUMBER env var is misconfigured: "${numberRaw}" is not a valid integer`
+      )
+    }
+  }
+
   const project = nodeIdOverride
     ? await loadProjectByNodeId(nodeIdOverride)
-    : await loadProjectByOwnerAndNumber(owner!, Number(numberRaw))
+    : await loadProjectByOwnerAndNumber(owner!, projectNumber!)
 
   const addMutation = `
     mutation ($projectId: ID!, $contentId: ID!) {
