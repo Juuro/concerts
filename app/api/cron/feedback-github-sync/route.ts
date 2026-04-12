@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { batchSyncStaleFeedbackGithub } from "@/lib/github/batch-sync-feedback-github"
 
 /**
- * Hourly (or on-demand) sync of GitHub issue open/closed state for linked feedback.
- * Protect with CRON_SECRET: `Authorization: Bearer <CRON_SECRET>`.
+ * Daily (or on-demand) sync of GitHub issue open/closed state for linked feedback.
+ * Vercel automatically sends `Authorization: Bearer <CRON_SECRET>` when invoking cron jobs.
+ * For manual invocations, pass the same header.
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim()
