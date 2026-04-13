@@ -2,7 +2,10 @@ import { prisma } from "@/lib/prisma"
 import AdminAttentionClient from "./AdminAttentionClient"
 
 export interface AttentionStats {
+  /** Bands that have never had image enrichment (`Missing Images` queue). */
   bandsWithoutImages: number
+  /** Bands where enrichment ran but `imageUrl` is still null (`Enrichment Failed` queue). */
+  bandsEnrichmentFailed: number
   totalBands: number
   concertsWithoutCity: number
   totalConcerts: number
@@ -15,6 +18,7 @@ export interface AttentionStats {
 async function getAttentionStats(): Promise<AttentionStats> {
   const [
     bandsWithoutImages,
+    bandsEnrichmentFailed,
     totalBands,
     concertsWithoutCity,
     totalConcerts,
@@ -24,7 +28,10 @@ async function getAttentionStats(): Promise<AttentionStats> {
     totalUsers,
   ] = await Promise.all([
     prisma.band.count({
-      where: { imageUrl: null },
+      where: { imageUrl: null, imageEnrichedAt: null },
+    }),
+    prisma.band.count({
+      where: { imageUrl: null, imageEnrichedAt: { not: null } },
     }),
     prisma.band.count(),
     prisma.concert.count({
@@ -41,6 +48,7 @@ async function getAttentionStats(): Promise<AttentionStats> {
 
   return {
     bandsWithoutImages,
+    bandsEnrichmentFailed,
     totalBands,
     concertsWithoutCity,
     totalConcerts,

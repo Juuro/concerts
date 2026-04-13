@@ -12,6 +12,7 @@ export async function GET() {
 
   const [
     bandsWithoutImages,
+    bandsEnrichmentFailed,
     totalBands,
     concertsWithoutCity,
     totalConcerts,
@@ -21,7 +22,10 @@ export async function GET() {
     totalUsers,
   ] = await Promise.all([
     prisma.band.count({
-      where: { imageUrl: null },
+      where: { imageUrl: null, imageEnrichedAt: null },
+    }),
+    prisma.band.count({
+      where: { imageUrl: null, imageEnrichedAt: { not: null } },
     }),
     prisma.band.count(),
     prisma.concert.count({
@@ -38,6 +42,7 @@ export async function GET() {
 
   return NextResponse.json({
     bandsWithoutImages,
+    bandsEnrichmentFailed,
     totalBands,
     concertsWithoutCity,
     totalConcerts,
