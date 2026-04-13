@@ -67,7 +67,7 @@ export async function createFeedbackIssue(
         body: [
           `Feedback ID: ${input.feedbackId}`,
           `Category: ${input.category}`,
-          input.pagePath ? `Page: ${input.pagePath}` : null,
+          input.pagePath ? `Page: ${sanitizeText(input.pagePath)}` : null,
           "",
           sanitizeText(input.body),
         ]
