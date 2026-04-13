@@ -28,15 +28,22 @@ export function getGithubFeedbackRepoConfig(): {
   repo: string
 } {
   const token = getGithubFeedbackToken()
-  const repoPath = process.env.GITHUB_FEEDBACK_REPO
+  const repoPath = process.env.GITHUB_FEEDBACK_REPO?.trim()
 
-  if (!repoPath || !repoPath.includes("/")) {
+  if (!repoPath) {
     throw new Error(
-      "Missing or invalid GITHUB_FEEDBACK_REPO (expected owner/repo)"
+      "Missing GITHUB_FEEDBACK_REPO environment variable (expected owner/repo)"
     )
   }
 
-  const [owner, repo] = repoPath.split("/")
+  const parts = repoPath.split("/")
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    throw new Error(
+      `Invalid GITHUB_FEEDBACK_REPO "${repoPath}" (expected exactly owner/repo)`
+    )
+  }
+
+  const [owner, repo] = parts
   return { token, owner, repo }
 }
 
