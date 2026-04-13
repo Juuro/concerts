@@ -160,19 +160,11 @@ function pickStatusOption(
   field: SingleSelectField,
   preferredName: string | undefined
 ): string | undefined {
-  const opts = field.options
-  if (preferredName) {
-    const exact = opts.find(
-      (o) => o.name.toLowerCase() === preferredName.toLowerCase()
-    )
-    if (exact) return exact.id
-  }
-  const fallbacks = ["Todo", "To do", "New", "Backlog", "Triage", "Triaged"]
-  for (const name of fallbacks) {
-    const o = opts.find((x) => x.name.toLowerCase() === name.toLowerCase())
-    if (o) return o.id
-  }
-  return opts[0]?.id
+  if (!preferredName) return undefined
+  const exact = field.options.find(
+    (o) => o.name.toLowerCase() === preferredName.toLowerCase()
+  )
+  return exact?.id
 }
 
 /**
