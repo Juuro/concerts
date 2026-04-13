@@ -278,7 +278,8 @@ export default function BandAutocomplete({
         if (
           selectedBands.some(
             (sb) =>
-              normalizeBandSearchKey(sb.name) === normalizeBandSearchKey(trimmed)
+              normalizeBandSearchKey(sb.name) ===
+              normalizeBandSearchKey(trimmed)
           )
         ) {
           setSearchTerm("")

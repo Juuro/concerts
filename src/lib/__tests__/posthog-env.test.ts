@@ -18,6 +18,7 @@ describe("posthog-env", () => {
     describe("returns false when key is missing or empty", () => {
       it("returns false when NEXT_PUBLIC_POSTHOG_KEY is undefined", () => {
         vi.stubEnv("NEXT_PUBLIC_POSTHOG_ENABLED", "true")
+        delete process.env.NEXT_PUBLIC_POSTHOG_KEY
         expect(isPostHogAnalyticsEnabled()).toBe(false)
       })
 
@@ -37,6 +38,7 @@ describe("posthog-env", () => {
     describe("returns false when enabled flag is missing or invalid", () => {
       it("returns false when NEXT_PUBLIC_POSTHOG_ENABLED is undefined", () => {
         vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test123")
+        delete process.env.NEXT_PUBLIC_POSTHOG_ENABLED
         expect(isPostHogAnalyticsEnabled()).toBe(false)
       })
 

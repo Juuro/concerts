@@ -19,6 +19,14 @@ These principles must always be respected when building or editing features:
 - **Content Security Policy**: CSP is set in `proxy.ts`. Scripts use a per-request nonce (`script-src 'self' 'nonce-{nonce}' 'strict-dynamic'`); styles use `'unsafe-inline'` without a nonce (Next.js/Turbopack does not inject nonces into all `<style>` tags, and mixing a nonce with `'unsafe-inline'` causes the browser to ignore `'unsafe-inline'`). When adding new client-facing external services (e.g. new APIs, widgets, or script/style hosts), update the CSP in `proxy.ts` so the new origins are allowed in the relevant directives (e.g. `connect-src`, `script-src`, `img-src`). Server-only integrations (e.g. Photon, Last.fm, MusicBrainz) do not require CSP entries.
 - **Privacy**: Public profiles are strictly opt-in via the `isPublic` flag. Concert data is scoped to the owning user. Public profile routes return 404 for non-public users. The concerts API checks `isPublic` before returning data for username-based queries.
 
+## Package Manager: Yarn 4 Only
+
+**ALWAYS use `yarn`. NEVER use `npm`, `npx`, `pnpm`, or any other package manager.** This project uses Yarn 4 (Berry). Some classic commands do not exist in Yarn 4:
+
+- `yarn audit` **does NOT exist** in Yarn 4. Use `yarn npm audit` instead.
+- Use `yarn dlx` instead of `npx` for one-off bin execution.
+- Use `yarn add` / `yarn remove`, never `npm install` / `npm uninstall`.
+
 ## Commands
 
 ```bash

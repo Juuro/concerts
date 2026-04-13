@@ -7,7 +7,6 @@ import ActivityChart from "./components/ActivityChart"
 import ActivityLog from "./components/ActivityLog"
 import HealthScore from "./components/HealthScore"
 import AdminManagementTabs from "./components/AdminManagementTabs"
-import "./admin.scss"
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | My Concerts",

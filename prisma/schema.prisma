@@ -49,6 +49,8 @@ model User {
   festivalsCreated Festival[] @relation("festivalsCreated")
   festivalsUpdated Festival[] @relation("festivalsUpdated")
   adminActivities  AdminActivity[]
+  appFeedback      AppFeedback[]
+  feedbackOwned    AppFeedback[] @relation("feedbackOwner")
 
   @@map("user")
 }
@@ -227,4 +229,64 @@ model AdminActivity {
   @@index([createdAt])
   @@index([userId])
   @@map("admin_activity")
+}
+
+enum AppFeedbackCategory {
+  BUG
+  FEATURE
+  GENERAL
+}
+
+enum AppFeedbackTriageStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  DONE
+  DISCARDED
+}
+
+enum AppFeedbackPriority {
+  P1
+  P2
+  P3
+  P4
+  P5
+}
+
+enum GithubIssueState {
+  OPEN
+  CLOSED
+}
+
+model AppFeedback {
+  id                String                   @id @default(cuid())
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  category          AppFeedbackCategory
+  message           String                   @db.Text
+  userId            String?
+  pagePath          String?                  @db.VarChar(512)
+  userAgent         String?                  @db.VarChar(512)
+  triageStatus      AppFeedbackTriageStatus  @default(NEW)
+  priority          AppFeedbackPriority      @default(P3)
+  ownerUserId       String?
+  internalNotes     String?                  @db.Text
+  tags              String[]                 @default([])
+  githubIssueNumber   Int?
+  githubIssueUrl      String?                  @db.VarChar(512)
+  githubProjectItemId String?                  @db.VarChar(128)
+  githubIssueState    GithubIssueState?
+  githubSyncedAt      DateTime?
+  triagedAt           DateTime?
+  closedAt            DateTime?
+
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  owner User? @relation("feedbackOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([triageStatus])
+  @@index([priority])
+  @@index([ownerUserId])
+  @@map("app_feedback")
 }

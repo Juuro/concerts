@@ -90,6 +90,26 @@ export default function PrivacyPage() {
                 6(1)(f) GDPR).
               </li>
               <li>
+                <strong>Product feedback:</strong> When you use the in-app
+                feedback form, we process the text you enter, the feedback type
+                you select (bug report, feature request, or general), the page
+                path you were on (if provided by the app), and the browser
+                user-agent string to understand and improve the service. If you
+                are logged in, we also store your account identifier with the
+                submission. <em>Legal basis:</em> Legitimate interest in
+                improving the service (Art. 6(1)(f) GDPR) and, where you are
+                logged in, contract performance (Art. 6(1)(b) GDPR).
+              </li>
+              <li>
+                <strong>Admin triage and escalation:</strong> Authorized admins
+                may process feedback internally (status, priority, notes,
+                ownership) and may, when necessary to resolve product issues,
+                create a linked GitHub issue from selected feedback. We aim to
+                minimize exported data and avoid unnecessary personal
+                identifiers. <em>Legal basis:</em> Legitimate interest in secure
+                service operation and product improvement (Art. 6(1)(f) GDPR).
+              </li>
+              <li>
                 <strong>Technical logs and security monitoring:</strong> Our
                 hosting and infrastructure providers temporarily process IP
                 addresses, timestamps, User-Agent information, requested URLs,
@@ -228,6 +248,12 @@ export default function PrivacyPage() {
                 information) are generally retained for 7–30 days, unless a
                 longer retention period is required in the context of specific
                 security incidents or legal obligations.
+              </li>
+              <li>
+                <strong>Product feedback submissions:</strong> Stored until they
+                are no longer needed for handling your request and improving the
+                service, typically for up to 24 months, unless a shorter or
+                longer period is required for legal claims or compliance.
               </li>
             </ul>
           </section>

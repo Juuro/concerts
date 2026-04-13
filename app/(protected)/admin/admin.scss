@@ -42,6 +42,239 @@
 // Page Layout
 // ============================================
 
+// Sidebar + main content (all /admin/* routes)
+// `main.container` uses `display: grid; justify-items: center` — stretch the shell
+// full-width so the sidebar + dashboard layout is not collapsed to content width (Safari/Chrome).
+main.container > .admin-shell {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-shell {
+  align-items: flex-start;
+  display: flex;
+  gap: 0;
+  justify-self: stretch;
+  max-width: 100%;
+  min-height: calc(100vh - 6rem);
+  min-width: 0;
+  width: 100%;
+
+  @media screen and (max-width: 900px) {
+    flex-direction: column;
+  }
+}
+
+.admin-shell__content {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 2rem 1.25rem;
+
+  @media screen and (max-width: 900px) {
+    padding: 0 1rem 2rem;
+  }
+}
+
+.admin-sidebar {
+  background: variables.$admin-surface;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: variables.$admin-shadow-sm;
+  display: flex;
+  flex: 0 0 15.5rem;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 1rem;
+  max-height: calc(100vh - 6rem);
+  max-width: 100%;
+  padding: 1rem 0 1rem 1rem;
+  position: sticky;
+  top: 1rem;
+  width: 15.5rem;
+
+  @media screen and (max-width: 900px) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-right: none;
+    flex: none;
+    max-height: none;
+    padding: 1rem;
+    position: relative;
+    top: auto;
+    width: 100%;
+  }
+}
+
+.admin-sidebar__brand {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.25rem 0.75rem 0.75rem 0;
+}
+
+.admin-sidebar__brand-icon {
+  align-items: center;
+  color: variables.$admin-pink-600;
+  display: flex;
+  flex-shrink: 0;
+
+  svg {
+    display: block;
+    height: 1.75rem;
+    max-height: 100%;
+    max-width: 100%;
+    width: 1.75rem;
+  }
+}
+
+.admin-sidebar__brand-text {
+  font-family: variables.$font-family-heading;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-sidebar__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: auto;
+  padding-right: 0.75rem;
+}
+
+.admin-sidebar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-sidebar__group-label {
+  color: variables.$admin-text-muted;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.admin-sidebar__link {
+  align-items: center;
+  border-radius: 10px;
+  color: variables.$admin-text-secondary;
+  display: flex;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+  transition:
+    background-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    color variables.$transition-duration variables.$transition-easing-decelerate;
+
+  svg {
+    display: block;
+    flex-shrink: 0;
+    height: 1.2rem;
+    max-height: 1.25rem;
+    max-width: 1.25rem;
+    width: 1.2rem;
+  }
+
+  &:hover {
+    background: variables.$admin-surface-alt;
+    color: variables.$admin-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.admin-sidebar__link-label {
+  min-width: 0;
+}
+
+.admin-sidebar__link-count {
+  align-items: center;
+  background: variables.$admin-pink-100;
+  border-radius: 999px;
+  color: variables.$admin-pink-600;
+  display: inline-flex;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  height: 1.45rem;
+  justify-content: center;
+  line-height: 1;
+  margin-left: auto;
+  min-width: 2.55rem;
+  padding: 0.25rem 0.5rem;
+
+  span:last-child {
+    font-size: 0.77rem;
+  }
+}
+
+.admin-sidebar__link-count--empty {
+  background: rgba(0, 0, 0, 0.07);
+  color: variables.$admin-text-muted;
+}
+
+.admin-sidebar__link--active {
+  background: variables.$admin-pink-100;
+  color: variables.$admin-pink-600;
+
+  .admin-sidebar__link-count {
+    background: rgba(255, 6, 102, 0.2);
+    color: variables.$admin-pink-600;
+  }
+
+  .admin-sidebar__link-count--empty {
+    background: rgba(255, 6, 102, 0.15);
+    color: variables.$admin-pink-500;
+  }
+}
+
+.admin-sidebar__back {
+  align-items: center;
+  border-radius: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  color: variables.$admin-text-secondary;
+  display: flex;
+  font-size: 0.85rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  margin-right: 0.75rem;
+  margin-top: auto;
+  padding: 0.75rem;
+  text-decoration: none;
+  transition:
+    background-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    color variables.$transition-duration variables.$transition-easing-decelerate;
+
+  svg {
+    flex-shrink: 0;
+    height: 1.1rem;
+    width: 1.1rem;
+  }
+
+  &:hover {
+    background: variables.$admin-surface-alt;
+    color: variables.$admin-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
 .admin-page {
   min-height: 100vh;
   padding: 2rem 1rem;
@@ -50,7 +283,7 @@
 .admin-dashboard {
   position: relative;
   z-index: 1;
-  max-width: 1400px;
+  max-width: min(variables.$admin-dashboard-inner-max-width, 100%);
   margin: 0 auto;
 }
 
@@ -2559,4 +2792,505 @@
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
   }
+}
+
+// ============================================
+// Feedback operations (Pink Ink — dashboard-grade surface)
+// ============================================
+
+.feedback-ops {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+.feedback-ops__workspace {
+  background: variables.$admin-surface;
+  border-radius: 20px;
+  box-shadow: variables.$admin-shadow-md;
+  display: grid;
+  grid-template-columns: minmax(300px, 36%) minmax(0, 1fr);
+  min-height: min(72vh, 820px);
+  overflow: hidden;
+
+  @media screen and (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: section-fade-in 400ms variables.$transition-easing-decelerate
+      both;
+  }
+}
+
+.feedback-ops__pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 0;
+  min-width: 0;
+  padding: 1.35rem 1.25rem 1.5rem;
+}
+
+.feedback-ops__pane--inbox {
+  background: variables.$admin-surface-alt;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  container-name: feedback-inbox;
+  container-type: inline-size;
+
+  @media screen and (max-width: 1100px) {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+}
+
+.feedback-ops__pane--detail {
+  background: variables.$admin-surface;
+}
+
+.feedback-ops__pane-head {
+  margin-bottom: 0.15rem;
+}
+
+.feedback-ops__pane-title {
+  font-family: variables.$font-family-heading;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  color: variables.$admin-text;
+}
+
+.feedback-ops__pane-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: variables.$admin-text-muted;
+}
+
+.feedback-queue__filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-queue__view-toggle {
+  display: inline-flex;
+  gap: 0;
+  padding: 3px;
+  border-radius: 12px;
+  background: variables.$admin-surface;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.feedback-queue__toggle {
+  border: none;
+  border-radius: 9px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: variables.$admin-text-secondary;
+  background: transparent;
+  transition:
+    background-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    color variables.$transition-duration variables.$transition-easing-decelerate;
+
+  &:focus-visible {
+    outline: 2px solid variables.$admin-pink-600;
+    outline-offset: 2px;
+  }
+}
+
+.feedback-queue__toggle--active {
+  background: variables.$admin-pink-100;
+  color: variables.$admin-pink-600;
+}
+
+// Compact toolbar: search full-width, then 3 self-labeling selects in one row
+.feedback-queue__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.feedback-queue__search {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.feedback-queue__filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.feedback-queue__filter-row select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.feedback-queue__select--active {
+  background-color: variables.$admin-pink-100;
+  border-color: variables.$admin-pink-400;
+}
+
+.feedback-queue__controls input,
+.feedback-queue__controls select,
+.feedback-detail input,
+.feedback-detail select,
+.feedback-detail textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  color: inherit;
+  background-color: variables.$admin-surface;
+}
+
+// Custom dropdown arrow for cross-browser consistency
+.feedback-queue__controls select,
+.feedback-detail select {
+  padding-right: 1.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 12px;
+  cursor: pointer;
+}
+
+.feedback-queue__meta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: variables.$admin-text-secondary;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.feedback-queue__skeleton {
+  min-height: 200px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.07) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.feedback-queue__empty {
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-queue__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  max-height: min(58vh, 640px);
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feedback-queue__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
+  background: variables.$admin-surface;
+  cursor: pointer;
+  transition:
+    border-color variables.$transition-duration
+      variables.$transition-easing-decelerate,
+    box-shadow variables.$transition-duration
+      variables.$transition-easing-decelerate;
+
+  &:hover,
+  &:focus-visible {
+    border-color: variables.$admin-pink-400;
+    outline: none;
+  }
+}
+
+.feedback-queue__item--active {
+  border-color: variables.$admin-pink-500;
+  box-shadow: 0 0 0 2px rgba(255, 6, 102, 0.14);
+}
+
+.feedback-queue__item-top,
+.feedback-queue__item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.feedback-queue__item-bottom {
+  justify-content: space-between;
+  color: variables.$admin-text-muted;
+}
+
+.feedback-queue__message {
+  margin: 0.45rem 0;
+  color: variables.$admin-text;
+  line-height: 1.45;
+  font-size: 0.88rem;
+}
+
+.feedback-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: variables.$admin-surface-alt;
+  color: variables.$admin-text;
+}
+
+.feedback-chip--muted {
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-chip--p1,
+.feedback-chip--p2 {
+  background: variables.$admin-danger-bg;
+  color: variables.$admin-danger;
+}
+
+.feedback-chip--p3 {
+  background: variables.$admin-warning-bg;
+  color: variables.$admin-warning;
+}
+
+.feedback-chip--p4,
+.feedback-chip--p5 {
+  background: variables.$admin-success-bg;
+  color: variables.$admin-success;
+}
+
+.feedback-chip--gh {
+  background: variables.$admin-info-bg;
+  color: variables.$admin-info;
+}
+
+.feedback-chip--gh-closed {
+  background: rgba(0, 0, 0, 0.06);
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-queue__pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.feedback-queue__pagination button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  background: variables.$admin-pink-600;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity variables.$transition-duration ease;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.feedback-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.feedback-detail--empty {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  color: variables.$admin-text-secondary;
+  text-align: center;
+  padding: 1rem;
+}
+
+.feedback-detail__header {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.feedback-detail__title {
+  margin: 0;
+  font-family: variables.$font-family-heading;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: variables.$admin-text;
+}
+
+.feedback-detail__idline {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: variables.$admin-text-muted;
+}
+
+.feedback-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.feedback-detail__section-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: variables.$admin-text-muted;
+}
+
+.feedback-detail__message {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  font-size: 0.95rem;
+  color: variables.$admin-text;
+}
+
+.feedback-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 0.75rem;
+
+  @media screen and (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feedback-detail__meta label,
+.feedback-detail__notes label,
+.feedback-detail__github label {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__notes button,
+.feedback-detail__github button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  background: variables.$admin-pink-600;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  align-self: flex-start;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.feedback-detail__notes-counter {
+  font-size: 0.75rem;
+  color: variables.$admin-text-secondary;
+  text-align: right;
+  display: block;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-detail__gh-refresh {
+  margin-top: 0.35rem;
+}
+
+.feedback-detail__github {
+  padding: 1rem;
+  border-radius: 14px;
+  background: variables.$admin-surface-alt;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.feedback-detail__github-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-detail__github-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.feedback-detail__gh-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.feedback-detail__gh-pill--open {
+  background: variables.$admin-success-bg;
+  color: variables.$admin-success;
+}
+
+.feedback-detail__gh-pill--closed {
+  background: rgba(0, 0, 0, 0.07);
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__gh-pill--unknown {
+  background: variables.$admin-warning-bg;
+  color: variables.$admin-warning;
+}
+
+.feedback-detail__gh-link {
+  font-weight: 700;
+  color: variables.$admin-pink-600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.feedback-detail__gh-synced {
+  margin: 0;
+  font-size: 0.8rem;
+  color: variables.$admin-text-secondary;
+}
+
+.feedback-detail__github-project {
+  margin: 0;
+  font-size: 0.8rem;
+  color: variables.$admin-text-muted;
 }
