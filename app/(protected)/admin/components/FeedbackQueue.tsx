@@ -43,10 +43,26 @@ export default function FeedbackQueue({
   const [offset, setOffset] = useState(0)
   const [limit] = useState(20)
   const [q, setQ] = useState("")
+  const [debouncedQ, setDebouncedQ] = useState("")
   const [status, setStatus] = useState<string>("")
   const [priority, setPriority] = useState<string>("")
   const [category, setCategory] = useState<string>("")
   const [queueMode, setQueueMode] = useState<QueueMode>("active")
+
+  // Debounce search input: only fire a fetch after the user stops typing for
+  // 300ms instead of on every keystroke. Other filters (selects) are immediate.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmed = q.trim()
+      if (trimmed !== debouncedQ) {
+        setOffset(0)
+        setDebouncedQ(trimmed)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+    // debouncedQ intentionally excluded: we only want to react to raw q changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q])
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams({
@@ -54,12 +70,12 @@ export default function FeedbackQueue({
       offset: String(offset),
       queue: queueMode,
     })
-    if (q.trim()) params.set("q", q.trim())
+    if (debouncedQ) params.set("q", debouncedQ)
     if (status) params.set("status", status)
     if (priority) params.set("priority", priority)
     if (category) params.set("category", category)
     return params.toString()
-  }, [category, limit, offset, priority, q, queueMode, status])
+  }, [category, debouncedQ, limit, offset, priority, queueMode, status])
 
   const fetchQueue = useCallback(async () => {
     setLoading(true)
@@ -177,7 +193,6 @@ export default function FeedbackQueue({
             placeholder="Message, page, tag"
             value={q}
             onChange={(e) => {
-              setOffset(0)
               setQ(e.target.value)
             }}
           />
