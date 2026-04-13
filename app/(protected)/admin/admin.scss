@@ -2764,26 +2764,6 @@ main.container > .admin-shell {
   padding-bottom: 2rem;
 }
 
-.feedback-ops__page-head {
-  max-width: 52rem;
-}
-
-.feedback-ops__title {
-  font-family: variables.$font-family-heading;
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
-  color: variables.$admin-text;
-}
-
-.feedback-ops__lede {
-  margin: 0.5rem 0 0;
-  font-size: 1.05rem;
-  line-height: 1.55;
-  color: variables.$admin-text-secondary;
-}
-
 .feedback-ops__workspace {
   background: variables.$admin-surface;
   border-radius: 20px;
