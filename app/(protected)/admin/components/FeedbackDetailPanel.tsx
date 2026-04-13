@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useToast } from "@/components/Toast/Toast"
+import type { FeedbackTriagePatch } from "@/lib/feedback/triage-schema"
 
 interface UserLite {
   id: string
@@ -84,7 +85,7 @@ export default function FeedbackDetailPanel({
 
   const ownerOptions = useMemo(() => owners, [owners])
 
-  const patch = async (next: Partial<FeedbackDetail>) => {
+  const patch = async (next: FeedbackTriagePatch) => {
     if (!feedback) return
     setSaving(true)
     try {
