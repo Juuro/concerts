@@ -9,6 +9,7 @@ declare namespace NodeJS {
     LASTFM_SECRET?: string
     ENABLE_LASTFM?: string
     ENABLE_GEOCODING?: string
+    ENABLE_MUSICBRAINZ?: string
     ENABLE_MAP_PAGE?: string
   }
 }

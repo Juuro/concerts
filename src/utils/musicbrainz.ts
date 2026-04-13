@@ -365,7 +365,7 @@ export async function getArtistImageUrl(
   artistName: string,
   retryCount = 0
 ): Promise<string | null> {
-  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ_IMAGES, false)) {
+  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ, true)) {
     return null
   }
 
@@ -514,7 +514,7 @@ export async function getArtistWebsiteUrl(
   artistName: string,
   retryCount = 0
 ): Promise<string | null> {
-  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ_IMAGES, false)) {
+  if (!isFeatureEnabled(FEATURE_FLAGS.ENABLE_MUSICBRAINZ, true)) {
     return null
   }
 
