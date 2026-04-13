@@ -83,33 +83,37 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         projectErr instanceof Error ? projectErr.message : "Project link failed"
     }
 
-    const updated = await prisma.appFeedback.update({
-      where: { id },
-      data: {
-        githubIssueNumber: created.number,
-        githubIssueUrl: created.url,
-        githubProjectItemId: githubProjectItemId ?? undefined,
-        githubIssueState: "OPEN",
-        githubSyncedAt: new Date(),
-        triageStatus:
-          feedback.triageStatus === "NEW" ? "TRIAGED" : feedback.triageStatus,
-        triagedAt: feedback.triagedAt ?? new Date(),
-      },
-    })
-
-    await prisma.adminActivity.create({
-      data: {
-        userId: session.user.id,
-        action: "feedback_github_issue_created",
-        targetType: "feedback",
-        targetId: id,
-        details: {
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedFeedback = await tx.appFeedback.update({
+        where: { id },
+        data: {
           githubIssueNumber: created.number,
           githubIssueUrl: created.url,
-          ...(githubProjectItemId && { githubProjectItemId }),
-          ...(projectLinkError && { projectLinkError }),
+          githubProjectItemId: githubProjectItemId ?? undefined,
+          githubIssueState: "OPEN",
+          githubSyncedAt: new Date(),
+          triageStatus:
+            feedback.triageStatus === "NEW" ? "TRIAGED" : feedback.triageStatus,
+          triagedAt: feedback.triagedAt ?? new Date(),
         },
-      },
+      })
+
+      await tx.adminActivity.create({
+        data: {
+          userId: session.user.id,
+          action: "feedback_github_issue_created",
+          targetType: "feedback",
+          targetId: id,
+          details: {
+            githubIssueNumber: created.number,
+            githubIssueUrl: created.url,
+            ...(githubProjectItemId && { githubProjectItemId }),
+            ...(projectLinkError && { projectLinkError }),
+          },
+        },
+      })
+
+      return updatedFeedback
     })
 
     return NextResponse.json({
