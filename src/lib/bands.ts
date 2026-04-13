@@ -2,7 +2,10 @@ import { prisma } from "./prisma"
 import type { Band as PrismaBand } from "@/generated/prisma/client"
 import { getConcertsByBand } from "./concerts/read"
 import type { TransformedConcert } from "./concerts/types"
-import { getArtistInfo } from "@/utils/lastfm"
+import {
+  getArtistInfo,
+  pickPreferredLastFmArtistImageUrl,
+} from "@/utils/lastfm"
 import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz"
 import { validateWebsiteUrl } from "@/utils/validation"
 import { slugify } from "@/utils/helpers"
@@ -256,10 +259,12 @@ export async function enrichBandData(
 
     const [lastfmData, musicbrainzImageUrl, musicbrainzWebsiteUrl] =
       await Promise.all([
-        imageOnly ? Promise.resolve(null) : getArtistInfo(bandName),
+        getArtistInfo(bandName),
         getArtistImageUrl(bandName),
         getArtistWebsiteUrl(bandName),
       ])
+
+    const lastFmImageUrl = pickPreferredLastFmArtistImageUrl(lastfmData)
 
     if (!lastfmData && !musicbrainzImageUrl && !musicbrainzWebsiteUrl) {
       await prisma.band.update({
@@ -269,7 +274,7 @@ export async function enrichBandData(
       return
     }
 
-    const imageUrl = musicbrainzImageUrl || undefined
+    const imageUrl = musicbrainzImageUrl || lastFmImageUrl || undefined
 
     const updateData: Record<string, unknown> = {
       imageEnrichedAt: new Date(),

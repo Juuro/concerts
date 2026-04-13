@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
-import { getArtistInfo } from "@/utils/lastfm"
+import {
+  getArtistInfo,
+  pickPreferredLastFmArtistImageUrl,
+} from "@/utils/lastfm"
 import { getArtistImageUrl, getArtistWebsiteUrl } from "@/utils/musicbrainz"
 import { validateWebsiteUrl } from "@/utils/validation"
 
@@ -39,6 +42,8 @@ export async function GET(
         getArtistWebsiteUrl(band.name),
       ])
 
+    const lastFmImageUrl = pickPreferredLastFmArtistImageUrl(lastfmData)
+
     if (!lastfmData && !musicbrainzImageUrl && !musicbrainzWebsiteUrl) {
       await prisma.band.update({
         where: { id: band.id },
@@ -64,7 +69,8 @@ export async function GET(
         lastfmUrl: lastfmData?.url || undefined,
         genres: lastfmData?.genres || [],
         bio: lastfmData?.bio || undefined,
-        imageUrl: musicbrainzImageUrl || band.imageUrl || undefined,
+        imageUrl:
+          musicbrainzImageUrl || lastFmImageUrl || band.imageUrl || undefined,
         websiteUrl,
         imageEnrichedAt: new Date(),
       },

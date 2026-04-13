@@ -21,6 +21,17 @@ function getLastFmErrorCode(error: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * Prefer largest Last.fm artist image URL for band avatars.
+ */
+export function pickPreferredLastFmArtistImageUrl(
+  data: LastFMArtistInfoOrNull
+): string | null {
+  if (!data?.images) return null
+  const { mega, extralarge, large, medium, small } = data.images
+  return mega || extralarge || large || medium || small || null
+}
+
 // Build-time cache to prevent duplicate API calls during static generation
 const artistCache = new Map<string, LastFMArtistInfoOrNull>()
 // Track pending requests to prevent duplicate concurrent calls

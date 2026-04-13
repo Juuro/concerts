@@ -990,4 +990,45 @@ describe("lastfm", () => {
       expect(mockSearch).toHaveBeenCalledTimes(2)
     })
   })
+
+  describe("pickPreferredLastFmArtistImageUrl", () => {
+    it("returns null when data is null", async () => {
+      const { pickPreferredLastFmArtistImageUrl } = await import("../lastfm")
+      expect(pickPreferredLastFmArtistImageUrl(null)).toBeNull()
+    })
+
+    it("prefers larger sizes", async () => {
+      const { pickPreferredLastFmArtistImageUrl } = await import("../lastfm")
+      const base = {
+        name: "Artist",
+        url: "https://last.fm/music/Artist",
+        genres: [] as string[],
+        bio: null as string | null,
+      }
+      expect(
+        pickPreferredLastFmArtistImageUrl({
+          ...base,
+          images: {
+            small: "a",
+            medium: "b",
+            large: "c",
+            extralarge: null,
+            mega: null,
+          },
+        })
+      ).toBe("c")
+      expect(
+        pickPreferredLastFmArtistImageUrl({
+          ...base,
+          images: {
+            small: "a",
+            medium: null,
+            large: null,
+            extralarge: "d",
+            mega: null,
+          },
+        })
+      ).toBe("d")
+    })
+  })
 })
