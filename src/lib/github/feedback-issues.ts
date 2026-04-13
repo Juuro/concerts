@@ -1,4 +1,5 @@
 import type { FeedbackGithubCreate } from "@/lib/feedback/triage-schema"
+import { fetchWithGithubRetry } from "@/lib/github/github-fetch"
 import { getGithubFeedbackToken } from "@/lib/github/github-token"
 
 interface CreateGithubIssueInput extends FeedbackGithubCreate {
@@ -39,16 +40,12 @@ export function getGithubFeedbackRepoConfig(): {
   return { token, owner, repo }
 }
 
-function getRepoConfig(): { token: string; owner: string; repo: string } {
-  return getGithubFeedbackRepoConfig()
-}
-
 export async function createFeedbackIssue(
   input: CreateGithubIssueInput
 ): Promise<CreatedIssue> {
-  const { token, owner, repo } = getRepoConfig()
+  const { token, owner, repo } = getGithubFeedbackRepoConfig()
 
-  const response = await fetch(
+  const response = await fetchWithGithubRetry(
     `https://api.github.com/repos/${owner}/${repo}/issues`,
     {
       method: "POST",

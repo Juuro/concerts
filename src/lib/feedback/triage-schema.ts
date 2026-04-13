@@ -23,13 +23,23 @@ export const feedbackListQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 })
 
-export const feedbackTriagePatchSchema = z.object({
-  triageStatus: feedbackStatusSchema.optional(),
-  priority: feedbackPrioritySchema.optional(),
-  ownerUserId: z.string().cuid().nullable().optional(),
-  internalNotes: z.string().trim().max(10000).nullable().optional(),
-  tags: z.array(z.string().trim().min(1).max(40)).max(12).optional(),
-})
+export const feedbackTriagePatchSchema = z
+  .object({
+    triageStatus: feedbackStatusSchema.optional(),
+    priority: feedbackPrioritySchema.optional(),
+    ownerUserId: z.string().cuid().nullable().optional(),
+    internalNotes: z.string().trim().max(10000).nullable().optional(),
+    tags: z.array(z.string().trim().min(1).max(40)).max(12).optional(),
+  })
+  .refine(
+    (val) =>
+      val.triageStatus !== undefined ||
+      val.priority !== undefined ||
+      val.ownerUserId !== undefined ||
+      val.internalNotes !== undefined ||
+      val.tags !== undefined,
+    { message: "At least one field must be provided" }
+  )
 
 export const feedbackGithubCreateSchema = z.object({
   title: z.string().trim().min(5).max(200),

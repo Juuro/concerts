@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { prisma } from "@/lib/prisma"
 import { syncAppFeedbackGithubState } from "@/lib/github/sync-app-feedback-github"
 
@@ -40,10 +41,7 @@ export async function batchSyncStaleFeedbackGithub(options?: {
       await syncAppFeedbackGithubState(row.id, { actorUserId })
     } catch (err) {
       errors++
-      console.error(
-        `[batch-sync-feedback] Failed to sync feedback ${row.id}:`,
-        err
-      )
+      Sentry.captureException(err, { tags: { feedbackId: row.id } })
     }
   }
 

@@ -1,3 +1,4 @@
+import { fetchWithGithubRetry } from "@/lib/github/github-fetch"
 import { getGithubFeedbackToken } from "@/lib/github/github-token"
 
 const GRAPHQL_URL = "https://api.github.com/graphql"
@@ -16,7 +17,7 @@ async function githubGraphql<T>(
   variables: Record<string, unknown>
 ): Promise<T> {
   const token = getProjectToken()
-  const res = await fetch(GRAPHQL_URL, {
+  const res = await fetchWithGithubRetry(GRAPHQL_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

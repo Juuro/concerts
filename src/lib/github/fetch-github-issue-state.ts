@@ -1,4 +1,5 @@
 import { getGithubFeedbackRepoConfig } from "@/lib/github/feedback-issues"
+import { fetchWithGithubRetry } from "@/lib/github/github-fetch"
 
 export type GithubRestIssueState = "OPEN" | "CLOSED"
 
@@ -9,7 +10,7 @@ export async function fetchGithubIssueStateByNumber(
   issueNumber: number
 ): Promise<{ state: GithubRestIssueState }> {
   const { token, owner, repo } = getGithubFeedbackRepoConfig()
-  const res = await fetch(
+  const res = await fetchWithGithubRetry(
     `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`,
     {
       headers: {

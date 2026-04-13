@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../styles/variables.scss";
 
 .trigger {
@@ -77,7 +78,7 @@
   &:focus-visible {
     outline: none;
     border-color: variables.$color-primary;
-    box-shadow: 0 0 0 2px rgba(255, 6, 102, 0.2);
+    box-shadow: 0 0 0 2px color.change(variables.$color-primary, $alpha: 0.2);
   }
 }
 
@@ -88,8 +89,23 @@
 
 .validation {
   font-size: 0.8125rem;
-  color: #c62828;
+  color: variables.$form-validation-error;
   min-height: 1.25em;
+}
+
+.privacyLink {
+  color: rgba(0, 0, 0, 0.55);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: variables.$color-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
 }
 
 .counter {

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/feedback-github-sync",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/feedback-retention",
+      "schedule": "0 3 * * 0"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
 import { batchSyncStaleFeedbackGithub } from "@/lib/github/batch-sync-feedback-github"
 
@@ -20,6 +21,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const result = await batchSyncStaleFeedbackGithub()
-  return NextResponse.json({ ok: true, ...result })
+  try {
+    const result = await batchSyncStaleFeedbackGithub()
+    return NextResponse.json({ ok: true, ...result })
+  } catch (error) {
+    Sentry.captureException(error)
+    return NextResponse.json(
+      { ok: false, error: "Feedback GitHub sync failed" },
+      { status: 500 }
+    )
+  }
 }

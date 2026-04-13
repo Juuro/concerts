@@ -21,23 +21,24 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params
 
   try {
-    const feedback = await prisma.appFeedback.findUnique({
-      where: { id },
-      include: {
-        user: { select: { id: true, email: true, name: true } },
-        owner: { select: { id: true, email: true, name: true } },
-      },
-    })
+    const [feedback, owners] = await Promise.all([
+      prisma.appFeedback.findUnique({
+        where: { id },
+        include: {
+          user: { select: { id: true, email: true, name: true } },
+          owner: { select: { id: true, email: true, name: true } },
+        },
+      }),
+      prisma.user.findMany({
+        where: { role: "admin" },
+        select: { id: true, name: true, email: true },
+        orderBy: { createdAt: "asc" },
+      }),
+    ])
 
     if (!feedback) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
-
-    const owners = await prisma.user.findMany({
-      where: { role: "admin" },
-      select: { id: true, name: true, email: true },
-      orderBy: { createdAt: "asc" },
-    })
 
     return NextResponse.json({ feedback, owners })
   } catch (error) {

@@ -41,7 +41,7 @@ export default function FeedbackQueue({
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [offset, setOffset] = useState(0)
-  const [limit] = useState(20)
+  const limit = 20
   const [q, setQ] = useState("")
   const [debouncedQ, setDebouncedQ] = useState("")
   const [status, setStatus] = useState<string>("")

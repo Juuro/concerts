@@ -79,7 +79,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     } catch (projectErr) {
       Sentry.captureException(projectErr)
-      console.error("Failed to link issue to GitHub Project V2", projectErr)
       projectLinkError =
         projectErr instanceof Error ? projectErr.message : "Project link failed"
     }
@@ -122,7 +121,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     })
   } catch (error) {
     Sentry.captureException(error)
-    console.error("Failed to create feedback issue", error)
     return NextResponse.json(
       { error: "Failed to create GitHub issue" },
       { status: 500 }

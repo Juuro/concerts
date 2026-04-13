@@ -129,7 +129,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     Sentry.captureException(error)
-    console.error("Error fetching feedback queue", error)
     return NextResponse.json(
       { error: "Failed to fetch feedback" },
       { status: 500 }

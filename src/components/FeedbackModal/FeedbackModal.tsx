@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useId, useState } from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Dialog from "@/components/Dialog/Dialog"
 import { useToast } from "@/components/Toast/Toast"
@@ -87,7 +88,6 @@ export default function FeedbackModal() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label="Send feedback"
       >
         Feedback
       </button>
@@ -95,8 +95,15 @@ export default function FeedbackModal() {
       <Dialog open={open} onClose={handleClose} title="Send feedback">
         <form className={styles.form} onSubmit={handleSubmit}>
           <p className={styles.hint} id={`${formId}-desc`}>
-            Tell us about a bug, an idea, or anything else. If you are signed
-            in, we may link this to your account to help follow up.
+            Tell us about a bug, an idea, or anything else. We store your
+            category, message, the page you are on (if you allow it), and
+            technical details from your browser (such as user agent) to
+            reproduce issues. If you are signed in, we link this to your account
+            to help follow up. See our{" "}
+            <Link href="/privacy" className={styles.privacyLink}>
+              Privacy Policy
+            </Link>{" "}
+            for how we handle personal data.
           </p>
 
           <div className={styles.field}>
@@ -150,7 +157,11 @@ export default function FeedbackModal() {
               aria-describedby={`${formId}-desc ${messageId}-validation`}
               aria-invalid={message.length > 0 && message.trim().length < 10}
             />
-            <span id={`${messageId}-validation`} className={styles.validation} aria-live="polite">
+            <span
+              id={`${messageId}-validation`}
+              className={styles.validation}
+              aria-live="polite"
+            >
               {message.length > 0 && message.trim().length < 10
                 ? "Message must contain at least 10 non-whitespace characters."
                 : ""}
