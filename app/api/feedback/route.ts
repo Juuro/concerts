@@ -32,7 +32,9 @@ function checkRateLimit(ip: string): boolean {
   if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES && !rateLimitMap.has(ip)) {
     cleanupExpiredEntries()
     if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
-      return true
+      // Fail closed: reject new IPs when map is at capacity to prevent bypass
+      // via map exhaustion (filling map with unique IPs disables rate limiting).
+      return false
     }
   }
 
