@@ -313,7 +313,11 @@ export default function FeedbackDetailPanel({
             )
           }
           rows={5}
+          maxLength={10000}
         />
+        <span className="feedback-detail__notes-counter">
+          {(feedback.internalNotes || "").length.toLocaleString()} / 10,000
+        </span>
         <button
           type="button"
           disabled={saving}

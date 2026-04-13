@@ -3213,6 +3213,15 @@ main.container > .admin-shell {
   }
 }
 
+.feedback-detail__notes-counter {
+  font-size: 0.75rem;
+  color: variables.$admin-text-secondary;
+  text-align: right;
+  display: block;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
 .feedback-detail__gh-refresh {
   margin-top: 0.35rem;
 }
