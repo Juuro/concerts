@@ -26,7 +26,7 @@ export default withSentryConfig(nextConfig, {
 
   org: "sebastian-engel",
 
-  project: "trackmyconcerts",
+  project: "concertivity",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,

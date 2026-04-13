@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/sebastian-engel/trackmyconcerts"
+      "url": "https://mcp.sentry.dev/mcp/sebastian-engel/concertivity"
     }
   }
 }
