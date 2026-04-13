@@ -16,7 +16,9 @@ interface PostHogUserSyncProps {
  */
 export default function PostHogUserSync({ userId }: PostHogUserSyncProps) {
   const previousUserId = useRef<string | null | undefined>(undefined)
-  const [consentGranted, setConsentGranted] = useState(() => hasPostHogConsent())
+  const [consentGranted, setConsentGranted] = useState(() =>
+    hasPostHogConsent()
+  )
 
   useEffect(() => {
     const handleConsentChange = () => {

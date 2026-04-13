@@ -88,8 +88,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const willBeClosed = nextStatus === "DONE" || nextStatus === "DISCARDED"
     const isExplicitStatusChange =
       requestedStatus !== undefined && requestedStatus !== existing.triageStatus
-    const transitionedIntoClosed = isExplicitStatusChange && !wasClosed && willBeClosed
-    const transitionedOutOfClosed = isExplicitStatusChange && wasClosed && !willBeClosed
+    const transitionedIntoClosed =
+      isExplicitStatusChange && !wasClosed && willBeClosed
+    const transitionedOutOfClosed =
+      isExplicitStatusChange && wasClosed && !willBeClosed
 
     // Only update closedAt on explicit status transitions:
     // - Set to now when transitioning INTO a closed state

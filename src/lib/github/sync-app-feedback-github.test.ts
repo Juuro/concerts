@@ -32,14 +32,12 @@ beforeEach(() => {
     githubIssueState: "OPEN",
     githubSyncedAt: new Date(),
   }
-  mockPrisma.$transaction.mockImplementation(
-    async (ops: unknown) => {
-      if (Array.isArray(ops)) {
-        return Promise.all(ops)
-      }
-      return Promise.resolve(undefined)
+  mockPrisma.$transaction.mockImplementation(async (ops: unknown) => {
+    if (Array.isArray(ops)) {
+      return Promise.all(ops)
     }
-  )
+    return Promise.resolve(undefined)
+  })
   mockPrisma.appFeedback.update.mockResolvedValue(updatedRow as never)
   mockPrisma.adminActivity.create.mockResolvedValue({} as never)
 })

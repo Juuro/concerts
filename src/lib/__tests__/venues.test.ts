@@ -137,7 +137,9 @@ describe("Venues Search Module", () => {
       vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([tmVenue])
       vi.mocked(searchVenues).mockResolvedValueOnce([])
 
-      const results = await searchVenuesEnhanced("olympia", { userId: "user-1" })
+      const results = await searchVenuesEnhanced("olympia", {
+        userId: "user-1",
+      })
 
       // Should only have one result (deduplicated)
       const olympiaResults = results.filter((r) =>
@@ -360,7 +362,10 @@ describe("Venues Search Module", () => {
 
       await searchVenuesEnhanced("venue", { lat: 52.52, lon: 13.405 })
 
-      expect(searchVenues).toHaveBeenCalledWith("venue", { lat: 52.52, lon: 13.405 })
+      expect(searchVenues).toHaveBeenCalledWith("venue", {
+        lat: 52.52,
+        lon: 13.405,
+      })
     })
 
     test("passes undefined to Photon when only lat is provided", async () => {
@@ -395,7 +400,9 @@ describe("Venues Search Module", () => {
       }
 
       // No userId, so no prisma.concert.findMany mock needed
-      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([venueWithScore])
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([
+        venueWithScore,
+      ])
       vi.mocked(searchVenues).mockResolvedValueOnce([venueWithoutScore])
 
       const results = await searchVenuesEnhanced("test")
@@ -425,7 +432,9 @@ describe("Venues Search Module", () => {
       }
 
       // No userId, so no prisma.concert.findMany mock needed
-      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([venueWithScore])
+      vi.mocked(searchTicketmasterVenues).mockResolvedValueOnce([
+        venueWithScore,
+      ])
       vi.mocked(searchVenues).mockResolvedValueOnce([venueWithoutScore])
 
       const results = await searchVenuesEnhanced("venue")

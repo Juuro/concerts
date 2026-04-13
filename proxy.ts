@@ -51,7 +51,8 @@ function isPostHogAnalyticsEnabled(): boolean {
 function getPostHogConnectSrc(): string {
   if (!isPostHogAnalyticsEnabled()) return ""
 
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || POSTHOG_DEFAULT_HOST
+  const host =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || POSTHOG_DEFAULT_HOST
   try {
     const url = new URL(host)
     return ` ${url.origin}`

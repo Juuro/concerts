@@ -260,10 +260,7 @@ export default function FeedbackQueue({
           No feedback matches these filters.
         </p>
       ) : (
-        <ul
-          className="feedback-queue__list"
-          aria-label="Feedback queue"
-        >
+        <ul className="feedback-queue__list" aria-label="Feedback queue">
           {items.map((item) => (
             <li key={item.id}>
               <button
