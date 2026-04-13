@@ -2870,106 +2870,33 @@ main.container > .admin-shell {
   color: variables.$admin-pink-600;
 }
 
-.feedback-queue__filters-heading {
-  margin: 0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: variables.$admin-text-muted;
-  flex: 1;
-  text-align: center;
-}
-
-.feedback-queue__filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.feedback-queue__filter-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: variables.$admin-text-secondary;
-}
-
-// Flex row layout for all filters: search + status + priority + category in one line with responsive wrap
+// Compact toolbar: search full-width, then 3 self-labeling selects in one row
 .feedback-queue__controls {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.feedback-queue__filter-field--search {
-  flex: 1 1 auto;
-  min-width: 120px;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .feedback-queue__search {
   box-sizing: border-box;
-  max-width: 100%;
-  min-width: 0;
   width: 100%;
 }
 
-.feedback-queue__controls .feedback-queue__filter-field {
-  flex: 0 1 auto;
-  min-width: 80px;
+.feedback-queue__filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.35rem;
 }
 
-.feedback-queue__controls .feedback-queue__filter-field input,
-.feedback-queue__controls .feedback-queue__filter-field select {
+.feedback-queue__filter-row select {
   box-sizing: border-box;
-  max-width: 100%;
-  min-width: 0;
   width: 100%;
+  min-width: 0;
 }
 
-// Very narrow inbox: flex-wrap forces stacking naturally
-@container feedback-inbox (max-width: 380px) {
-  .feedback-queue__filter-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-  }
-
-  .feedback-queue__filters-heading {
-    width: 100%;
-    text-align: left;
-  }
-
-  .feedback-queue__controls {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .feedback-queue__controls .feedback-queue__filter-field {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
-
-  .feedback-queue__filter-field--search {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
-}
-
-// Mid-width inbox: search and filters stack appropriately
-@container feedback-inbox (min-width: 381px) and (max-width: 480px) {
-  .feedback-queue__controls {
-    gap: 0.35rem;
-  }
-
-  .feedback-queue__controls .feedback-queue__filter-field {
-    flex: 1 1 45%;
-    min-width: 0;
-  }
-
-  .feedback-queue__filter-field--search {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
+.feedback-queue__select--active {
+  background-color: variables.$admin-pink-100;
+  border-color: variables.$admin-pink-400;
 }
 
 .feedback-queue__controls input,
@@ -2977,11 +2904,25 @@ main.container > .admin-shell {
 .feedback-detail input,
 .feedback-detail select,
 .feedback-detail textarea {
+  appearance: none;
+  -webkit-appearance: none;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 10px;
   padding: 0.5rem 0.65rem;
   font: inherit;
-  background: variables.$admin-surface;
+  color: inherit;
+  background-color: variables.$admin-surface;
+}
+
+// Custom dropdown arrow for cross-browser consistency
+.feedback-queue__controls select,
+.feedback-detail select {
+  padding-right: 1.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 12px;
+  cursor: pointer;
 }
 
 .feedback-queue__meta {

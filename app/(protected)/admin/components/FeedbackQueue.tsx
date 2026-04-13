@@ -164,13 +164,6 @@ export default function FeedbackQueue({
           </button>
         </div>
 
-        <h3
-          className="feedback-queue__filters-heading"
-          id="feedback-filters-heading"
-        >
-          Filters
-        </h3>
-
         <div className="feedback-queue__meta" aria-live="polite">
           {loading
             ? "Loading…"
@@ -181,84 +174,64 @@ export default function FeedbackQueue({
       <div
         className="feedback-queue__controls"
         role="group"
-        aria-labelledby="feedback-filters-heading"
+        aria-label="Feedback filters"
       >
-        <div className="feedback-queue__filter-field feedback-queue__filter-field--search">
-          <label htmlFor="feedback-q" className="feedback-queue__filter-label">
-            Search
-          </label>
-          <input
-            id="feedback-q"
-            className="feedback-queue__search"
-            placeholder="Message, page, tag"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value)
-            }}
-          />
-        </div>
-        <div className="feedback-queue__filter-field">
-          <label
-            htmlFor="feedback-filter-status"
-            className="feedback-queue__filter-label"
-          >
-            Status
-          </label>
+        <input
+          id="feedback-q"
+          className="feedback-queue__search"
+          placeholder="Search message, page, tag"
+          aria-label="Search feedback"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value)
+          }}
+        />
+        <div className="feedback-queue__filter-row">
           <select
             id="feedback-filter-status"
+            className={status ? "feedback-queue__select--active" : ""}
+            aria-label="Filter by status"
             value={status}
             onChange={(e) => {
               setOffset(0)
               setStatus(e.target.value)
             }}
           >
-            <option value="">All</option>
+            <option value="">Any status</option>
             {STATUSES.map((value) => (
               <option key={value} value={value}>
                 {value}
               </option>
             ))}
           </select>
-        </div>
-        <div className="feedback-queue__filter-field">
-          <label
-            htmlFor="feedback-filter-priority"
-            className="feedback-queue__filter-label"
-          >
-            Priority
-          </label>
           <select
             id="feedback-filter-priority"
+            className={priority ? "feedback-queue__select--active" : ""}
+            aria-label="Filter by priority"
             value={priority}
             onChange={(e) => {
               setOffset(0)
               setPriority(e.target.value)
             }}
           >
-            <option value="">All</option>
+            <option value="">Any priority</option>
             {PRIORITIES.map((value) => (
               <option key={value} value={value}>
                 {value}
               </option>
             ))}
           </select>
-        </div>
-        <div className="feedback-queue__filter-field feedback-queue__filter-field--category">
-          <label
-            htmlFor="feedback-filter-category"
-            className="feedback-queue__filter-label"
-          >
-            Category
-          </label>
           <select
             id="feedback-filter-category"
+            className={category ? "feedback-queue__select--active" : ""}
+            aria-label="Filter by category"
             value={category}
             onChange={(e) => {
               setOffset(0)
               setCategory(e.target.value)
             }}
           >
-            <option value="">All</option>
+            <option value="">Any category</option>
             {CATEGORIES.map((value) => (
               <option key={value} value={value}>
                 {value}
