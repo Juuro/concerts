@@ -194,9 +194,50 @@ main.container > .admin-shell {
   }
 }
 
+.admin-sidebar__link-label {
+  min-width: 0;
+}
+
+.admin-sidebar__link-count {
+  align-items: center;
+  background: variables.$admin-pink-100;
+  border-radius: 999px;
+  color: variables.$admin-pink-600;
+  display: inline-flex;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  height: 1.45rem;
+  justify-content: center;
+  line-height: 1;
+  margin-left: auto;
+  min-width: 2.55rem;
+  padding: 0.25rem 0.5rem;
+
+  span:last-child {
+    font-size: 0.77rem;
+  }
+}
+
+.admin-sidebar__link-count--empty {
+  background: rgba(0, 0, 0, 0.07);
+  color: variables.$admin-text-muted;
+}
+
 .admin-sidebar__link--active {
   background: variables.$admin-pink-100;
   color: variables.$admin-pink-600;
+
+  .admin-sidebar__link-count {
+    background: rgba(255, 6, 102, 0.2);
+    color: variables.$admin-pink-600;
+  }
+
+  .admin-sidebar__link-count--empty {
+    background: rgba(255, 6, 102, 0.15);
+    color: variables.$admin-pink-500;
+  }
 }
 
 .admin-sidebar__back {

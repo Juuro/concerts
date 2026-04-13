@@ -21,6 +21,7 @@ interface NavItem {
   href: string
   label: string
   icon: ReactNode
+  badgeCount?: number
 }
 
 interface NavGroup {
@@ -28,7 +29,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
-const navGroups: NavGroup[] = [
+const getNavGroups = (feedbackNewCount: number): NavGroup[] => [
   {
     label: "Main",
     items: [
@@ -100,6 +101,7 @@ const navGroups: NavGroup[] = [
       {
         href: "/admin/feedback",
         label: "Feedback",
+        badgeCount: feedbackNewCount,
         icon: (
           <svg {...NAV_ICON_PROPS}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
@@ -125,8 +127,13 @@ const navGroups: NavGroup[] = [
   },
 ]
 
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  feedbackNewCount,
+}: {
+  feedbackNewCount: number
+}) {
   const pathname = usePathname()
+  const navGroups = getNavGroups(feedbackNewCount)
 
   return (
     <aside className="admin-sidebar" aria-label="Admin navigation">
@@ -169,7 +176,22 @@ export default function AdminSidebar() {
                   aria-current={isActive ? "page" : undefined}
                 >
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span className="admin-sidebar__link-label">
+                    {item.label}
+                  </span>
+                  {typeof item.badgeCount === "number" ? (
+                    <span
+                      className={`admin-sidebar__link-count${
+                        item.badgeCount === 0
+                          ? " admin-sidebar__link-count--empty"
+                          : ""
+                      }`}
+                      aria-label={`${item.badgeCount} new feedback items`}
+                    >
+                      <span aria-hidden="true">NEW</span>
+                      <span>{item.badgeCount}</span>
+                    </span>
+                  ) : null}
                 </Link>
               )
             })}

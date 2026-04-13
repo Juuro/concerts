@@ -120,6 +120,8 @@ describe("lastfm", () => {
       const getArtistInfo = await loadGetArtistInfo()
       vi.stubEnv("ENABLE_LASTFM", "true")
       // No LASTFM_API_KEY set
+      delete process.env.LASTFM_API_KEY
+      delete process.env.LASTFM_SECRET
 
       const result = await getArtistInfo("Radiohead")
 
@@ -723,6 +725,8 @@ describe("lastfm", () => {
     it("test_searchLastFmArtists_when_api_key_missing_returns_empty", async () => {
       const searchLastFmArtists = await loadSearchLastFmArtists()
       vi.stubEnv("ENABLE_LASTFM", "true")
+      delete process.env.LASTFM_API_KEY
+      delete process.env.LASTFM_SECRET
 
       await expect(searchLastFmArtists("radio", 10)).resolves.toEqual([])
       expect(mockSearch).not.toHaveBeenCalled()

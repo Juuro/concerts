@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import AdminSidebar from "./components/AdminSidebar"
@@ -19,9 +20,13 @@ export default async function AdminLayout({
     redirect("/")
   }
 
+  const feedbackNewCount = await prisma.appFeedback.count({
+    where: { triageStatus: "NEW" },
+  })
+
   return (
     <div className="admin-shell">
-      <AdminSidebar />
+      <AdminSidebar feedbackNewCount={feedbackNewCount} />
       <div className="admin-shell__content">{children}</div>
     </div>
   )
