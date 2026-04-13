@@ -47,14 +47,9 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
     Sentry.captureException(error)
-    console.error("feedback github sync", error)
+    console.error("[feedback-github-sync] Failed to sync GitHub issue state:", error)
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to sync GitHub issue state",
-      },
+      { error: "Failed to sync GitHub issue state" },
       { status: 500 }
     )
   }
