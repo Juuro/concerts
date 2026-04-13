@@ -106,32 +106,36 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           ? null
           : existing.closedAt
 
-    const updated = await prisma.appFeedback.update({
-      where: { id },
-      data: {
-        ...parsed.data,
-        triagedAt: shouldSetTriagedAt ? new Date() : existing.triagedAt,
-        closedAt: nextClosedAt,
-      },
-      include: {
-        user: { select: { id: true, email: true, name: true } },
-        owner: { select: { id: true, email: true, name: true } },
-      },
-    })
-
-    await prisma.adminActivity.create({
-      data: {
-        userId: session.user.id,
-        action: "feedback_triage_update",
-        targetType: "feedback",
-        targetId: id,
-        details: {
-          fromStatus: existing.triageStatus,
-          toStatus: updated.triageStatus,
-          priority: updated.priority,
-          ownerUserId: updated.ownerUserId,
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedFeedback = await tx.appFeedback.update({
+        where: { id },
+        data: {
+          ...parsed.data,
+          triagedAt: shouldSetTriagedAt ? new Date() : existing.triagedAt,
+          closedAt: nextClosedAt,
         },
-      },
+        include: {
+          user: { select: { id: true, email: true, name: true } },
+          owner: { select: { id: true, email: true, name: true } },
+        },
+      })
+
+      await tx.adminActivity.create({
+        data: {
+          userId: session.user.id,
+          action: "feedback_triage_update",
+          targetType: "feedback",
+          targetId: id,
+          details: {
+            fromStatus: existing.triageStatus,
+            toStatus: updatedFeedback.triageStatus,
+            priority: updatedFeedback.priority,
+            ownerUserId: updatedFeedback.ownerUserId,
+          },
+        },
+      })
+
+      return updatedFeedback
     })
 
     return NextResponse.json({ feedback: updated })
