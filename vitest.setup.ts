@@ -143,6 +143,7 @@ vi.mock("@/lib/prisma", () => {
       create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
+      deleteMany: vi.fn(),
     },
     adminActivity: {
       create: vi.fn(),
