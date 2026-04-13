@@ -17,23 +17,25 @@ export default function BandsAdminPage() {
         </p>
       </div>
 
-      <section className="admin-card" aria-labelledby="bands-heading">
-        <div className="admin-card__header">
-          <h2 id="bands-heading" className="admin-card__title">
-            Data Quality
-          </h2>
-        </div>
-        <BandManagement />
-      </section>
+      <div className="admin-bands-layout">
+        <section className="admin-card" aria-labelledby="bands-heading">
+          <div className="admin-card__header">
+            <h2 id="bands-heading" className="admin-card__title">
+              Data Quality
+            </h2>
+          </div>
+          <BandManagement />
+        </section>
 
-      <section className="admin-card" aria-labelledby="merge-heading">
-        <div className="admin-card__header">
-          <h2 id="merge-heading" className="admin-card__title">
-            Merge Duplicates
-          </h2>
-        </div>
-        <BandMerge />
-      </section>
+        <section className="admin-card" aria-labelledby="merge-heading">
+          <div className="admin-card__header">
+            <h2 id="merge-heading" className="admin-card__title">
+              Merge Duplicates
+            </h2>
+          </div>
+          <BandMerge />
+        </section>
+      </div>
     </>
   )
 }

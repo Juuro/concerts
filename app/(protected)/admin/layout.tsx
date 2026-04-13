@@ -27,7 +27,9 @@ export default async function AdminLayout({
   return (
     <div className="admin-shell">
       <AdminSidebar feedbackNewCount={feedbackNewCount} />
-      <div className="admin-shell__content">{children}</div>
+      <div className="admin-shell__content">
+        <div className="admin-subpage">{children}</div>
+      </div>
     </div>
   )
 }

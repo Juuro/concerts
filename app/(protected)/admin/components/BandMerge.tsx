@@ -105,11 +105,7 @@ export default function BandMerge() {
     return (
       <div className="admin-list">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="admin-list__skeleton"
-            style={{ height: 120 }}
-          />
+          <div key={i} className="admin-list__skeleton admin-merge__skeleton" />
         ))}
       </div>
     )
@@ -125,13 +121,7 @@ export default function BandMerge() {
 
   return (
     <div>
-      <p
-        style={{
-          marginBottom: "1rem",
-          color: "rgba(0,0,0,0.6)",
-          fontSize: "0.875rem",
-        }}
-      >
+      <p className="admin-merge__intro">
         Found {duplicates.length} potential duplicate pairs. Review and merge as
         needed.
       </p>
@@ -200,13 +190,7 @@ export default function BandMerge() {
               </div>
             </div>
 
-            <div
-              style={{
-                gridColumn: "1 / -1",
-                textAlign: "center",
-                marginTop: "0.5rem",
-              }}
-            >
+            <div className="admin-merge__dismiss">
               <button
                 type="button"
                 className="admin-btn admin-btn--secondary"
