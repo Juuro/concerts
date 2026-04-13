@@ -126,14 +126,35 @@ export default function FeedbackModal() {
               id={messageId}
               className={styles.textarea}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                const nextMessage = e.target.value
+                e.target.setCustomValidity(
+                  nextMessage.trim().length >= 10
+                    ? ""
+                    : "Message must contain at least 10 non-whitespace characters."
+                )
+                setMessage(nextMessage)
+              }}
+              onInvalid={(e) => {
+                e.currentTarget.setCustomValidity(
+                  e.currentTarget.value.trim().length >= 10
+                    ? ""
+                    : "Message must contain at least 10 non-whitespace characters."
+                )
+              }}
               rows={5}
               required
               minLength={10}
               maxLength={5000}
               placeholder="Describe what happened or what you would like…"
-              aria-describedby={`${formId}-desc`}
+              aria-describedby={`${formId}-desc ${messageId}-validation`}
+              aria-invalid={message.length > 0 && message.trim().length < 10}
             />
+            <span id={`${messageId}-validation`} className={styles.validation} aria-live="polite">
+              {message.length > 0 && message.trim().length < 10
+                ? "Message must contain at least 10 non-whitespace characters."
+                : ""}
+            </span>
             <span className={styles.counter} aria-live="polite">
               {message.length} / 5000
             </span>
