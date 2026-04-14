@@ -1,9 +1,14 @@
 import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { parseSupportingActIds } from "@/lib/concerts/transform"
+
+const exportQuerySchema = z.object({
+  format: z.enum(["json", "csv"]).default("json"),
+})
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({
@@ -15,14 +20,18 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url)
-  const format = searchParams.get("format") ?? "json"
+  const queryResult = exportQuerySchema.safeParse({
+    format: searchParams.get("format"),
+  })
 
-  if (format !== "json" && format !== "csv") {
+  if (!queryResult.success) {
     return NextResponse.json(
       { error: "Invalid format. Use json or csv." },
       { status: 400 }
     )
   }
+
+  const format = queryResult.data.format
 
   try {
     const userId = session.user.id
@@ -191,4 +200,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

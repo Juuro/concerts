@@ -115,7 +115,6 @@ export default function SettingsPage() {
       a.remove()
       URL.revokeObjectURL(url)
     } catch (err) {
-      console.error("Export error:", err)
       showToast({ type: "error", message: "An unexpected error occurred" })
     } finally {
       setIsExporting(null)
@@ -137,7 +136,6 @@ export default function SettingsPage() {
         })
       }
     } catch (err) {
-      console.error("Delete account error:", err)
       showToast({ type: "error", message: "An unexpected error occurred" })
     } finally {
       setIsDeleting(false)
