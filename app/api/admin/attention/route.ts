@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { auth, getSession } from "@/lib/auth"
+import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
-import { prisma } from "@/lib/prisma"
+import { getAttentionStats } from "@/lib/admin"
 
 export async function GET() {
   const session = await getSession(await headers())
@@ -10,40 +10,6 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const [
-    bandsWithoutImages,
-    totalBands,
-    concertsWithoutCity,
-    totalConcerts,
-    orphanedFestivals,
-    totalFestivals,
-    bannedUsers,
-    totalUsers,
-  ] = await Promise.all([
-    prisma.band.count({
-      where: { imageUrl: null },
-    }),
-    prisma.band.count(),
-    prisma.concert.count({
-      where: { normalizedCity: null },
-    }),
-    prisma.concert.count(),
-    prisma.festival.count({
-      where: { concerts: { none: {} } },
-    }),
-    prisma.festival.count(),
-    prisma.user.count({ where: { banned: true } }),
-    prisma.user.count(),
-  ])
-
-  return NextResponse.json({
-    bandsWithoutImages,
-    totalBands,
-    concertsWithoutCity,
-    totalConcerts,
-    orphanedFestivals,
-    totalFestivals,
-    bannedUsers,
-    totalUsers,
-  })
+  const stats = await getAttentionStats()
+  return NextResponse.json(stats)
 }
