@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import type { KeyboardEvent } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useToast } from "@/components/Toast/Toast"
 
 interface Band {
@@ -28,15 +29,31 @@ const TABS: { id: TabType; label: string }[] = [
   { id: "orphaned", label: "Orphaned Bands" },
 ]
 
+const TAB_IDS = TABS.map((t) => t.id)
+
+function isValidTab(tab: string | null): tab is TabType {
+  return tab !== null && TAB_IDS.includes(tab as TabType)
+}
+
 export default function BandManagement() {
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const initialTab = isValidTab(tabParam) ? tabParam : "missing-images"
+
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [activeTab, setActiveTab] = useState<TabType>("missing-images")
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [bands, setBands] = useState<Band[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
   const { showToast } = useToast()
+
+  useEffect(() => {
+    if (isValidTab(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam, activeTab])
 
   const fetchBands = useCallback(async () => {
     setLoading(true)

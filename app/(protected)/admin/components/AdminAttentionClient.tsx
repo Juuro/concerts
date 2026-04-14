@@ -71,7 +71,7 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           : stats.bandsWithoutImages > 0
             ? "warning"
             : "success",
-      manageHref: "/admin/bands",
+      manageHref: "/admin/bands?tab=missing-images",
       manageLabel: "Manage Bands",
       icon: (
         <svg
@@ -101,7 +101,7 @@ function buildAttentionItems(stats: AttentionStats): AttentionItem[] {
           : stats.bandsEnrichmentFailed > 0
             ? "warning"
             : "success",
-      manageHref: "/admin/bands",
+      manageHref: "/admin/bands?tab=enrichment-failed",
       manageLabel: "Manage Bands",
       icon: (
         <svg
