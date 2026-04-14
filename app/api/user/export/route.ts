@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { parseSupportingActIds } from "@/lib/concerts/transform"
+import { getExportFilename } from "@/lib/export"
 
 const exportQuerySchema = z.object({
   format: z.enum(["json", "csv"]).default("json"),
@@ -85,6 +86,18 @@ export async function GET(request: NextRequest) {
         : []
     const bandsById = new Map(supportingBands.map((b) => [b.id, b]))
 
+    /**
+     * Export data structure containing user profile and concert attendance records.
+     * Implements GDPR Article 15 (Right of Access) — includes all personal data
+     * and related concert attendance history without sensitive internal fields.
+     *
+     * Fields included:
+     * - exportedAt: ISO timestamp of export generation
+     * - user: Profile data (id, email, name, username, preferences, privacy settings)
+     * - concerts: Complete concert attendance history with venues, dates, bands, costs, notes
+     *
+     * Excluded: internalNotes, ownerUserId (triage fields), admin activity logs
+     */
     const exportData = {
       exportedAt: new Date().toISOString(),
       user,
@@ -179,7 +192,7 @@ export async function GET(request: NextRequest) {
         status: 200,
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="concerts-export-${new Date().toISOString().split("T")[0]}.csv"`,
+          "Content-Disposition": `attachment; filename="${getExportFilename("csv")}"`,
         },
       })
     }
@@ -188,7 +201,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="concerts-export-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="${getExportFilename("json")}"`,
       },
     })
   } catch (error) {

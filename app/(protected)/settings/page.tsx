@@ -12,6 +12,7 @@ import { applyPostHogConsentState } from "@/lib/posthog-client"
 import { isPostHogSessionReplayEnabled } from "@/lib/posthog-env"
 import { useToast } from "@/components/Toast/Toast"
 import Dialog from "@/components/Dialog/Dialog"
+import { getExportFilename } from "@/lib/export"
 import "./settings.scss"
 
 export default function SettingsPage() {
@@ -108,8 +109,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      const date = new Date().toISOString().split("T")[0]
-      a.download = `concerts-export-${date}.${format}`
+      a.download = getExportFilename(format)
       document.body.appendChild(a)
       a.click()
       a.remove()
