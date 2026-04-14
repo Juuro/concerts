@@ -78,6 +78,7 @@ export default function BandEditForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -89,6 +90,7 @@ export default function BandEditForm({
             value={websiteUrl}
             onChange={(e) => setWebsiteUrl(e.target.value)}
             placeholder="https://..."
+            disabled={isSubmitting}
           />
         </div>
 
@@ -100,6 +102,7 @@ export default function BandEditForm({
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://..."
+            disabled={isSubmitting}
           />
         </div>
 

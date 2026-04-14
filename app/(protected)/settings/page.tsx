@@ -132,6 +132,7 @@ export default function SettingsPage() {
               placeholder="Choose a username for your public profile"
               pattern="[a-z0-9-]+"
               title="Only lowercase letters, numbers, and hyphens allowed"
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -145,6 +146,7 @@ export default function SettingsPage() {
               id="currency"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
+              disabled={isSubmitting}
             >
               <option value="EUR">EUR</option>
               <option value="USD">USD</option>
@@ -169,6 +171,7 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
+                disabled={isSubmitting}
               />
               Make my profile public
             </label>
@@ -228,6 +231,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={hideLocationPublic}
                     onChange={(e) => setHideLocationPublic(e.target.checked)}
+                    disabled={isSubmitting}
                   />
                   Hide location data on public profile
                 </label>
@@ -251,6 +255,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={hideCostPublic}
                     onChange={(e) => setHideCostPublic(e.target.checked)}
+                    disabled={isSubmitting}
                   />
                   Hide money spent on public profile
                 </label>
@@ -267,6 +272,7 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       setIncludeUserIdInErrorReports(e.target.checked)
                     }
+                    disabled={isSubmitting}
                   />
                   Include my account identifier in error reports (helps us fix
                   issues faster)

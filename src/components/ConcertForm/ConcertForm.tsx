@@ -531,6 +531,7 @@ export default function ConcertForm({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -567,6 +568,7 @@ export default function ConcertForm({
               placeholder="0.00"
               min="0"
               step="0.01"
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -598,6 +600,7 @@ export default function ConcertForm({
                     handleClearFestival()
                   }
                 }}
+                disabled={isSubmitting}
               />
               This was a festival
             </label>
@@ -617,6 +620,7 @@ export default function ConcertForm({
                     className="concert-form__selected-festival-clear"
                     onClick={handleClearFestival}
                     aria-label={`Clear festival ${selectedFestival.name}`}
+                    disabled={isSubmitting}
                   >
                     <svg
                       aria-hidden="true"
@@ -654,6 +658,7 @@ export default function ConcertForm({
                       onChange={(e) => setFestivalSearch(e.target.value)}
                       onKeyDown={handleFestivalKeyDown}
                       placeholder="Type to search festivals..."
+                      disabled={isSubmitting}
                     />
                     {isFestivalSearching && (
                       <span className="concert-form__searching">
