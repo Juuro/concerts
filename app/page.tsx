@@ -1,6 +1,7 @@
 import React, { Suspense } from "react"
 import Link from "next/link"
 import Layout from "../src/components/layout-client"
+import HeroBanner from "@/components/HeroBanner/heroBanner"
 import StatisticsWidgetServer from "../src/components/StatisticsWidget/StatisticsWidgetServer"
 import StatCard from "@/components/StatCard/StatCard"
 import FeatureCard from "@/components/FeatureCard/FeatureCard"
@@ -150,6 +151,7 @@ async function LandingPage() {
     <Layout>
       <main>
         <div className="container">
+          <HeroBanner />
           <section className="home-hero">
             <h2>Your concert history, beautifully tracked</h2>
             <p>
