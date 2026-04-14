@@ -119,9 +119,15 @@ const ConcertCard: React.FC<ConcertCardProps> = ({
           {concert.attendeeCount && concert.attendeeCount > 1 && (
             <span
               className="concert-card-attendees"
-              title={`${concert.attendeeCount} people attended`}
+              title={
+                isInTheFuture()
+                  ? `${concert.attendeeCount} people going`
+                  : `${concert.attendeeCount} people attended`
+              }
             >
-              {concert.attendeeCount} attended
+              {isInTheFuture()
+                ? `${concert.attendeeCount} going`
+                : `${concert.attendeeCount} attended`}
             </span>
           )}
         </div>
