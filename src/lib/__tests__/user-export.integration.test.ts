@@ -8,93 +8,35 @@
  * - Proper error handling and status codes
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it } from "vitest"
 
 describe("User Export Route (app/api/user/export/route.ts)", () => {
   /**
-   * Test: Unauthorized request returns 401
-   * Implementation: GET /api/user/export without valid session
-   * Expected: { error: "Unauthorized" }, status 401
-   */
-  it("should return 401 Unauthorized without valid session", () => {
-    // This test requires a test server or supertest
-    // Documented here as a specification for API behavior
-    const expectedStatus = 401
-    const expectedBody = { error: "Unauthorized" }
-
-    expect(expectedStatus).toBe(401)
-    expect(expectedBody).toHaveProperty("error")
-  })
-
-  /**
-   * Test: Invalid format query parameter returns 400
-   * Implementation: GET /api/user/export?format=xml
-   * Expected: { error: "Invalid format. Use json or csv." }, status 400
-   */
-  it("should return 400 for invalid format parameter", () => {
-    const expectedStatus = 400
-    const expectedBody = { error: "Invalid format. Use json or csv." }
-
-    expect(expectedStatus).toBe(400)
-    expect(expectedBody).toHaveProperty(
-      "error",
-      expect.stringContaining("format")
-    )
-  })
-
-  /**
-   * Test: CSV export with special characters escapes quotes correctly
-   * Implementation: Concert title contains quotes; export to CSV
-   * Expected: Quotes are doubled per CSV RFC 4180 (e.g., 'foo"bar' becomes 'foo""bar')
+   * Placeholder specifications only.
    *
-   * Verification: The CSV generation logic at line 187 of route.ts implements:
-   * row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
-   * This correctly escapes quotes by doubling them.
+   * These scenarios must be implemented as real route tests that invoke the
+   * handler (or a test server) with mocked auth and Prisma state. Keeping them
+   * as todos avoids reporting false coverage from tautological assertions.
    */
-  it("should escape CSV cells with double quotes per RFC 4180", () => {
-    const cellWithQuote = 'Concert "Name" Here'
-    const escaped = `"${cellWithQuote.replace(/"/g, '""')}"`
-    const expected = '"Concert ""Name"" Here"'
+  it.todo(
+    "returns 401 Unauthorized for GET /api/user/export without a valid session"
+  )
 
-    expect(escaped).toBe(expected)
-  })
+  it.todo(
+    "returns 400 for GET /api/user/export?format=xml with an invalid format parameter"
+  )
 
-  /**
-   * Test: CSV response has correct Content-Type and Content-Disposition
-   * Implementation: GET /api/user/export?format=csv with valid session
-   * Expected:
-   *   Content-Type: text/csv; charset=utf-8
-   *   Content-Disposition: attachment; filename="concerts-export-YYYY-MM-DD.csv"
-   */
-  it("should set correct headers for CSV export", () => {
-    const expectedContentType = "text/csv; charset=utf-8"
-    const expectedDispositionPattern =
-      /attachment; filename="concerts-export-\d{4}-\d{2}-\d{2}\.csv"/
+  it.todo(
+    'exports CSV with RFC 4180 escaping for quoted values such as Concert "Name" Here'
+  )
 
-    expect(expectedContentType).toBe("text/csv; charset=utf-8")
-    expect("concerts-export-2026-04-14.csv").toMatch(
-      /concerts-export-\d{4}-\d{2}-\d{2}\.csv/
-    )
-  })
+  it.todo(
+    'sets CSV headers for GET /api/user/export?format=csv: Content-Type "text/csv; charset=utf-8" and an attachment filename'
+  )
 
-  /**
-   * Test: JSON export response has correct Content-Type
-   * Implementation: GET /api/user/export?format=json with valid session
-   * Expected:
-   *   Content-Type: application/json
-   *   Content-Disposition: attachment; filename="concerts-export-YYYY-MM-DD.json"
-   */
-  it("should set correct headers for JSON export", () => {
-    const expectedContentType = "application/json"
-    const expectedDispositionPattern =
-      /attachment; filename="concerts-export-\d{4}-\d{2}-\d{2}\.json"/
-
-    expect(expectedContentType).toBe("application/json")
-    expect("concerts-export-2026-04-14.json").toMatch(
-      /concerts-export-\d{4}-\d{2}-\d{2}\.json/
-    )
-  })
-
+  it.todo(
+    'sets JSON headers for GET /api/user/export?format=json: Content-Type "application/json" and an attachment filename'
+  )
   /**
    * Test: Export data excludes internal fields per GDPR Art. 15
    * Implementation: Prisma query uses explicit select: { ... }
