@@ -22,7 +22,8 @@ export default async function HomePage() {
     <Layout concerts={concerts}>
       <main>
         <div className="container">
-          <HeroBanner />
+          {/* TODO: pass isLoggedIn={true} once auth is wired up so logged-in users skip this banner */}
+          <HeroBanner isLoggedIn={false} />
           <StatisticsWidget concerts={concerts} bands={bands} />
           <ul className="list-unstyled">
             {concerts.map((concert) => (
