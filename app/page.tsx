@@ -1,9 +1,10 @@
 import React from "react";
 import Layout from "../src/components/layout-client";
 import ConcertCard from "../src/components/ConcertCard/concertCard";
+import HeroBanner from "../src/components/HeroBanner/heroBanner";
 import StatisticsWidget from "../src/components/StatisticsWidget/statisticsWidget";
 import { getAllConcerts, getAllBands, getSiteMetadata } from "../src/utils/data";
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const dynamic = "force-static";
 
@@ -21,6 +22,7 @@ export default async function HomePage() {
     <Layout concerts={concerts}>
       <main>
         <div className="container">
+          <HeroBanner />
           <StatisticsWidget concerts={concerts} bands={bands} />
           <ul className="list-unstyled">
             {concerts.map((concert) => (
