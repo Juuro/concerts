@@ -10,11 +10,13 @@ import {
 } from "@/lib/posthog-consent"
 import { applyPostHogConsentState } from "@/lib/posthog-client"
 import { isPostHogSessionReplayEnabled } from "@/lib/posthog-env"
+import { useToast } from "@/components/Toast/Toast"
 import "./settings.scss"
 
 export default function SettingsPage() {
   const router = useRouter()
   const { data: session, isPending } = useTypedSession()
+  const { showToast } = useToast()
   const [username, setUsername] = useState(session?.user?.username || "")
   const [isPublic, setIsPublic] = useState(session?.user?.isPublic || false)
   const [hideLocationPublic, setHideLocationPublic] = useState(
@@ -28,10 +30,6 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState(session?.user?.currency || "EUR")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [analyticsConsent, setAnalyticsConsent] = useState(false)
-  const [message, setMessage] = useState<{
-    type: "success" | "error"
-    text: string
-  } | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -62,7 +60,6 @@ export default function SettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setMessage(null)
 
     try {
       const res = await fetch("/api/user/profile", {
@@ -79,17 +76,17 @@ export default function SettingsPage() {
       })
 
       if (res.ok) {
-        setMessage({ type: "success", text: "Settings saved successfully!" })
+        showToast({ type: "success", message: "Settings saved successfully!" })
         router.refresh()
       } else {
         const data = await res.json()
-        setMessage({
+        showToast({
           type: "error",
-          text: data.error || "Failed to save settings",
+          message: data.error || "Failed to save settings",
         })
       }
     } catch (err) {
-      setMessage({ type: "error", text: "An unexpected error occurred" })
+      showToast({ type: "error", message: "An unexpected error occurred" })
     } finally {
       setIsSubmitting(false)
     }
@@ -101,14 +98,6 @@ export default function SettingsPage() {
       <p className="settings__subtitle">Manage your profile and preferences</p>
 
       <form className="settings__form" onSubmit={handleSubmit}>
-        {message && (
-          <div
-            className={`settings__message settings__message--${message.type}`}
-          >
-            {message.text}
-          </div>
-        )}
-
         <div className="settings__section">
           <h2>Profile</h2>
 
