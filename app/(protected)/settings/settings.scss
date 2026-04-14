@@ -31,24 +31,6 @@
     padding: 2rem;
   }
 
-  &__message {
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-
-    &--success {
-      background-color: #e8f5e9;
-      border: 1px solid #c8e6c9;
-      color: #2e7d32;
-    }
-
-    &--error {
-      background-color: #fee;
-      border: 1px solid #fcc;
-      color: variables.$color-red;
-    }
-  }
-
   &__section {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
