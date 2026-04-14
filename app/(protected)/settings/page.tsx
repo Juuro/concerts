@@ -36,6 +36,8 @@ export default function SettingsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExporting, setIsExporting] = useState<"json" | "csv" | null>(null)
+  const [isUpdatingAnalyticsConsent, setIsUpdatingAnalyticsConsent] =
+    useState(false)
 
   useEffect(() => {
     if (session?.user) {
@@ -360,6 +362,7 @@ export default function SettingsPage() {
                     return
                   }
 
+                  setIsUpdatingAnalyticsConsent(true)
                   try {
                     await applyPostHogConsentState(consented)
                   } catch (error) {
@@ -371,8 +374,11 @@ export default function SettingsPage() {
                     setPostHogConsentState(
                       previousConsented ? "granted" : "denied"
                     )
+                  } finally {
+                    setIsUpdatingAnalyticsConsent(false)
                   }
                 }}
+                disabled={isSubmitting || isUpdatingAnalyticsConsent}
               />
               {isPostHogSessionReplayEnabled()
                 ? "Allow analytics and session replay"
