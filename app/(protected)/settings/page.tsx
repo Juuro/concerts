@@ -330,6 +330,7 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   setIncludeUserIdInErrorReports(e.target.checked)
                 }
+                disabled={isSubmitting}
               />
               Include my account identifier in error reports (helps us fix
               issues faster)
