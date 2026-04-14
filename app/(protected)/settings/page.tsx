@@ -113,7 +113,9 @@ export default function SettingsPage() {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      URL.revokeObjectURL(url)
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 1000)
     } catch (err) {
       showToast({ type: "error", message: "An unexpected error occurred" })
     } finally {
