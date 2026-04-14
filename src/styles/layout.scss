@@ -66,7 +66,9 @@ a {
   text-decoration: none;
   transition: color variables.$transition-duration ease-out;
 
-  // TODO: Fix hover colour for tags.
+  // This hover color applies to text links only.
+  // Button-styled links override this via btn-primary/btn-secondary mixins
+  // which explicitly set color on hover.
   &:hover {
     color: variables.$color-black;
   }
@@ -106,14 +108,277 @@ main {
   padding: 0;
 }
 
+// Screen-reader only text (visually hidden but accessible)
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .container {
   display: grid;
   justify-items: center;
 }
 
+// Admin: `.container` + `justify-items: center` shrinks `.admin-shell` to max-content (~narrow band).
+// Stretch the grid item and allow a wider max width than default `main` (100rem).
+main.container:has(.admin-shell) {
+  justify-items: stretch;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(variables.$admin-main-max-width, 100%);
+  padding: 1rem clamp(1rem, 2.5vw, 2.5rem) 0;
+  width: 100%;
+}
+
 .bands {
   display: flex;
   flex-wrap: wrap;
+}
+
+.map-wrapper {
+  position: relative;
+
+  &--fullscreen {
+    background: variables.$color-white;
+    inset: 0;
+    position: fixed;
+    z-index: 9999;
+
+    .mapid {
+      border-radius: 0;
+      height: 100vh;
+    }
+  }
+
+  &__fullscreen-btn {
+    background: variables.$color-white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 0.4rem 0.75rem;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 10000;
+
+    &:hover {
+      background: #f0f0f0;
+    }
+  }
+
+  // MapLibre popup — Pink Ink Editorial (card surface + pink accents)
+  .maplibregl-popup-content {
+    background: variables.$admin-surface;
+    border: 1px solid rgba(255, 6, 102, 0.14);
+    border-radius: 16px;
+    box-shadow: variables.$admin-shadow-md;
+    color: variables.$admin-text;
+    font-family: variables.$font-family-text;
+    max-width: min(320px, calc(100vw - 2rem));
+    // Symmetric horizontal padding — the old 2.25rem right inset was for the × but
+    // applied to the whole block, leaving a wide empty strip beside the list.
+    padding: 0.85rem 1rem 1rem;
+  }
+
+  // Omit border on the edge that meets the tip. MapLibre anchor names refer to which side
+  // of the popup sits on the lng/lat: anchor-bottom = body above the point, tip points down
+  // → the triangle meets the *bottom* of .maplibregl-popup-content (not the top).
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-content,
+  .maplibregl-popup-anchor-bottom-left .maplibregl-popup-content,
+  .maplibregl-popup-anchor-bottom-right .maplibregl-popup-content {
+    border-bottom: none;
+  }
+
+  .maplibregl-popup-anchor-top .maplibregl-popup-content,
+  .maplibregl-popup-anchor-top-left .maplibregl-popup-content,
+  .maplibregl-popup-anchor-top-right .maplibregl-popup-content {
+    border-top: none;
+  }
+
+  .maplibregl-popup-anchor-left .maplibregl-popup-content {
+    border-right: none;
+  }
+
+  .maplibregl-popup-anchor-right .maplibregl-popup-content {
+    border-left: none;
+  }
+
+  .maplibregl-popup-close-button {
+    border-radius: 8px;
+    color: variables.$admin-text-muted;
+    font-size: 1.25rem;
+    height: auto;
+    line-height: 1;
+    padding: 0.35rem 0.45rem;
+    transition:
+      background-color variables.$transition-duration ease,
+      color variables.$transition-duration ease;
+    width: auto;
+
+    &:hover {
+      background-color: variables.$admin-pink-100;
+      color: variables.$admin-pink-600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$admin-pink-400;
+      outline-offset: 2px;
+    }
+  }
+
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-top-left .maplibregl-popup-tip {
+    border-bottom-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+    border-bottom-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip {
+    border-top-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+    border-top-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: variables.$admin-surface;
+  }
+
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: variables.$admin-surface;
+  }
+
+  .map-popup-concerts {
+    box-sizing: border-box;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    max-width: none;
+    width: 100%;
+
+    strong {
+      color: variables.$admin-text;
+      font-family: variables.$font-family-heading;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    &__count {
+      color: variables.$admin-text;
+      font-family: variables.$font-family-heading;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0 0 0.5rem;
+      // Keep the heading line clear of the ×; list uses full width below.
+      padding-right: 1.5rem;
+    }
+
+    // Single-concert popup: first line sits under the close control
+    > a:first-child,
+    > strong:first-child {
+      box-sizing: border-box;
+      display: inline-block;
+      max-width: 100%;
+      padding-right: 1.5rem;
+    }
+
+    &__list {
+      list-style: none;
+      margin: 0;
+      max-height: min(50vh, 280px);
+      overflow-y: auto;
+      padding: 0;
+
+      @media (prefers-reduced-motion: no-preference) {
+        scroll-behavior: smooth;
+      }
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 6, 102, 0.28);
+        border-radius: 100px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: variables.$admin-surface-alt;
+        border-radius: 100px;
+      }
+    }
+
+    &__item {
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      margin: 0;
+      padding: 0.5rem 0;
+
+      &:first-child {
+        border-top: none;
+        padding-top: 0;
+      }
+    }
+
+    &__detail {
+      color: variables.$admin-text-secondary;
+      display: block;
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      margin-top: 0.2rem;
+    }
+
+    > span:not(.map-popup-concerts__detail) {
+      color: variables.$admin-text-secondary;
+      font-size: 0.875rem;
+    }
+
+    a {
+      color: variables.$admin-pink-600;
+      font-family: variables.$font-family-heading;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+      transition:
+        color variables.$transition-duration
+          variables.$transition-easing-decelerate,
+        text-decoration-color variables.$transition-duration ease;
+
+      strong {
+        color: inherit;
+      }
+
+      &:hover {
+        color: variables.$admin-pink-500;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 6, 102, 0.45);
+      }
+
+      &:focus-visible {
+        border-radius: 4px;
+        outline: 2px solid variables.$admin-pink-400;
+        outline-offset: 2px;
+      }
+    }
+  }
 }
 
 .mapid {
@@ -150,6 +415,11 @@ h2 {
   display: inline;
   margin: 0 0.4em 0.4em 0;
   padding: 0.1em 0.5em;
+  transition: background-color variables.$transition-duration ease;
+
+  &:hover {
+    color: variables.$color-white;
+  }
 
   &:has(.badge) {
     padding-left: 0;
@@ -165,11 +435,35 @@ h2 {
 
 .bg-primary {
   background-color: variables.$color-primary;
+
+  &:hover {
+    background-color: color.adjust(variables.$color-primary, $lightness: -10%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-primary;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background-color: color.adjust(variables.$color-primary, $lightness: -15%);
+  }
 }
 
 @media screen and (min-width: 768px) {
   main {
     margin: 0 auto;
     width: 55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

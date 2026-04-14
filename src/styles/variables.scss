@@ -1,5 +1,7 @@
 $color-primary: #ff0666;
 $color-red: #f00;
+/** Form validation message text (e.g. inline field errors). */
+$form-validation-error: #c62828;
 $color-white: #fff;
 $color-black: #444;
 
@@ -7,3 +9,48 @@ $font-family-text: OpenSans, sans-serif;
 $font-family-heading: Rubik, sans-serif;
 
 $transition-duration: 200ms;
+$transition-duration-slow: 300ms;
+$transition-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+$transition-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+// Admin Dashboard - "Pink Ink Editorial" Light Mode
+// ==================================================
+
+// Light mode foundation
+$admin-bg: #faf9f7;
+$admin-surface: #ffffff;
+$admin-surface-alt: #f5f4f2;
+
+// Text hierarchy (light mode)
+$admin-text: #1a1a1a;
+$admin-text-secondary: #666666;
+$admin-text-muted: #999999;
+
+// Pink spectrum (signature)
+$admin-pink-600: #ff0666;
+$admin-pink-500: #ff3385;
+$admin-pink-400: #ff6ba3;
+$admin-pink-200: #ffcce0;
+$admin-pink-100: #fff0f5;
+$admin-pink-50: #fff8fb;
+$admin-pink-gradient: linear-gradient(135deg, #ff0666 0%, #ff6ba3 100%);
+
+// Status colors
+$admin-success: #059669;
+$admin-success-bg: #ecfdf5;
+$admin-warning: #d97706;
+$admin-warning-bg: #fffbeb;
+$admin-danger: #dc2626;
+$admin-danger-bg: #fef2f2;
+$admin-info: #2563eb;
+$admin-info-bg: #eff6ff;
+
+// Shadows (light mode - subtle)
+$admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+$admin-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.06);
+$admin-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+$admin-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+// Admin layout — wider dashboard workspace than default `main` (100rem)
+$admin-main-max-width: 120rem;
+$admin-dashboard-inner-max-width: 100rem;

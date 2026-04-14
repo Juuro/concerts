@@ -1,0 +1,292 @@
+// Prisma schema for concerts multi-tenant application
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Better Auth Models
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  image         String?
+  username      String?   @unique
+  isPublic      Boolean   @default(false)
+  currency      String    @default("EUR")
+  hideLocationPublic Boolean @default(true)
+  hideCostPublic     Boolean @default(true)
+  includeUserIdInErrorReports Boolean @default(true)
+  role          String    @default("user")
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Better Auth relations
+  sessions Session[]
+  accounts Account[]
+
+  // Concert relations (via UserConcert junction table)
+  attendedConcerts   UserConcert[]
+  concertsCreated    Concert[]      @relation("concertsCreated")
+  concertsUpdated    Concert[]      @relation("concertsUpdated")
+  deprecatedConcerts Concert[]      @relation("deprecatedConcerts") // DEPRECATED: Remove after migration
+
+  // Audit relations
+  bandsCreated     Band[]     @relation("bandsCreated")
+  bandsUpdated     Band[]     @relation("bandsUpdated")
+  festivalsCreated Festival[] @relation("festivalsCreated")
+  festivalsUpdated Festival[] @relation("festivalsUpdated")
+  adminActivities  AdminActivity[]
+  appFeedback      AppFeedback[]
+  feedbackOwned    AppFeedback[] @relation("feedbackOwner")
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ============================================
+// Application Models
+// ============================================
+
+model Concert {
+  id             String   @id @default(cuid())
+  date           DateTime
+  latitude       Float
+  longitude      Float
+  venue          String?
+  normalizedCity String?
+  isFestival     Boolean  @default(false)
+  festivalId     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // DEPRECATED: These fields are being migrated to UserConcert
+  // Will be removed after data migration is complete
+  userId String?
+  cost   Decimal? @db.Decimal(10, 2)
+  user   User?    @relation("deprecatedConcerts", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Audit fields for shared entity
+  createdById String?
+  updatedById String?
+
+  // Relations
+  festival  Festival?     @relation(fields: [festivalId], references: [id])
+  bands     ConcertBand[]
+  attendees UserConcert[]
+  createdBy User?         @relation("concertsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?         @relation("concertsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([date])
+  @@index([normalizedCity])
+  @@map("concert")
+}
+
+// Junction table for user attendance with user-specific data
+model UserConcert {
+  id        String   @id @default(cuid())
+  userId    String
+  concertId String
+  cost      Decimal? @db.Decimal(10, 2) // User-specific ticket cost
+  notes     String?                      // User-specific notes (future)
+  supportingActIds Json?                 // [{ bandId: string, sortOrder: number }] - user's support acts (per-user, not shared)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  concert Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, concertId]) // One attendance per user per concert
+  @@index([userId])
+  @@index([concertId])
+  @@map("user_concert")
+}
+
+model Band {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  imageUrl        String?
+  imageEnrichedAt DateTime?
+  // Last.fm cached data
+  lastfmUrl  String?
+  websiteUrl String?
+  genres    String[] // Array of genre strings
+  bio       String?
+  createdById String?
+  updatedById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  concerts  ConcertBand[]
+  createdBy User?  @relation("bandsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?  @relation("bandsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@map("band")
+}
+
+model Festival {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  url       String?
+  createdById String?
+  updatedById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  concerts  Concert[]
+  createdBy User?  @relation("festivalsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?  @relation("festivalsUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("festival")
+}
+
+model ConcertBand {
+  id          String  @id @default(cuid())
+  concertId   String
+  bandId      String
+  isHeadliner Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  concert Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+  band    Band    @relation(fields: [bandId], references: [id])
+
+  @@unique([concertId, bandId])
+  @@map("concert_band")
+}
+
+model AdminActivity {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // "band_enrich", "band_delete", "band_merge", "user_ban", etc.
+  targetType String   // "band", "concert", "user", "festival"
+  targetId   String
+  details    Json?    // Additional context (e.g., { bandName: "..." })
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("admin_activity")
+}
+
+enum AppFeedbackCategory {
+  BUG
+  FEATURE
+  GENERAL
+}
+
+enum AppFeedbackTriageStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  DONE
+  DISCARDED
+}
+
+enum AppFeedbackPriority {
+  P1
+  P2
+  P3
+  P4
+  P5
+}
+
+enum GithubIssueState {
+  OPEN
+  CLOSED
+}
+
+model AppFeedback {
+  id                String                   @id @default(cuid())
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  category          AppFeedbackCategory
+  message           String                   @db.Text
+  userId            String?
+  pagePath          String?                  @db.VarChar(512)
+  userAgent         String?                  @db.VarChar(512)
+  triageStatus      AppFeedbackTriageStatus  @default(NEW)
+  priority          AppFeedbackPriority      @default(P3)
+  ownerUserId       String?
+  internalNotes     String?                  @db.Text
+  tags              String[]                 @default([])
+  githubIssueNumber   Int?
+  githubIssueUrl      String?                  @db.VarChar(512)
+  githubProjectItemId String?                  @db.VarChar(128)
+  githubIssueState    GithubIssueState?
+  githubSyncedAt      DateTime?
+  triagedAt           DateTime?
+  closedAt            DateTime?
+
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  owner User? @relation("feedbackOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([triageStatus])
+  @@index([priority])
+  @@index([ownerUserId])
+  @@map("app_feedback")
+}

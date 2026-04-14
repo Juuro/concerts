@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/sebastian-engel/concertivity",
+      "type": "http"
+    }
+  }
+}

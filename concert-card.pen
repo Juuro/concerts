@@ -1,0 +1,1898 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "5ieWf",
+      "x": 0,
+      "y": 0,
+      "name": "container",
+      "gap": 80,
+      "children": [
+        {
+          "type": "frame",
+          "id": "6oYJL",
+          "name": "largeWrapper",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "zfpui",
+              "name": "label2",
+              "fill": "#666666",
+              "content": "Large screens (≥ 1024px)",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "U6fnJ",
+              "name": "Concert Card (Large)",
+              "clip": true,
+              "width": 900,
+              "height": 150,
+              "fill": "#ffffff",
+              "cornerRadius": 8,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "rgba(0, 0, 0, 0.1)",
+                "blur": 32
+              },
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oHzeG",
+                  "name": "imageFrame",
+                  "clip": true,
+                  "width": 130,
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1772229023803.png",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "PY6Sq",
+                  "name": "bodySection",
+                  "width": 488,
+                  "height": 135,
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    12,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZISjZ",
+                      "name": "title",
+                      "fill": "#ff0666",
+                      "content": "Arctic Monkeys",
+                      "fontFamily": "Rubik",
+                      "fontSize": 40,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "u0pgX",
+                      "name": "metaRow",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sNGqF",
+                          "name": "dateText",
+                          "fill": "#666666",
+                          "content": "27. Februar 2025",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LbMmW",
+                          "name": "attendeesBadge",
+                          "fill": "#e7e7e7",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 0,
+                            "fill": "transparent"
+                          },
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Am4Vq",
+                              "name": "attendeesText",
+                              "fill": "#555555",
+                              "content": "3 attended",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YPpeA",
+                      "name": "bandsRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "dHZqN",
+                          "name": "badge1",
+                          "fill": "#ff0666",
+                          "cornerRadius": 4,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mM3Gw",
+                              "name": "badge1Text",
+                              "fill": "#ffffff",
+                              "content": "The Hives",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HMOGS",
+                          "name": "badge2",
+                          "fill": "#ff0666",
+                          "cornerRadius": 4,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2x3Wh",
+                              "name": "badge2Text",
+                              "fill": "#ffffff",
+                              "content": "Fontaines D.C.",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "9o0EP",
+                  "name": "locationBlock",
+                  "width": 250,
+                  "height": "fill_container",
+                  "gap": 16,
+                  "padding": [
+                    0,
+                    16,
+                    12,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Xqhi1",
+                      "name": "locationSection",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ad7ie",
+                          "name": "venueText",
+                          "fill": "#444444",
+                          "content": "O2 Arena",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "24mVK",
+                          "name": "cityText",
+                          "fill": "#ff0666",
+                          "content": "London",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "hH5Z8",
+                          "name": "costText",
+                          "fill": "#666666",
+                          "content": "85 EUR",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "IOGHa",
+                      "name": "editBtn",
+                      "fill": "transparent",
+                      "cornerRadius": 4,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#dddddd"
+                      },
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "R4Fxa",
+                          "name": "editBtnText",
+                          "fill": "#444444",
+                          "content": "Edit",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "j46ls",
+          "name": "Concert Card (Small)",
+          "clip": true,
+          "width": 600,
+          "height": 180,
+          "fill": "#ffffff",
+          "cornerRadius": 8,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "rgba(0, 0, 0, 0.1)",
+            "blur": 32
+          },
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "msITL",
+              "name": "imageFrame",
+              "clip": true,
+              "width": 200,
+              "height": "fill_container",
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1772229023803.png",
+                "mode": "fill"
+              }
+            },
+            {
+              "type": "frame",
+              "id": "4bxzR",
+              "name": "contentCol",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                16,
+                16,
+                0
+              ],
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kpDZq",
+                  "name": "bodySection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qKApH",
+                      "name": "title",
+                      "fill": "#ff0666",
+                      "content": "Arctic Monkeys",
+                      "fontFamily": "Rubik",
+                      "fontSize": 28,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zO1u4",
+                      "name": "metaRow",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eS0Hu",
+                          "name": "dateText",
+                          "fill": "#666666",
+                          "content": "27. Februar 2025",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QX09G",
+                          "name": "attendeesBadge",
+                          "fill": "#e7e7e7",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 0,
+                            "fill": "transparent"
+                          },
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sGPmN",
+                              "name": "attendeesText",
+                              "fill": "#555555",
+                              "content": "3 attended",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "9wSp4",
+                      "name": "bandsRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HE8WR",
+                          "name": "badge1",
+                          "fill": "#ff0666",
+                          "cornerRadius": 4,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "6lA5R",
+                              "name": "badge1Text",
+                              "fill": "#ffffff",
+                              "content": "The Hives",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DtLqk",
+                          "name": "badge2",
+                          "fill": "#ff0666",
+                          "cornerRadius": 4,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "U1MVh",
+                              "name": "badge2Text",
+                              "fill": "#ffffff",
+                              "content": "Fontaines D.C.",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xeJKf",
+                  "name": "locationRow",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UL1AJ",
+                      "name": "locationSection",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "93E9Y",
+                          "name": "venueText",
+                          "fill": "#444444",
+                          "content": "O2 Arena",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "UckyO",
+                          "name": "cityText",
+                          "fill": "#ff0666",
+                          "content": "London",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gl1g2",
+                          "name": "costText",
+                          "fill": "#666666",
+                          "content": "85 EUR",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Zg7ix",
+                      "name": "editBtn",
+                      "fill": "transparent",
+                      "cornerRadius": 4,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#dddddd"
+                      },
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Npru5",
+                          "name": "editBtnText",
+                          "fill": "#444444",
+                          "content": "Edit",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kmIUu",
+          "name": "modernIconEditWrapper",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "zPmOq",
+              "name": "labelModernIcon",
+              "fill": "#ff0666",
+              "content": "Modern redesign (icon-only edit)",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "yIWLO",
+              "name": "Concert Card (Small) — Modern Icon Edit",
+              "clip": true,
+              "width": 600,
+              "height": 220,
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 145,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#130812",
+                      "position": 0
+                    },
+                    {
+                      "color": "#1C0B16",
+                      "position": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.8,
+                    "height": 0.8
+                  },
+                  "colors": [
+                    {
+                      "color": "#FF066655",
+                      "position": 0
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                }
+              ],
+              "cornerRadius": 20,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#4A1A2F"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "rgba(2, 6, 23, 0.45)",
+                "offset": {
+                  "x": 0,
+                  "y": 16
+                },
+                "blur": 40
+              },
+              "gap": 18,
+              "padding": [
+                0,
+                20,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OQAih",
+                  "name": "imageFrame",
+                  "clip": true,
+                  "width": 180,
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1772229023803.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": [
+                    20,
+                    0,
+                    0,
+                    20
+                  ],
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#1E293B"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "oncI9",
+                  "name": "contentCol",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    20,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zta9i",
+                      "name": "bodySection",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xe12n",
+                          "name": "title",
+                          "fill": "#F8FAFC",
+                          "content": "Arctic Monkeys",
+                          "fontFamily": "Sora",
+                          "fontSize": 30,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xyP70",
+                          "name": "metaRow",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MFo69",
+                              "name": "dateText",
+                              "fill": "#94A3B8",
+                              "content": "27. Februar 2025",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Fsq2M",
+                              "name": "attendeesBadge",
+                              "fill": "#FFE3EF",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 0,
+                                "fill": "transparent"
+                              },
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "xqQRl",
+                                  "name": "attendeesText",
+                                  "fill": "#B10047",
+                                  "content": "3 attended",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tKmxZ",
+                          "name": "bandsRow",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "dJa3j",
+                              "name": "badge1",
+                              "fill": "#2A0B18",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#5C1636"
+                              },
+                              "padding": [
+                                5,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XkJcq",
+                                  "name": "badge1Text",
+                                  "fill": "#FFDDEA",
+                                  "content": "The Hives",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xiVMM",
+                              "name": "badge2",
+                              "fill": "#2A0B18",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#5C1636"
+                              },
+                              "padding": [
+                                5,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "BcpfT",
+                                  "name": "badge2Text",
+                                  "fill": "#FFDDEA",
+                                  "content": "Fontaines D.C.",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BoPae",
+                          "name": "locationSection",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "G5GdW",
+                              "name": "venueText",
+                              "fill": "#F8FAFC",
+                              "content": "O2 Arena",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 16,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "XDNvb",
+                              "name": "cityText",
+                              "fill": "#ff0666",
+                              "content": "London",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Stj4E",
+                              "name": "costText",
+                              "fill": "#94A3B8",
+                              "content": "85 EUR",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p0MEz",
+                      "name": "locationRow",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "justifyContent": "end",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "A3YuN",
+                          "name": "editBtn",
+                          "width": 32,
+                          "height": 32,
+                          "fill": "#2A0B18AA",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#7A244A"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "gqLtX",
+                              "name": "editIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "pencil",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FF9BC3"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "0xoiJ",
+              "name": "Concert Card (Large) — Modern Icon Edit",
+              "clip": true,
+              "width": 900,
+              "height": 150,
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 145,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#130812",
+                      "position": 0
+                    },
+                    {
+                      "color": "#1C0B16",
+                      "position": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.9,
+                    "height": 0.9
+                  },
+                  "colors": [
+                    {
+                      "color": "#FF066655",
+                      "position": 0
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                }
+              ],
+              "cornerRadius": 20,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#4A1A2F"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "rgba(2, 6, 23, 0.5)",
+                "offset": {
+                  "x": 0,
+                  "y": 18
+                },
+                "blur": 44
+              },
+              "gap": 18,
+              "padding": [
+                0,
+                40,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZeC76",
+                  "name": "imageFrame",
+                  "clip": true,
+                  "width": 150,
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1772229023803.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": [
+                    20,
+                    0,
+                    0,
+                    20
+                  ],
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#1E293B"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "xqLnw",
+                  "name": "bodySection",
+                  "width": 438,
+                  "height": 135,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": [
+                    16,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bDqXe",
+                      "name": "title",
+                      "fill": "#F8FAFC",
+                      "content": "Arctic Monkeys",
+                      "fontFamily": "Sora",
+                      "fontSize": 40,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nwwrk",
+                      "name": "metaRow",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Fs1qL",
+                          "name": "dateText",
+                          "fill": "#94A3B8",
+                          "content": "27. Februar 2025",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Eaye5",
+                          "name": "attendeesBadge",
+                          "fill": "#FFE3EF",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 0,
+                            "fill": "transparent"
+                          },
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2ZnFY",
+                              "name": "attendeesText",
+                              "fill": "#B10047",
+                              "content": "3 attended",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "IvddA",
+                      "name": "bandsRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Zepiz",
+                          "name": "badge1",
+                          "fill": "#2A0B18",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#5C1636"
+                          },
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tYCkT",
+                              "name": "badge1Text",
+                              "fill": "#FFDDEA",
+                              "content": "The Hives",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "phVnL",
+                          "name": "badge2",
+                          "fill": "#2A0B18",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#5C1636"
+                          },
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Y5WO4",
+                              "name": "badge2Text",
+                              "fill": "#FFDDEA",
+                              "content": "Fontaines D.C.",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dJAfk",
+                  "name": "locationBlock",
+                  "width": 222,
+                  "height": "fill_container",
+                  "gap": 16,
+                  "padding": [
+                    0,
+                    28,
+                    12,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "qeLHU",
+                      "name": "locationSection",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hmV45",
+                          "name": "venueText",
+                          "fill": "#F8FAFC",
+                          "content": "O2 Arena",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LeP8z",
+                          "name": "cityText",
+                          "fill": "#ff0666",
+                          "content": "London",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "m0wRW",
+                          "name": "costText",
+                          "fill": "#94A3B8",
+                          "content": "85 EUR",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kj3P8",
+                      "name": "editBtn",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#2A0B18AA",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#7A244A"
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "J2uqZ",
+                          "name": "editIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "pencil",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FF9BC3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lfti7",
+              "name": "Concert Card (Small) — Modern Light Icon Edit",
+              "clip": true,
+              "width": 600,
+              "height": 220,
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 145,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#FFFFFF",
+                      "position": 0
+                    },
+                    {
+                      "color": "#FFF1F7",
+                      "position": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.95,
+                    "height": 0.95
+                  },
+                  "colors": [
+                    {
+                      "color": "#FF06662E",
+                      "position": 0
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                }
+              ],
+              "cornerRadius": 20,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FFD1E5"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "rgba(255, 6, 102, 0.12)",
+                "offset": {
+                  "x": 0,
+                  "y": 12
+                },
+                "blur": 28
+              },
+              "gap": 18,
+              "padding": [
+                0,
+                20,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mEBxE",
+                  "name": "imageFrame",
+                  "clip": true,
+                  "width": 180,
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1772229023803.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": [
+                    20,
+                    0,
+                    0,
+                    20
+                  ],
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFD1E5"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "fk6Jl",
+                  "name": "contentCol",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    20,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WIrDE",
+                      "name": "bodySection",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UVLXT",
+                          "name": "title",
+                          "fill": "#3B0A22",
+                          "content": "Arctic Monkeys",
+                          "fontFamily": "Rubik",
+                          "fontSize": 30,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Yohv6",
+                          "name": "metaRow",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "1z4z0",
+                              "name": "dateText",
+                              "fill": "#6B7280",
+                              "content": "27. Februar 2025",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "7jhFs",
+                              "name": "attendeesBadge",
+                              "fill": "#FFE3EF",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFD1E5"
+                              },
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iheLm",
+                                  "name": "attendeesText",
+                                  "fill": "#B10047",
+                                  "content": "3 attended",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "8oUtX",
+                          "name": "bandsRow",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ojsmT",
+                              "name": "badge1",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFD1E5"
+                              },
+                              "padding": [
+                                5,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "lrby6",
+                                  "name": "badge1Text",
+                                  "fill": "#B10047",
+                                  "content": "The Hives",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kWFrl",
+                              "name": "badge2",
+                              "fill": "#FFFFFF",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFD1E5"
+                              },
+                              "padding": [
+                                5,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "hf1qg",
+                                  "name": "badge2Text",
+                                  "fill": "#B10047",
+                                  "content": "Fontaines D.C.",
+                                  "fontFamily": "Open Sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QjAqh",
+                          "name": "locationSection",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ldKOn",
+                              "name": "venueText",
+                              "fill": "#1F2937",
+                              "content": "O2 Arena",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 16,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ncp2F",
+                              "name": "cityText",
+                              "fill": "#ff0666",
+                              "content": "London",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "x2PY4",
+                              "name": "costText",
+                              "fill": "#6B7280",
+                              "content": "85 EUR",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GKvTT",
+                      "name": "locationRow",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "justifyContent": "end",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "a6DWA",
+                          "name": "editBtn",
+                          "width": 32,
+                          "height": 32,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFB7D3"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Nfg5Z",
+                              "name": "editIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "pencil",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B10047"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jsN7q",
+              "name": "Concert Card (Large) — Modern Light Icon Edit",
+              "clip": true,
+              "width": 900,
+              "height": 150,
+              "fill": [
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 145,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#FFFFFF",
+                      "position": 0
+                    },
+                    {
+                      "color": "#FFF1F7",
+                      "position": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.95,
+                    "height": 0.95
+                  },
+                  "colors": [
+                    {
+                      "color": "#FF06662E",
+                      "position": 0
+                    },
+                    {
+                      "color": "#00000000",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                }
+              ],
+              "cornerRadius": 20,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FFD1E5"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "rgba(255, 6, 102, 0.12)",
+                "offset": {
+                  "x": 0,
+                  "y": 12
+                },
+                "blur": 28
+              },
+              "gap": 18,
+              "padding": [
+                0,
+                32,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "7gpyP",
+                  "name": "imageFrame",
+                  "clip": true,
+                  "width": 150,
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1772229023803.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": [
+                    20,
+                    0,
+                    0,
+                    20
+                  ],
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFD1E5"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "YRdsb",
+                  "name": "bodySection",
+                  "width": 438,
+                  "height": 135,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": [
+                    16,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tFMvd",
+                      "name": "title",
+                      "fill": "#3B0A22",
+                      "content": "Arctic Monkeys",
+                      "fontFamily": "Rubik",
+                      "fontSize": 40,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oGw6t",
+                      "name": "metaRow",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "txnC9",
+                          "name": "dateText",
+                          "fill": "#6B7280",
+                          "content": "27. Februar 2025",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "G5c2J",
+                          "name": "attendeesBadge",
+                          "fill": "#FFE3EF",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFD1E5"
+                          },
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2MwWf",
+                              "name": "attendeesText",
+                              "fill": "#B10047",
+                              "content": "3 attended",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LcAXI",
+                      "name": "bandsRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HWnfl",
+                          "name": "badge1",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFD1E5"
+                          },
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "umBw5",
+                              "name": "badge1Text",
+                              "fill": "#B10047",
+                              "content": "The Hives",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eMAOW",
+                          "name": "badge2",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 999,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFD1E5"
+                          },
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yv4bO",
+                              "name": "badge2Text",
+                              "fill": "#B10047",
+                              "content": "Fontaines D.C.",
+                              "fontFamily": "Open Sans",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cKP62",
+                  "name": "locationBlock",
+                  "width": 222,
+                  "height": "fill_container",
+                  "gap": 16,
+                  "padding": [
+                    0,
+                    28,
+                    12,
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "neAZK",
+                      "name": "locationSection",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lX2Ju",
+                          "name": "venueText",
+                          "fill": "#1F2937",
+                          "content": "O2 Arena",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "B2FKD",
+                          "name": "cityText",
+                          "fill": "#ff0666",
+                          "content": "London",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YJKCq",
+                          "name": "costText",
+                          "fill": "#6B7280",
+                          "content": "85 EUR",
+                          "fontFamily": "Open Sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Qvu9v",
+                      "name": "editBtn",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FFB7D3"
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "JKxns",
+                          "name": "editIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "pencil",
+                          "iconFontFamily": "lucide",
+                          "fill": "#B10047"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "color-black": {
+      "type": "color",
+      "value": "#444444"
+    },
+    "color-muted": {
+      "type": "color",
+      "value": "#666666"
+    },
+    "color-placeholder-bg": {
+      "type": "color",
+      "value": "rgba(68, 68, 68, 0.06)"
+    },
+    "color-white": {
+      "type": "color",
+      "value": "#ffffff"
+    },
+    "primary-color": {
+      "type": "color",
+      "value": "#ff0666"
+    }
+  }
+}

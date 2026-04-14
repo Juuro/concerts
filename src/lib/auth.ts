@@ -1,21 +1,151 @@
-import { betterAuth } from "better-auth"
-import { memoryAdapter } from "better-auth/adapters/memory-adapter"
+import { betterAuth, APIError } from "better-auth"
+import { prismaAdapter } from "better-auth/adapters/prisma"
+import { admin } from "better-auth/plugins/admin"
+import { prisma } from "./prisma"
+import { sendVerificationEmail, sendPasswordResetEmail } from "./email"
+import { checkUserBan } from "./ban"
 
-function getAuthSecret() {
-  const secret = process.env.BETTER_AUTH_SECRET
-  if (!secret && process.env.NODE_ENV === "production") {
-    throw new Error("BETTER_AUTH_SECRET environment variable is required in production")
-  }
-  return secret ?? "placeholder-secret-replace-in-production"
+function getBaseURL() {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return "http://localhost:3000"
 }
 
-// Minimal auth instance for session checking.
-// This branch does not have a real database; the memory adapter is a
-// placeholder so that auth.api.getSession() resolves safely (always returning
-// null, i.e. every visitor is treated as a guest).  When the multi-tenancy
-// branch is merged this file is replaced with the full Prisma-backed
-// configuration that includes email/password, GitHub OAuth, and the admin plugin.
 export const auth = betterAuth({
-  database: memoryAdapter({}),
-  secret: getAuthSecret(),
+  baseURL: getBaseURL(),
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url)
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url)
+    },
+  },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    },
+  },
+  plugins: [
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"],
+    }),
+  ],
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const banStatus = await checkUserBan(session.userId)
+          if (banStatus.banned) {
+            throw new APIError("FORBIDDEN", {
+              message: "Your account has been suspended",
+            })
+          }
+          // Return void to proceed with session creation
+        },
+      },
+    },
+  },
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        required: false,
+        unique: true,
+      },
+      isPublic: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
+      currency: {
+        type: "string",
+        required: false,
+        defaultValue: "EUR",
+      },
+      hideLocationPublic: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+      },
+      hideCostPublic: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+      },
+      includeUserIdInErrorReports: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+      },
+      // Added by admin plugin, declared here for TypeScript inference
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "user",
+      },
+      banned: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
+      banReason: {
+        type: "string",
+        required: false,
+      },
+      banExpires: {
+        type: "date",
+        required: false,
+      },
+    },
+  },
 })
+
+// Base session type from Better Auth
+type BaseSession = typeof auth.$Infer.Session
+
+// Extended user fields from additionalFields config and admin plugin
+interface ExtendedUserFields {
+  role?: string
+  username?: string | null
+  isPublic?: boolean
+  currency?: string
+  hideLocationPublic?: boolean
+  hideCostPublic?: boolean
+  includeUserIdInErrorReports?: boolean
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | null
+}
+
+// Extended session type including all custom user fields
+export type Session = Omit<BaseSession, "user"> & {
+  user: BaseSession["user"] & ExtendedUserFields
+}
+
+/**
+ * Get session with proper typing for role field (added by admin plugin)
+ */
+export async function getSession(headers: Headers): Promise<Session | null> {
+  const session = await auth.api.getSession({ headers })
+  return session as Session | null
+}

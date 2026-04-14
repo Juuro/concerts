@@ -1,29 +1,37 @@
-import Link from 'next/link';
-import React from 'react';
-import ConcertCount from '../ConcertCount/concertCount';
-import type { Concert } from '../../types/concert';
-import './header.scss';
+import Link from "next/link"
+import React from "react"
+import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
+import ConcertCount from "../ConcertCount/concertCount"
+import HeaderAuth from "./HeaderAuth"
+import "./header.scss"
 
 interface HeaderProps {
-  siteTitle?: string;
-  concerts?: Concert[];
+  siteTitle?: string
+  concertCounts?: {
+    past: number
+    future: number
+  }
 }
 
-const Header: React.FC<HeaderProps> = ({ siteTitle = "", concerts }) => (
-  <header className="bg-light shadow-sm">
-    <div className="container">
-      <h1>
-        <Link href="/">{siteTitle}</Link>
-      </h1>
-      <wbr />
-      {concerts && <ConcertCount concerts={{ edges: concerts.map(c => ({ node: c })), totalCount: concerts.length }} />}
+const Header: React.FC<HeaderProps> = ({ siteTitle = "", concertCounts }) => {
+  const showMapLink = isFeatureEnabled(FEATURE_FLAGS.ENABLE_MAP_PAGE, false)
 
-      <nav>
-        <Link href="/">Home</Link>
-        <Link href="/map">Map</Link>
-      </nav>
-    </div>
-  </header>
-);
+  return (
+    <header className="bg-light shadow-sm">
+      <div className="container">
+        <h1>
+          <Link href="/">{siteTitle}</Link>
+        </h1>
+        <wbr />
+        {concertCounts && <ConcertCount counts={concertCounts} />}
 
-export default Header;
+        <nav>
+          <Link href="/">Home</Link>
+          <HeaderAuth showMapLink={showMapLink} />
+        </nav>
+      </div>
+    </header>
+  )
+}
+
+export default Header
