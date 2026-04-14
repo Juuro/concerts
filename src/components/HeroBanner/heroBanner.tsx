@@ -10,7 +10,7 @@ const HeroBanner: React.FC = () => (
       catch.
     </p>
     <ul className={styles.featureList} aria-label="What you get for free">
-      <li>Track every concert you&rsquo;ve ever been to</li>
+      <li>Track every concert you&apos;ve ever been to</li>
       <li>Interactive world map of your live music history</li>
       <li>Charts — top years, bands, and cities</li>
       <li>Band pages with genre info and history</li>
