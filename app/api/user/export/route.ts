@@ -53,13 +53,17 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
     const userConcerts = await prisma.userConcert.findMany({
       where: { userId },
       include: {
         concert: {
           include: {
             bands: {
-              include: { band: true },
+              include: { band: { select: { name: true, slug: true } } },
               orderBy: { sortOrder: "asc" },
             },
             festival: { select: { name: true, slug: true, url: true } },

@@ -1,10 +1,19 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { getExportFilename } from "../export"
 
 describe("getExportFilename", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-04-14T12:00:00Z"))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("generates filename with current date in YYYY-MM-DD format", () => {
     const filename = getExportFilename("json")
-    expect(filename).toMatch(/^concerts-export-\d{4}-\d{2}-\d{2}\.json$/)
+    expect(filename).toBe("concerts-export-2026-04-14.json")
   })
 
   it("generates JSON filename with json extension", () => {
@@ -15,8 +24,7 @@ describe("getExportFilename", () => {
 
   it("generates CSV filename with csv extension", () => {
     const filename = getExportFilename("csv")
-    expect(filename).toMatch(/\.csv$/)
-    expect(filename).toMatch(/^concerts-export-/)
+    expect(filename).toBe("concerts-export-2026-04-14.csv")
   })
 
   it("generates consistent filenames for same date", () => {
@@ -25,20 +33,20 @@ describe("getExportFilename", () => {
     const csv1 = getExportFilename("csv")
     const csv2 = getExportFilename("csv")
 
-    // Extract date portion (should be same for tests run on same day)
-    const jsonDate1 = json1.split(".")[0]
-    const jsonDate2 = json2.split(".")[0]
-    const csvDate1 = csv1.split(".")[0]
-    const csvDate2 = csv2.split(".")[0]
-
-    expect(jsonDate1).toBe(jsonDate2)
-    expect(csvDate1).toBe(csvDate2)
+    expect(json1).toBe(json2)
+    expect(csv1).toBe(csv2)
   })
 
   it("uses ISO date format (YYYY-MM-DD)", () => {
     const filename = getExportFilename("json")
-    const datePart = filename.split(".")[0].replace("concerts-export-", "")
-    const date = new Date(datePart)
-    expect(date.toISOString().split("T")[0]).toBe(datePart)
+    expect(filename).toBe("concerts-export-2026-04-14.json")
+  })
+
+  it("handles different dates correctly", () => {
+    vi.setSystemTime(new Date("2025-12-31T23:59:59Z"))
+    expect(getExportFilename("json")).toBe("concerts-export-2025-12-31.json")
+
+    vi.setSystemTime(new Date("2027-01-01T00:00:00Z"))
+    expect(getExportFilename("csv")).toBe("concerts-export-2027-01-01.csv")
   })
 })
