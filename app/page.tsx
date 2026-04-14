@@ -3,10 +3,10 @@ import Layout from "../src/components/layout-client";
 import ConcertCard from "../src/components/ConcertCard/concertCard";
 import HeroBanner from "../src/components/HeroBanner/heroBanner";
 import StatisticsWidget from "../src/components/StatisticsWidget/statisticsWidget";
-import { getAllConcerts, getAllBands, getSiteMetadata } from "../src/utils/data";
+import { getAllConcerts, getAllBands } from "../src/utils/data";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
-
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Concerts",
@@ -14,16 +14,22 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const concerts = await getAllConcerts();
-  const bands = await getAllBands();
-  const siteMetadata = getSiteMetadata();
+  const [concerts, bands, session] = await Promise.all([
+    getAllConcerts(),
+    getAllBands(),
+    auth.api
+      .getSession({ headers: await headers() })
+      .catch((err: unknown) => {
+        console.error("[auth] getSession failed:", err)
+        return null
+      }),
+  ]);
 
   return (
     <Layout concerts={concerts}>
       <main>
         <div className="container">
-          {/* TODO: pass isLoggedIn={true} once auth is wired up so logged-in users skip this banner */}
-          <HeroBanner isLoggedIn={false} />
+          {!session?.user && <HeroBanner />}
           <StatisticsWidget concerts={concerts} bands={bands} />
           <ul className="list-unstyled">
             {concerts.map((concert) => (
