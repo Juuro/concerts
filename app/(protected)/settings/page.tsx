@@ -315,72 +315,75 @@ export default function SettingsPage() {
                   Concert ticket costs will be hidden from your public profile.
                 </span>
               </div>
-
-              <div className="settings__field settings__checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={includeUserIdInErrorReports}
-                    onChange={(e) =>
-                      setIncludeUserIdInErrorReports(e.target.checked)
-                    }
-                    disabled={isSubmitting}
-                  />
-                  Include my account identifier in error reports (helps us fix
-                  issues faster)
-                </label>
-                <span className="settings__hint">
-                  When enabled, we associate error reports with your account so
-                  we can fix problems; you can turn this off at any time.
-                </span>
-              </div>
-
-              <div className="settings__field settings__checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={analyticsConsent}
-                    onChange={async (e) => {
-                      const consented = e.target.checked
-                      const previousConsented = analyticsConsent
-
-                      setAnalyticsConsent(consented)
-                      const persisted = setPostHogConsentState(
-                        consented ? "granted" : "denied"
-                      )
-
-                      if (!persisted) {
-                        setAnalyticsConsent(previousConsented)
-                        return
-                      }
-
-                      try {
-                        await applyPostHogConsentState(consented)
-                      } catch (error) {
-                        console.error(
-                          "Failed to apply PostHog consent state",
-                          error
-                        )
-                        setAnalyticsConsent(previousConsented)
-                        setPostHogConsentState(
-                          previousConsented ? "granted" : "denied"
-                        )
-                      }
-                    }}
-                  />
-                  {isPostHogSessionReplayEnabled()
-                    ? "Allow analytics and session replay"
-                    : "Allow analytics"}
-                </label>
-                <span className="settings__hint">
-                  Uses PostHog for page analytics
-                  {isPostHogSessionReplayEnabled()
-                    ? " and optional session replay"
-                    : ""}
-                  . You can change this at any time.
-                </span>
-              </div>
             </div>
+          </div>
+        </div>
+
+        <div className="settings__section">
+          <h2>Diagnostics and analytics</h2>
+
+          <div className="settings__field settings__checkbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={includeUserIdInErrorReports}
+                onChange={(e) =>
+                  setIncludeUserIdInErrorReports(e.target.checked)
+                }
+              />
+              Include my account identifier in error reports (helps us fix
+              issues faster)
+            </label>
+            <span className="settings__hint">
+              When enabled, we associate error reports with your account so we
+              can fix problems; you can turn this off at any time.
+            </span>
+          </div>
+
+          <div className="settings__field settings__checkbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={analyticsConsent}
+                onChange={async (e) => {
+                  const consented = e.target.checked
+                  const previousConsented = analyticsConsent
+
+                  setAnalyticsConsent(consented)
+                  const persisted = setPostHogConsentState(
+                    consented ? "granted" : "denied"
+                  )
+
+                  if (!persisted) {
+                    setAnalyticsConsent(previousConsented)
+                    return
+                  }
+
+                  try {
+                    await applyPostHogConsentState(consented)
+                  } catch (error) {
+                    console.error(
+                      "Failed to apply PostHog consent state",
+                      error
+                    )
+                    setAnalyticsConsent(previousConsented)
+                    setPostHogConsentState(
+                      previousConsented ? "granted" : "denied"
+                    )
+                  }
+                }}
+              />
+              {isPostHogSessionReplayEnabled()
+                ? "Allow analytics and session replay"
+                : "Allow analytics"}
+            </label>
+            <span className="settings__hint">
+              Uses PostHog for page analytics
+              {isPostHogSessionReplayEnabled()
+                ? " and optional session replay"
+                : ""}
+              . You can change this at any time.
+            </span>
           </div>
         </div>
 
