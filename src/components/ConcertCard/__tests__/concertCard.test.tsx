@@ -223,12 +223,32 @@ describe("ConcertCard", () => {
   })
 
   it("test_ConcertCard_when_attendee_count_above_one_renders_attendee_badge", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z"))
+
     const sharedConcert: TransformedConcert = {
       ...mockConcert,
       attendeeCount: 3,
     }
     render(<ConcertCard concert={sharedConcert} />)
     expect(screen.getByText("3 attended")).toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it("test_ConcertCard_when_future_concert_and_attendee_count_above_one_renders_going_badge", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z"))
+
+    const futureConcert: TransformedConcert = {
+      ...mockConcert,
+      date: "2027-12-31T20:00:00.000Z",
+      attendeeCount: 3,
+    }
+    render(<ConcertCard concert={futureConcert} />)
+    expect(screen.getByText("3 going")).toBeInTheDocument()
+
+    vi.useRealTimers()
   })
 
   it("test_ConcertCard_when_user_matches_attendance_shows_edit_button", () => {
