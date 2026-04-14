@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { signOut, useSession } from "@/lib/auth-client"
 import "./userMenu.scss"
 import Image from "next/image"
@@ -10,6 +11,7 @@ export default function UserMenu() {
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -23,7 +25,13 @@ export default function UserMenu() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut()
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/login")
+        },
+      },
+    })
     setIsOpen(false)
   }
 
