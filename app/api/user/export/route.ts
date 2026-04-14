@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url)
   const queryResult = exportQuerySchema.safeParse({
-    format: searchParams.get("format"),
+    format: searchParams.get("format") ?? undefined,
   })
 
   if (!queryResult.success) {
