@@ -269,7 +269,7 @@ export default function BandManagement() {
             role="tab"
             id={`band-mgmt-tab-${tab.id}`}
             aria-selected={activeTab === tab.id}
-            aria-controls="band-mgmt-panel"
+            aria-controls={`band-mgmt-panel-${tab.id}`}
             tabIndex={activeTab === tab.id ? 0 : -1}
             className={`admin-tabs__tab ${activeTab === tab.id ? "admin-tabs__tab--active" : ""}`}
             onClick={() => setActiveTab(tab.id)}
@@ -280,121 +280,129 @@ export default function BandManagement() {
         ))}
       </div>
 
-      <div
-        className="admin-band-mgmt__panel"
-        role="tabpanel"
-        id="band-mgmt-panel"
-        aria-labelledby={`band-mgmt-tab-${activeTab}`}
-      >
-        {selectedIds.size > 0 && (
-          <div className="admin-bulk-actions">
-            <span className="admin-bulk-actions__count">
-              {selectedIds.size} selected
-            </span>
-            {activeTab !== "orphaned" && (
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                onClick={handleBulkEnrich}
-                disabled={processingIds.size > 0}
-              >
-                Enrich Selected
-              </button>
-            )}
-            <button
-              type="button"
-              className="admin-btn admin-btn--secondary"
-              onClick={() => setSelectedIds(new Set())}
-            >
-              Clear Selection
-            </button>
-          </div>
-        )}
-
-        <div>
-          {loading ? (
-            <div className="admin-list">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="admin-list__skeleton" />
-              ))}
-            </div>
-          ) : bands.length === 0 ? (
-            <div className="admin-list__empty">
-              {activeTab === "missing-images" && "No bands missing images"}
-              {activeTab === "enrichment-failed" &&
-                "No bands with failed enrichment"}
-              {activeTab === "missing-lastfm" &&
-                "No bands missing Last.fm data"}
-              {activeTab === "orphaned" && "No orphaned bands found"}
-            </div>
-          ) : (
+      {TABS.map((tab) => (
+        <div
+          key={tab.id}
+          className="admin-band-mgmt__panel"
+          role="tabpanel"
+          id={`band-mgmt-panel-${tab.id}`}
+          aria-labelledby={`band-mgmt-tab-${tab.id}`}
+          hidden={activeTab !== tab.id}
+        >
+          {activeTab === tab.id && (
             <>
-              <div className="admin-filter">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedIds.size === bands.length && bands.length > 0
-                    }
-                    onChange={toggleSelectAll}
-                  />{" "}
-                  Select all ({total} total)
-                </label>
-              </div>
-              <ul className="admin-list">
-                {bands.map((band) => (
-                  <li key={band.id} className="admin-list__item">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(band.id)}
-                      onChange={() => toggleSelect(band.id)}
-                      aria-label={`Select ${band.name}`}
-                    />
-                    <div className="admin-list__info">
-                      <p className="admin-list__name">
-                        <Link href={`/band/${band.slug}/`}>{band.name}</Link>
-                      </p>
-                      <p className="admin-list__meta">
-                        {band.concertCount !== undefined &&
-                          `${band.concertCount} concerts`}
-                        {band.createdBy && ` • Created by ${band.createdBy}`}
-                      </p>
-                    </div>
-                    <div className="admin-list__actions">
-                      {activeTab !== "orphaned" && (
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--primary"
-                          onClick={() =>
-                            handleEnrich(
-                              band.id,
-                              activeTab === "missing-images" ||
-                                activeTab === "enrichment-failed"
-                            )
+              {selectedIds.size > 0 && (
+                <div className="admin-bulk-actions">
+                  <span className="admin-bulk-actions__count">
+                    {selectedIds.size} selected
+                  </span>
+                  {activeTab !== "orphaned" && (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--primary"
+                      onClick={handleBulkEnrich}
+                      disabled={processingIds.size > 0}
+                    >
+                      Enrich Selected
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              )}
+
+              <div>
+                {loading ? (
+                  <div className="admin-list">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="admin-list__skeleton" />
+                    ))}
+                  </div>
+                ) : bands.length === 0 ? (
+                  <div className="admin-list__empty">
+                    {activeTab === "missing-images" && "No bands missing images"}
+                    {activeTab === "enrichment-failed" &&
+                      "No bands with failed enrichment"}
+                    {activeTab === "missing-lastfm" &&
+                      "No bands missing Last.fm data"}
+                    {activeTab === "orphaned" && "No orphaned bands found"}
+                  </div>
+                ) : (
+                  <>
+                    <div className="admin-filter">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedIds.size === bands.length && bands.length > 0
                           }
-                          disabled={processingIds.has(band.id)}
-                          aria-label={`Enrich ${band.name}`}
-                        >
-                          {processingIds.has(band.id) ? "..." : "Enrich"}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--danger"
-                        onClick={() => handleDelete(band.id)}
-                        disabled={processingIds.has(band.id)}
-                        aria-label={`Delete ${band.name}`}
-                      >
-                        Delete
-                      </button>
+                          onChange={toggleSelectAll}
+                        />{" "}
+                        Select all ({total} total)
+                      </label>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                    <ul className="admin-list">
+                      {bands.map((band) => (
+                        <li key={band.id} className="admin-list__item">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(band.id)}
+                            onChange={() => toggleSelect(band.id)}
+                            aria-label={`Select ${band.name}`}
+                          />
+                          <div className="admin-list__info">
+                            <p className="admin-list__name">
+                              <Link href={`/band/${band.slug}/`}>{band.name}</Link>
+                            </p>
+                            <p className="admin-list__meta">
+                              {band.concertCount !== undefined &&
+                                `${band.concertCount} concerts`}
+                              {band.createdBy && ` • Created by ${band.createdBy}`}
+                            </p>
+                          </div>
+                          <div className="admin-list__actions">
+                            {activeTab !== "orphaned" && (
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--primary"
+                                onClick={() =>
+                                  handleEnrich(
+                                    band.id,
+                                    activeTab === "missing-images" ||
+                                      activeTab === "enrichment-failed"
+                                  )
+                                }
+                                disabled={processingIds.has(band.id)}
+                                aria-label={`Enrich ${band.name}`}
+                              >
+                                {processingIds.has(band.id) ? "..." : "Enrich"}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--danger"
+                              onClick={() => handleDelete(band.id)}
+                              disabled={processingIds.has(band.id)}
+                              aria-label={`Delete ${band.name}`}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
-      </div>
+      ))}
     </div>
   )
 }
