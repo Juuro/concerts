@@ -320,7 +320,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings__section">
-          <h2>Diagnostics and analytics</h2>
+          <h2>Diagnostics and Analytics</h2>
 
           <div className="settings__field settings__checkbox">
             <label>
