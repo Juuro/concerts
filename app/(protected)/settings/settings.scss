@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../../src/styles/variables.scss";
 @use "../../../src/styles/buttons.scss" as buttons;
 
@@ -254,5 +255,77 @@
     button {
       @include buttons.btn-primary;
     }
+  }
+
+  &__panel {
+    background-color: variables.$color-white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin: 2rem auto 0;
+    max-width: 600px;
+    padding: 2rem;
+
+    &--danger {
+      border: 1px solid #fca5a5;
+    }
+
+    .settings__section {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  &__hint--block {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  &__export-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__btn-secondary {
+    @include buttons.btn-secondary;
+    font-size: 0.9375rem;
+    padding: 0.625rem 1.25rem;
+  }
+
+  &__btn-danger {
+    @include buttons.btn-danger;
+    font-size: 0.9375rem;
+    padding: 0.625rem 1.25rem;
+  }
+
+  &__delete-list {
+    color: #555;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0 0 1rem 1.25rem;
+    padding: 0;
+  }
+
+  &__inline-link {
+    background: none;
+    border: none;
+    color: variables.$color-primary;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+    text-decoration: underline;
+
+    &:hover {
+      color: color.adjust(variables.$color-primary, $lightness: -10%);
+    }
+  }
+
+  &__dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
   }
 }

@@ -11,6 +11,8 @@ import {
 import { applyPostHogConsentState } from "@/lib/posthog-client"
 import { isPostHogSessionReplayEnabled } from "@/lib/posthog-env"
 import { useToast } from "@/components/Toast/Toast"
+import Dialog from "@/components/Dialog/Dialog"
+import { getExportFilename } from "@/lib/export"
 import "./settings.scss"
 
 export default function SettingsPage() {
@@ -31,6 +33,9 @@ export default function SettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [analyticsConsent, setAnalyticsConsent] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState<"json" | "csv" | null>(null)
 
   useEffect(() => {
     if (session?.user) {
@@ -89,6 +94,53 @@ export default function SettingsPage() {
       showToast({ type: "error", message: "An unexpected error occurred" })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleExport = async (format: "json" | "csv") => {
+    setIsExporting(format)
+    try {
+      const res = await fetch(`/api/user/export?format=${format}`)
+      if (!res.ok) {
+        showToast({ type: "error", message: "Failed to export data" })
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = getExportFilename(format)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 1000)
+    } catch (err) {
+      showToast({ type: "error", message: "An unexpected error occurred" })
+    } finally {
+      setIsExporting(null)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const res = await fetch("/api/user/account", { method: "DELETE" })
+      if (res.ok) {
+        setIsDeleteDialogOpen(false)
+        router.push("/")
+      } else {
+        const data = await res.json()
+        showToast({
+          type: "error",
+          message: data.error || "Failed to delete account",
+        })
+      }
+    } catch (err) {
+      showToast({ type: "error", message: "An unexpected error occurred" })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -338,6 +390,112 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      <div className="settings__panel">
+        <div className="settings__section">
+          <h2>Export Your Data</h2>
+          <p className="settings__hint settings__hint--block">
+            Download all your concert attendance data. Your export includes your
+            profile information and the full list of concerts you have attended,
+            with dates, venues, bands, and ticket costs.
+          </p>
+          <div className="settings__export-actions">
+            <button
+              type="button"
+              className="settings__btn-secondary"
+              onClick={() => handleExport("json")}
+              disabled={isExporting !== null}
+              aria-label="Download data as JSON"
+            >
+              {isExporting === "json" ? "Exporting…" : "Download JSON"}
+            </button>
+            <button
+              type="button"
+              className="settings__btn-secondary"
+              onClick={() => handleExport("csv")}
+              disabled={isExporting !== null}
+              aria-label="Download data as CSV"
+            >
+              {isExporting === "csv" ? "Exporting…" : "Download CSV"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings__panel settings__panel--danger">
+        <div className="settings__section">
+          <h2>Delete Account</h2>
+          <p className="settings__hint settings__hint--block">
+            Permanently delete your account and all associated data. This action
+            cannot be undone.
+          </p>
+          <ul className="settings__delete-list">
+            <li>Your profile and login credentials</li>
+            <li>Your concert attendance records (including costs and notes)</li>
+            <li>Your active sessions</li>
+          </ul>
+          <p className="settings__hint settings__hint--block">
+            Shared data such as concerts, bands, and festivals you have created
+            will remain in the database and can still be used by other users.
+          </p>
+          <button
+            type="button"
+            className="settings__btn-danger"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            aria-label="Delete my account"
+          >
+            Delete My Account
+          </button>
+        </div>
+      </div>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={() => !isDeleting && setIsDeleteDialogOpen(false)}
+        title="Delete Account"
+      >
+        <p>
+          Are you sure you want to permanently delete your account? The
+          following personal data will be removed:
+        </p>
+        <ul className="settings__delete-list">
+          <li>Your profile and login credentials</li>
+          <li>Your concert attendance records (including costs and notes)</li>
+          <li>Your active sessions</li>
+        </ul>
+        <p>
+          <strong>This action cannot be undone.</strong> Consider{" "}
+          <button
+            type="button"
+            className="settings__inline-link"
+            onClick={() => {
+              setIsDeleteDialogOpen(false)
+              handleExport("json")
+            }}
+          >
+            downloading your data
+          </button>{" "}
+          before proceeding.
+        </p>
+        <div className="settings__dialog-actions">
+          <button
+            type="button"
+            className="settings__btn-secondary"
+            onClick={() => setIsDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="settings__btn-danger"
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting…" : "Yes, delete my account"}
+          </button>
+        </div>
+      </Dialog>
     </div>
   )
 }

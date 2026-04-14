@@ -281,6 +281,8 @@ GET    /api/bands/[slug]/enrich   - Fetch Last.fm data (auth required)
 GET    /api/festivals/search      - Search festivals (for autocomplete)
 GET    /api/venues/search         - Search venues via Photon API
 PUT    /api/user/profile          - Update user profile (auth required)
+GET    /api/user/export           - Export all user data as JSON or CSV (auth required)
+DELETE /api/user/account          - Delete account and all personal data (auth required)
 
 # Admin (require user.role === "admin")
 GET    /api/admin/stats                     - Dashboard statistics
