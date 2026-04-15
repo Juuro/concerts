@@ -70,5 +70,23 @@ describe("featureFlags", () => {
         }
       }
     })
+
+    it("test_isFeatureEnabled_when_statistics_widget_flag_is_unset_defaults_to_false", () => {
+      const originalEnableStatisticsWidget =
+        process.env.ENABLE_STATISTICS_WIDGET
+      delete process.env.ENABLE_STATISTICS_WIDGET
+
+      try {
+        expect(isFeatureEnabled(FEATURE_FLAGS.ENABLE_STATISTICS_WIDGET)).toBe(
+          false
+        )
+      } finally {
+        if (originalEnableStatisticsWidget === undefined) {
+          delete process.env.ENABLE_STATISTICS_WIDGET
+        } else {
+          process.env.ENABLE_STATISTICS_WIDGET = originalEnableStatisticsWidget
+        }
+      }
+    })
   })
 })

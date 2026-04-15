@@ -13,6 +13,7 @@ import StatisticsWidgetServer from "@/components/StatisticsWidget/StatisticsWidg
 import StatCard from "@/components/StatCard/StatCard"
 import ConcertCount from "@/components/ConcertCount/concertCount"
 import MapClient from "@/components/MapClient"
+import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
 import "./profile.scss"
 import Image from "next/image"
 
@@ -126,6 +127,10 @@ export default async function PublicProfilePage({
         }
       : null,
   }))
+  const showStatisticsWidget = isFeatureEnabled(
+    FEATURE_FLAGS.ENABLE_STATISTICS_WIDGET,
+    false
+  )
 
   return (
     <>
@@ -155,7 +160,7 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
-          {userStats.totalPast > 0 && (
+          {showStatisticsWidget && userStats.totalPast > 0 && (
             <StatisticsWidgetServer
               statistics={userStats}
               hideCityChart={hideLocation}
