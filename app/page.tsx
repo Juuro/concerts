@@ -16,6 +16,7 @@ import {
 import { getUserTotalSpentCached } from "@/lib/concerts/spending"
 import { getConcertsPaginated } from "@/lib/concerts/pagination"
 import { auth } from "@/lib/auth"
+import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 import "./home.scss"
@@ -71,6 +72,11 @@ async function LoggedInHome({
   userId: string
   cursor?: string
 }) {
+  const showStatisticsWidget = isFeatureEnabled(
+    FEATURE_FLAGS.ENABLE_STATISTICS_WIDGET,
+    false
+  )
+
   const [
     initialData,
     uniqueBands,
@@ -82,7 +88,9 @@ async function LoggedInHome({
     getConcertsPaginated(cursor, 20, "forward", { userId }),
     getUserUniqueBandCount(userId),
     getUserDashboardCounts(userId),
-    getUserConcertStatistics(userId),
+    showStatisticsWidget
+      ? getUserConcertStatistics(userId)
+      : Promise.resolve(null),
     getUserConcertCounts(userId),
     getUserTotalSpentCached(userId),
   ])
@@ -98,7 +106,7 @@ async function LoggedInHome({
             </Link>
           </div>
 
-          {userStats.totalPast > 0 && (
+          {showStatisticsWidget && userStats && userStats.totalPast > 0 && (
             <StatisticsWidgetServer statistics={userStats} />
           )}
 

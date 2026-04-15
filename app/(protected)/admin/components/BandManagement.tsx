@@ -342,7 +342,8 @@ export default function BandManagement() {
                   </div>
                 ) : bands.length === 0 ? (
                   <div className="admin-list__empty">
-                    {activeTab === "missing-images" && "No bands missing images"}
+                    {activeTab === "missing-images" &&
+                      "No bands missing images"}
                     {activeTab === "enrichment-failed" &&
                       "No bands with failed enrichment"}
                     {activeTab === "missing-lastfm" &&
@@ -356,7 +357,8 @@ export default function BandManagement() {
                         <input
                           type="checkbox"
                           checked={
-                            selectedIds.size === bands.length && bands.length > 0
+                            selectedIds.size === bands.length &&
+                            bands.length > 0
                           }
                           onChange={toggleSelectAll}
                         />{" "}
@@ -374,12 +376,15 @@ export default function BandManagement() {
                           />
                           <div className="admin-list__info">
                             <p className="admin-list__name">
-                              <Link href={`/band/${band.slug}/`}>{band.name}</Link>
+                              <Link href={`/band/${band.slug}/`}>
+                                {band.name}
+                              </Link>
                             </p>
                             <p className="admin-list__meta">
                               {band.concertCount !== undefined &&
                                 `${band.concertCount} concerts`}
-                              {band.createdBy && ` • Created by ${band.createdBy}`}
+                              {band.createdBy &&
+                                ` • Created by ${band.createdBy}`}
                             </p>
                           </div>
                           <div className="admin-list__actions">
