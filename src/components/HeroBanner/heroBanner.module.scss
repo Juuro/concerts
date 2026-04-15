@@ -1,0 +1,58 @@
+@use "../../styles/variables.scss";
+
+.hero {
+  background-color: variables.$color-primary;
+  border-radius: 1rem;
+  color: variables.$color-white;
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.freeBadge {
+  display: inline-block;
+  background-color: variables.$color-white;
+  color: variables.$color-primary;
+  font-family: variables.$font-family-heading;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 0.3rem;
+  padding: 0.2em 0.75em;
+  margin-bottom: 1rem;
+}
+
+.headline {
+  font-family: variables.$font-family-heading;
+  font-size: 2.5rem;
+  font-weight: bold;
+  line-height: 1.1;
+  margin: 0 0 0.75rem;
+  color: variables.$color-white;
+}
+
+.subline {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0 0 1.25rem;
+  opacity: 0.92;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+
+  li::before {
+    content: "✓ ";
+    font-weight: bold;
+  }
+}

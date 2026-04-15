@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [Unreleased]
+
+### Added
+
+- In-app feedback flow with `POST /api/feedback` and `FeedbackModal` UI for bug reports, feature requests, and general feedback.
+- Database persistence for feedback submissions via `AppFeedback` model and migration.
+- Shared Zod validation schema and unit tests for feedback payload validation.
+- Admin feedback operations workspace (`/admin/feedback`) with queue/list triage controls.
+- Admin APIs for feedback queue and detail triage updates (`/api/admin/feedback*`).
+- GitHub issue escalation endpoint for feedback items (`POST /api/admin/feedback/[id]/github`).
+- GitHub issue **open/closed** state on `AppFeedback` (`githubIssueState`, `githubSyncedAt`) with `POST /api/admin/feedback/[id]/github/sync` and optional daily cron `GET /api/cron/feedback-github-sync` (Bearer `CRON_SECRET`).
+- Feedback queue **`queue=active` | `all`**: default Active inbox hides Done, Discarded, and GitHub-closed linked items.
+- Optional env **`FEEDBACK_GITHUB_CLOSE_SETS_DONE`**: when a sync finds the GitHub issue closed, triage can auto-move to Done (audit logged).
+
+### Changed
+
+- `app/SessionAwareShell.tsx` now mounts the global feedback trigger/modal.
+- `app/privacy/page.tsx` now documents product feedback processing purpose and retention period.
+- `prisma/schema.prisma` now includes feedback enum/model relations.
+- `prisma/schema.prisma` now includes feedback triage metadata (status, priority, owner, notes, GitHub links).
+- Admin feedback UI restyled (Pink Ink Editorial): single dashboard surface, Inbox/Detail panes, Active/All toggle, GitHub status pill and refresh.
+
 ## [1.0.0](https://github.com/Juuro/concerts/compare/v0.3.0...v1.0.0) (2022-12-03)
 
 
