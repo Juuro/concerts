@@ -75,6 +75,10 @@ export default async function PublicProfilePage({
 
   const hideLocation = user.hideLocationPublic
   const hideCost = user.hideCostPublic
+  const showStatisticsWidget = isFeatureEnabled(
+    FEATURE_FLAGS.ENABLE_STATISTICS_WIDGET,
+    false
+  )
 
   // Calculate statistics using separate count/aggregation queries
   const [
@@ -100,7 +104,9 @@ export default async function PublicProfilePage({
       where: { attendees: { some: { userId: user.id } } },
       select: { date: true },
     }),
-    getUserConcertStatistics(user.id),
+    showStatisticsWidget
+      ? getUserConcertStatistics(user.id)
+      : Promise.resolve(null),
     getUserConcertCounts(user.id),
     hideLocation ? Promise.resolve([]) : getUserConcerts(user.id),
   ])
@@ -127,10 +133,6 @@ export default async function PublicProfilePage({
         }
       : null,
   }))
-  const showStatisticsWidget = isFeatureEnabled(
-    FEATURE_FLAGS.ENABLE_STATISTICS_WIDGET,
-    false
-  )
 
   return (
     <>
@@ -160,7 +162,7 @@ export default async function PublicProfilePage({
             </div>
           </div>
 
-          {showStatisticsWidget && userStats.totalPast > 0 && (
+          {showStatisticsWidget && userStats && userStats.totalPast > 0 && (
             <StatisticsWidgetServer
               statistics={userStats}
               hideCityChart={hideLocation}
