@@ -1,0 +1,138 @@
+import * as Sentry from "@sentry/nextjs"
+import { NextRequest, NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+import type { UpdateConcertInput } from "@/lib/concerts/types"
+import { getConcertById } from "@/lib/concerts/read"
+import { updateConcert } from "@/lib/concerts/mutations/update"
+import { deleteConcert } from "@/lib/concerts/mutations/delete"
+import { getOrCreateFestival } from "@/lib/festivals"
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+
+  // Optionally include user's attendance data if authenticated
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const userId = session?.user?.id
+
+  const concert = await getConcertById(id, userId)
+
+  if (!concert) {
+    return NextResponse.json({ error: "Concert not found" }, { status: 404 })
+  }
+
+  return NextResponse.json(concert)
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+
+  try {
+    const body = await request.json()
+
+    // Resolve festival: use provided ID, create from name, or clear
+    let resolvedFestivalId: string | null | undefined = body.festivalId
+    if (body.isFestival && body.festivalName && !body.festivalId) {
+      const festival = await getOrCreateFestival(body.festivalName)
+      resolvedFestivalId = festival.id
+    } else if (body.isFestival === false) {
+      resolvedFestivalId = null
+    }
+
+    const input: UpdateConcertInput = {
+      date: body.date ? new Date(body.date) : undefined,
+      latitude: body.latitude,
+      longitude: body.longitude,
+      venue: body.venue,
+      isFestival: body.isFestival,
+      festivalId: resolvedFestivalId,
+      cost:
+        body.cost !== undefined
+          ? body.cost !== null && body.cost !== ""
+            ? parseFloat(body.cost)
+            : null
+          : undefined,
+      bandIds: body.bandIds,
+    }
+
+    const concert = await updateConcert(id, session.user.id, input)
+
+    if (!concert) {
+      return NextResponse.json(
+        { error: "Concert not found or not authorized" },
+        { status: 404 }
+      )
+    }
+
+    // Revalidate statistics and user counts cache
+    revalidateTag("concert-statistics", "max")
+    revalidateTag("user-concert-statistics", "max")
+    revalidateTag(`user-concert-counts-${session.user.id}`, "max")
+    revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
+    revalidateTag(`user-unique-bands-${session.user.id}`, "max")
+    revalidateTag(`user-total-spent-${session.user.id}`, "max")
+
+    return NextResponse.json(concert)
+  } catch (error) {
+    Sentry.captureException(error)
+    console.error("Error updating concert:", error)
+    return NextResponse.json(
+      { error: "Failed to update concert" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+
+  const deleteResult = await deleteConcert(id, session.user.id)
+
+  if (!deleteResult.removedAttendance) {
+    return NextResponse.json(
+      { error: "Concert not found or not authorized" },
+      { status: 404 }
+    )
+  }
+
+  // Revalidate statistics and user counts cache
+  revalidateTag("concert-statistics", "max")
+  revalidateTag("user-concert-statistics", "max")
+  revalidateTag(`user-concert-counts-${session.user.id}`, "max")
+  revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
+  revalidateTag(`user-unique-bands-${session.user.id}`, "max")
+  revalidateTag(`user-total-spent-${session.user.id}`, "max")
+
+  return NextResponse.json({
+    success: true,
+    deletedConcert: deleteResult.deletedConcert,
+  })
+}

@@ -1,26 +1,26 @@
-import React from 'react';
-import Header from './Header/header';
-import type { Concert } from '../types/concert';
-import '../styles/layout.scss';
+import React from "react"
+import Header from "./Header/header"
+import Footer from "./Footer/Footer"
+import "../styles/layout.scss"
 
 interface LayoutProps {
-  children: React.ReactNode;
-  concerts?: Concert[];
+  children: React.ReactNode
+  concertCounts?: {
+    past: number
+    future: number
+  }
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, concerts }) => {
+const Layout: React.FC<LayoutProps> = ({ children, concertCounts }) => {
   return (
     <>
-      <Header
-        siteTitle="Concerts"
-        concerts={concerts}
-      />
+      <Header siteTitle="Concerts" concertCounts={concertCounts} />
 
       {children}
 
-      <footer>© {new Date().getFullYear()} · Built with ❤️ on 🌍! 🤟🏳️‍🌈</footer>
+      <Footer />
     </>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout
