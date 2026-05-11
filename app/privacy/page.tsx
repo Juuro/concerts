@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import styles from "./privacy.module.scss"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy | Concertivity",
   description:
     "Privacy policy and data protection information for Concertivity, in accordance with GDPR and DSGVO.",
 }
