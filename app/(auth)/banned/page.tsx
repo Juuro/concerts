@@ -6,7 +6,7 @@ import { checkUserBan } from "@/lib/ban"
 import BannedClient from "./BannedClient"
 
 export const metadata: Metadata = {
-  title: "Account Suspended | My Concerts",
+  title: "Account Suspended | Concertivity",
   description: "Your account has been suspended",
 }
 

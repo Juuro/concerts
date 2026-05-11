@@ -14,7 +14,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, concertCounts }) => {
   return (
     <>
-      <Header siteTitle="Concerts" concertCounts={concertCounts} />
+      <Header siteTitle="Concertivity" concertCounts={concertCounts} />
 
       {children}
 

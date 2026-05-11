@@ -4,7 +4,7 @@ import Link from "next/link"
 import "./reset-password.scss"
 
 export const metadata = {
-  title: "Reset Password - Concerts",
+  title: "Reset Password | Concertivity",
   description: "Set a new password for your account",
 }
 

@@ -4,8 +4,9 @@ import type { Metadata } from "next"
 import styles from "./revocation.module.scss"
 
 export const metadata: Metadata = {
-  title: "Right of Withdrawal (Revocation)",
-  description: "Withdrawal instruction and right of withdrawal for Concerts.",
+  title: "Right of Withdrawal (Revocation) | Concertivity",
+  description:
+    "Withdrawal instruction and right of withdrawal for Concertivity.",
 }
 
 export default function RevocationPage() {

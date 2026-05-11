@@ -136,7 +136,7 @@ export default async function PublicProfilePage({
 
   return (
     <>
-      <Header siteTitle="Concerts" />
+      <Header siteTitle="Concertivity" />
       <main className="container">
         <div className="public-profile">
           <div className="public-profile__header">

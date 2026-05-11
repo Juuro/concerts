@@ -3,7 +3,7 @@ import Link from "next/link"
 import "./register.scss"
 
 export const metadata = {
-  title: "Create Account - Concerts",
+  title: "Create Account | Concertivity",
   description: "Create an account to track your concert attendance",
 }
 

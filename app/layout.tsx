@@ -7,7 +7,7 @@ import SessionAwareShell from "./SessionAwareShell"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Concerts",
+  title: "Concertivity",
   description:
     "List of all concerts and festivals I've visited. Including pages for every band I ever saw.",
   authors: [{ name: "@juuro" }],

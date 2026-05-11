@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Concerts",
-    short_name: "Concerts",
+    name: "Concertivity",
+    short_name: "Concertivity",
     description: "Track your personal concert attendance history",
     start_url: "/",
     display: "standalone",
