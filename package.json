@@ -19,10 +19,11 @@
     "react-dom": "^19.2.4",
     "react-helmet": "^6.1.0",
     "resend": "^6.9.3",
-    "sharp": "^0.33.5",
-    "standard-version": "^9.5.0"
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.0",
+    "@commitlint/config-conventional": "^21.0.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
@@ -61,7 +62,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,scss}\" --ignore-path .gitignore",
     "lint": "eslint .",
     "prepare": "husky",
-    "release": "standard-version",
+    "commitlint": "commitlint",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -61,7 +61,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 | `yarn db:push` | `prisma db push` (prototype / non-migration workflows) |
 | `yarn db:reset` | `prisma migrate reset` |
 | `yarn db:studio` | Open Prisma Studio |
-| `yarn release` | Version bump via `standard-version` |
+| `yarn commitlint --edit <file>` | Validate a commit message file (the Husky `commit-msg` hook passes `.git/COMMIT_EDITMSG`) |
 | `yarn tsx --env-file=.env scripts/prefetch-lastfm.ts` | Optional: prefetch Last.fm JSON from band names in Postgres (requires `ENABLE_LASTFM`, `LASTFM_API_KEY`) |
 | `yarn tsx --env-file=.env scripts/prefetch-geocoding.ts` | Optional: prefetch Photon geocoding cache from concert coordinates in Postgres |
 
@@ -95,6 +95,12 @@ Without a Last.fm key, or with Last.fm disabled via feature flags, the app uses 
 | `GET` | `/api/cron/feedback-github-sync` | Cron: batch-sync stale issues (`Authorization: Bearer CRON_SECRET`). |
 
 Other routes under `app/api/` cover authentication, concerts, bands, venues, festivals, user profile, and admin tools.
+
+## Releases
+
+Version bumps, `CHANGELOG.md`, git tags, and GitHub Releases are automated with [Release Please](https://github.com/googleapis/release-please) (`.github/workflows/release-please.yml`) when changes on `main` follow [Conventional Commits](https://www.conventionalcommits.org/). Open and merge the release PR when you want to ship a new version.
+
+Pull request titles are checked by `.github/workflows/conventional-commits.yml` (use titles like `feat: …` or `fix: …`, especially if you squash-merge).
 
 ## History
 
