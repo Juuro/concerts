@@ -14,11 +14,12 @@ const TicketmasterVenueSchema = z.object({
   url: z.string().optional(),
   locale: z.string().optional(),
   timezone: z.string().optional(),
+  // Ticketmaster occasionally omits city.name or returns an empty city object.
   city: z
     .object({
-      name: z.string(),
+      name: z.string().nullish(),
     })
-    .optional(),
+    .nullish(),
   state: z
     .object({
       name: z.string().optional(),
