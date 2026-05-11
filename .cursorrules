@@ -70,7 +70,6 @@ yarn dev/build/lint/test/clean
 
 ### Last.fm for artist genres
 
-- Calls Last.fm: prebuild only via scripts/prefetch-lastfm.mjs.
-- Stores results: .next/cache/lastfm-artists.json (fallback .cache/lastfm-artists.json).
-- Build uses cached data: src/utils/data.ts reads the cache and attaches band.lastfm.
-- Pages never call Last.fm directly; they only render band.lastfm when ENABLE_LASTFM=true.
+- Optional prebuild: `yarn tsx --env-file=.env scripts/prefetch-lastfm.ts` loads band names from Postgres and writes `.next/cache/lastfm-artists.json` (fallback `.cache/lastfm-artists.json`).
+- Reverse geocoding: `yarn tsx --env-file=.env scripts/prefetch-geocoding.ts` loads concert coordinates from Postgres and fills the geocoding cache used by `src/utils/data.ts` during `getGeocodingData`.
+- At runtime, Last.fm enrichment uses `src/utils/lastfm.ts` and band fields from Prisma when `ENABLE_LASTFM=true` (no direct Last.fm calls from pages).

@@ -62,6 +62,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 | `yarn db:reset` | `prisma migrate reset` |
 | `yarn db:studio` | Open Prisma Studio |
 | `yarn release` | Version bump via `standard-version` |
+| `yarn tsx --env-file=.env scripts/prefetch-lastfm.ts` | Optional: prefetch Last.fm JSON from band names in Postgres (requires `ENABLE_LASTFM`, `LASTFM_API_KEY`) |
+| `yarn tsx --env-file=.env scripts/prefetch-geocoding.ts` | Optional: prefetch Photon geocoding cache from concert coordinates in Postgres |
 
 ## Environment variables
 

@@ -194,7 +194,7 @@ export async function searchTicketmasterVenues(
             displayName: formatDisplayName(venue),
             street: venue.address?.line1,
             postcode: venue.postalCode,
-            city: venue.city?.name,
+            city: venue.city?.name ?? undefined,
             state: venue.state?.name,
             country: venue.country?.name,
             lat: coords.lat,
