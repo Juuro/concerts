@@ -5001,9 +5001,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concerts-nextjs@workspace:.":
+"concertivity@workspace:.":
   version: 0.0.0-use.local
-  resolution: "concerts-nextjs@workspace:."
+  resolution: "concertivity@workspace:."
   dependencies:
     "@prisma/adapter-pg": "npm:^7.4.2"
     "@prisma/client": "npm:^7.4.2"

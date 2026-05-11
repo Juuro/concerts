@@ -1,7 +1,7 @@
 {
-  "name": "concerts-nextjs",
+  "name": "concertivity",
   "private": true,
-  "description": "All the concerts",
+  "description": "Concertivity — track all the concerts you've been to.",
   "version": "1.1.0",
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
@@ -51,6 +51,7 @@
   },
   "keywords": [
     "nextjs",
+    "concertivity",
     "concerts"
   ],
   "license": "MIT",
@@ -86,10 +87,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Juuro/concerts"
+    "url": "https://github.com/Juuro/Concertivity"
   },
   "bugs": {
-    "url": "https://github.com/Juuro/concerts/issues"
+    "url": "https://github.com/Juuro/Concertivity/issues"
   },
   "packageManager": "yarn@4.13.0"
 }
