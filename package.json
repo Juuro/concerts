@@ -2,7 +2,7 @@
   "name": "concertivity",
   "private": true,
   "description": "Concertivity — track all the concerts you've been to.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Sebastian Engel <sebastianengel@posteo.de>",
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.2",
