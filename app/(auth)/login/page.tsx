@@ -4,7 +4,7 @@ import Link from "next/link"
 import "./login.scss"
 
 export const metadata = {
-  title: "Sign In - Concerts",
+  title: "Sign In | Concertivity",
   description: "Sign in to track your concert attendance",
 }
 

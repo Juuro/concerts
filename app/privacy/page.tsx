@@ -4,9 +4,9 @@ import type { Metadata } from "next"
 import styles from "./privacy.module.scss"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy | Concertivity",
   description:
-    "Privacy policy and data protection information for Concerts, in accordance with GDPR and DSGVO.",
+    "Privacy policy and data protection information for Concertivity, in accordance with GDPR and DSGVO.",
 }
 
 export default function PrivacyPage() {
@@ -17,8 +17,8 @@ export default function PrivacyPage() {
           <h1>Privacy Policy</h1>
           <p className={styles.intro}>
             This privacy policy explains how we collect, use, store, and protect
-            your personal data when you use Concerts. It complies with the EU
-            General Data Protection Regulation (GDPR) and the German Federal
+            your personal data when you use Concertivity. It complies with the
+            EU General Data Protection Regulation (GDPR) and the German Federal
             Data Protection Act (BDSG). Last updated: 14 March 2025 .
           </p>
 

@@ -3,7 +3,7 @@ import Link from "next/link"
 import "./resend-verification.scss"
 
 export const metadata = {
-  title: "Resend Verification Email - Concerts",
+  title: "Resend Verification Email | Concertivity",
   description: "Resend your email verification link",
 }
 

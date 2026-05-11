@@ -7,7 +7,7 @@ import { ConcertForm } from "@/components/ConcertForm"
 import "./edit-concert.scss"
 
 export const metadata = {
-  title: "Edit Concert - My Concerts",
+  title: "Edit Concert | Concertivity",
   description: "Edit concert details",
 }
 

@@ -22,7 +22,7 @@ import type { Metadata } from "next"
 import "./home.scss"
 
 export const metadata: Metadata = {
-  title: "Concerts",
+  title: "Concertivity",
   description: "Track your concert history.",
 }
 
@@ -100,7 +100,7 @@ async function LoggedInHome({
       <main>
         <div className="container">
           <div className="home-header">
-            <h2>My Concerts</h2>
+            <h2>Concerts</h2>
             <Link href="/concerts/new" className="home-btn">
               + Add Concert
             </Link>
