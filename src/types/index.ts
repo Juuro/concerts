@@ -3,6 +3,5 @@
  */
 
 export * from "./concert"
-export * from "./contentful"
 export * from "./geocoding"
 export * from "./lastfm"
