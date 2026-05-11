@@ -53,12 +53,15 @@ function getPostHogConnectSrc(): string {
 
   const host =
     process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || POSTHOG_DEFAULT_HOST
+  let apiOrigin: string
   try {
-    const url = new URL(host)
-    return ` ${url.origin}`
+    apiOrigin = new URL(host).origin
   } catch {
-    return ` ${POSTHOG_DEFAULT_HOST}`
+    apiOrigin = POSTHOG_DEFAULT_HOST
   }
+  // posthog-js loads remote config from {region}-assets.i.posthog.com (e.g. eu-assets),
+  // not only from the API host; *.i.posthog.com covers EU/US asset endpoints.
+  return ` ${apiOrigin} https://*.i.posthog.com`
 }
 
 function buildCsp(nonce: string): string {
