@@ -4,8 +4,8 @@ import type { Metadata } from "next"
 import styles from "./imprint.module.scss"
 
 export const metadata: Metadata = {
-  title: "Imprint",
-  description: "Legal imprint and provider identification for Concerts.",
+  title: "Imprint | Concertivity",
+  description: "Legal imprint and provider identification for Concertivity.",
 }
 
 export default function ImprintPage() {

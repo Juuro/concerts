@@ -1,8 +1,8 @@
-# Design Document: Concerts
+# Design Document: Concertivity
 
 ## 1. Project Overview
 
-**Concerts** is a personal concert tracking and discovery platform. It allows users to log their live music experiences, visualize their history through data and maps, and share their journey with a community of music fans.
+**Concertivity** is a personal concert tracking and discovery platform. It allows users to log their live music experiences, visualize their history through data and maps, and share their journey with a community of music fans.
 
 ### Core Value Propositions:
 

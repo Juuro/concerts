@@ -3,7 +3,7 @@ import Link from "next/link"
 import "./forgot-password.scss"
 
 export const metadata = {
-  title: "Forgot Password - Concerts",
+  title: "Forgot Password | Concertivity",
   description: "Reset your password",
 }
 

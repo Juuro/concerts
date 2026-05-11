@@ -4,8 +4,8 @@ import type { Metadata } from "next"
 import styles from "./terms.module.scss"
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions",
-  description: "Terms and Conditions for Concerts.",
+  title: "Terms and Conditions | Concertivity",
+  description: "Terms and Conditions for Concertivity.",
 }
 
 export default function TermsPage() {
@@ -15,25 +15,25 @@ export default function TermsPage() {
         <article className={styles.terms}>
           <h1>Terms and Conditions</h1>
           <p className={styles.intro}>
-            General terms and conditions for the use of Concerts. Please read
-            these terms carefully. By using our service, you agree to be bound
-            by these terms.
+            General terms and conditions for the use of Concertivity. Please
+            read these terms carefully. By using our service, you agree to be
+            bound by these terms.
           </p>
 
           <section aria-labelledby="scope-heading">
             <h2 id="scope-heading">§ 1 Scope</h2>
             <p>
               These terms and conditions apply to all contracts between
-              [Business Name] GBR and the user regarding the use of the Concerts
-              platform. Deviating or supplementary terms of the user do not
-              apply unless explicitly agreed in writing.
+              [Business Name] GBR and the user regarding the use of the
+              Concertivity platform. Deviating or supplementary terms of the
+              user do not apply unless explicitly agreed in writing.
             </p>
           </section>
 
           <section aria-labelledby="subject-heading">
             <h2 id="subject-heading">§ 2 Subject Matter</h2>
             <p>
-              Concerts is a web-based service for tracking personal concert
+              Concertivity is a web-based service for tracking personal concert
               attendance. The scope of services includes the features described
               on the website at the time of registration. [Business Name] GBR
               reserves the right to expand, restrict, or modify the service with
