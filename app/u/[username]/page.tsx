@@ -154,6 +154,7 @@ export default async function PublicProfilePage({
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
   const profileUrl = `${siteUrl}/u/${user.username}`
+  const displayName = user.name || user.username
   const nonce = (await headers()).get("x-nonce") ?? undefined
 
   const profileJsonLd = {
@@ -161,11 +162,11 @@ export default async function PublicProfilePage({
     "@type": "ProfilePage",
     mainEntity: {
       "@type": "Person",
-      name: user.name || user.username,
+      name: displayName,
       identifier: user.username,
       url: profileUrl,
       image: user.image ?? undefined,
-      description: `Concert history of ${user.name || user.username} — tracked with Concertivity`,
+      description: `Concert history of ${displayName} — tracked with Concertivity`,
     },
   }
 

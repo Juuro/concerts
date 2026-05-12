@@ -166,9 +166,8 @@ async function LoggedInHome({
 }
 
 async function LandingPage() {
-  const [stats, hdrs] = await Promise.all([getGlobalAppStats(), headers()])
-  const nonce = hdrs.get("x-nonce") ?? undefined
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
+  const [stats, headersList] = await Promise.all([getGlobalAppStats(), headers()])
+  const nonce = headersList.get("x-nonce") ?? undefined
 
   const websiteJsonLd = {
     "@context": "https://schema.org",
