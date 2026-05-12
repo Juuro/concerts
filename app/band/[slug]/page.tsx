@@ -29,6 +29,7 @@ export async function generateMetadata({
 
   return {
     title: `${band?.name || slug} | Concerts`,
+    robots: { index: false, follow: false },
   }
 }
 

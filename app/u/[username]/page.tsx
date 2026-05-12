@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { getConcertsPaginated } from "@/lib/concerts/pagination"
 import { getUserConcerts } from "@/lib/concerts/read"
@@ -23,19 +24,36 @@ export async function generateMetadata({
   params: Promise<{ username: string }>
 }) {
   const { username } = await params
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
 
   const user = await prisma.user.findUnique({
     where: { username },
-    select: { name: true, username: true, isPublic: true },
+    select: { name: true, username: true, isPublic: true, image: true },
   })
 
   if (!user || !user.isPublic) {
     return { title: "Profile Not Found" }
   }
 
+  const displayName = user.name || user.username
+  const profileUrl = `${siteUrl}/u/${user.username}`
+
   return {
-    title: `${user.name || user.username}'s Concerts`,
-    description: `View the concert collection of ${user.name || user.username}`,
+    title: `${displayName}'s Concert History`,
+    description: `Explore ${displayName}'s live music journey on Concertivity — every concert, band, and city tracked.`,
+    alternates: { canonical: profileUrl },
+    openGraph: {
+      title: `${displayName}'s Concert History`,
+      description: `Explore ${displayName}'s live music journey on Concertivity — every concert, band, and city tracked.`,
+      url: profileUrl,
+      type: "profile",
+      images: user.image ? [{ url: user.image }] : [],
+    },
+    twitter: {
+      card: "summary",
+      title: `${displayName}'s Concert History`,
+      description: `Explore ${displayName}'s live music journey on Concertivity.`,
+    },
   }
 }
 
@@ -134,8 +152,30 @@ export default async function PublicProfilePage({
       : null,
   }))
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
+  const profileUrl = `${siteUrl}/u/${user.username}`
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
+  const profileJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    mainEntity: {
+      "@type": "Person",
+      name: user.name || user.username,
+      identifier: user.username,
+      url: profileUrl,
+      image: user.image ?? undefined,
+      description: `Concert history of ${user.name || user.username} — tracked with Concertivity`,
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        nonce={nonce}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+      />
       <Header siteTitle="Concertivity" />
       <main className="container">
         <div className="public-profile">

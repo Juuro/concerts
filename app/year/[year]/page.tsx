@@ -21,6 +21,7 @@ export async function generateMetadata({
 
   return {
     title: `${year} | Concerts`,
+    robots: { index: false, follow: false },
   }
 }
 
