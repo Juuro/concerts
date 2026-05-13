@@ -3,6 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs"
 const nextConfig = {
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
+  serverExternalPackages: ["@paddle/paddle-node-sdk"],
   images: {
     remotePatterns: [
       {

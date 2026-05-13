@@ -1,0 +1,14 @@
+@use "../../../src/styles/buttons.scss" as buttons;
+
+.button {
+  @include buttons.btn-secondary;
+  font-size: 0.9375rem;
+  margin-top: 0.75rem;
+  padding: 0.625rem 1.25rem;
+}
+
+.error {
+  color: #b00020;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}

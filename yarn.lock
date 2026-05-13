@@ -2381,6 +2381,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@paddle/paddle-js@npm:^1.6.4":
+  version: 1.6.4
+  resolution: "@paddle/paddle-js@npm:1.6.4"
+  checksum: 10c0/4c0887b9aa9becf6e090bf9ebf4eab57ec881c1836d8e78d69ecc0e98351d84bc42d409cada4da96ae1ec22ae986ab97f686cf3118449c27f4a9881772e3b051
+  languageName: node
+  linkType: hard
+
+"@paddle/paddle-node-sdk@npm:^3.8.0":
+  version: 3.8.0
+  resolution: "@paddle/paddle-node-sdk@npm:3.8.0"
+  checksum: 10c0/f2e876aed1f49936f0da53b0924e4ba61d3e412e06a510339285b3638c11e130ec03083c628dca0fb51e2159227d0f9c35a8fc9f91df8a4fda09c3d7eb533fea
+  languageName: node
+  linkType: hard
+
 "@parcel/watcher-android-arm64@npm:2.5.6":
   version: 2.5.6
   resolution: "@parcel/watcher-android-arm64@npm:2.5.6"
@@ -5253,6 +5267,8 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^21.0.0"
     "@commitlint/config-conventional": "npm:^21.0.0"
+    "@paddle/paddle-js": "npm:^1.6.4"
+    "@paddle/paddle-node-sdk": "npm:^3.8.0"
     "@prisma/adapter-pg": "npm:^7.4.2"
     "@prisma/client": "npm:^7.4.2"
     "@sentry/nextjs": "npm:^10"
@@ -5292,6 +5308,7 @@ __metadata:
     typescript: "npm:^5.9.3"
     vite: "npm:^8.0.5"
     vitest: "npm:^4.1.2"
+    zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft
 
@@ -11648,5 +11665,12 @@ __metadata:
   version: 4.3.6
   resolution: "zod@npm:4.3.6"
   checksum: 10c0/860d25a81ab41d33aa25f8d0d07b091a04acb426e605f396227a796e9e800c44723ed96d0f53a512b57be3d1520f45bf69c0cb3b378a232a00787a2609625307
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.4.3":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard
