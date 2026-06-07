@@ -320,6 +320,60 @@ describe("searchConcertCandidates", () => {
     expect(result.candidates[0].city).toBe("Stuttgart")
   })
 
+  test("finds Nirvana in Paris for early-90s decade range via year filter", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        artist: "Nirvana",
+        city: "Paris",
+        yearStart: 1990,
+        yearEnd: 1993,
+      })
+    )
+    vi.mocked(searchArtists).mockResolvedValue([
+      { name: "Nirvana", mbid: "mbid-nirvana" },
+    ])
+    vi.mocked(searchSetlists).mockResolvedValue([
+      setlist({
+        id: "paris92",
+        eventDate: "24-06-1992",
+        artist: { name: "Nirvana", mbid: "mbid-nirvana" },
+        venue: {
+          name: "Le Zénith",
+          city: {
+            name: "Paris",
+            coords: { lat: 48.89, long: 2.39 },
+            country: { code: "FR", name: "France" },
+          },
+        },
+      }),
+      setlist({
+        id: "paris94",
+        eventDate: "14-02-1994",
+        artist: { name: "Nirvana", mbid: "mbid-nirvana" },
+        venue: {
+          name: "Palais Omnisports",
+          city: { name: "Paris", country: { code: "FR", name: "France" } },
+        },
+      }),
+    ])
+
+    const result = await searchConcertCandidates(
+      "Nirvana beginning of the 90ies Paris",
+      "user-1"
+    )
+
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artistMbid: "mbid-nirvana",
+        cityName: "Paris",
+      })
+    )
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.not.objectContaining({ year: expect.anything() })
+    )
+    expect(result.candidates.map((c) => c.id)).toEqual(["paris92"])
+  })
+
   test("marks candidates already in the user's list", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(
       pq({ artist: "The Rolling Stones", yearStart: 1999, yearEnd: 1999 })

@@ -80,4 +80,22 @@ describe("parseConcertProseHeuristic", () => {
     expect(parsed?.venue).toBe("Wembley Arena")
     expect(parsed?.yearStart).toBe(2003)
   })
+
+  test("parses decade phrase with trailing city", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Nirvana in the beginning of the 90ies in PAris.",
+      now
+    )
+    expect(parsed).toEqual({
+      artist: "Nirvana",
+      city: "Paris",
+      venue: null,
+      festival: null,
+      countryCode: null,
+      yearStart: 1990,
+      yearEnd: 1993,
+      season: null,
+      month: null,
+    })
+  })
 })
