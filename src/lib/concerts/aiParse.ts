@@ -48,6 +48,125 @@ function validateParsed(value: unknown): ParsedConcertQuery | null {
   return parsed.success ? parsed.data : null
 }
 
+function titleCaseWords(text: string): string {
+  return text
+    .split(/\s+/)
+    .map((word) => {
+      if (word === word.toLowerCase()) {
+        return word.charAt(0).toUpperCase() + word.slice(1)
+      }
+      return word
+    })
+    .join(" ")
+}
+
+const REGION_HINTS: Array<{ pattern: RegExp; countryCode: string }> = [
+  { pattern: /\bsouth\s+germany\b|\bsüddeutschland\b/i, countryCode: "DE" },
+  { pattern: /\bnorth\s+germany\b|\bnorddeutschland\b/i, countryCode: "DE" },
+  { pattern: /\bsoth\s+germany\b/i, countryCode: "DE" },
+  { pattern: /\bbavaria\b|\bbayern\b/i, countryCode: "DE" },
+]
+
+function isRegionName(name: string): boolean {
+  const trimmed = name.trim()
+  return REGION_HINTS.some(({ pattern }) => pattern.test(trimmed))
+}
+
+function emptyParsed(): ParsedConcertQuery {
+  return {
+    artist: null,
+    city: null,
+    venue: null,
+    festival: null,
+    countryCode: null,
+    yearStart: null,
+    yearEnd: null,
+    season: null,
+    month: null,
+  }
+}
+
+/**
+ * Last-resort parser for common "I saw …" patterns when Groq fails.
+ * Intentionally conservative — only fills fields with high-confidence matches.
+ */
+export function parseConcertProseHeuristic(
+  prose: string,
+  now = new Date()
+): ParsedConcertQuery | null {
+  const text = prose.trim()
+  if (!text) return null
+
+  const result = emptyParsed()
+  const currentYear = now.getUTCFullYear()
+
+  if (/\bthis year\b/i.test(text)) {
+    result.yearStart = currentYear
+    result.yearEnd = currentYear
+  } else if (/\blast year\b/i.test(text)) {
+    result.yearStart = currentYear - 1
+    result.yearEnd = currentYear - 1
+  } else {
+    const yearMatch = text.match(/\b(19|20)\d{2}\b/)
+    if (yearMatch) {
+      result.yearStart = Number(yearMatch[0])
+      result.yearEnd = Number(yearMatch[0])
+    }
+  }
+
+  for (const { pattern, countryCode } of REGION_HINTS) {
+    if (pattern.test(text)) {
+      result.countryCode = countryCode
+      break
+    }
+  }
+
+  const sawInCityThisYear = text.match(
+    /\bsaw\s+(.+?)\s+in\s+([A-Za-zÀ-ÿ][\wÀ-ÿ\s'-]+?)\s+this\s+year\b/i
+  )
+  if (sawInCityThisYear) {
+    result.artist = titleCaseWords(sawInCityThisYear[1].trim())
+    const city = sawInCityThisYear[2].trim()
+    if (!isRegionName(city)) result.city = titleCaseWords(city)
+  }
+
+  const sawInCityLastYear = text.match(
+    /\bsaw\s+(.+?)\s+in\s+([A-Za-zÀ-ÿ][\wÀ-ÿ\s'-]+?)\s+last\s+year\b/i
+  )
+  if (sawInCityLastYear && !result.artist) {
+    result.artist = titleCaseWords(sawInCityLastYear[1].trim())
+    const city = sawInCityLastYear[2].trim()
+    if (!isRegionName(city)) result.city = titleCaseWords(city)
+  }
+
+  const sawAtVenueInYear = text.match(
+    /\bsaw\s+(.+?)\s+at\s+(.+?)\s+in\s+(19|20)\d{2}\b/i
+  )
+  if (sawAtVenueInYear) {
+    if (!result.artist)
+      result.artist = titleCaseWords(sawAtVenueInYear[1].trim())
+    result.venue = titleCaseWords(sawAtVenueInYear[2].trim())
+    if (result.yearStart == null) {
+      result.yearStart = Number(sawAtVenueInYear[3])
+      result.yearEnd = Number(sawAtVenueInYear[3])
+    }
+  }
+
+  const sawInYear = text.match(/\bsaw\s+(.+?)\s+in\s+(19|20)\d{2}\b/i)
+  if (sawInYear) {
+    if (!result.artist) result.artist = titleCaseWords(sawInYear[1].trim())
+    if (result.yearStart == null) {
+      result.yearStart = Number(sawInYear[2])
+      result.yearEnd = Number(sawInYear[2])
+    }
+  }
+
+  const hasAnchor = Boolean(result.artist || result.city || result.venue)
+  if (!hasAnchor) return null
+
+  return validateParsed(result)
+}
+
 async function tryStructuredParse(
   groq: ReturnType<typeof createGroq>,
   modelId: string,
@@ -126,6 +245,9 @@ export async function parseConcertProse(
       // Try the next strategy; never log prose.
     }
   }
+
+  const heuristic = parseConcertProseHeuristic(text)
+  if (heuristic) return heuristic
 
   console.error("Groq concert-prose parse failed")
   return null
