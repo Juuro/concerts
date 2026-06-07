@@ -273,6 +273,53 @@ describe("searchConcertCandidates", () => {
     expect(result.hint).toBeNull()
   })
 
+  test("searches by country and year when only a region is given (no city)", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        artist: "Die Ärzte",
+        countryCode: "DE",
+        yearStart: 2003,
+        yearEnd: 2003,
+      })
+    )
+    vi.mocked(searchArtists).mockResolvedValue([
+      { name: "Die Ärzte", mbid: "mbid-arzte" },
+    ])
+    vi.mocked(searchSetlists).mockResolvedValue([
+      setlist({
+        id: "stuttgart03",
+        eventDate: "21-12-2003",
+        artist: { name: "Die Ärzte", mbid: "mbid-arzte" },
+        venue: {
+          name: "Hanns-Martin-Schleyer-Halle",
+          city: {
+            name: "Stuttgart",
+            coords: { lat: 48.79, long: 9.18 },
+            country: { code: "DE", name: "Germany" },
+          },
+        },
+      }),
+    ])
+
+    const result = await searchConcertCandidates(
+      "Die Ärzte in 2003 in South germany",
+      "user-1"
+    )
+
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artistMbid: "mbid-arzte",
+        countryCode: "DE",
+        year: 2003,
+      })
+    )
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.not.objectContaining({ cityName: expect.anything() })
+    )
+    expect(result.candidates).toHaveLength(1)
+    expect(result.candidates[0].city).toBe("Stuttgart")
+  })
+
   test("marks candidates already in the user's list", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(
       pq({ artist: "The Rolling Stones", yearStart: 1999, yearEnd: 1999 })

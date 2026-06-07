@@ -83,7 +83,12 @@ function normalizeArtist(name: string): string {
 function normalizeCityName(city: string | null): string | null {
   if (!city) return null
   const primary = city.split(",")[0]?.trim()
-  return primary || null
+  if (!primary) return null
+  // Title-case for Groq/user lowercase ("stuttgart" -> "Stuttgart").
+  return primary.replace(
+    /\b[\p{L}\p{M}']+\b/gu,
+    (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  )
 }
 
 function buildSearchBase(
