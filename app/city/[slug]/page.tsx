@@ -25,6 +25,7 @@ export async function generateMetadata({
 
   return {
     title: `${city || slug} | Concerts`,
+    robots: { index: false, follow: false },
   }
 }
 

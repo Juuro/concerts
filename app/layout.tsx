@@ -6,12 +6,33 @@ import SessionAwareShell from "./SessionAwareShell"
 
 export const dynamic = "force-dynamic"
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
+
 export const metadata: Metadata = {
-  title: "Concertivity",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Concertivity",
+    template: "%s | Concertivity",
+  },
   description:
-    "List of all concerts and festivals I've visited. Including pages for every band I ever saw.",
+    "Track every concert you've ever attended. Discover your top bands, favourite cities, and most active years — all in one place.",
   authors: [{ name: "@juuro" }],
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    siteName: "Concertivity",
+    locale: "en_US",
+    url: siteUrl,
+    title: "Concertivity",
+    description:
+      "Track every concert you've ever attended. Discover your top bands, favourite cities, and most active years — all in one place.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Concertivity",
+    description:
+      "Track every concert you've ever attended. Discover your top bands, favourite cities, and most active years — all in one place.",
+  },
 }
 
 export default function RootLayout({

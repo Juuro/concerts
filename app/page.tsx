@@ -21,9 +21,22 @@ import { headers } from "next/headers"
 import type { Metadata } from "next"
 import "./home.scss"
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://concertivity.app"
+
 export const metadata: Metadata = {
-  title: "Concertivity",
-  description: "Track your concert history.",
+  title: "Concertivity — Track Your Concert History",
+  description:
+    "Never forget a show. Log every concert, discover your patterns, and share your musical journey with Concertivity.",
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    title: "Concertivity — Track Your Concert History",
+    description:
+      "Never forget a show. Log every concert, discover your patterns, and share your musical journey with Concertivity.",
+    url: siteUrl,
+    type: "website",
+  },
 }
 
 interface HomePageProps {
@@ -153,11 +166,55 @@ async function LoggedInHome({
 }
 
 async function LandingPage() {
-  const stats = await getGlobalAppStats()
+  const [stats, headersList] = await Promise.all([getGlobalAppStats(), headers()])
+  const nonce = headersList.get("x-nonce") ?? undefined
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Concertivity",
+    url: siteUrl,
+    description:
+      "Track every concert you've ever attended. Discover your top bands, favourite cities, and most active years.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/u/{username}`,
+      },
+      "query-input": "required name=username",
+    },
+  }
+
+  const webAppJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Concertivity",
+    url: siteUrl,
+    applicationCategory: "EntertainmentApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    description:
+      "A personal concert-attendance tracker. Log every show, explore statistics, and share your musical journey.",
+  }
 
   return (
     <Layout>
       <main>
+        <script
+          type="application/ld+json"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppJsonLd) }}
+        />
         <div className="container">
           <HeroBanner />
           <section className="home-hero">
