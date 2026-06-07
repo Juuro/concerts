@@ -12,6 +12,17 @@ const SUPERFAN_STATUSES: SubscriptionStatus[] = [
   SubscriptionStatus.LIFETIME,
 ]
 
+function planKeyForSubscriptionRow(sub: {
+  planKey: string | null
+  paddlePriceId: string | null
+}): string | null {
+  if (sub.planKey) return sub.planKey
+  if (sub.paddlePriceId && tryGetPaddleEnvConfig()) {
+    return getPlanForPriceId(sub.paddlePriceId) ?? null
+  }
+  return null
+}
+
 export async function isUserSuperfan(userId: string): Promise<boolean> {
   await ensureSubscriptionSyncedFromPaddle(userId)
   const sub = await prisma.subscription.findUnique({
@@ -44,16 +55,8 @@ export async function getPricingBillingHint(userId: string): Promise<{
     select: { planKey: true, status: true, paddlePriceId: true },
   })
   if (!sub) return null
-  let planKey = sub.planKey
-  if (!planKey && sub.paddlePriceId) {
-    const cfg = tryGetPaddleEnvConfig()
-    if (cfg) {
-      const mapped = getPlanForPriceId(sub.paddlePriceId)
-      planKey = mapped ?? null
-    }
-  }
   return {
-    planKey,
+    planKey: planKeyForSubscriptionRow(sub),
     isPremium: SUPERFAN_STATUSES.includes(sub.status),
   }
 }
@@ -71,6 +74,7 @@ export async function getSubscriptionSummary(
   if (!user?.subscription) return null
 
   const sub = user.subscription
+  const displayPlanKey = planKeyForSubscriptionRow(sub)
   let manageBillingUrl: string | null = null
   let portalTimedOut = false
 
@@ -95,7 +99,7 @@ export async function getSubscriptionSummary(
 
   return {
     status: sub.status,
-    planKey: sub.planKey,
+    planKey: displayPlanKey,
     currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
     trialEndsAt: sub.trialEndsAt?.toISOString() ?? null,
     manageBillingUrl,

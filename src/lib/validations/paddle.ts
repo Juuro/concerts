@@ -27,3 +27,9 @@ export const paddleCheckoutBodySchema = z.object({
 })
 
 export type PaddleCheckoutBody = z.infer<typeof paddleCheckoutBodySchema>
+
+export const paddleSyncBodySchema = z.object({
+  transactionId: z.string().min(1).optional(),
+})
+
+export type PaddleSyncBody = z.infer<typeof paddleSyncBodySchema>

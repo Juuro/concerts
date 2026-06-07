@@ -2,35 +2,6 @@
 
 .pricing-page {
   margin: 0 auto;
-  max-width: 1100px;
-  padding: 2rem 1rem 4rem;
-
-  h1 {
-    font-family: variables.$font-family-heading;
-    font-size: 2rem;
-    margin: 0 0 0.5rem;
-  }
-
-  &__intro {
-    color: #555;
-    margin: 0 0 2rem;
-    max-width: 42rem;
-  }
-
-  &__grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-  }
-
-  &__notice {
-    background: #fff8e6;
-    border-radius: 8px;
-    color: #5c4a00;
-    font-size: 0.9375rem;
-    margin-bottom: 1.5rem;
-    max-width: 42rem;
-    padding: 0.75rem 1rem;
-  }
+  max-width: 72rem;
+  padding: 1rem 1rem 2rem;
 }

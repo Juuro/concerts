@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { getSubscriptionSummary } from "@/lib/paddle/entitlement"
 
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -13,7 +13,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const summary = await getSubscriptionSummary(session.user.id)
+  const skipPortal =
+    request.nextUrl.searchParams.get("portal") === "0" ||
+    request.nextUrl.searchParams.get("portal") === "false"
+
+  const summary = await getSubscriptionSummary(session.user.id, {
+    includePortalSession: !skipPortal,
+  })
   if (!summary) {
     return NextResponse.json({ subscription: null })
   }

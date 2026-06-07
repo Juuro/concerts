@@ -13,6 +13,7 @@ interface PaddleCheckoutButtonProps {
   label: string
   className?: string
   paywallEnabled: boolean
+  variant?: "primary" | "secondary"
 }
 
 export function PaddleCheckoutButton({
@@ -20,6 +21,7 @@ export function PaddleCheckoutButton({
   label,
   className,
   paywallEnabled,
+  variant = "secondary",
 }: PaddleCheckoutButtonProps) {
   const router = useRouter()
   const { data: session, isPending } = useTypedSession()
@@ -73,7 +75,7 @@ export function PaddleCheckoutButton({
     <div>
       <button
         type="button"
-        className={`${styles.button} ${className ?? ""}`.trim()}
+        className={`${styles.button} ${variant === "primary" ? styles.buttonPrimary : ""} ${className ?? ""}`.trim()}
         onClick={() => void onClick()}
         disabled={busy || isPending}
         aria-busy={busy}

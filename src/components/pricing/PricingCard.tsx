@@ -12,8 +12,10 @@ interface PricingCardProps {
   currencyHint?: string
   localeDe: boolean
   paywallEnabled: boolean
-  /** Logged-in user already has this plan with premium access (synced from Paddle). */
   isCurrentPlan?: boolean
+  highlighted?: boolean
+  badge?: string
+  billingPeriod?: string
 }
 
 export function PricingCard({
@@ -25,24 +27,34 @@ export function PricingCard({
   localeDe,
   paywallEnabled,
   isCurrentPlan = false,
+  highlighted = false,
+  badge,
+  billingPeriod,
 }: PricingCardProps) {
   const vatText = localeDe
     ? "Preise zzgl. MwSt.; der finale Betrag wird beim Checkout angezeigt."
     : "Prices exclude VAT; the final amount is shown at checkout."
 
+  const cardClass = [styles.card, highlighted ? styles.cardHighlighted : ""]
+    .filter(Boolean)
+    .join(" ")
+
   return (
-    <article className={styles.card}>
+    <article className={cardClass}>
+      {badge ? <span className={styles.badge}>{badge}</span> : null}
       {isCurrentPlan ? (
         <p className={styles.currentPlan} role="status">
           {localeDe ? "Dein aktueller Plan" : "Your current plan"}
         </p>
       ) : null}
-      <h2 className={styles.title}>{title}</h2>
+      <h3 className={styles.title}>{title}</h3>
       <p className={styles.price}>
-        {priceLabel}
+        <span className={styles.priceAmount}>{priceLabel}</span>
+        {billingPeriod ? (
+          <span className={styles.pricePeriod}>{billingPeriod}</span>
+        ) : null}
         {currencyHint ? (
           <span className={styles.vatHint} title={vatText}>
-            {" "}
             ({currencyHint})
           </span>
         ) : null}
@@ -53,8 +65,10 @@ export function PricingCard({
       </p>
       <PaddleCheckoutButton
         planKey={planKey}
-        label="Subscribe"
+        label={localeDe ? "Jetzt abonnieren" : "Subscribe"}
         paywallEnabled={paywallEnabled}
+        variant={highlighted ? "primary" : "secondary"}
+        className={styles.checkoutButton}
       />
     </article>
   )

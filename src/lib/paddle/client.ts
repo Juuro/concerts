@@ -1,6 +1,7 @@
 import {
   Environment,
   Paddle,
+  type Customer,
   type Subscription as PaddleSubscription,
 } from "@paddle/paddle-node-sdk"
 import { getPaddleEnvConfig } from "./config"
@@ -63,6 +64,26 @@ export async function listCustomerSubscriptions(
   const items: PaddleSubscription[] = []
   for await (const sub of collection) {
     items.push(sub)
+  }
+  return items
+}
+
+export async function getTransaction(transactionId: string) {
+  const paddle = getPaddleApi()
+  return paddle.transactions.get(transactionId)
+}
+
+export async function getSubscription(subscriptionId: string) {
+  const paddle = getPaddleApi()
+  return paddle.subscriptions.get(subscriptionId)
+}
+
+export async function listCustomersByEmail(email: string): Promise<Customer[]> {
+  const paddle = getPaddleApi()
+  const collection = paddle.customers.list({ email: [email] })
+  const items: Customer[] = []
+  for await (const customer of collection) {
+    items.push(customer)
   }
   return items
 }

@@ -1,4 +1,4 @@
-import { headers } from "next/headers"
+import { cookies, headers } from "next/headers"
 import Layout from "@/components/layout-client"
 import { auth } from "@/lib/auth"
 import type { PaddlePlanKey } from "@/lib/paddle/config"
@@ -8,8 +8,11 @@ import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
 import { PricingView } from "./PricingView"
 import "./pricing.scss"
 
+export const dynamic = "force-dynamic"
+
 export default async function PricingPage() {
   const hdrs = await headers()
+  await cookies()
   const accept = hdrs.get("accept-language") ?? ""
   const localeDe = accept.toLowerCase().includes("de")
   const paywallEnabled = isFeatureEnabled(FEATURE_FLAGS.ENABLE_PAYWALL, false)

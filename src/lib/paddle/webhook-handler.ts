@@ -118,12 +118,13 @@ function currentPeriodEndFromData(data: Record<string, unknown>): Date | null {
 }
 
 export async function syncSubscriptionFromPaddleData(
-  data: unknown
+  data: unknown,
+  options?: { userId?: string }
 ): Promise<void> {
   const d = asRecord(data)
   if (!d) return
 
-  const userId = await resolveUserIdForSubscription(d)
+  const userId = options?.userId ?? (await resolveUserIdForSubscription(d))
   if (!userId) {
     throw new Error("subscription_webhook_missing_user")
   }

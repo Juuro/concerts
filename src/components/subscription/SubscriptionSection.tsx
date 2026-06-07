@@ -1,6 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+  PADDLE_BILLING_CHANGED_EVENT,
+  syncBillingAfterCheckout,
+} from "@/lib/paddle/billing-ui"
 import styles from "./SubscriptionSection.module.scss"
 
 type SubscriptionPayload = {
@@ -22,23 +26,43 @@ export function SubscriptionSection() {
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
+
+    async function load() {
       try {
-        const res = await fetch("/api/paddle/subscription")
-        const data = (await res.json()) as {
-          subscription: SubscriptionPayload | null
+        await syncBillingAfterCheckout()
+        let found: SubscriptionPayload | null = null
+        for (let _i = 0; _i < 8; _i++) {
+          if (cancelled) return
+          const res = await fetch("/api/paddle/subscription")
+          const data = (await res.json()) as {
+            subscription: SubscriptionPayload | null
+          }
+          if (data.subscription) {
+            found = data.subscription
+            break
+          }
+          await new Promise((r) => setTimeout(r, 600))
         }
         if (!cancelled) {
-          setSub(data.subscription ?? null)
+          setSub(found)
         }
       } catch {
         if (!cancelled) setSub(null)
       } finally {
         if (!cancelled) setLoading(false)
       }
-    })()
+    }
+
+    void load()
+
+    function onPaddleBilling() {
+      void load()
+    }
+    window.addEventListener(PADDLE_BILLING_CHANGED_EVENT, onPaddleBilling)
+
     return () => {
       cancelled = true
+      window.removeEventListener(PADDLE_BILLING_CHANGED_EVENT, onPaddleBilling)
     }
   }, [])
 

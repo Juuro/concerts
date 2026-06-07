@@ -1,7 +1,15 @@
 import type { Subscription as PaddleSubscription } from "@paddle/paddle-node-sdk"
 import { prisma } from "@/lib/prisma"
-import { listCustomerSubscriptions } from "./client"
-import { syncSubscriptionFromPaddleData } from "./webhook-handler"
+import {
+  getSubscription,
+  getTransaction,
+  listCustomerSubscriptions,
+  listCustomersByEmail,
+} from "./client"
+import {
+  handleTransactionCompleted,
+  syncSubscriptionFromPaddleData,
+} from "./webhook-handler"
 
 /** Shape expected by `syncSubscriptionFromPaddleData` (matches webhook payloads). */
 export function paddleSubscriptionRemoteToSyncData(
@@ -62,6 +70,53 @@ function pickPrimarySubscription(
   )[0]!
 }
 
+function readUserIdFromCustomData(obj: unknown): string | null {
+  if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return null
+  const r = obj as Record<string, unknown>
+  const u = r["user_id"] ?? r["userId"]
+  return typeof u === "string" && u.length > 0 ? u : null
+}
+
+function transactionIsPaid(status: string): boolean {
+  return status === "completed" || status === "paid" || status === "billed"
+}
+
+/**
+ * Link a Concertivity user to their Paddle customer when webhooks did not run
+ * (typical on localhost). Matches the logged-in user's email in Paddle.
+ */
+export async function discoverAndLinkPaddleCustomer(
+  userId: string
+): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, paddleCustomerId: true },
+  })
+  if (!user) return null
+  if (user.paddleCustomerId) return user.paddleCustomerId
+
+  const customers = await listCustomersByEmail(user.email)
+  if (customers.length === 0) return null
+
+  let linkedId: string | null = null
+  for (const customer of customers) {
+    const subs = await listCustomerSubscriptions(customer.id)
+    if (pickPrimarySubscription(subs)) {
+      linkedId = customer.id
+      break
+    }
+  }
+  if (!linkedId) {
+    linkedId = customers[0]!.id
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { paddleCustomerId: linkedId },
+  })
+  return linkedId
+}
+
 /**
  * When webhooks never reached this deployment (common on localhost), the user
  * can still have `paddleCustomerId` and an active subscription in Paddle.
@@ -76,12 +131,68 @@ export async function trySyncSubscriptionFromPaddleApi(
   if (!best) return false
   try {
     await syncSubscriptionFromPaddleData(
-      paddleSubscriptionRemoteToSyncData(best)
+      paddleSubscriptionRemoteToSyncData(best),
+      { userId }
     )
     return true
   } catch {
     return false
   }
+}
+
+/**
+ * After overlay checkout completes, pull the paid transaction from Paddle and
+ * hydrate local billing state without waiting for webhooks.
+ */
+export async function syncSubscriptionFromCheckoutTransaction(
+  userId: string,
+  transactionId: string
+): Promise<boolean> {
+  const tx = await getTransaction(transactionId)
+  const customUserId = readUserIdFromCustomData(tx.customData)
+  if (customUserId && customUserId !== userId) {
+    throw new Error("transaction_user_mismatch")
+  }
+  if (!transactionIsPaid(tx.status)) {
+    return false
+  }
+
+  const customerId = tx.customerId
+  if (customerId) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { paddleCustomerId: customerId },
+    })
+  }
+
+  if (tx.subscriptionId) {
+    const remote = await getSubscription(tx.subscriptionId)
+    await syncSubscriptionFromPaddleData(
+      paddleSubscriptionRemoteToSyncData(remote),
+      { userId }
+    )
+    return true
+  }
+
+  if (customerId) {
+    const synced = await trySyncSubscriptionFromPaddleApi(userId, customerId)
+    if (synced) return true
+  }
+
+  await handleTransactionCompleted({
+    customer_id: customerId,
+    custom_data: tx.customData ?? { user_id: userId },
+    items: tx.items.map((it) => ({
+      price_id: it.price?.id,
+      price: it.price ? { id: it.price.id } : null,
+    })),
+  })
+
+  const local = await prisma.subscription.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  return local != null
 }
 
 /**
@@ -101,14 +212,49 @@ export async function ensureSubscriptionSyncedFromPaddle(
       },
     },
   })
-  if (!user?.paddleCustomerId) return
+  if (!user) return
+
+  let customerId = user.paddleCustomerId
+  if (!customerId) {
+    customerId = await discoverAndLinkPaddleCustomer(userId)
+  }
+  if (!customerId) return
 
   const sub = user.subscription
   if (!sub) {
-    await trySyncSubscriptionFromPaddleApi(userId, user.paddleCustomerId)
+    await trySyncSubscriptionFromPaddleApi(userId, customerId)
     return
   }
   if (!sub.planKey && sub.paddleSubscriptionId) {
-    await trySyncSubscriptionFromPaddleApi(userId, user.paddleCustomerId)
+    await trySyncSubscriptionFromPaddleApi(userId, customerId)
   }
+}
+
+/** Used by the post-checkout sync API and client refresh flows. */
+export async function syncBillingForUser(
+  userId: string,
+  transactionId?: string
+): Promise<boolean> {
+  if (transactionId) {
+    try {
+      return await syncSubscriptionFromCheckoutTransaction(
+        userId,
+        transactionId
+      )
+    } catch {
+      // Fall through to customer discovery when transaction lookup fails.
+    }
+  }
+
+  const customerId =
+    (await discoverAndLinkPaddleCustomer(userId)) ??
+    (
+      await prisma.user.findUnique({
+        where: { id: userId },
+        select: { paddleCustomerId: true },
+      })
+    )?.paddleCustomerId
+
+  if (!customerId) return false
+  return trySyncSubscriptionFromPaddleApi(userId, customerId)
 }
