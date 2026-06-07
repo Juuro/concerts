@@ -76,6 +76,49 @@ function normalizeArtist(name: string): string {
     .trim()
 }
 
+/**
+ * Setlist.fm `cityName` must match exactly — values like "London, England"
+ * return 404. Keep the city token only.
+ */
+function normalizeCityName(city: string | null): string | null {
+  if (!city) return null
+  const primary = city.split(",")[0]?.trim()
+  return primary || null
+}
+
+function buildSearchBase(
+  parsed: ParsedConcertQuery,
+  artistMbid: string | null
+): SetlistSearchParams {
+  const city = normalizeCityName(parsed.city)
+  return {
+    ...(artistMbid
+      ? { artistMbid }
+      : parsed.artist
+        ? { artistName: parsed.artist }
+        : {}),
+    ...(city ? { cityName: city } : {}),
+    ...(parsed.venue ? { venueName: parsed.venue } : {}),
+    ...(parsed.countryCode ? { countryCode: parsed.countryCode } : {}),
+    ...(parsed.festival ? { tourName: parsed.festival } : {}),
+  }
+}
+
+async function querySetlists(
+  base: SetlistSearchParams,
+  years: number[] | null
+): Promise<SetlistfmSetlist[]> {
+  const raw: SetlistfmSetlist[] = []
+  if (years) {
+    for (const year of years) {
+      raw.push(...(await searchSetlists({ ...base, year })))
+    }
+  } else {
+    raw.push(...(await searchSetlists(base)))
+  }
+  return raw
+}
+
 // ---------------------------------------------------------------------------
 // Search orchestration
 // ---------------------------------------------------------------------------
@@ -241,27 +284,17 @@ export async function searchConcertCandidates(
     ? await resolveArtistMbid(parsed.artist)
     : null
 
-  const base: SetlistSearchParams = {
-    ...(artistMbid
-      ? { artistMbid }
-      : parsed.artist
-        ? { artistName: parsed.artist }
-        : {}),
-    ...(parsed.city ? { cityName: parsed.city } : {}),
-    ...(parsed.venue ? { venueName: parsed.venue } : {}),
-    ...(parsed.countryCode ? { countryCode: parsed.countryCode } : {}),
-    ...(parsed.festival ? { tourName: parsed.festival } : {}),
-  }
+  const base = buildSearchBase(parsed, artistMbid)
 
   const { years, yearFilter } = planYears(parsed)
 
-  const raw: SetlistfmSetlist[] = []
-  if (years) {
-    for (const year of years) {
-      raw.push(...(await searchSetlists({ ...base, year })))
-    }
-  } else {
-    raw.push(...(await searchSetlists(base)))
+  let raw = await querySetlists(base, years)
+
+  // When both city and venue are present, prefer a venue-only retry on miss —
+  // Groq-inferred city names are often rejected by Setlist.fm (404).
+  if (raw.length === 0 && base.cityName && base.venueName) {
+    const { cityName: _city, ...venueOnly } = base
+    raw = await querySetlists(venueOnly, years)
   }
 
   // Dedup by setlist id, map to candidates (drops unparseable dates).

@@ -223,6 +223,56 @@ describe("searchConcertCandidates", () => {
     expect(result.candidates.map((c) => c.id)).toEqual(["jul"])
   })
 
+  test("retries venue-only when a city+venue search returns nothing", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        artist: "The Rolling Stones",
+        city: "Metro London",
+        venue: "Wembley Arena",
+        yearStart: 2003,
+        yearEnd: 2003,
+      })
+    )
+    vi.mocked(searchArtists).mockResolvedValue([
+      { name: "The Rolling Stones", mbid: "mbid-stones" },
+    ])
+    vi.mocked(searchSetlists)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        setlist({ id: "wembley1", eventDate: "15-09-2003" }),
+      ])
+
+    const result = await searchConcertCandidates(
+      "Stones at Wembley Arena 2003",
+      "user-1"
+    )
+
+    expect(searchSetlists).toHaveBeenCalledTimes(2)
+    expect(searchSetlists).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        artistMbid: "mbid-stones",
+        cityName: "Metro London",
+        venueName: "Wembley Arena",
+        year: 2003,
+      })
+    )
+    expect(searchSetlists).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        artistMbid: "mbid-stones",
+        venueName: "Wembley Arena",
+        year: 2003,
+      })
+    )
+    expect(searchSetlists).toHaveBeenNthCalledWith(
+      2,
+      expect.not.objectContaining({ cityName: expect.anything() })
+    )
+    expect(result.candidates).toHaveLength(1)
+    expect(result.hint).toBeNull()
+  })
+
   test("marks candidates already in the user's list", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(
       pq({ artist: "The Rolling Stones", yearStart: 1999, yearEnd: 1999 })

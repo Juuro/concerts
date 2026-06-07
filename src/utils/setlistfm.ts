@@ -21,9 +21,10 @@ import type {
 
 const BASE_URL = "https://api.setlist.fm/rest/1.0"
 const USER_AGENT = "Concertivity/1.0 (https://github.com/Juuro/Concertivity)"
-const MIN_REQUEST_INTERVAL = 550 // ms — ~1.8 req/s, safely under the 2 req/s cap
+const MIN_REQUEST_INTERVAL = 600 // ms — safely under Setlist.fm's 2 req/s cap
 const TIMEOUT_MS = 8000
 const CIRCUIT_COOLDOWN_MS = 60_000
+const RATE_LIMIT_RETRY_DELAY_MS = 1500
 
 const SEARCH_TTL_MS = 10 * 60 * 1000 // setlists are historical; cache 10 min
 const SETLIST_TTL_MS = 60 * 60 * 1000 // a single setlist is effectively immutable
@@ -31,6 +32,8 @@ const MAX_CACHE_ENTRIES = 500
 
 let nextAvailableAt = 0
 let circuitOpenUntil = 0
+/** Serializes pacing so concurrent callers cannot burst past the rate limit. */
+let paceQueue: Promise<void> = Promise.resolve()
 
 interface CacheEntry<T> {
   value: T
@@ -73,12 +76,22 @@ function isAvailable(): boolean {
 }
 
 async function pace(): Promise<void> {
-  const now = Date.now()
-  const waitMs = Math.max(0, nextAvailableAt - now)
-  nextAvailableAt = now + waitMs + MIN_REQUEST_INTERVAL
-  if (waitMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, waitMs))
-  }
+  const turn = paceQueue.then(async () => {
+    const now = Date.now()
+    const waitMs = Math.max(0, nextAvailableAt - now)
+    nextAvailableAt = now + waitMs + MIN_REQUEST_INTERVAL
+    if (waitMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitMs))
+    }
+  })
+  paceQueue = turn.catch(() => undefined)
+  await turn
+}
+
+/** Setlist.fm sometimes returns a single object instead of a one-element array. */
+function asArray<T>(value: T | T[] | undefined): T[] {
+  if (!value) return []
+  return Array.isArray(value) ? value : [value]
 }
 
 /**
@@ -87,29 +100,16 @@ async function pace(): Promise<void> {
  * timeout, network error, non-2xx). A 429/403 additionally trips the circuit
  * breaker so subsequent calls short-circuit for the cooldown window.
  */
-async function setlistfmGet<T>(
+async function fetchSetlistfm(
   path: string,
-  search?: URLSearchParams
-): Promise<T | null> {
-  const apiKey = process.env.SETLISTFM_API_KEY
-  if (!apiKey) {
-    console.warn(
-      "SETLISTFM_API_KEY not configured; Setlist.fm lookups disabled"
-    )
-    return null
-  }
-
-  await pace()
-
-  const qs = search?.toString()
-  const url = qs ? `${BASE_URL}${path}?${qs}` : `${BASE_URL}${path}`
-
+  url: string,
+  apiKey: string
+): Promise<Response | null> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
-  let res: Response
   try {
-    res = await fetch(url, {
+    return await fetch(url, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -123,6 +123,35 @@ async function setlistfmGet<T>(
     return null
   } finally {
     clearTimeout(timeoutId)
+  }
+}
+
+async function setlistfmGet<T>(
+  path: string,
+  search?: URLSearchParams
+): Promise<T | null> {
+  const apiKey = process.env.SETLISTFM_API_KEY
+  if (!apiKey) {
+    console.warn(
+      "SETLISTFM_API_KEY not configured; Setlist.fm lookups disabled"
+    )
+    return null
+  }
+
+  const qs = search?.toString()
+  const url = qs ? `${BASE_URL}${path}?${qs}` : `${BASE_URL}${path}`
+
+  await pace()
+  let res = await fetchSetlistfm(path, url, apiKey)
+  if (!res) return null
+
+  if (res.status === 429) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, RATE_LIMIT_RETRY_DELAY_MS)
+    )
+    await pace()
+    res = await fetchSetlistfm(path, url, apiKey)
+    if (!res) return null
   }
 
   if (res.status === 429 || res.status === 403) {
@@ -198,7 +227,7 @@ export async function searchSetlists(
       "/search/setlists",
       search
     )
-    const setlists = data?.setlist ?? []
+    const setlists = asArray(data?.setlist)
     if (data !== null) searchCache.set(key, setlists, SEARCH_TTL_MS)
     return setlists
   })()
@@ -235,7 +264,7 @@ export async function searchArtists(
       "/search/artists",
       search
     )
-    const artists = data?.artist ?? []
+    const artists = asArray(data?.artist)
     if (data !== null) artistCache.set(key, artists, SEARCH_TTL_MS)
     return artists
   })()
