@@ -31,6 +31,16 @@ interface User {
 
 type FilterType = "all" | "active" | "banned" | "unverified" | "reset_pending"
 
+type FilterCounts = Record<FilterType, number>
+
+const FILTER_LABELS: Record<FilterType, string> = {
+  all: "All Users",
+  active: "Active",
+  unverified: "Unverified",
+  reset_pending: "Reset pending",
+  banned: "Banned",
+}
+
 const FILTER_EMPTY_MESSAGES: Record<FilterType, string> = {
   all: "No users found",
   active: "No active users",
@@ -53,7 +63,13 @@ function getStatusBadgeClass(status: UserAccountStatus): string {
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
-  const [total, setTotal] = useState(0)
+  const [filterCounts, setFilterCounts] = useState<FilterCounts>({
+    all: 0,
+    active: 0,
+    unverified: 0,
+    reset_pending: 0,
+    banned: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>("all")
   const [processingId, setProcessingId] = useState<string | null>(null)
@@ -72,7 +88,9 @@ export default function UserManagement() {
 
       const data = await response.json()
       setUsers(data.users)
-      setTotal(data.total)
+      if (data.counts) {
+        setFilterCounts(data.counts)
+      }
     } catch (error) {
       console.error("Error fetching users:", error)
       showToast({ message: "Failed to fetch users", type: "error" })
@@ -230,11 +248,11 @@ export default function UserManagement() {
           value={filter}
           onChange={(e) => setFilter(e.target.value as FilterType)}
         >
-          <option value="all">All Users ({total})</option>
-          <option value="active">Active</option>
-          <option value="unverified">Unverified</option>
-          <option value="reset_pending">Reset pending</option>
-          <option value="banned">Banned</option>
+          {(Object.keys(FILTER_LABELS) as FilterType[]).map((filterType) => (
+            <option key={filterType} value={filterType}>
+              {FILTER_LABELS[filterType]} ({filterCounts[filterType]})
+            </option>
+          ))}
         </select>
       </div>
 

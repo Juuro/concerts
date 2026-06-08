@@ -210,6 +210,32 @@ function needsPendingResetExpiryLookup(filter: UserFilter): boolean {
   return filter === "all" || filter === "reset_pending"
 }
 
+async function countUsersByPendingResetFilter(
+  filter: PendingResetFilter
+): Promise<number> {
+  const now = new Date()
+  const whereSql = buildPendingResetFilterWhereSql(filter, now)
+  const countRows = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(*)::bigint AS count
+    FROM "user" u
+    WHERE ${whereSql}
+  `
+
+  return Number(countRows[0]?.count ?? 0)
+}
+
+async function fetchFilterCounts(): Promise<Record<UserFilter, number>> {
+  const [all, active, unverified, reset_pending, banned] = await Promise.all([
+    prisma.user.count(),
+    countUsersByPendingResetFilter("active"),
+    countUsersByPendingResetFilter("unverified"),
+    countUsersByPendingResetFilter("reset_pending"),
+    prisma.user.count({ where: { banned: true } }),
+  ])
+
+  return { all, active, unverified, reset_pending, banned }
+}
+
 export async function GET(request: NextRequest) {
   const session = await getSession(await headers())
 
@@ -230,9 +256,12 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0")
 
   try {
-    const { users, total } = isPendingResetFilter(filter)
-      ? await fetchUsersByPendingResetFilter(filter, limit, offset)
-      : await fetchUsersSimple(filter, limit, offset)
+    const [{ users, total }, counts] = await Promise.all([
+      isPendingResetFilter(filter)
+        ? fetchUsersByPendingResetFilter(filter, limit, offset)
+        : fetchUsersSimple(filter, limit, offset),
+      fetchFilterCounts(),
+    ])
 
     const expiresByUserId = needsPendingResetExpiryLookup(filter)
       ? await getPendingPasswordResetExpiresForUsers(
@@ -243,6 +272,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       users: users.map((user) => mapUserToResponse(user, expiresByUserId)),
       total,
+      counts,
       limit,
       offset,
     })
