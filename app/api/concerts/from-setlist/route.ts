@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       )
     }
     Sentry.captureException(error)
-    console.error("Add-from-setlist failed")
+    console.error("Add-from-setlist failed:", error)
     return NextResponse.json(
       { error: "Couldn't add that concert. Please try again." },
       { status: 500 }
