@@ -101,7 +101,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const { userIds: pendingResetUserIds, expiresByUserId } =
-      await getPendingPasswordResetUserIds()
+      filter === "banned"
+        ? { userIds: [], expiresByUserId: new Map<string, Date>() }
+        : await getPendingPasswordResetUserIds()
     const whereClause = buildWhereClause(filter, pendingResetUserIds)
 
     const [users, total] = await Promise.all([
