@@ -70,7 +70,7 @@ export interface SetlistfmSearchSetlistsResponse {
   itemsPerPage?: number
   page?: number
   total?: number
-  setlist?: SetlistfmSetlist[]
+  setlist?: SetlistfmSetlist | SetlistfmSetlist[]
 }
 
 export interface SetlistfmSearchArtistsResponse {
@@ -78,5 +78,5 @@ export interface SetlistfmSearchArtistsResponse {
   itemsPerPage?: number
   page?: number
   total?: number
-  artist?: SetlistfmArtist[]
+  artist?: SetlistfmArtist | SetlistfmArtist[]
 }
