@@ -71,18 +71,23 @@ export async function POST(
       },
     })
 
-    await prisma.adminActivity.create({
-      data: {
-        userId: session.user.id,
-        action: "user_resend_verification",
-        targetType: "user",
-        targetId: id,
-        details: {
-          userName: user.name || user.email,
-          email: user.email,
+    try {
+      await prisma.adminActivity.create({
+        data: {
+          userId: session.user.id,
+          action: "user_resend_verification",
+          targetType: "user",
+          targetId: id,
+          details: {
+            userName: user.name || user.email,
+            email: user.email,
+          },
         },
-      },
-    })
+      })
+    } catch (logError) {
+      Sentry.captureException(logError)
+      console.error("Error logging resend verification activity:", logError)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
