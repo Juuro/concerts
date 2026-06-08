@@ -4865,7 +4865,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-auth@npm:^1.6.15":
+"better-auth@npm:1.6.15":
   version: 1.6.15
   resolution: "better-auth@npm:1.6.15"
   dependencies:
@@ -5348,7 +5348,7 @@ __metadata:
     "@vitest/coverage-v8": "npm:^4.1.2"
     "@vitest/ui": "npm:^4.1.2"
     ai: "npm:^6.0.197"
-    better-auth: "npm:^1.6.15"
+    better-auth: "npm:1.6.15"
     eslint: "npm:^9.20.0"
     eslint-config-next: "npm:^16.1.6"
     husky: "npm:^9.1.7"
