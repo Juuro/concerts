@@ -20,7 +20,13 @@ export const parsedConcertQuerySchema = z.object({
     .string()
     .nullable()
     .describe(
-      "Primary headlining artist or band name, in its common canonical spelling (e.g. 'The Rolling Stones'). Null if not stated."
+      "Primary headlining artist or band name, in its common canonical spelling (e.g. 'The Rolling Stones'). Null when the user only describes the act vaguely (gender, nationality, genre) without naming them."
+    ),
+  artistHints: z
+    .string()
+    .nullable()
+    .describe(
+      "Free-text description of the act when artist is null (e.g. 'German woman singer-songwriter'). Null when a proper artist name is given."
     ),
   city: z
     .string()

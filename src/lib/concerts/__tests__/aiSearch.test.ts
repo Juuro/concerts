@@ -3,9 +3,16 @@ import { prisma } from "@/lib/prisma"
 import type { ParsedConcertQuery } from "@/types/concertAiSearch"
 import type { SetlistfmSetlist } from "@/types/setlistfm"
 
-vi.mock("@/lib/concerts/aiParse", () => ({
-  parseConcertProse: vi.fn(),
-  MAX_PROSE_LENGTH: 500,
+vi.mock("@/lib/concerts/aiParse", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/concerts/aiParse")>()
+  return {
+    ...actual,
+    parseConcertProse: vi.fn(),
+    MAX_PROSE_LENGTH: 500,
+  }
+})
+vi.mock("@/lib/concerts/aiRank", () => ({
+  rankCandidatesByHints: vi.fn(async (candidates: unknown[]) => candidates),
 }))
 vi.mock("@/utils/setlistfm", () => ({
   searchSetlists: vi.fn(),
@@ -37,6 +44,7 @@ import {
 function pq(partial: Partial<ParsedConcertQuery>): ParsedConcertQuery {
   return {
     artist: null,
+    artistHints: null,
     city: null,
     venue: null,
     festival: null,
@@ -372,6 +380,110 @@ describe("searchConcertCandidates", () => {
       expect.not.objectContaining({ year: expect.anything() })
     )
     expect(result.candidates.map((c) => c.id)).toEqual(["paris92"])
+  })
+
+  test("searches by city and year without artist for fuzzy descriptions", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        city: "Kaiserslautern",
+        countryCode: "DE",
+        yearStart: 2026,
+        yearEnd: 2026,
+        month: 5,
+        artistHints: "German woman singer songwriter",
+      })
+    )
+    vi.mocked(searchSetlists).mockResolvedValue([
+      setlist({
+        id: "dota-kl",
+        eventDate: "02-05-2026",
+        artist: { name: "Dota", mbid: "mbid-dota" },
+        venue: {
+          name: "Pfalztheater",
+          city: {
+            name: "Kaiserslautern",
+            coords: { lat: 49.44, long: 7.77 },
+            country: { code: "DE", name: "Germany" },
+          },
+        },
+      }),
+      setlist({
+        id: "rock-kl",
+        eventDate: "15-05-2026",
+        artist: { name: "Some Rock Band" },
+        venue: {
+          name: "Other Venue",
+          city: {
+            name: "Kaiserslautern",
+            country: { code: "DE", name: "Germany" },
+          },
+        },
+      }),
+    ])
+
+    const result = await searchConcertCandidates(
+      "German woman singer songwriter Kaiserslautern last month",
+      "user-1"
+    )
+
+    expect(searchArtists).not.toHaveBeenCalled()
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cityName: "Kaiserslautern",
+        countryCode: "DE",
+        year: 2026,
+      })
+    )
+    expect(searchSetlists).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        artistName: expect.anything(),
+        artistMbid: expect.anything(),
+      })
+    )
+    expect(result.candidates).toHaveLength(2)
+    expect(result.candidates.every((c) => c.date.startsWith("2026-05"))).toBe(
+      true
+    )
+    expect(result.hint).toBeNull()
+  })
+
+  test("rejects fuzzy search without a date anchor", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        city: "Berlin",
+        countryCode: "DE",
+        yearStart: 2020,
+        yearEnd: 2025,
+        artistHints: "German singer",
+      })
+    )
+
+    const result = await searchConcertCandidates(
+      "German singer in Berlin",
+      "user-1"
+    )
+
+    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(result.hint).toMatch(/month or year/i)
+  })
+
+  test("rejects fuzzy search without a city or venue", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        countryCode: "DE",
+        yearStart: 2025,
+        yearEnd: 2025,
+        artistHints: "German singer",
+      })
+    )
+
+    const result = await searchConcertCandidates(
+      "German singer last year",
+      "user-1"
+    )
+
+    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(result.hint).toMatch(/city or venue/i)
   })
 
   test("marks candidates already in the user's list", async () => {

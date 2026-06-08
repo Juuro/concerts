@@ -4,6 +4,7 @@ import { createGroq } from "@ai-sdk/groq"
 import {
   buildConcertParseSystemPrompt,
   extractJsonObject,
+  isGenericArtistPhrase,
   MAX_PROSE_LENGTH,
   parseConcertProse,
   parseConcertProseHeuristic,
@@ -33,6 +34,15 @@ describe("buildConcertParseSystemPrompt", () => {
     expect(buildConcertParseSystemPrompt()).toMatch(/regions.*NOT cities/i)
     expect(buildConcertParseSystemPrompt()).toMatch(/South Germany -> DE/)
   })
+
+  test("documents fuzzy artist and relative month rules", () => {
+    const prompt = buildConcertParseSystemPrompt(
+      new Date("2026-06-07T12:00:00.000Z")
+    )
+    expect(prompt).toMatch(/artistHints/)
+    expect(prompt).toMatch(/last month.*month=5/i)
+    expect(prompt).toMatch(/in the city of X/)
+  })
 })
 
 describe("extractJsonObject", () => {
@@ -53,6 +63,19 @@ describe("extractJsonObject", () => {
   })
 })
 
+describe("isGenericArtistPhrase", () => {
+  test("detects vague descriptor phrases", () => {
+    expect(isGenericArtistPhrase("a German woman singer songwriter")).toBe(true)
+    expect(isGenericArtistPhrase("some local band")).toBe(true)
+  })
+
+  test("accepts proper band names", () => {
+    expect(isGenericArtistPhrase("The Rolling Stones")).toBe(false)
+    expect(isGenericArtistPhrase("Die Ärzte")).toBe(false)
+    expect(isGenericArtistPhrase("Dota")).toBe(false)
+  })
+})
+
 describe("parseConcertProseHeuristic", () => {
   const now = new Date("2026-06-07T12:00:00.000Z")
 
@@ -63,6 +86,7 @@ describe("parseConcertProseHeuristic", () => {
     )
     expect(parsed).toEqual({
       artist: "Sportfreunde Stiller",
+      artistHints: null,
       city: "Stuttgart",
       venue: null,
       festival: null,
@@ -102,6 +126,7 @@ describe("parseConcertProseHeuristic", () => {
     )
     expect(parsed).toEqual({
       artist: "Nirvana",
+      artistHints: null,
       city: "Paris",
       venue: null,
       festival: null,
@@ -120,6 +145,7 @@ describe("parseConcertProseHeuristic", () => {
     )
     expect(parsed).toEqual({
       artist: "Radiohead",
+      artistHints: null,
       city: "Berlin",
       venue: null,
       festival: null,
@@ -153,6 +179,36 @@ describe("parseConcertProseHeuristic", () => {
     expect(parsed?.countryCode).toBe("DE")
   })
 
+  test("parses fuzzy Kaiserslautern last month query", () => {
+    const parsed = parseConcertProseHeuristic(
+      "Saw a German woman singer songwriter in the city of Kaiserslautern last month.",
+      now
+    )
+    expect(parsed).toEqual({
+      artist: null,
+      artistHints: "a German woman singer songwriter",
+      city: "Kaiserslautern",
+      venue: null,
+      festival: null,
+      countryCode: "DE",
+      yearStart: 2026,
+      yearEnd: 2026,
+      season: null,
+      month: 5,
+    })
+  })
+
+  test("parses city before last month without 'the city of'", () => {
+    const parsed = parseConcertProseHeuristic(
+      "Saw a German woman singer songwriter in Kaiserslautern last month.",
+      now
+    )
+    expect(parsed?.city).toBe("Kaiserslautern")
+    expect(parsed?.month).toBe(5)
+    expect(parsed?.artist).toBeNull()
+    expect(parsed?.artistHints).toBe("a German woman singer songwriter")
+  })
+
   test("returns null for empty prose or when no anchor is found", () => {
     expect(parseConcertProseHeuristic("", now)).toBeNull()
     expect(parseConcertProseHeuristic("just some random words", now)).toBeNull()
@@ -162,6 +218,7 @@ describe("parseConcertProseHeuristic", () => {
 describe("parseConcertProse", () => {
   const validParsed = {
     artist: "The Rolling Stones",
+    artistHints: null,
     city: "London",
     venue: null,
     festival: null,
@@ -243,6 +300,7 @@ describe("parseConcertProse", () => {
       parseConcertProse("I saw sportfreunde stiller in Stuttgart this year.")
     ).resolves.toEqual({
       artist: "Sportfreunde Stiller",
+      artistHints: null,
       city: "Stuttgart",
       venue: null,
       festival: null,

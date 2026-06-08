@@ -9,7 +9,11 @@ import {
   getSetlistById,
   type SetlistSearchParams,
 } from "@/utils/setlistfm"
-import { parseConcertProse } from "@/lib/concerts/aiParse"
+import {
+  parseConcertProse,
+  isGenericArtistPhrase,
+} from "@/lib/concerts/aiParse"
+import { rankCandidatesByHints } from "@/lib/concerts/aiRank"
 import type { SetlistfmSetlist } from "@/types/setlistfm"
 import type {
   CandidateShow,
@@ -189,8 +193,27 @@ function composeHint(parsed: ParsedConcertQuery | null): string {
   if (!parsed) {
     return "Nothing found. Try naming the band, a city, or an approximate year."
   }
+
+  const isFuzzy = isFuzzyArtistQuery(parsed)
+  const hasPlace = Boolean(parsed.city || parsed.venue)
+
+  if (isFuzzy && !hasPlace) {
+    return 'Add a city or venue to narrow this down, e.g. "in Stuttgart last month".'
+  }
+  if (isFuzzy && !hasFuzzyDateAnchor(parsed)) {
+    return 'Add a month or year to narrow this down, e.g. "last month" or "in 2024".'
+  }
+  if (isFuzzy) {
+    const place = parsed.city
+      ? ` in ${parsed.city}`
+      : parsed.venue
+        ? ` at ${parsed.venue}`
+        : ""
+    return `No Setlist.fm match${place} for that description. Try a different month or nearby city.`
+  }
+
   if (!parsed.artist) {
-    return "Tell me which band or artist you saw."
+    return "Tell me which band or artist you saw, or describe the show with a city and date."
   }
   const place = parsed.city ? ` in ${parsed.city}` : ""
   const yearLabel =
@@ -210,6 +233,36 @@ function composeHint(parsed: ParsedConcertQuery | null): string {
     return `No matches for ${parsed.artist} in ${yearLabel}. Add a city to narrow it down.`
   }
   return `No Setlist.fm match for ${parsed.artist}${place} in ${yearLabel}. Try a nearby city or a different year.`
+}
+
+/** True when search should run without pinning to a named artist. */
+function isFuzzyArtistQuery(parsed: ParsedConcertQuery): boolean {
+  if (!parsed.artist) return Boolean(parsed.artistHints)
+  return isGenericArtistPhrase(parsed.artist)
+}
+
+/** Fuzzy mode requires a tight-enough date window to avoid city-wide result floods. */
+function hasFuzzyDateAnchor(parsed: ParsedConcertQuery): boolean {
+  if (parsed.month != null) return true
+  if (parsed.season != null) return true
+  if (parsed.yearStart == null && parsed.yearEnd == null) return false
+  const a = parsed.yearStart ?? parsed.yearEnd!
+  const b = parsed.yearEnd ?? parsed.yearStart!
+  const lo = Math.min(a, b)
+  const hi = Math.max(a, b)
+  return hi - lo <= 1
+}
+
+/** Strip bogus generic artist names; preserve hints when moving artist -> artistHints. */
+function effectiveParsedQuery(parsed: ParsedConcertQuery): ParsedConcertQuery {
+  if (!parsed.artist || !isGenericArtistPhrase(parsed.artist)) {
+    return parsed
+  }
+  return {
+    ...parsed,
+    artist: null,
+    artistHints: parsed.artistHints ?? parsed.artist,
+  }
 }
 
 /** Mark candidates that already exist in the user's list (date + headliner slug). */
@@ -277,17 +330,30 @@ export async function searchConcertCandidates(
   prose: string,
   userId: string
 ): Promise<ConcertAiSearchResponse> {
-  const parsed = await parseConcertProse(prose)
+  const rawParsed = await parseConcertProse(prose)
+  const parsed = rawParsed ? effectiveParsedQuery(rawParsed) : null
 
   // Need at least one anchor to search; otherwise results would be meaningless.
-  if (!parsed || (!parsed.artist && !parsed.city && !parsed.venue)) {
+  if (
+    !parsed ||
+    (!parsed.artist && !parsed.artistHints && !parsed.city && !parsed.venue)
+  ) {
     return { candidates: [], parsed, hint: composeHint(parsed) }
   }
 
+  const fuzzy = isFuzzyArtistQuery(parsed)
+  if (fuzzy) {
+    if (!parsed.city && !parsed.venue) {
+      return { candidates: [], parsed, hint: composeHint(parsed) }
+    }
+    if (!hasFuzzyDateAnchor(parsed)) {
+      return { candidates: [], parsed, hint: composeHint(parsed) }
+    }
+  }
+
   // Pin the artist by MBID where possible (avoids unrelated-artist matches).
-  const artistMbid = parsed.artist
-    ? await resolveArtistMbid(parsed.artist)
-    : null
+  const artistMbid =
+    parsed.artist && !fuzzy ? await resolveArtistMbid(parsed.artist) : null
 
   const base = buildSearchBase(parsed, artistMbid)
 
@@ -327,6 +393,15 @@ export async function searchConcertCandidates(
     const months = SEASON_MONTHS[parsed.season]
     candidates = candidates.filter((c) =>
       months.includes(Number(c.date.slice(5, 7)))
+    )
+  }
+
+  // Re-rank fuzzy matches when multiple candidates share the same city/time window.
+  if (fuzzy && parsed.artistHints && candidates.length > 1) {
+    candidates = await rankCandidatesByHints(
+      candidates,
+      parsed.artistHints,
+      prose
     )
   }
 
