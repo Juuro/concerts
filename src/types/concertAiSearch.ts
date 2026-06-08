@@ -61,6 +61,8 @@ export const parsedConcertQuerySchema = z.object({
   month: z
     .number()
     .int()
+    .min(1)
+    .max(12)
     .nullable()
     .describe(
       "Calendar month 1-12 if a specific month is named. Null otherwise."
