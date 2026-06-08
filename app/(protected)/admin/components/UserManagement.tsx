@@ -5,7 +5,6 @@ import { useToast } from "@/components/Toast/Toast"
 import Dialog from "@/components/Dialog/Dialog"
 import { DATE_LOCALE } from "@/utils/dateLocale"
 import {
-  deriveUserAccountStatus,
   getAccountStatusLabel,
   getAuthProviderLabel,
   type AuthProviderLabel,
@@ -144,20 +143,7 @@ export default function UserManagement() {
         type: "success",
       })
 
-      // Update user in list
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === banDialogUser.id
-            ? {
-                ...u,
-                banned: true,
-                accountStatus: "banned",
-                banReason: banReason || null,
-                banExpires: banExpires || null,
-              }
-            : u
-        )
-      )
+      await fetchUsers()
 
       // Notify other components (e.g., AdminAttention) to refresh
       window.dispatchEvent(new CustomEvent("admin-data-changed"))
@@ -192,26 +178,7 @@ export default function UserManagement() {
         type: "success",
       })
 
-      // Update user in list
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id !== user.id) return u
-
-          const accountStatus = deriveUserAccountStatus({
-            banned: false,
-            emailVerified: u.emailVerified,
-            hasPendingPasswordReset: Boolean(u.passwordResetExpiresAt),
-          })
-
-          return {
-            ...u,
-            banned: false,
-            accountStatus,
-            banReason: null,
-            banExpires: null,
-          }
-        })
-      )
+      await fetchUsers()
 
       // Notify other components (e.g., AdminAttention) to refresh
       window.dispatchEvent(new CustomEvent("admin-data-changed"))
