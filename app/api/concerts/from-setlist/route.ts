@@ -42,7 +42,7 @@ const MONTHS = [
   "Dec",
 ]
 
-/** Format an ISO `yyyy-mm-dd` as `DD Mon YYYY` without timezone drift. */
+/** Format an ISO `yyyy-mm-dd` as `D Mon YYYY` without timezone drift. */
 function humanDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number)
   return `${d} ${MONTHS[m - 1] ?? ""} ${y}`
