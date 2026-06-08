@@ -45,26 +45,36 @@ async function getPendingPasswordResetUserIds(): Promise<{
   }
 }
 
-async function buildWhereClause(
-  filter: UserFilter
-): Promise<Prisma.UserWhereInput> {
+function buildWhereClause(
+  filter: UserFilter,
+  pendingResetUserIds: string[]
+): Prisma.UserWhereInput {
+  const excludePendingReset =
+    pendingResetUserIds.length > 0 ? { id: { notIn: pendingResetUserIds } } : {}
+
   switch (filter) {
     case "banned":
       return { banned: true }
     case "active":
-      return { banned: false, emailVerified: true }
+      return {
+        banned: false,
+        emailVerified: true,
+        ...excludePendingReset,
+      }
     case "unverified":
-      return { banned: false, emailVerified: false }
-    case "reset_pending": {
-      const { userIds } = await getPendingPasswordResetUserIds()
-      if (userIds.length === 0) {
+      return {
+        banned: false,
+        emailVerified: false,
+        ...excludePendingReset,
+      }
+    case "reset_pending":
+      if (pendingResetUserIds.length === 0) {
         return { id: { in: [] } }
       }
       return {
         banned: false,
-        id: { in: userIds },
+        id: { in: pendingResetUserIds },
       }
-    }
     default:
       return {}
   }
@@ -90,8 +100,9 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0")
 
   try {
-    const whereClause = await buildWhereClause(filter)
-    const { expiresByUserId } = await getPendingPasswordResetUserIds()
+    const { userIds: pendingResetUserIds, expiresByUserId } =
+      await getPendingPasswordResetUserIds()
+    const whereClause = buildWhereClause(filter, pendingResetUserIds)
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
