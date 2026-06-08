@@ -33,6 +33,17 @@ yarn dev/build/lint/test/clean
 - Create a new feature branch when working on a new feature: feat/NAME_OF_THE_FEATURE
 - Create a new fix branch when fixing a new bug/error: fix/NAME_OF_THE_BUG
 
+## Git Commit Messages
+
+When Cursor auto-generates a Git commit message for this repository:
+
+- Follow Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
+- Subject line: max 72 characters, lowercase, no trailing period
+- Body: wrap every line at 100 characters or fewer (commitlint `body-max-line-length`)
+- Footer lines: max 100 characters
+- Prefer a short subject; put detail in the body with hard line breaks
+- Match the style of recent commits in this repo
+
 ## Styling Guidelines
 
 - SCSS Modules required: Component.module.scss co-located with components
