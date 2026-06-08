@@ -4,14 +4,13 @@
 
 import type { LastFMArtistInfoOrNull } from "./lastfm"
 import type { GeocodingData } from "./geocoding"
-import type { ContentfulImage } from "./contentful"
 
 export interface Band {
   id: string
   name: string
   slug: string
   url: string
-  image?: ContentfulImage
+  imageUrl?: string | null
   lastfm?: LastFMArtistInfoOrNull
   concert?: Concert[]
 }

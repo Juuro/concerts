@@ -9,7 +9,7 @@ import HealthScore from "./components/HealthScore"
 import AdminManagementTabs from "./components/AdminManagementTabs"
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard | My Concerts",
+  title: "Admin Dashboard | Concertivity",
   description: "Admin dashboard for managing bands, concerts, and users",
 }
 

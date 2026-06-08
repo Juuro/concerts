@@ -2,7 +2,7 @@ import Link from "next/link"
 import "./verify-email.scss"
 
 export const metadata = {
-  title: "Email Verified - Concerts",
+  title: "Email Verified | Concertivity",
   description: "Your email has been verified",
 }
 

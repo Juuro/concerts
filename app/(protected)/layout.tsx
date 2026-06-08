@@ -29,7 +29,7 @@ export default async function ProtectedLayout({
 
   return (
     <>
-      <Header siteTitle="My Concerts" concertCounts={userCounts} />
+      <Header siteTitle="Concertivity" concertCounts={userCounts} />
       <main className="container">{children}</main>
       <Footer />
     </>

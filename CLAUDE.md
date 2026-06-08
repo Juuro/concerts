@@ -62,6 +62,7 @@ High-signal instructions for coding agents. Keep this file concise and non-obvio
   - `ENABLE_MUSICBRAINZ`
   - `ENABLE_EXTERNAL_BAND_SUGGEST`
   - `ENABLE_MAP_PAGE`
+  - `ENABLE_CONCERT_AI_SEARCH` (AI "help me remember" backfill: Groq parse + Setlist.fm search; gates the inline panel on `/concerts/new` and the `/api/concerts/ai-search` + `/api/concerts/from-setlist` routes. Off by default. Sends user prose to Groq (US) — privacy-policy/sub-processor update required before production use.)
 - Do not bypass flags in UI or API logic.
 
 ## Animations

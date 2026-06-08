@@ -2610,50 +2610,6 @@ main.container > .admin-shell {
   opacity: 0.6;
 }
 
-.admin-status-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-left: 8px;
-  vertical-align: middle;
-
-  &--active {
-    background-color: variables.$admin-success;
-    box-shadow: 0 0 0 2px variables.$admin-success-bg;
-
-    @media (prefers-reduced-motion: no-preference) {
-      animation: status-pulse 2s ease-in-out infinite;
-    }
-  }
-
-  &--banned {
-    background-color: variables.$admin-danger;
-    box-shadow: 0 0 0 2px variables.$admin-danger-bg;
-  }
-}
-
-@keyframes status-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.admin-badge {
-  margin-left: 8px;
-  font-size: 0.75rem;
-  background: #e7f3ff;
-  color: variables.$admin-info;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
 // Visually hidden but accessible to screen readers
 .visually-hidden {
   position: absolute;
@@ -2871,6 +2827,7 @@ main.container > .admin-shell {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  margin-left: 8px;
 
   &--success {
     background: variables.$admin-success-bg;
@@ -2891,6 +2848,31 @@ main.container > .admin-shell {
     background: variables.$admin-info-bg;
     color: variables.$admin-info;
   }
+
+  &--auth {
+    background: variables.$admin-neutral-bg;
+    color: variables.$admin-neutral;
+  }
+}
+
+.admin-list__meta--ban-reason {
+  color: variables.$admin-danger;
+  margin-top: 4px;
+}
+
+.admin-list__meta--ban-expires {
+  color: variables.$admin-warning;
+  margin-top: 4px;
+}
+
+.admin-list__meta--ban-permanent {
+  color: variables.$admin-danger;
+  margin-top: 4px;
+}
+
+.admin-list__meta--reset-expires {
+  color: variables.$admin-warning;
+  margin-top: 4px;
 }
 
 // ============================================

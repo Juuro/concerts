@@ -11,7 +11,7 @@ import type { Metadata } from "next"
 import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
 
 export const metadata: Metadata = {
-  title: "Map | Concerts",
+  title: "Map | Concertivity",
   description: "Map of all concerts",
 }
 

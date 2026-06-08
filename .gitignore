@@ -64,6 +64,7 @@ public
 
 # Claude Code (local/user machine config)
 .claude/settings.local.json
+.claude/*.lock
 .claude/**/.temp/
 .claude/**/__pycache__/
 
@@ -84,8 +85,6 @@ yarn-error.log
 # Yarn Berry
 .yarn/install-state.gz
 
-#contentful config file
-.contentful.json
 .vercel
 .env*.local
 .env*.*.local
