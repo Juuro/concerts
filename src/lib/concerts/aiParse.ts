@@ -182,12 +182,13 @@ export function parseConcertProseHeuristic(
     }
   }
 
-  const sawInYear = text.match(/\bsaw\s+(.+?)\s+in\s+(19|20)\d{2}\b/i)
+  const sawInYear = text.match(/\bsaw\s+(.+?)\s+in\s+((?:19|20)\d{2})\b/i)
   if (sawInYear && !result.artist) {
     result.artist = titleCaseWords(sawInYear[1].trim())
     if (result.yearStart == null) {
-      result.yearStart = Number(sawInYear[2])
-      result.yearEnd = Number(sawInYear[2])
+      const year = Number(sawInYear[2])
+      result.yearStart = year
+      result.yearEnd = year
     }
   }
 
