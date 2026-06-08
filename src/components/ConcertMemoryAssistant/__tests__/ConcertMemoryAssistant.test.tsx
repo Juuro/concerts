@@ -213,4 +213,137 @@ describe("ConcertMemoryAssistant", () => {
       screen.queryByRole("button", { name: /add concert/i })
     ).not.toBeInTheDocument()
   })
+
+  test("submits on Cmd+Enter and clears results on Escape", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValueOnce(
+      makeRes({ candidates: [candidate()], parsed: null, hint: null })
+    )
+    renderPanel()
+
+    const textarea = screen.getByLabelText(/what do you remember/i)
+    await user.type(textarea, "Rolling Stones London 99")
+    fireEvent.keyDown(textarea, { key: "Enter", metaKey: true })
+
+    expect(await screen.findByText("The Rolling Stones")).toBeInTheDocument()
+
+    fireEvent.keyDown(textarea, { key: "Escape" })
+    expect(screen.queryByText("The Rolling Stones")).not.toBeInTheDocument()
+  })
+
+  test("shows rate-limit and generic search errors", async () => {
+    const user = userEvent.setup()
+    fetchMock
+      .mockResolvedValueOnce(makeRes({}, 429))
+      .mockResolvedValueOnce(makeRes({}, 500))
+    renderPanel()
+
+    const textarea = screen.getByLabelText(/what do you remember/i)
+    await user.type(textarea, "Rolling Stones London 99")
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+
+    expect(await screen.findByText(/too many searches/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /try again/i }))
+
+    expect(
+      await screen.findByText(/something went wrong searching/i)
+    ).toBeInTheDocument()
+  })
+
+  test("shows a connection error when search fetch rejects", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockRejectedValueOnce(new Error("network down"))
+    renderPanel()
+
+    await user.type(
+      screen.getByLabelText(/what do you remember/i),
+      "Rolling Stones London 99"
+    )
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+
+    expect(
+      await screen.findByText(/couldn't reach the search/i)
+    ).toBeInTheDocument()
+  })
+
+  test("handles duplicate add responses and add failures", async () => {
+    const user = userEvent.setup()
+    fetchMock
+      .mockResolvedValueOnce(
+        makeRes({ candidates: [candidate()], parsed: null, hint: null })
+      )
+      .mockResolvedValueOnce(
+        makeRes({ editPath: "/concerts/edit/existing" }, 409)
+      )
+      .mockResolvedValueOnce(
+        makeRes({
+          candidates: [candidate({ id: "s2" })],
+          parsed: null,
+          hint: null,
+        })
+      )
+      .mockResolvedValueOnce(makeRes({ error: "Server exploded" }, 500))
+      .mockResolvedValueOnce(
+        makeRes({
+          candidates: [candidate({ id: "s3" })],
+          parsed: null,
+          hint: null,
+        })
+      )
+      .mockRejectedValueOnce(new Error("offline"))
+
+    renderPanel()
+
+    await user.type(
+      screen.getByLabelText(/what do you remember/i),
+      "Rolling Stones London 99"
+    )
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: /add concert: the rolling stones/i,
+      })
+    )
+    expect(
+      await screen.findByText(/that concert is already in your list/i)
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+    await user.click(
+      await screen.findByRole("button", {
+        name: /add concert: the rolling stones/i,
+      })
+    )
+    expect(await screen.findByText(/server exploded/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+    await user.click(
+      await screen.findByRole("button", {
+        name: /add concert: the rolling stones/i,
+      })
+    )
+    expect(
+      await screen.findByText(
+        /couldn't add that concert\. check your connection/i
+      )
+    ).toBeInTheDocument()
+  })
+
+  test("announces singular match count in the live region", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValueOnce(
+      makeRes({ candidates: [candidate()], parsed: null, hint: null })
+    )
+    renderPanel()
+
+    await user.type(
+      screen.getByLabelText(/what do you remember/i),
+      "Rolling Stones London 99"
+    )
+    await user.click(screen.getByRole("button", { name: /find concert/i }))
+
+    expect(await screen.findByText("1 match found")).toBeInTheDocument()
+  })
 })

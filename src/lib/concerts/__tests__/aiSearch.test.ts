@@ -395,6 +395,65 @@ describe("searchConcertCandidates", () => {
     expect(result.candidates[0].alreadyAdded).toBe(true)
     expect(result.candidates[0].editPath).toBe("/concerts/edit/concert-xyz")
   })
+
+  test("filters by month and returns a city/year hint on miss", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        artist: "Radiohead",
+        city: "Berlin",
+        yearStart: 2012,
+        yearEnd: 2012,
+        month: 7,
+      })
+    )
+    vi.mocked(searchSetlists).mockResolvedValue([
+      setlist({
+        id: "jul",
+        eventDate: "10-07-2012",
+        artist: { name: "Radiohead" },
+      }),
+      setlist({
+        id: "aug",
+        eventDate: "10-08-2012",
+        artist: { name: "Radiohead" },
+      }),
+    ])
+
+    const result = await searchConcertCandidates(
+      "Radiohead Berlin July 2012",
+      "user-1"
+    )
+    expect(result.candidates.map((c) => c.id)).toEqual(["jul"])
+  })
+
+  test("returns a narrow-it-down hint when artist, city, and year miss", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(
+      pq({
+        artist: "Metallica",
+        city: "Berlin",
+        venue: "Waldbühne",
+        yearStart: 2010,
+        yearEnd: 2010,
+      })
+    )
+    vi.mocked(searchSetlists).mockResolvedValue([])
+
+    const result = await searchConcertCandidates(
+      "Metallica at Waldbühne Berlin 2010",
+      "user-1"
+    )
+
+    expect(result.candidates).toEqual([])
+    expect(result.hint).toMatch(/nearby city or a different year/i)
+  })
+
+  test("returns an artist-only hint when no place or year anchors exist", async () => {
+    vi.mocked(parseConcertProse).mockResolvedValue(pq({ artist: "Metallica" }))
+    vi.mocked(searchSetlists).mockResolvedValue([])
+
+    const result = await searchConcertCandidates("Metallica", "user-1")
+    expect(result.hint).toMatch(/add a city or an approximate year/i)
+  })
 })
 
 describe("buildCreateInputFromSetlist", () => {
@@ -475,5 +534,30 @@ describe("buildCreateInputFromSetlist", () => {
 
     const result = await buildCreateInputFromSetlist("abc123", "user-1")
     expect(result).toEqual({ ok: false, code: "MISSING_COORDINATES" })
+  })
+
+  test("enriches newly created bands without cached images", async () => {
+    vi.mocked(getSetlistById).mockResolvedValue(
+      setlist({ id: "abc123", eventDate: "11-07-1999" })
+    )
+    vi.mocked(searchVenues).mockResolvedValue([
+      {
+        name: "Wembley Stadium",
+        displayName: "Wembley, London",
+        lat: 51.556,
+        lon: -0.2796,
+      },
+    ] as never)
+    vi.mocked(getOrCreateBand).mockResolvedValue({
+      id: "band-1",
+      name: "The Rolling Stones",
+      slug: "the-rolling-stones",
+      url: "/band/the-rolling-stones/",
+      imageEnrichedAt: null,
+    } as never)
+
+    const result = await buildCreateInputFromSetlist("abc123", "user-1")
+    expect(result.ok).toBe(true)
+    expect(enrichBandData).toHaveBeenCalledWith("band-1", "The Rolling Stones")
   })
 })
