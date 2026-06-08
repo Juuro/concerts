@@ -25,6 +25,7 @@ const ACTION_LABELS: Record<string, string> = {
   user_ban: "Banned user",
   user_unban: "Unbanned user",
   user_auto_unban: "Auto-unbanned user",
+  user_resend_verification: "Resent verification email",
 }
 
 function formatTimeAgo(dateString: string): string {
