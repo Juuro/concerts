@@ -341,12 +341,12 @@ export default function ConcertMemoryAssistant() {
                     {candidate.editPath && (
                       <>
                         {" · "}
-                        <a
+                        <Link
                           href={candidate.editPath}
                           className="concert-memory-assistant__edit-link"
                         >
                           Edit
-                        </a>
+                        </Link>
                       </>
                     )}
                   </span>
