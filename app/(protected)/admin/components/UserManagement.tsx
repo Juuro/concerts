@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/Toast/Toast"
 import Dialog from "@/components/Dialog/Dialog"
 import { DATE_LOCALE } from "@/utils/dateLocale"
+import {
+  getAccountStatusLabel,
+  getAuthProviderLabel,
+  type AuthProviderLabel,
+  type UserAccountStatus,
+} from "@/lib/user-account-status"
 
 interface User {
   id: string
@@ -15,15 +21,55 @@ interface User {
   banned: boolean
   banReason: string | null
   banExpires: string | null
+  emailVerified: boolean
+  accountStatus: UserAccountStatus
+  authProviderLabel: AuthProviderLabel | null
+  passwordResetExpiresAt?: string
   createdAt: string
   concertCount: number
 }
 
-type FilterType = "all" | "active" | "banned"
+type FilterType = "all" | "active" | "banned" | "unverified" | "reset_pending"
+
+type FilterCounts = Record<FilterType, number>
+
+const FILTER_LABELS: Record<FilterType, string> = {
+  all: "All Users",
+  active: "Active",
+  unverified: "Unverified",
+  reset_pending: "Reset pending",
+  banned: "Banned",
+}
+
+const FILTER_EMPTY_MESSAGES: Record<FilterType, string> = {
+  all: "No users found",
+  active: "No active users",
+  banned: "No banned users",
+  unverified: "No unverified users",
+  reset_pending: "No users with pending password resets",
+}
+
+function getStatusBadgeClass(status: UserAccountStatus): string {
+  switch (status) {
+    case "banned":
+      return "admin-badge admin-badge--danger"
+    case "reset_pending":
+    case "unverified":
+      return "admin-badge admin-badge--warning"
+    case "active":
+      return "admin-badge admin-badge--success"
+  }
+}
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
-  const [total, setTotal] = useState(0)
+  const [filterCounts, setFilterCounts] = useState<FilterCounts>({
+    all: 0,
+    active: 0,
+    unverified: 0,
+    reset_pending: 0,
+    banned: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>("all")
   const [processingId, setProcessingId] = useState<string | null>(null)
@@ -42,7 +88,9 @@ export default function UserManagement() {
 
       const data = await response.json()
       setUsers(data.users)
-      setTotal(data.total)
+      if (data.counts) {
+        setFilterCounts(data.counts)
+      }
     } catch (error) {
       console.error("Error fetching users:", error)
       showToast({ message: "Failed to fetch users", type: "error" })
@@ -112,19 +160,7 @@ export default function UserManagement() {
         type: "success",
       })
 
-      // Update user in list
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === banDialogUser.id
-            ? {
-                ...u,
-                banned: true,
-                banReason: banReason || null,
-                banExpires: banExpires || null,
-              }
-            : u
-        )
-      )
+      await fetchUsers()
 
       // Notify other components (e.g., AdminAttention) to refresh
       window.dispatchEvent(new CustomEvent("admin-data-changed"))
@@ -132,6 +168,46 @@ export default function UserManagement() {
       console.error("Error banning user:", error)
       showToast({
         message: error instanceof Error ? error.message : "Failed to ban user",
+        type: "error",
+      })
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const canResendVerification = (user: User) =>
+    user.accountStatus === "unverified" &&
+    (user.authProviderLabel === "email" || user.authProviderLabel === "both")
+
+  const handleResendVerification = async (user: User) => {
+    if (!confirm(`Resend verification email to ${user.name || user.email}?`)) {
+      return
+    }
+
+    setProcessingId(user.id)
+
+    try {
+      const response = await fetch(
+        `/api/admin/users/${user.id}/resend-verification`,
+        { method: "POST" }
+      )
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to resend verification email")
+      }
+
+      showToast({
+        message: `Verification email sent to ${user.email}`,
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error resending verification email:", error)
+      showToast({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to resend verification email",
         type: "error",
       })
     } finally {
@@ -159,14 +235,7 @@ export default function UserManagement() {
         type: "success",
       })
 
-      // Update user in list
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id
-            ? { ...u, banned: false, banReason: null, banExpires: null }
-            : u
-        )
-      )
+      await fetchUsers()
 
       // Notify other components (e.g., AdminAttention) to refresh
       window.dispatchEvent(new CustomEvent("admin-data-changed"))
@@ -219,20 +288,16 @@ export default function UserManagement() {
           value={filter}
           onChange={(e) => setFilter(e.target.value as FilterType)}
         >
-          <option value="all">All Users ({total})</option>
-          <option value="active">Active</option>
-          <option value="banned">Banned</option>
+          {(Object.keys(FILTER_LABELS) as FilterType[]).map((filterType) => (
+            <option key={filterType} value={filterType}>
+              {FILTER_LABELS[filterType]} ({filterCounts[filterType]})
+            </option>
+          ))}
         </select>
       </div>
 
       {users.length === 0 ? (
-        <div className="admin-list__empty">
-          {filter === "banned"
-            ? "No banned users"
-            : filter === "active"
-              ? "No active users"
-              : "No users found"}
-        </div>
+        <div className="admin-list__empty">{FILTER_EMPTY_MESSAGES[filter]}</div>
       ) : (
         <ul className="admin-list">
           {users.map((user) => (
@@ -246,48 +311,48 @@ export default function UserManagement() {
                     </span>
                   )}
                   <span
-                    className={`admin-status-dot ${user.banned ? "admin-status-dot--banned" : "admin-status-dot--active"}`}
+                    className={getStatusBadgeClass(user.accountStatus)}
                     role="status"
-                    aria-label={
-                      user.banned
-                        ? "Account status: Banned"
-                        : "Account status: Active"
-                    }
+                    aria-label={`Account status: ${getAccountStatusLabel(user.accountStatus)}`}
                   >
-                    <span className="visually-hidden">
-                      {user.banned ? "Banned" : "Active"}
-                    </span>
+                    {getAccountStatusLabel(user.accountStatus)}
                   </span>
+                  {user.authProviderLabel && (
+                    <span
+                      className="admin-badge admin-badge--auth"
+                      aria-label={`Auth method: ${getAuthProviderLabel(user.authProviderLabel)}`}
+                    >
+                      {getAuthProviderLabel(user.authProviderLabel)}
+                    </span>
+                  )}
                   {user.role === "admin" && (
-                    <span className="admin-badge">Admin</span>
+                    <span className="admin-badge admin-badge--info">Admin</span>
                   )}
                 </p>
                 <p className="admin-list__meta">
                   {user.email} • {user.concertCount} concerts • Joined{" "}
                   {formatDate(user.createdAt)}
                 </p>
+                {user.accountStatus === "reset_pending" &&
+                  user.passwordResetExpiresAt && (
+                    <p className="admin-list__meta admin-list__meta--reset-expires">
+                      Reset link expires:{" "}
+                      {formatDateTime(user.passwordResetExpiresAt)}
+                    </p>
+                  )}
                 {user.banned && (
                   <>
                     {user.banReason && (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#721c24", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-reason">
                         Reason: {user.banReason}
                       </p>
                     )}
                     {user.banExpires ? (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#856404", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-expires">
                         Expires: {formatDateTime(user.banExpires)}
                       </p>
                     ) : (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#721c24", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-permanent">
                         Permanent ban
                       </p>
                     )}
@@ -295,6 +360,17 @@ export default function UserManagement() {
                 )}
               </div>
               <div className="admin-list__actions">
+                {canResendVerification(user) && (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    onClick={() => handleResendVerification(user)}
+                    disabled={processingId === user.id}
+                    aria-label={`Resend verification email to ${user.name || user.email}`}
+                  >
+                    {processingId === user.id ? "..." : "Resend verification"}
+                  </button>
+                )}
                 {user.banned ? (
                   <button
                     type="button"
