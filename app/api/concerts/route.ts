@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
-import { revalidateTag } from "next/cache"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { createConcert } from "@/lib/concerts/mutations/create"
+import { revalidateConcertCaches } from "@/lib/concerts/revalidate"
 import { ConcertAlreadyExistsError } from "@/lib/concerts/errors"
 import { getConcertsPaginated } from "@/lib/concerts/pagination"
 import type { CreateConcertInput, ConcertFilters } from "@/lib/concerts/types"
@@ -166,12 +166,7 @@ export async function POST(request: NextRequest) {
     const concert = await createConcert(input)
 
     // Revalidate statistics and user counts cache
-    revalidateTag("concert-statistics", "max")
-    revalidateTag("user-concert-statistics", "max")
-    revalidateTag(`user-concert-counts-${session.user.id}`, "max")
-    revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
-    revalidateTag(`user-unique-bands-${session.user.id}`, "max")
-    revalidateTag(`user-total-spent-${session.user.id}`, "max")
+    revalidateConcertCaches(session.user.id)
 
     return NextResponse.json(concert, { status: 201 })
   } catch (error) {

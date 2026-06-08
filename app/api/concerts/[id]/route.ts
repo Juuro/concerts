@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
-import { revalidateTag } from "next/cache"
 import { auth } from "@/lib/auth"
+import { revalidateConcertCaches } from "@/lib/concerts/revalidate"
 import { headers } from "next/headers"
 import type { UpdateConcertInput } from "@/lib/concerts/types"
 import { getConcertById } from "@/lib/concerts/read"
@@ -81,13 +81,7 @@ export async function PUT(
       )
     }
 
-    // Revalidate statistics and user counts cache
-    revalidateTag("concert-statistics", "max")
-    revalidateTag("user-concert-statistics", "max")
-    revalidateTag(`user-concert-counts-${session.user.id}`, "max")
-    revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
-    revalidateTag(`user-unique-bands-${session.user.id}`, "max")
-    revalidateTag(`user-total-spent-${session.user.id}`, "max")
+    revalidateConcertCaches(session.user.id)
 
     return NextResponse.json(concert)
   } catch (error) {
@@ -123,13 +117,7 @@ export async function DELETE(
     )
   }
 
-  // Revalidate statistics and user counts cache
-  revalidateTag("concert-statistics", "max")
-  revalidateTag("user-concert-statistics", "max")
-  revalidateTag(`user-concert-counts-${session.user.id}`, "max")
-  revalidateTag(`user-dashboard-counts-${session.user.id}`, "max")
-  revalidateTag(`user-unique-bands-${session.user.id}`, "max")
-  revalidateTag(`user-total-spent-${session.user.id}`, "max")
+  revalidateConcertCaches(session.user.id)
 
   return NextResponse.json({
     success: true,
