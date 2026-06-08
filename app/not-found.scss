@@ -1,0 +1,164 @@
+@use "../src/styles/variables.scss";
+@use "../src/styles/buttons.scss" as buttons;
+
+@keyframes emoji-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}
+
+// ── Hero Section ──────────────────────────────────────────────
+
+.not-found-hero {
+  padding: 4rem 1rem 2rem;
+  text-align: center;
+
+  &__code {
+    align-items: center;
+    cursor: default;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+
+    &:hover .not-found-hero__emoji {
+      animation: emoji-wiggle 400ms ease-in-out infinite;
+
+      &:last-child {
+        animation-delay: 100ms;
+      }
+    }
+  }
+
+  &__number {
+    color: variables.$color-primary;
+    font-family: variables.$font-family-heading;
+    font-size: 8rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  &__emoji {
+    display: inline-block;
+    font-size: 3rem;
+  }
+
+  h2 {
+    font-family: variables.$font-family-heading;
+    font-size: 2rem;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+  }
+
+  p {
+    color: #666;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 480px;
+  }
+}
+
+// ── Feature Cards ─────────────────────────────────────────────
+
+.not-found-features {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 2rem 0;
+
+  &__card {
+    padding: 1.5rem;
+    text-align: center;
+
+    h4 {
+      font-family: variables.$font-family-heading;
+      margin: 0 0 0.5rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+
+  &__icon {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+// ── CTA Section ───────────────────────────────────────────────
+
+.not-found-cta {
+  padding: 2rem 1rem 4rem;
+  text-align: center;
+
+  h3 {
+    font-family: variables.$font-family-heading;
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    color: #666;
+    margin: 0 0 1.5rem;
+  }
+
+  &__actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────────
+
+.not-found-btn--primary {
+  @include buttons.btn-primary;
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.75rem 2rem;
+}
+
+.not-found-btn--secondary {
+  @include buttons.btn-secondary;
+  display: inline-block;
+}
+
+// ── Responsive ────────────────────────────────────────────────
+
+@media screen and (max-width: 680px) {
+  .not-found-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .not-found-hero {
+    &__number {
+      font-size: 5rem;
+    }
+
+    &__emoji {
+      font-size: 2rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+}
