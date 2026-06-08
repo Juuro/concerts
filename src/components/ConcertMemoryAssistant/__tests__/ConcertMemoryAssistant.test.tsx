@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { ToastProvider } from "@/components/Toast/Toast"
 import ConcertMemoryAssistant from "../ConcertMemoryAssistant"
@@ -48,6 +48,10 @@ function renderPanel() {
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock)
   fetchMock.mockReset()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe("ConcertMemoryAssistant", () => {
@@ -153,6 +157,36 @@ describe("ConcertMemoryAssistant", () => {
       "/api/concerts/from-setlist",
       expect.objectContaining({ method: "POST" })
     )
+  })
+
+  test("recovers from search timeout instead of staying stuck in thinking state", async () => {
+    vi.useFakeTimers()
+
+    fetchMock.mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            const err = new Error("The operation was aborted")
+            err.name = "AbortError"
+            reject(err)
+          })
+        })
+    )
+    renderPanel()
+
+    fireEvent.change(screen.getByLabelText(/what do you remember/i), {
+      target: { value: "Rolling Stones London 99" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find concert/i }))
+
+    expect(screen.getByRole("button", { name: /searching/i })).toBeDisabled()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15000)
+    })
+
+    expect(screen.getByText(/search took too long/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /find concert/i })).toBeEnabled()
   })
 
   test("already-added candidates render a disabled-equivalent state", async () => {

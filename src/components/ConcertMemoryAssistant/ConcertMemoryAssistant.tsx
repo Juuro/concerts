@@ -79,7 +79,11 @@ export default function ConcertMemoryAssistant() {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-    const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS)
+    let timedOut = false
+    const timeout = setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, SEARCH_TIMEOUT_MS)
 
     setState({ type: "thinking" })
 
@@ -112,7 +116,16 @@ export default function ConcertMemoryAssistant() {
         })
       }
     } catch (err) {
-      if ((err as Error)?.name === "AbortError") return
+      if ((err as Error)?.name === "AbortError") {
+        if (timedOut && abortRef.current === controller) {
+          setState({
+            type: "error",
+            message:
+              "Search took too long. Try again, or add the concert with the form below.",
+          })
+        }
+        return
+      }
       setState({
         type: "error",
         message:
