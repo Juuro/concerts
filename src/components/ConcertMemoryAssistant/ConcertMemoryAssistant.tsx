@@ -288,9 +288,9 @@ export default function ConcertMemoryAssistant() {
         >
           Your description is sent to our AI provider (Groq, USA) to find the
           show. It is not stored.{" "}
-          <a href="/privacy" className="concert-memory-assistant__privacy-link">
+          <Link href="/privacy" className="concert-memory-assistant__privacy-link">
             Privacy
-          </a>
+          </Link>
         </p>
       </div>
 
