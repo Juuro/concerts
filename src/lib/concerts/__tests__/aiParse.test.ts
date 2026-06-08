@@ -43,6 +43,14 @@ describe("buildConcertParseSystemPrompt", () => {
     expect(prompt).toMatch(/last month.*month=5/i)
     expect(prompt).toMatch(/in the city of X/)
   })
+
+  test("uses December of the prior year when the current month is January", () => {
+    const prompt = buildConcertParseSystemPrompt(
+      new Date("2026-01-15T12:00:00.000Z")
+    )
+    expect(prompt).toMatch(/last month.*month=12/i)
+    expect(prompt).toMatch(/yearStart=yearEnd=2025/)
+  })
 })
 
 describe("extractJsonObject", () => {
@@ -61,6 +69,10 @@ describe("extractJsonObject", () => {
   test("returns null for invalid JSON", () => {
     expect(extractJsonObject("not json")).toBeNull()
   })
+
+  test("returns null for malformed JSON objects", () => {
+    expect(extractJsonObject('{"artist":}')).toBeNull()
+  })
 })
 
 describe("isGenericArtistPhrase", () => {
@@ -73,6 +85,12 @@ describe("isGenericArtistPhrase", () => {
     expect(isGenericArtistPhrase("The Rolling Stones")).toBe(false)
     expect(isGenericArtistPhrase("Die Ärzte")).toBe(false)
     expect(isGenericArtistPhrase("Dota")).toBe(false)
+  })
+
+  test("rejects empty strings and detects the-prefixed descriptors", () => {
+    expect(isGenericArtistPhrase("")).toBe(false)
+    expect(isGenericArtistPhrase("German singer")).toBe(true)
+    expect(isGenericArtistPhrase("the local rock band")).toBe(true)
   })
 })
 
@@ -213,6 +231,77 @@ describe("parseConcertProseHeuristic", () => {
     expect(parseConcertProseHeuristic("", now)).toBeNull()
     expect(parseConcertProseHeuristic("just some random words", now)).toBeNull()
   })
+
+  test("parses full-decade ranges without early/mid/late qualifiers", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Foo Fighters in the 90s in London.",
+      now
+    )
+    expect(parsed?.artist).toBe("Foo Fighters")
+    expect(parsed?.city).toBe("London")
+    expect(parsed?.yearStart).toBe(1990)
+    expect(parsed?.yearEnd).toBe(1999)
+  })
+
+  test("parses artist, city, and this month", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Blur in Manchester this month.",
+      now
+    )
+    expect(parsed).toEqual({
+      artist: "Blur",
+      artistHints: null,
+      city: "Manchester",
+      venue: null,
+      festival: null,
+      countryCode: null,
+      yearStart: 2026,
+      yearEnd: 2026,
+      season: null,
+      month: 6,
+    })
+  })
+
+  test("extracts city from 'in CITY last month' without a saw prefix", () => {
+    const parsed = parseConcertProseHeuristic(
+      "German woman singer songwriter in Munich last month.",
+      now
+    )
+    expect(parsed?.city).toBe("Munich")
+    expect(parsed?.month).toBe(5)
+    expect(parsed?.countryCode).toBe("DE")
+  })
+
+  test("extracts city from 'in CITY this month' without a saw prefix", () => {
+    const parsed = parseConcertProseHeuristic(
+      "German woman singer songwriter in Hamburg this month.",
+      now
+    )
+    expect(parsed?.city).toBe("Hamburg")
+    expect(parsed?.month).toBe(6)
+    expect(parsed?.countryCode).toBe("DE")
+  })
+
+  test("does not overwrite an existing year from saw-at-venue patterns", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Nirvana at Wembley Arena in 1992 in the 90s.",
+      now
+    )
+    expect(parsed?.artist).toBe("Nirvana")
+    expect(parsed?.venue).toBe("Wembley Arena")
+    expect(parsed?.yearStart).toBe(1990)
+    expect(parsed?.yearEnd).toBe(1999)
+  })
+
+  test("does not overwrite an existing year from saw-in-year patterns", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Radiohead in 2012 last year.",
+      now
+    )
+    expect(parsed?.artist).toBe("Radiohead")
+    expect(parsed?.yearStart).toBe(2025)
+    expect(parsed?.yearEnd).toBe(2025)
+  })
 })
 
 describe("parseConcertProse", () => {
@@ -320,5 +409,16 @@ describe("parseConcertProse", () => {
     await expect(parseConcertProse("nothing useful here")).resolves.toBeNull()
     expect(error).toHaveBeenCalledWith("Groq concert-prose parse failed")
     error.mockRestore()
+  })
+
+  test("tries the next strategy when structured output validates to null", async () => {
+    vi.mocked(generateObject)
+      .mockResolvedValueOnce({ object: { artist: "x".repeat(300) } } as never)
+      .mockResolvedValueOnce({ object: validParsed } as never)
+
+    await expect(
+      parseConcertProse("Rolling Stones in London 1999")
+    ).resolves.toEqual(validParsed)
+    expect(generateObject).toHaveBeenCalledTimes(2)
   })
 })
