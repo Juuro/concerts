@@ -1,8 +1,74 @@
 import * as Sentry from "@sentry/nextjs"
 import { NextRequest, NextResponse } from "next/server"
-import { auth, getSession } from "@/lib/auth"
+import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
+import {
+  deriveAuthProviderLabel,
+  deriveUserAccountStatus,
+} from "@/lib/user-account-status"
+import type { Prisma } from "@prisma/client"
+
+const VALID_FILTERS = [
+  "all",
+  "active",
+  "banned",
+  "unverified",
+  "reset_pending",
+] as const
+
+type UserFilter = (typeof VALID_FILTERS)[number]
+
+async function getPendingPasswordResetUserIds(): Promise<{
+  userIds: string[]
+  expiresByUserId: Map<string, Date>
+}> {
+  const pendingResets = await prisma.verification.findMany({
+    where: {
+      identifier: { startsWith: "reset-password:" },
+      expiresAt: { gt: new Date() },
+    },
+    select: { value: true, expiresAt: true },
+  })
+
+  const expiresByUserId = new Map<string, Date>()
+  for (const reset of pendingResets) {
+    const existing = expiresByUserId.get(reset.value)
+    if (!existing || reset.expiresAt > existing) {
+      expiresByUserId.set(reset.value, reset.expiresAt)
+    }
+  }
+
+  return {
+    userIds: [...expiresByUserId.keys()],
+    expiresByUserId,
+  }
+}
+
+async function buildWhereClause(
+  filter: UserFilter
+): Promise<Prisma.UserWhereInput> {
+  switch (filter) {
+    case "banned":
+      return { banned: true }
+    case "active":
+      return { banned: false, emailVerified: true }
+    case "unverified":
+      return { banned: false, emailVerified: false }
+    case "reset_pending": {
+      const { userIds } = await getPendingPasswordResetUserIds()
+      if (userIds.length === 0) {
+        return { id: { in: [] } }
+      }
+      return {
+        banned: false,
+        id: { in: userIds },
+      }
+    }
+    default:
+      return {}
+  }
+}
 
 export async function GET(request: NextRequest) {
   const session = await getSession(await headers())
@@ -16,17 +82,16 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams
-  const filter = searchParams.get("filter") || "all"
+  const filterParam = searchParams.get("filter") || "all"
+  const filter = VALID_FILTERS.includes(filterParam as UserFilter)
+    ? (filterParam as UserFilter)
+    : "all"
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
   const offset = parseInt(searchParams.get("offset") || "0")
 
   try {
-    const whereClause =
-      filter === "banned"
-        ? { banned: true }
-        : filter === "active"
-          ? { banned: false }
-          : {}
+    const whereClause = await buildWhereClause(filter)
+    const { expiresByUserId } = await getPendingPasswordResetUserIds()
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -41,7 +106,11 @@ export async function GET(request: NextRequest) {
           banned: true,
           banReason: true,
           banExpires: true,
+          emailVerified: true,
           createdAt: true,
+          accounts: {
+            select: { providerId: true },
+          },
           _count: {
             select: { attendedConcerts: true },
           },
@@ -54,19 +123,36 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      users: users.map((user) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        image: user.image,
-        role: user.role,
-        banned: user.banned,
-        banReason: user.banReason,
-        banExpires: user.banExpires,
-        createdAt: user.createdAt,
-        concertCount: user._count.attendedConcerts,
-      })),
+      users: users.map((user) => {
+        const authProviders = user.accounts.map((account) => account.providerId)
+        const passwordResetExpiresAt = expiresByUserId.get(user.id)
+        const hasPendingPasswordReset = passwordResetExpiresAt !== undefined
+        const accountStatus = deriveUserAccountStatus({
+          banned: user.banned,
+          emailVerified: user.emailVerified,
+          hasPendingPasswordReset,
+        })
+        const authProviderLabel = deriveAuthProviderLabel(authProviders)
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          image: user.image,
+          role: user.role,
+          banned: user.banned,
+          banReason: user.banReason,
+          banExpires: user.banExpires,
+          emailVerified: user.emailVerified,
+          accountStatus,
+          authProviders,
+          authProviderLabel,
+          passwordResetExpiresAt: passwordResetExpiresAt?.toISOString(),
+          createdAt: user.createdAt,
+          concertCount: user._count.attendedConcerts,
+        }
+      }),
       total,
       limit,
       offset,

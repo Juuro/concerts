@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/Toast/Toast"
 import Dialog from "@/components/Dialog/Dialog"
 import { DATE_LOCALE } from "@/utils/dateLocale"
+import {
+  getAccountStatusLabel,
+  getAuthProviderLabel,
+  type AuthProviderLabel,
+  type UserAccountStatus,
+} from "@/lib/user-account-status"
 
 interface User {
   id: string
@@ -15,11 +21,36 @@ interface User {
   banned: boolean
   banReason: string | null
   banExpires: string | null
+  emailVerified: boolean
+  accountStatus: UserAccountStatus
+  authProviders: string[]
+  authProviderLabel: AuthProviderLabel | null
+  passwordResetExpiresAt?: string
   createdAt: string
   concertCount: number
 }
 
-type FilterType = "all" | "active" | "banned"
+type FilterType = "all" | "active" | "banned" | "unverified" | "reset_pending"
+
+const FILTER_EMPTY_MESSAGES: Record<FilterType, string> = {
+  all: "No users found",
+  active: "No active users",
+  banned: "No banned users",
+  unverified: "No unverified users",
+  reset_pending: "No users with pending password resets",
+}
+
+function getStatusBadgeClass(status: UserAccountStatus): string {
+  switch (status) {
+    case "banned":
+      return "admin-badge admin-badge--danger"
+    case "reset_pending":
+    case "unverified":
+      return "admin-badge admin-badge--warning"
+    case "active":
+      return "admin-badge admin-badge--success"
+  }
+}
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
@@ -119,6 +150,7 @@ export default function UserManagement() {
             ? {
                 ...u,
                 banned: true,
+                accountStatus: "banned",
                 banReason: banReason || null,
                 banExpires: banExpires || null,
               }
@@ -161,11 +193,25 @@ export default function UserManagement() {
 
       // Update user in list
       setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id
-            ? { ...u, banned: false, banReason: null, banExpires: null }
-            : u
-        )
+        prev.map((u) => {
+          if (u.id !== user.id) return u
+
+          const hasPendingPasswordReset = Boolean(u.passwordResetExpiresAt)
+          let accountStatus: UserAccountStatus = "active"
+          if (hasPendingPasswordReset) {
+            accountStatus = "reset_pending"
+          } else if (!u.emailVerified) {
+            accountStatus = "unverified"
+          }
+
+          return {
+            ...u,
+            banned: false,
+            accountStatus,
+            banReason: null,
+            banExpires: null,
+          }
+        })
       )
 
       // Notify other components (e.g., AdminAttention) to refresh
@@ -221,18 +267,14 @@ export default function UserManagement() {
         >
           <option value="all">All Users ({total})</option>
           <option value="active">Active</option>
+          <option value="unverified">Unverified</option>
+          <option value="reset_pending">Reset pending</option>
           <option value="banned">Banned</option>
         </select>
       </div>
 
       {users.length === 0 ? (
-        <div className="admin-list__empty">
-          {filter === "banned"
-            ? "No banned users"
-            : filter === "active"
-              ? "No active users"
-              : "No users found"}
-        </div>
+        <div className="admin-list__empty">{FILTER_EMPTY_MESSAGES[filter]}</div>
       ) : (
         <ul className="admin-list">
           {users.map((user) => (
@@ -246,48 +288,48 @@ export default function UserManagement() {
                     </span>
                   )}
                   <span
-                    className={`admin-status-dot ${user.banned ? "admin-status-dot--banned" : "admin-status-dot--active"}`}
+                    className={getStatusBadgeClass(user.accountStatus)}
                     role="status"
-                    aria-label={
-                      user.banned
-                        ? "Account status: Banned"
-                        : "Account status: Active"
-                    }
+                    aria-label={`Account status: ${getAccountStatusLabel(user.accountStatus)}`}
                   >
-                    <span className="visually-hidden">
-                      {user.banned ? "Banned" : "Active"}
-                    </span>
+                    {getAccountStatusLabel(user.accountStatus)}
                   </span>
+                  {user.authProviderLabel && (
+                    <span
+                      className="admin-badge admin-badge--auth"
+                      aria-label={`Auth method: ${getAuthProviderLabel(user.authProviderLabel)}`}
+                    >
+                      {getAuthProviderLabel(user.authProviderLabel)}
+                    </span>
+                  )}
                   {user.role === "admin" && (
-                    <span className="admin-badge">Admin</span>
+                    <span className="admin-badge admin-badge--info">Admin</span>
                   )}
                 </p>
                 <p className="admin-list__meta">
                   {user.email} • {user.concertCount} concerts • Joined{" "}
                   {formatDate(user.createdAt)}
                 </p>
+                {user.accountStatus === "reset_pending" &&
+                  user.passwordResetExpiresAt && (
+                    <p className="admin-list__meta admin-list__meta--reset-expires">
+                      Reset link expires:{" "}
+                      {formatDateTime(user.passwordResetExpiresAt)}
+                    </p>
+                  )}
                 {user.banned && (
                   <>
                     {user.banReason && (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#721c24", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-reason">
                         Reason: {user.banReason}
                       </p>
                     )}
                     {user.banExpires ? (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#856404", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-expires">
                         Expires: {formatDateTime(user.banExpires)}
                       </p>
                     ) : (
-                      <p
-                        className="admin-list__meta"
-                        style={{ color: "#721c24", marginTop: 4 }}
-                      >
+                      <p className="admin-list__meta admin-list__meta--ban-permanent">
                         Permanent ban
                       </p>
                     )}

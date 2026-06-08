@@ -2645,15 +2645,6 @@ main.container > .admin-shell {
   }
 }
 
-.admin-badge {
-  margin-left: 8px;
-  font-size: 0.75rem;
-  background: #e7f3ff;
-  color: variables.$admin-info;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
 // Visually hidden but accessible to screen readers
 .visually-hidden {
   position: absolute;
@@ -2871,6 +2862,7 @@ main.container > .admin-shell {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  margin-left: 8px;
 
   &--success {
     background: variables.$admin-success-bg;
@@ -2891,6 +2883,32 @@ main.container > .admin-shell {
     background: variables.$admin-info-bg;
     color: variables.$admin-info;
   }
+
+  &--auth {
+    background: variables.$admin-surface-alt;
+    color: variables.$admin-text-secondary;
+    font-weight: 500;
+  }
+}
+
+.admin-list__meta--ban-reason {
+  color: variables.$admin-danger;
+  margin-top: 4px;
+}
+
+.admin-list__meta--ban-expires {
+  color: variables.$admin-warning;
+  margin-top: 4px;
+}
+
+.admin-list__meta--ban-permanent {
+  color: variables.$admin-danger;
+  margin-top: 4px;
+}
+
+.admin-list__meta--reset-expires {
+  color: variables.$admin-warning;
+  margin-top: 4px;
 }
 
 // ============================================
