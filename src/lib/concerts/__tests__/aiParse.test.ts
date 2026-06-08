@@ -131,13 +131,24 @@ describe("parseConcertProseHeuristic", () => {
     })
   })
 
+  test("parses mid-decade ranges", () => {
+    const parsed = parseConcertProseHeuristic(
+      "I saw Oasis in the mid 90s in London.",
+      now
+    )
+    expect(parsed?.artist).toBe("Oasis")
+    expect(parsed?.city).toBe("London")
+    expect(parsed?.yearStart).toBe(1994)
+    expect(parsed?.yearEnd).toBe(1996)
+  })
+
   test("parses late-decade ranges and region hints", () => {
     const parsed = parseConcertProseHeuristic(
       "I saw Pearl Jam in the late 90s in Bavaria.",
       now
     )
     expect(parsed?.artist).toBe("Pearl Jam")
-    expect(parsed?.yearStart).toBe(1996)
+    expect(parsed?.yearStart).toBe(1997)
     expect(parsed?.yearEnd).toBe(1999)
     expect(parsed?.countryCode).toBe("DE")
   })
