@@ -5,7 +5,10 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { isFeatureEnabled, FEATURE_FLAGS } from "@/utils/featureFlags"
 import { createRateLimiter, clientIpFrom } from "@/lib/rateLimit"
-import { buildCreateInputFromSetlist } from "@/lib/concerts/aiSearch"
+import {
+  buildCreateInputFromSetlist,
+  type BuildSetlistResultCode,
+} from "@/lib/concerts/aiSearch"
 import { createConcert } from "@/lib/concerts/mutations/create"
 import { revalidateConcertCaches } from "@/lib/concerts/revalidate"
 import { ConcertAlreadyExistsError } from "@/lib/concerts/errors"
@@ -48,7 +51,10 @@ function humanDate(iso: string): string {
   return `${d} ${MONTHS[m - 1] ?? ""} ${y}`
 }
 
-const ERROR_BY_CODE: Record<string, { status: number; message: string }> = {
+const ERROR_BY_CODE: Record<
+  BuildSetlistResultCode,
+  { status: number; message: string }
+> = {
   NOT_FOUND: { status: 404, message: "Couldn't find that show on Setlist.fm." },
   INVALID_DATE: {
     status: 422,
