@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/Toast/Toast"
+import type {
   CandidateShow,
   ConcertAiSearchResponse,
 } from "@/types/concertAiSearch"
@@ -288,7 +289,10 @@ export default function ConcertMemoryAssistant() {
         >
           Your description is sent to our AI provider (Groq, USA) to find the
           show. It is not stored.{" "}
-          <Link href="/privacy" className="concert-memory-assistant__privacy-link">
+          <Link
+            href="/privacy"
+            className="concert-memory-assistant__privacy-link"
+          >
             Privacy
           </Link>
         </p>
