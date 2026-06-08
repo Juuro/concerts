@@ -197,13 +197,11 @@ export default function UserManagement() {
         prev.map((u) => {
           if (u.id !== user.id) return u
 
-          const hasPendingPasswordReset = Boolean(u.passwordResetExpiresAt)
-          let accountStatus: UserAccountStatus = "active"
-          if (hasPendingPasswordReset) {
-            accountStatus = "reset_pending"
-          } else if (!u.emailVerified) {
-            accountStatus = "unverified"
-          }
+          const accountStatus = deriveUserAccountStatus({
+            banned: false,
+            emailVerified: u.emailVerified,
+            hasPendingPasswordReset: Boolean(u.passwordResetExpiresAt),
+          })
 
           return {
             ...u,
