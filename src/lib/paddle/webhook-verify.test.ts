@@ -35,7 +35,6 @@ describe("verifyPaddleWebhookSignature", () => {
   })
 
   it("rejects non-numeric timestamp", () => {
-    const ts = Math.floor(Date.now() / 1000)
     const r = verifyPaddleWebhookSignature(
       "{}",
       `ts=notanumber;h1=${"ab".repeat(32)}`,
