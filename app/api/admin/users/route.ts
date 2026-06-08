@@ -7,7 +7,7 @@ import {
   deriveAuthProviderLabel,
   deriveUserAccountStatus,
 } from "@/lib/user-account-status"
-import type { Prisma } from "@prisma/client"
+import type { Prisma } from "@/generated/prisma/client"
 
 const VALID_FILTERS = [
   "all",
