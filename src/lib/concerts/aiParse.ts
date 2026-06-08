@@ -170,14 +170,15 @@ export function parseConcertProseHeuristic(
   }
 
   const sawAtVenueInYear = text.match(
-    /\bsaw\s+(.+?)\s+at\s+(.+?)\s+in\s+(19|20)\d{2}\b/i
+    /\bsaw\s+(.+?)\s+at\s+(.+?)\s+in\s+((?:19|20)\d{2})\b/i
   )
   if (sawAtVenueInYear) {
     result.artist = titleCaseWords(sawAtVenueInYear[1].trim())
     result.venue = titleCaseWords(sawAtVenueInYear[2].trim())
     if (result.yearStart == null) {
-      result.yearStart = Number(sawAtVenueInYear[3])
-      result.yearEnd = Number(sawAtVenueInYear[3])
+      const year = Number(sawAtVenueInYear[3])
+      result.yearStart = year
+      result.yearEnd = year
     }
   }
 
