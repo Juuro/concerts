@@ -2885,9 +2885,8 @@ main.container > .admin-shell {
   }
 
   &--auth {
-    background: variables.$admin-surface-alt;
-    color: variables.$admin-text-secondary;
-    font-weight: 500;
+    background: variables.$admin-neutral-bg;
+    color: variables.$admin-neutral;
   }
 }
 
