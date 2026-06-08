@@ -23,7 +23,6 @@ interface User {
   banExpires: string | null
   emailVerified: boolean
   accountStatus: UserAccountStatus
-  authProviders: string[]
   authProviderLabel: AuthProviderLabel | null
   passwordResetExpiresAt?: string
   createdAt: string
