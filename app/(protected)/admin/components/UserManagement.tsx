@@ -175,6 +175,46 @@ export default function UserManagement() {
     }
   }
 
+  const canResendVerification = (user: User) =>
+    user.accountStatus === "unverified" &&
+    (user.authProviderLabel === "email" || user.authProviderLabel === "both")
+
+  const handleResendVerification = async (user: User) => {
+    if (!confirm(`Resend verification email to ${user.name || user.email}?`)) {
+      return
+    }
+
+    setProcessingId(user.id)
+
+    try {
+      const response = await fetch(
+        `/api/admin/users/${user.id}/resend-verification`,
+        { method: "POST" }
+      )
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to resend verification email")
+      }
+
+      showToast({
+        message: `Verification email sent to ${user.email}`,
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error resending verification email:", error)
+      showToast({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to resend verification email",
+        type: "error",
+      })
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
   const handleUnban = async (user: User) => {
     if (!confirm(`Unban ${user.name || user.email}?`)) return
 
@@ -320,6 +360,17 @@ export default function UserManagement() {
                 )}
               </div>
               <div className="admin-list__actions">
+                {canResendVerification(user) && (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    onClick={() => handleResendVerification(user)}
+                    disabled={processingId === user.id}
+                    aria-label={`Resend verification email to ${user.name || user.email}`}
+                  >
+                    {processingId === user.id ? "..." : "Resend verification"}
+                  </button>
+                )}
                 {user.banned ? (
                   <button
                     type="button"

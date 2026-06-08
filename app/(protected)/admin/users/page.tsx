@@ -3,7 +3,8 @@ import UserManagement from "../components/UserManagement"
 
 export const metadata: Metadata = {
   title: "User Management | Admin",
-  description: "View users and manage account bans",
+  description:
+    "View users, resend verification emails, and manage account bans",
 }
 
 export default function UsersAdminPage() {
@@ -12,7 +13,7 @@ export default function UsersAdminPage() {
       <div className="admin-page-header">
         <h1 className="admin-page-header__title">User Management</h1>
         <p className="admin-page-header__desc">
-          View users and manage account bans
+          View users, resend verification emails, and manage account bans
         </p>
       </div>
 
