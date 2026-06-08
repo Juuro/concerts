@@ -116,6 +116,11 @@ export const auth = betterAuth({
         type: "date",
         required: false,
       },
+      paddleCustomerId: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
   },
 })
@@ -135,6 +140,7 @@ interface ExtendedUserFields {
   banned?: boolean
   banReason?: string | null
   banExpires?: Date | null
+  paddleCustomerId?: string | null
 }
 
 // Extended session type including all custom user fields
