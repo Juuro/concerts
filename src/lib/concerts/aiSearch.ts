@@ -4,15 +4,23 @@ import { searchVenues } from "@/utils/photon"
 import { slugify } from "@/utils/helpers"
 import { isFeatureEnabled, FEATURE_FLAGS } from "@/utils/featureFlags"
 import {
-  searchSetlists,
+  searchSetlistsWithMeta,
   searchArtists,
   getSetlistById,
+  mergeSetlistSearchMeta,
+  EMPTY_SETLIST_SEARCH_META,
   type SetlistSearchParams,
+  type SetlistSearchMeta,
 } from "@/utils/setlistfm"
 import {
   parseConcertProse,
   isGenericArtistPhrase,
 } from "@/lib/concerts/aiParse"
+import {
+  logAiSearchNoResult,
+  type AiSearchNoResultReason,
+  type AiSearchTelemetrySetlistParams,
+} from "@/lib/concerts/aiSearchTelemetry"
 import { rankCandidatesByHints } from "@/lib/concerts/aiRank"
 import type { SetlistfmSetlist } from "@/types/setlistfm"
 import type {
@@ -113,19 +121,60 @@ function buildSearchBase(
   }
 }
 
+interface QuerySetlistsResult {
+  setlists: SetlistfmSetlist[]
+  meta: SetlistSearchMeta
+}
+
 async function querySetlists(
   base: SetlistSearchParams,
   years: number[] | null
-): Promise<SetlistfmSetlist[]> {
-  const raw: SetlistfmSetlist[] = []
+): Promise<QuerySetlistsResult> {
+  let meta = EMPTY_SETLIST_SEARCH_META
+  const setlists: SetlistfmSetlist[] = []
+
   if (years) {
     for (const year of years) {
-      raw.push(...(await searchSetlists({ ...base, year })))
+      const result = await searchSetlistsWithMeta({ ...base, year })
+      setlists.push(...result.setlists)
+      meta = mergeSetlistSearchMeta(meta, result.meta)
     }
   } else {
-    raw.push(...(await searchSetlists(base)))
+    const result = await searchSetlistsWithMeta(base)
+    setlists.push(...result.setlists)
+    meta = result.meta
   }
-  return raw
+
+  return { setlists, meta }
+}
+
+function toTelemetrySetlistParams(
+  base: SetlistSearchParams,
+  years: number[] | null
+): AiSearchTelemetrySetlistParams {
+  return {
+    ...(base.artistMbid ? { artistMbid: base.artistMbid } : {}),
+    ...(base.artistName ? { artistName: base.artistName } : {}),
+    ...(base.cityName ? { cityName: base.cityName } : {}),
+    ...(base.venueName ? { venueName: base.venueName } : {}),
+    ...(base.countryCode ? { countryCode: base.countryCode } : {}),
+    ...(base.tourName ? { tourName: base.tourName } : {}),
+    years,
+  }
+}
+
+function resolveSetlistNoResultReason(
+  meta: SetlistSearchMeta,
+  rawSetlistCount: number,
+  candidateCountBeforeFilter: number,
+  candidateCountAfterFilter: number
+): AiSearchNoResultReason {
+  if (meta.unavailable) return "setlist_unavailable"
+  if (meta.errorCount > 0) return "setlist_api_error"
+  if (rawSetlistCount === 0) return "setlist_empty"
+  if (candidateCountBeforeFilter === 0) return "setlist_unparseable_dates"
+  if (candidateCountAfterFilter === 0) return "setlist_filtered_empty"
+  return "setlist_empty"
 }
 
 // ---------------------------------------------------------------------------
@@ -334,20 +383,51 @@ export async function searchConcertCandidates(
   const parsed = rawParsed ? effectiveParsedQuery(rawParsed) : null
 
   // Need at least one anchor to search; otherwise results would be meaningless.
-  if (
-    !parsed ||
-    (!parsed.artist && !parsed.artistHints && !parsed.city && !parsed.venue)
-  ) {
-    return { candidates: [], parsed, hint: composeHint(parsed) }
+  if (!parsed) {
+    const hint = composeHint(null)
+    logAiSearchNoResult({
+      reason: "parse_failed",
+      prose,
+      parsed: null,
+      hint,
+    })
+    return { candidates: [], parsed: null, hint }
+  }
+
+  if (!parsed.artist && !parsed.artistHints && !parsed.city && !parsed.venue) {
+    const hint = composeHint(parsed)
+    logAiSearchNoResult({
+      reason: "insufficient_anchors",
+      prose,
+      parsed,
+      hint,
+    })
+    return { candidates: [], parsed, hint }
   }
 
   const fuzzy = isFuzzyArtistQuery(parsed)
   if (fuzzy) {
     if (!parsed.city && !parsed.venue) {
-      return { candidates: [], parsed, hint: composeHint(parsed) }
+      const hint = composeHint(parsed)
+      logAiSearchNoResult({
+        reason: "fuzzy_missing_place",
+        prose,
+        parsed,
+        hint,
+        fuzzy: true,
+      })
+      return { candidates: [], parsed, hint }
     }
     if (!hasFuzzyDateAnchor(parsed)) {
-      return { candidates: [], parsed, hint: composeHint(parsed) }
+      const hint = composeHint(parsed)
+      logAiSearchNoResult({
+        reason: "fuzzy_missing_date",
+        prose,
+        parsed,
+        hint,
+        fuzzy: true,
+      })
+      return { candidates: [], parsed, hint }
     }
   }
 
@@ -358,15 +438,22 @@ export async function searchConcertCandidates(
   const base = buildSearchBase(parsed, artistMbid)
 
   const { years, yearFilter } = planYears(parsed)
+  const setlistSearchParams = toTelemetrySetlistParams(base, years)
 
-  let raw = await querySetlists(base, years)
+  let queryResult = await querySetlists(base, years)
+  let raw = queryResult.setlists
+  let setlistMeta = queryResult.meta
 
   // When both city and venue are present, prefer a venue-only retry on miss —
   // Groq-inferred city names are often rejected by Setlist.fm (404).
   if (raw.length === 0 && base.cityName && base.venueName) {
     const { cityName: _city, ...venueOnly } = base
-    raw = await querySetlists(venueOnly, years)
+    const retryResult = await querySetlists(venueOnly, years)
+    raw = retryResult.setlists
+    setlistMeta = mergeSetlistSearchMeta(setlistMeta, retryResult.meta)
   }
+
+  const rawSetlistCount = raw.length
 
   // Dedup by setlist id, map to candidates (drops unparseable dates).
   const seen = new Set<string>()
@@ -377,6 +464,8 @@ export async function searchConcertCandidates(
     const candidate = toCandidate(setlist)
     if (candidate) candidates.push(candidate)
   }
+
+  const candidateCountBeforeFilter = candidates.length
 
   // Client-side filters: wide year range, season, month.
   if (yearFilter) {
@@ -396,6 +485,8 @@ export async function searchConcertCandidates(
     )
   }
 
+  const candidateCountAfterFilter = candidates.length
+
   // Re-rank fuzzy matches when multiple candidates share the same city/time window.
   if (fuzzy && parsed.artistHints && candidates.length > 1) {
     candidates = await rankCandidatesByHints(
@@ -411,10 +502,32 @@ export async function searchConcertCandidates(
 
   await markAlreadyAdded(candidates, userId)
 
+  if (candidates.length === 0) {
+    const hint = composeHint(parsed)
+    logAiSearchNoResult({
+      reason: resolveSetlistNoResultReason(
+        setlistMeta,
+        rawSetlistCount,
+        candidateCountBeforeFilter,
+        candidateCountAfterFilter
+      ),
+      prose,
+      parsed,
+      hint,
+      fuzzy,
+      setlistSearchParams,
+      setlistMeta,
+      rawSetlistCount,
+      candidateCountBeforeFilter,
+      candidateCountAfterFilter,
+    })
+    return { candidates: [], parsed, hint }
+  }
+
   return {
     candidates,
     parsed,
-    hint: candidates.length === 0 ? composeHint(parsed) : null,
+    hint: null,
   }
 }
 
