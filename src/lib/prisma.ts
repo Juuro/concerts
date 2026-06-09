@@ -47,6 +47,19 @@ export function resolveDatabaseConnectionString(): string {
     postgresUrlNonPoolingEnv(),
   ]
 
+  // [DBDIAG-MARKER-v7] temporary diagnostic — remove after debugging
+  const diag = candidates.map((v) => {
+    if (!v) return "absent"
+    try {
+      return new URL(v).host
+    } catch {
+      return `unparseable(${v.slice(0, 12)})`
+    }
+  })
+  console.warn(
+    `[DBDIAG-MARKER-v7] VERCEL=${process.env["VERCEL"]} candidates(prisma,database,url,nonpool)=${JSON.stringify(diag)}`
+  )
+
   for (const value of candidates) {
     if (value && isDirectPostgresUrl(value)) {
       return value
@@ -54,7 +67,7 @@ export function resolveDatabaseConnectionString(): string {
   }
 
   throw new Error(
-    "Missing database URL. Set POSTGRES_PRISMA_URL, DATABASE_URL, or POSTGRES_URL " +
+    "[DBDIAG-MARKER-v7] Missing database URL. Set POSTGRES_PRISMA_URL, DATABASE_URL, or POSTGRES_URL " +
       "to a postgres:// connection string."
   )
 }
