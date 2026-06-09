@@ -14,11 +14,18 @@ vi.mock("@/lib/concerts/aiParse", async (importOriginal) => {
 vi.mock("@/lib/concerts/aiRank", () => ({
   rankCandidatesByHints: vi.fn(async (candidates: unknown[]) => candidates),
 }))
-vi.mock("@/utils/setlistfm", () => ({
-  searchSetlists: vi.fn(),
-  searchArtists: vi.fn(),
-  getSetlistById: vi.fn(),
+vi.mock("@/lib/concerts/aiSearchTelemetry", () => ({
+  logAiSearchNoResult: vi.fn(),
 }))
+vi.mock("@/utils/setlistfm", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/utils/setlistfm")>()
+  return {
+    ...actual,
+    searchSetlistsWithMeta: vi.fn(),
+    searchArtists: vi.fn(),
+    getSetlistById: vi.fn(),
+  }
+})
 vi.mock("@/lib/bands", () => ({
   getOrCreateBand: vi.fn(),
   enrichBandData: vi.fn(),
@@ -28,10 +35,12 @@ vi.mock("@/utils/photon", () => ({
 }))
 
 import { parseConcertProse } from "@/lib/concerts/aiParse"
+import { logAiSearchNoResult } from "@/lib/concerts/aiSearchTelemetry"
 import {
-  searchSetlists,
+  searchSetlistsWithMeta,
   searchArtists,
   getSetlistById,
+  type SetlistSearchMeta,
 } from "@/utils/setlistfm"
 import { getOrCreateBand, enrichBandData } from "@/lib/bands"
 import { searchVenues } from "@/utils/photon"
@@ -75,11 +84,36 @@ function setlist(
   }
 }
 
+const EMPTY_SETLIST_META: SetlistSearchMeta = {
+  queries: 1,
+  emptyCount: 1,
+  errorCount: 0,
+  unavailable: false,
+  httpStatuses: [404],
+}
+
+const SUCCESS_SETLIST_META: SetlistSearchMeta = {
+  queries: 1,
+  emptyCount: 0,
+  errorCount: 0,
+  unavailable: false,
+  httpStatuses: [200],
+}
+
+function mockSearchSetlistsWithMeta(
+  setlists: SetlistfmSetlist[],
+  meta: SetlistSearchMeta = setlists.length
+    ? SUCCESS_SETLIST_META
+    : EMPTY_SETLIST_META
+) {
+  vi.mocked(searchSetlistsWithMeta).mockResolvedValue({ setlists, meta })
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.userConcert.findMany).mockResolvedValue([] as never)
   vi.mocked(searchArtists).mockResolvedValue([])
-  vi.mocked(searchSetlists).mockResolvedValue([])
+  mockSearchSetlistsWithMeta([])
 })
 
 describe("parseEventDate", () => {
@@ -118,7 +152,14 @@ describe("searchConcertCandidates", () => {
     expect(result.candidates).toEqual([])
     expect(result.parsed).toBeNull()
     expect(result.hint).toBeTruthy()
-    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(searchSetlistsWithMeta).not.toHaveBeenCalled()
+    expect(logAiSearchNoResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: "parse_failed",
+        prose: "???",
+        parsed: null,
+      })
+    )
   })
 
   test("returns 'name the band' hint when no anchor fields are present", async () => {
@@ -126,7 +167,13 @@ describe("searchConcertCandidates", () => {
     const result = await searchConcertCandidates("something in 1999", "user-1")
     expect(result.candidates).toEqual([])
     expect(result.hint).toMatch(/band or artist/i)
-    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(searchSetlistsWithMeta).not.toHaveBeenCalled()
+    expect(logAiSearchNoResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: "insufficient_anchors",
+        prose: "something in 1999",
+      })
+    )
   })
 
   test("pins the artist by MBID and maps candidates", async () => {
@@ -141,7 +188,7 @@ describe("searchConcertCandidates", () => {
     vi.mocked(searchArtists).mockResolvedValue([
       { name: "The Rolling Stones", mbid: "mbid-stones" },
     ])
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({ id: "aaa1", eventDate: "11-07-1999" }),
       setlist({ id: "bbb2", eventDate: "12-07-1999" }),
     ])
@@ -152,8 +199,8 @@ describe("searchConcertCandidates", () => {
     )
 
     // Single year => exactly one search call, pinned by artistMbid.
-    expect(searchSetlists).toHaveBeenCalledTimes(1)
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledTimes(1)
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.objectContaining({
         artistMbid: "mbid-stones",
         cityName: "London",
@@ -170,13 +217,14 @@ describe("searchConcertCandidates", () => {
     expect(first.lon).toBe(-0.2796) // mapped from coords.long
     expect(first.headliner).toBe("The Rolling Stones")
     expect(result.hint).toBeNull()
+    expect(logAiSearchNoResult).not.toHaveBeenCalled()
   })
 
   test("caps a wide year range to one query and filters client-side", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(
       pq({ artist: "Metallica", yearStart: 1990, yearEnd: 2005 })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "in1",
         eventDate: "01-06-1995",
@@ -195,8 +243,8 @@ describe("searchConcertCandidates", () => {
     )
 
     // Span > 3 years => one un-yeared query (no `year` param).
-    expect(searchSetlists).toHaveBeenCalledTimes(1)
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledTimes(1)
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.not.objectContaining({ year: expect.anything() })
     )
     expect(result.candidates.map((c) => c.id)).toEqual(["in1"])
@@ -211,7 +259,7 @@ describe("searchConcertCandidates", () => {
         season: "summer",
       })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "jul",
         eventDate: "10-07-2012",
@@ -244,19 +292,20 @@ describe("searchConcertCandidates", () => {
     vi.mocked(searchArtists).mockResolvedValue([
       { name: "The Rolling Stones", mbid: "mbid-stones" },
     ])
-    vi.mocked(searchSetlists)
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        setlist({ id: "wembley1", eventDate: "15-09-2003" }),
-      ])
+    vi.mocked(searchSetlistsWithMeta)
+      .mockResolvedValueOnce({ setlists: [], meta: EMPTY_SETLIST_META })
+      .mockResolvedValueOnce({
+        setlists: [setlist({ id: "wembley1", eventDate: "15-09-2003" })],
+        meta: SUCCESS_SETLIST_META,
+      })
 
     const result = await searchConcertCandidates(
       "Stones at Wembley Arena 2003",
       "user-1"
     )
 
-    expect(searchSetlists).toHaveBeenCalledTimes(2)
-    expect(searchSetlists).toHaveBeenNthCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledTimes(2)
+    expect(searchSetlistsWithMeta).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         artistMbid: "mbid-stones",
@@ -265,7 +314,7 @@ describe("searchConcertCandidates", () => {
         year: 2003,
       })
     )
-    expect(searchSetlists).toHaveBeenNthCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         artistMbid: "mbid-stones",
@@ -273,7 +322,7 @@ describe("searchConcertCandidates", () => {
         year: 2003,
       })
     )
-    expect(searchSetlists).toHaveBeenNthCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenNthCalledWith(
       2,
       expect.not.objectContaining({ cityName: expect.anything() })
     )
@@ -293,7 +342,7 @@ describe("searchConcertCandidates", () => {
     vi.mocked(searchArtists).mockResolvedValue([
       { name: "Die Ärzte", mbid: "mbid-arzte" },
     ])
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "stuttgart03",
         eventDate: "21-12-2003",
@@ -314,14 +363,14 @@ describe("searchConcertCandidates", () => {
       "user-1"
     )
 
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.objectContaining({
         artistMbid: "mbid-arzte",
         countryCode: "DE",
         year: 2003,
       })
     )
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.not.objectContaining({ cityName: expect.anything() })
     )
     expect(result.candidates).toHaveLength(1)
@@ -340,7 +389,7 @@ describe("searchConcertCandidates", () => {
     vi.mocked(searchArtists).mockResolvedValue([
       { name: "Nirvana", mbid: "mbid-nirvana" },
     ])
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "paris92",
         eventDate: "24-06-1992",
@@ -370,13 +419,13 @@ describe("searchConcertCandidates", () => {
       "user-1"
     )
 
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.objectContaining({
         artistMbid: "mbid-nirvana",
         cityName: "Paris",
       })
     )
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.not.objectContaining({ year: expect.anything() })
     )
     expect(result.candidates.map((c) => c.id)).toEqual(["paris92"])
@@ -393,7 +442,7 @@ describe("searchConcertCandidates", () => {
         artistHints: "German woman singer songwriter",
       })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "dota-kl",
         eventDate: "02-05-2026",
@@ -427,14 +476,14 @@ describe("searchConcertCandidates", () => {
     )
 
     expect(searchArtists).not.toHaveBeenCalled()
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.objectContaining({
         cityName: "Kaiserslautern",
         countryCode: "DE",
         year: 2026,
       })
     )
-    expect(searchSetlists).toHaveBeenCalledWith(
+    expect(searchSetlistsWithMeta).toHaveBeenCalledWith(
       expect.not.objectContaining({
         artistName: expect.anything(),
         artistMbid: expect.anything(),
@@ -463,8 +512,11 @@ describe("searchConcertCandidates", () => {
       "user-1"
     )
 
-    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(searchSetlistsWithMeta).not.toHaveBeenCalled()
     expect(result.hint).toMatch(/month or year/i)
+    expect(logAiSearchNoResult).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "fuzzy_missing_date" })
+    )
   })
 
   test("rejects fuzzy search without a city or venue", async () => {
@@ -482,15 +534,18 @@ describe("searchConcertCandidates", () => {
       "user-1"
     )
 
-    expect(searchSetlists).not.toHaveBeenCalled()
+    expect(searchSetlistsWithMeta).not.toHaveBeenCalled()
     expect(result.hint).toMatch(/city or venue/i)
+    expect(logAiSearchNoResult).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "fuzzy_missing_place" })
+    )
   })
 
   test("marks candidates already in the user's list", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(
       pq({ artist: "The Rolling Stones", yearStart: 1999, yearEnd: 1999 })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({ id: "aaa1", eventDate: "11-07-1999" }),
     ])
     vi.mocked(prisma.userConcert.findMany).mockResolvedValue([
@@ -518,7 +573,7 @@ describe("searchConcertCandidates", () => {
         month: 7,
       })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([
+    mockSearchSetlistsWithMeta([
       setlist({
         id: "jul",
         eventDate: "10-07-2012",
@@ -548,7 +603,7 @@ describe("searchConcertCandidates", () => {
         yearEnd: 2010,
       })
     )
-    vi.mocked(searchSetlists).mockResolvedValue([])
+    mockSearchSetlistsWithMeta([])
 
     const result = await searchConcertCandidates(
       "Metallica at Waldbühne Berlin 2010",
@@ -557,11 +612,17 @@ describe("searchConcertCandidates", () => {
 
     expect(result.candidates).toEqual([])
     expect(result.hint).toMatch(/nearby city or a different year/i)
+    expect(logAiSearchNoResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: "setlist_empty",
+        prose: "Metallica at Waldbühne Berlin 2010",
+      })
+    )
   })
 
   test("returns an artist-only hint when no place or year anchors exist", async () => {
     vi.mocked(parseConcertProse).mockResolvedValue(pq({ artist: "Metallica" }))
-    vi.mocked(searchSetlists).mockResolvedValue([])
+    mockSearchSetlistsWithMeta([])
 
     const result = await searchConcertCandidates("Metallica", "user-1")
     expect(result.hint).toMatch(/add a city or an approximate year/i)
