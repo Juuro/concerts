@@ -58,7 +58,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
     "dev": "prisma generate && next dev",
     "start": "next start",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,scss}\" --ignore-path .gitignore",
