@@ -146,9 +146,16 @@ export default function PrivacyPage() {
                 description). When you add a suggested show, we fetch the
                 corresponding setlist details from Setlist.fm using its public
                 setlist identifier. Your description is processed only for the
-                search request, is not stored in our database, and is not
-                attached to error reports. <em>Legal basis:</em> Contract
-                performance (Art. 6(1)(b) GDPR).
+                search request and is not stored in our database. When a search
+                finds no matching setlists, we may send your description and the
+                structured parameters we derived to our error and performance
+                monitoring provider (Sentry, Functional Software Inc.) so we can
+                analyse how the assistant is used and improve it; this does not
+                apply to unexpected technical error reports from that service.
+                <em>Legal basis:</em> Contract performance (Art. 6(1)(b) GDPR)
+                for running the search; legitimate interest in improving the
+                optional assistant (Art. 6(1)(f) GDPR) for no-result analysis
+                sent to Sentry.
               </li>
             </ul>
           </section>
