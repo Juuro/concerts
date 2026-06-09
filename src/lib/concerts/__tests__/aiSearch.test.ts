@@ -48,6 +48,7 @@ import {
   parseEventDate,
   searchConcertCandidates,
   buildCreateInputFromSetlist,
+  pickBestGeocodeResult,
 } from "@/lib/concerts/aiSearch"
 
 function pq(partial: Partial<ParsedConcertQuery>): ParsedConcertQuery {
@@ -629,6 +630,38 @@ describe("searchConcertCandidates", () => {
   })
 })
 
+describe("pickBestGeocodeResult", () => {
+  test("prefers the venue name and city over unrelated lake matches", () => {
+    const picked = pickBestGeocodeResult(
+      [
+        {
+          name: "Victory Lakes Clubhouse",
+          displayName: "Bristow, VA",
+          city: "Bristow",
+          state: "VA",
+          lat: 38.7589733,
+          lon: -77.5661682,
+        },
+        {
+          name: "Lake Compounce",
+          displayName: "Bristol, CT",
+          city: "Bristol",
+          state: "CT",
+          lat: 41.6388123,
+          lon: -72.9227907,
+        },
+      ],
+      "Lake Compounce",
+      "Bristol",
+      41.6717648,
+      -72.9492703
+    )
+
+    expect(picked?.name).toBe("Lake Compounce")
+    expect(picked?.city).toBe("Bristol")
+  })
+})
+
 describe("buildCreateInputFromSetlist", () => {
   beforeEach(() => {
     vi.mocked(getOrCreateBand).mockResolvedValue({
@@ -669,6 +702,10 @@ describe("buildCreateInputFromSetlist", () => {
     ] as never)
 
     const result = await buildCreateInputFromSetlist("abc123", "user-1")
+    expect(searchVenues).toHaveBeenCalledWith("Wembley Stadium", {
+      lat: 51.556,
+      lon: -0.2796,
+    })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.input.latitude).toBe(51.556)
@@ -707,6 +744,50 @@ describe("buildCreateInputFromSetlist", () => {
 
     const result = await buildCreateInputFromSetlist("abc123", "user-1")
     expect(result).toEqual({ ok: false, code: "MISSING_COORDINATES" })
+  })
+
+  test("ignores unrelated photon hits that only match the word lake", async () => {
+    vi.mocked(getSetlistById).mockResolvedValue(
+      setlist({
+        id: "lake-compounce",
+        eventDate: "21-07-1989",
+        artist: { name: "Milli Vanilli", mbid: "mbid-mv" },
+        venue: {
+          name: "Lake Compounce",
+          city: {
+            name: "Bristol",
+            coords: { lat: 41.6717648, long: -72.9492703 },
+            country: { code: "US", name: "United States" },
+          },
+        },
+      })
+    )
+    vi.mocked(searchVenues).mockResolvedValue([
+      {
+        name: "Victory Lakes Clubhouse",
+        displayName: "Bristow, VA",
+        city: "Bristow",
+        lat: 38.7589733,
+        lon: -77.5661682,
+      },
+      {
+        name: "Lake Compounce",
+        displayName: "Bristol, CT",
+        city: "Bristol",
+        lat: 41.6388123,
+        lon: -72.9227907,
+      },
+    ] as never)
+
+    const result = await buildCreateInputFromSetlist("lake-compounce", "user-1")
+    expect(searchVenues).toHaveBeenCalledWith("Lake Compounce", {
+      lat: 41.6717648,
+      lon: -72.9492703,
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.input.latitude).toBe(41.6388123)
+    expect(result.input.longitude).toBe(-72.9227907)
   })
 
   test("enriches newly created bands without cached images", async () => {

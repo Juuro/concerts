@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { getOrCreateBand, enrichBandData } from "@/lib/bands"
 import { searchVenues } from "@/utils/photon"
-import { slugify } from "@/utils/helpers"
+import { haversineDistance, slugify } from "@/utils/helpers"
+import type { PhotonSearchResult } from "@/types/photon"
 import { isFeatureEnabled, FEATURE_FLAGS } from "@/utils/featureFlags"
 import {
   searchSetlistsWithMeta,
@@ -548,6 +549,73 @@ export type BuildSetlistResult =
     }
   | { ok: false; code: BuildSetlistResultCode }
 
+function normalizePlaceToken(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+/**
+ * Pick the best Photon hit for a Setlist.fm venue. Photon may rank unrelated
+ * "Lake …" places above the real venue when the query includes city + country
+ * (e.g. Victory Lakes Clubhouse in Bristow, VA before Lake Compounce, Bristol, CT).
+ */
+export function pickBestGeocodeResult(
+  results: PhotonSearchResult[],
+  venueName: string,
+  cityName: string | undefined,
+  centroidLat: number | null,
+  centroidLon: number | null
+): PhotonSearchResult | null {
+  if (!results.length) return null
+
+  const targetVenue = normalizePlaceToken(venueName)
+  const targetCity = cityName ? normalizePlaceToken(cityName) : null
+
+  let best: PhotonSearchResult | null = null
+  let bestScore = Number.NEGATIVE_INFINITY
+
+  for (const result of results) {
+    let score = 0
+    const resultVenue = normalizePlaceToken(result.name)
+
+    if (resultVenue === targetVenue) {
+      score += 100
+    } else if (
+      resultVenue.includes(targetVenue) ||
+      targetVenue.includes(resultVenue)
+    ) {
+      score += 50
+    }
+
+    const resultCity = result.city ? normalizePlaceToken(result.city) : null
+    if (targetCity && resultCity === targetCity) {
+      score += 40
+    } else if (
+      targetCity &&
+      resultCity &&
+      (resultCity.includes(targetCity) || targetCity.includes(resultCity))
+    ) {
+      score += 20
+    }
+
+    if (centroidLat != null && centroidLon != null) {
+      const distanceKm = haversineDistance(
+        centroidLat,
+        centroidLon,
+        result.lat,
+        result.lon
+      )
+      score -= Math.min(distanceKm, 500)
+    }
+
+    if (score > bestScore) {
+      bestScore = score
+      best = result
+    }
+  }
+
+  return best
+}
+
 /**
  * Resolve a coordinate pair for the venue.
  *
@@ -565,15 +633,19 @@ async function resolveCoords(
 
   const venueName = setlist.venue?.name
   const cityName = setlist.venue?.city?.name
-  const countryName = setlist.venue?.city?.country?.name
 
   if (isFeatureEnabled(FEATURE_FLAGS.ENABLE_GEOCODING, true) && venueName) {
-    const query = [venueName, cityName, countryName].filter(Boolean).join(", ")
-    const results = await searchVenues(query, {
+    const results = await searchVenues(venueName, {
       lat: centroidLat ?? undefined,
       lon: centroidLon ?? undefined,
     })
-    const top = results[0]
+    const top = pickBestGeocodeResult(
+      results,
+      venueName,
+      cityName,
+      centroidLat,
+      centroidLon
+    )
     if (top && typeof top.lat === "number" && typeof top.lon === "number") {
       return { lat: top.lat, lon: top.lon }
     }
