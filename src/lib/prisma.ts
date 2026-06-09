@@ -1,35 +1,21 @@
 import { PrismaClient } from "@/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
-import { Pool, type PoolConfig } from "pg"
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
-  pgPool: Pool | undefined
 }
 
 /**
- * Read server env at request time. Next.js 16 + Turbopack can replace
- * `process.env.DATABASE_URL` at build with `undefined`; dynamic keys avoid that.
+ * Read server env at request time. Reading via a dynamic key avoids any
+ * build-time inlining of `process.env.X` to a stale/undefined value.
  */
 function readRuntimeEnv(key: string): string | undefined {
   const value = process.env[key]
   return typeof value === "string" && value.length > 0 ? value : undefined
 }
 
-function postgresPrismaUrlEnv(): string | undefined {
-  return readRuntimeEnv(["POSTGRES", "_PRISMA", "_URL"].join(""))
-}
-
-function databaseUrlEnv(): string | undefined {
-  return readRuntimeEnv(["DATA", "BASE", "_URL"].join(""))
-}
-
-function postgresUrlEnv(): string | undefined {
-  return readRuntimeEnv(["POSTGRES", "_URL"].join(""))
-}
-
-function postgresUrlNonPoolingEnv(): string | undefined {
-  return readRuntimeEnv(["POSTGRES", "_URL", "_NON_POOLING"].join(""))
+function isAccelerateUrl(url: string): boolean {
+  return url.startsWith("prisma+postgres://") || url.startsWith("prisma://")
 }
 
 function isDirectPostgresUrl(url: string): boolean {
@@ -37,64 +23,69 @@ function isDirectPostgresUrl(url: string): boolean {
 }
 
 /**
- * Resolve a postgres:// URL for the `pg` driver. Skips prisma:// URLs.
+ * Prisma Postgres / Accelerate runtime URL (`prisma+postgres://`). Returns
+ * undefined when not configured (e.g. local dev against a direct database).
+ *
+ * On Vercel's serverless fan-out, runtime queries MUST go through Accelerate,
+ * which pools connections at the edge. The direct `postgres://…@db.prisma.io`
+ * connection authenticates as the low-limit `prisma_migration` role and is
+ * exhausted instantly — it is only for migrations, never serverless runtime.
  */
-export function resolveDatabaseConnectionString(): string {
+export function resolveAccelerateUrl(): string | undefined {
   const candidates = [
-    postgresPrismaUrlEnv(),
-    databaseUrlEnv(),
-    postgresUrlEnv(),
-    postgresUrlNonPoolingEnv(),
+    readRuntimeEnv("PRISMA_DATABASE_URL"),
+    readRuntimeEnv("DATABASE_URL"),
   ]
-
-  for (const value of candidates) {
-    if (value && isDirectPostgresUrl(value)) {
-      return value
-    }
-  }
-
-  throw new Error(
-    "Missing database URL. Set POSTGRES_PRISMA_URL, DATABASE_URL, or POSTGRES_URL " +
-      "to a postgres:// connection string."
+  return candidates.find(
+    (v): v is string => v !== undefined && isAccelerateUrl(v)
   )
 }
 
 /**
- * Vercel serverless: default pg pool size (10) × many warm isolates exhausts
- * Postgres connection limits. Prefer POSTGRES_PRISMA_URL (pooled) and cap max.
+ * Direct `postgres://` connection — used for local development (and by the
+ * Prisma CLI for migrations). Not suitable for serverless runtime against
+ * Prisma Postgres; prefer Accelerate there.
  */
-function createPoolConfig(): PoolConfig {
-  const connectionString = resolveDatabaseConnectionString()
-
-  const onVercel = readRuntimeEnv(["VER", "CEL"].join("")) === "1"
-  const fromEnv = readRuntimeEnv(["PG", "_POOL", "_MAX"].join(""))
-  let max = onVercel ? 1 : 10
-  if (fromEnv != null && fromEnv !== "") {
-    const parsed = parseInt(fromEnv, 10)
-    if (!Number.isNaN(parsed) && parsed > 0) {
-      max = parsed
-    }
-  }
-
-  return {
-    connectionString,
-    max,
-    idleTimeoutMillis: onVercel ? 20_000 : 30_000,
-    ...(onVercel ? { allowExitOnIdle: true } : {}),
-  }
+export function resolveDirectDatabaseUrl(): string | undefined {
+  const candidates = [
+    readRuntimeEnv("DATABASE_URL"),
+    readRuntimeEnv("POSTGRES_PRISMA_URL"),
+    readRuntimeEnv("POSTGRES_URL"),
+    readRuntimeEnv("POSTGRES_URL_NON_POOLING"),
+  ]
+  return candidates.find(
+    (v): v is string => v !== undefined && isDirectPostgresUrl(v)
+  )
 }
 
 function createPrismaClient(): PrismaClient {
-  const pool = new Pool(createPoolConfig())
-  globalForPrisma.pgPool = pool
-
-  const adapter = new PrismaPg(pool)
   const isDevelopment =
     readRuntimeEnv(["NODE", "_ENV"].join("")) === "development"
+  const log: ("query" | "error" | "warn")[] = isDevelopment
+    ? ["query", "error", "warn"]
+    : ["error"]
 
+  // Prefer Accelerate (`prisma+postgres://`) — the correct serverless runtime
+  // path. `accelerateUrl` routes the client through Accelerate's edge pooler.
+  const accelerateUrl = resolveAccelerateUrl()
+  if (accelerateUrl) {
+    return new PrismaClient({ accelerateUrl, log })
+  }
+
+  // Fallback: direct `postgres://` via the pg driver adapter (local dev).
+  // Pass the CONFIG (not a `pg.Pool` instance) — handing PrismaPg a Pool can
+  // fail its internal `instanceof pg.Pool` check under the externalized build,
+  // making it drop the connection string and fall back to 127.0.0.1.
+  const connectionString = resolveDirectDatabaseUrl()
+  if (!connectionString) {
+    throw new Error(
+      "Missing database URL. Set PRISMA_DATABASE_URL (prisma+postgres://) for " +
+        "Accelerate, or DATABASE_URL (postgres://) for a direct connection."
+    )
+  }
   return new PrismaClient({
-    adapter,
-    log: isDevelopment ? ["query", "error", "warn"] : ["error"],
+    adapter: new PrismaPg({ connectionString }),
+    log,
   })
 }
 
@@ -108,8 +99,8 @@ function getPrismaClient(): PrismaClient {
 }
 
 /**
- * Lazy Prisma singleton. Defers pool creation until the first query so Vercel
- * runtime env vars are available (not build-time undefined from Turbopack).
+ * Lazy Prisma singleton. Defers client creation until the first query so the
+ * connection URL is read from the runtime environment, not at build time.
  */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
