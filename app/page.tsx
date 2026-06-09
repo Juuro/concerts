@@ -15,7 +15,7 @@ import {
 } from "@/lib/concerts/stats"
 import { getUserTotalSpentCached } from "@/lib/concerts/spending"
 import { getConcertsPaginated } from "@/lib/concerts/pagination"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/auth"
 import { FEATURE_FLAGS, isFeatureEnabled } from "@/utils/featureFlags"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
@@ -48,7 +48,7 @@ async function HomeContent({
   searchParams: Promise<{ cursor?: string }>
 }) {
   const { cursor } = await searchParams
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession(await headers())
 
   if (session?.user) {
     return <LoggedInHome userId={session.user.id} cursor={cursor} />
