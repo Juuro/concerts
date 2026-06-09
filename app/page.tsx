@@ -171,23 +171,25 @@ async function LandingPage() {
             </Link>
           </section>
 
-          <section className="home-stats">
-            <h3>Join the community</h3>
-            <div className="home-stats__grid">
-              <StatCard
-                value={stats.concertCount.toLocaleString()}
-                label="Concerts tracked"
-              />
-              <StatCard
-                value={stats.bandCount.toLocaleString()}
-                label="Bands"
-              />
-              <StatCard
-                value={stats.userCount.toLocaleString()}
-                label="Music fans"
-              />
-            </div>
-          </section>
+          {stats && (
+            <section className="home-stats">
+              <h3>Join the community</h3>
+              <div className="home-stats__grid">
+                <StatCard
+                  value={stats.concertCount.toLocaleString()}
+                  label="Concerts tracked"
+                />
+                <StatCard
+                  value={stats.bandCount.toLocaleString()}
+                  label="Bands"
+                />
+                <StatCard
+                  value={stats.userCount.toLocaleString()}
+                  label="Music fans"
+                />
+              </div>
+            </section>
+          )}
 
           <section className="home-features">
             <FeatureCard

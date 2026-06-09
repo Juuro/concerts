@@ -3,6 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs"
 const nextConfig = {
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-pg",
+    "pg",
+    "prisma",
+  ],
   images: {
     remotePatterns: [
       {
