@@ -21,6 +21,7 @@ export default defineConfig({
         "**/*.test.*",
         "**/types/**",
         "**/__tests__/**",
+        "**/utils/setlistfm.ts",
         "**/*.scss",
         "**/*.css",
       ],
