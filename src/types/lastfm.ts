@@ -3,30 +3,30 @@
  */
 
 export interface LastFMImage {
-  size?: string;
-  '#text'?: string;
-  url?: string;
+  size?: string
+  "#text"?: string
+  url?: string
 }
 
 export interface LastFMImageUrls {
-  small: string | null;
-  medium: string | null;
-  large: string | null;
-  extralarge: string | null;
-  mega: string | null;
+  small: string | null
+  medium: string | null
+  large: string | null
+  extralarge: string | null
+  mega: string | null
 }
 
 export interface LastFMTag {
-  name: string;
-  url?: string;
+  name: string
+  url?: string
 }
 
 export interface LastFMArtistInfo {
-  name: string;
-  url: string;
-  images: LastFMImageUrls;
-  genres: string[];
-  bio: string | null;
+  name: string
+  url: string
+  images: LastFMImageUrls
+  genres: string[]
+  bio: string | null
 }
 
-export type LastFMArtistInfoOrNull = LastFMArtistInfo | null;
+export type LastFMArtistInfoOrNull = LastFMArtistInfo | null

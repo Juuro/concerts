@@ -1,124 +1,98 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
-import { cityToSlug } from "../../utils/helpers";
-import type { Concert, Band } from "../../types/concert";
-import "./statisticsWidget.scss";
-import BarChart from "../BarChart/barchart";
+import React, { useMemo } from "react"
+import { cityToSlug } from "../../utils/helpers"
+import type { Concert, Band } from "../../types/concert"
+import "./statisticsWidget.scss"
+import BarChart from "../BarChart/barchart"
 
 interface StatisticsWidgetProps {
-  concerts?: Concert[];
-  bands?: Band[];
+  concerts?: Concert[]
+  bands?: Band[]
 }
 
-const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({ concerts = [], bands = [] }) => {
-  const [yearCountsObject, setYearCountsObject] = useState<Record<string, number>>({});
-  const [cityCountsObject, setCityCountsObject] = useState<Record<string, number>>({});
-  const [mostConcerts, setMostConcerts] = useState(0);
-  const [mostCities, setMostCities] = useState(0);
-  const [mostSeenBandsArray, setMostSeenBandsArray] = useState<Array<{ id: string; slug: string; name: string; numberOfConcerts: number }>>([]);
-  const [mostConcertsOfOneBand, setMostConcertsOfOneBand] = useState(0);
-
-  const yearCountEntries = Object.entries(yearCountsObject);
-  const cityCountEntries = Object.entries(cityCountsObject);
-
-  useEffect(() => {
-    if (bands.length === 0) return;
-
-    const bandsArray = bands
+const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({
+  concerts = [],
+  bands = [],
+}) => {
+  const mostSeenBandsArray = useMemo(() => {
+    if (bands.length === 0) return []
+    return bands
       .filter((band) => band.concert && band.concert.length > 0)
       .map((band) => {
         const concertCount = band.concert!.filter(
           (concert) => new Date() > new Date(concert.date)
-        ).length;
+        ).length
 
         return {
           id: band.id,
           slug: band.slug,
           name: band.name,
           numberOfConcerts: concertCount,
-        };
+        }
       })
       .sort((a, b) => b.numberOfConcerts - a.numberOfConcerts)
-      .slice(0, 5);
+      .slice(0, 5)
+  }, [bands])
 
-    setMostSeenBandsArray(bandsArray);
-  }, [bands]);
+  const mostConcertsOfOneBand = useMemo(() => {
+    if (mostSeenBandsArray.length === 0) return 0
+    return Math.max(...mostSeenBandsArray.map((band) => band.numberOfConcerts))
+  }, [mostSeenBandsArray])
 
-  useEffect(() => {
-    if (mostSeenBandsArray.length > 0) {
-      setMostConcertsOfOneBand(
-        Math.max.apply(
-          null,
-          mostSeenBandsArray.map((band) => band.numberOfConcerts)
-        )
-      );
-    }
-  }, [mostSeenBandsArray]);
-
-  useEffect(() => {
-    if (concerts.length === 0) return;
-
+  const cityCountsObject = useMemo(() => {
+    if (concerts.length === 0) return {}
     const cityArray = concerts
       .map((concert) => {
         if (new Date() < new Date(concert.date)) {
-          return false;
+          return false
         }
-
-        return concert.fields?.geocoderAddressFields?._normalized_city;
+        return concert.fields?.geocoderAddressFields?._normalized_city
       })
-      .filter((city): city is string => typeof city === "string" && city.length > 0);
+      .filter(
+        (city): city is string => typeof city === "string" && city.length > 0
+      )
 
-    if (Object.entries(cityCountsObject).length === 0 && cityArray.length > 0) {
-      const cityCounts: Record<string, number> = {};
-      for (const city of cityArray) {
-        if (!city) {
-          continue;
-        }
-        cityCounts[city] = cityCounts[city] ? cityCounts[city] + 1 : 1;
-      }
-      setCityCountsObject(cityCounts);
+    const cityCounts: Record<string, number> = {}
+    for (const city of cityArray) {
+      cityCounts[city] = cityCounts[city] ? cityCounts[city] + 1 : 1
     }
-  }, [concerts, cityCountsObject]);
+    return cityCounts
+  }, [concerts])
 
-  useEffect(() => {
-    if (concerts.length === 0) return;
-
+  const yearCountsObject = useMemo(() => {
+    if (concerts.length === 0) return {}
     const yearArray = concerts
-      .filter((concert) => {
-        if (new Date() < new Date(concert.date)) {
-          return false;
-        }
-        return true;
-      })
+      .filter((concert) => new Date() >= new Date(concert.date))
       .map((concert) => {
-        const date = new Date(concert.date);
-        const year = date.getFullYear();
-        return Number.isFinite(year) ? year.toString() : undefined;
-      });
-    
-    const yearArrayFiltered = yearArray.filter((year): year is string => typeof year === "string" && year.length > 0);
+        const date = new Date(concert.date)
+        const year = date.getFullYear()
+        return Number.isFinite(year) ? year.toString() : undefined
+      })
 
-    if (Object.entries(yearCountsObject).length === 0 && yearArrayFiltered.length > 0) {
-      const yearCounts: Record<string, number> = {};
-      for (const year of yearArrayFiltered) {
-        yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1;
-      }
-      setYearCountsObject(yearCounts);
-    }
-  }, [concerts, yearCountsObject]);
+    const yearArrayFiltered = yearArray.filter(
+      (year): year is string => typeof year === "string" && year.length > 0
+    )
 
-  useEffect(() => {
-    if (Object.values(yearCountsObject).length > 0) {
-      setMostConcerts(Math.max.apply(null, Object.values(yearCountsObject)));
+    const yearCounts: Record<string, number> = {}
+    for (const year of yearArrayFiltered) {
+      yearCounts[year] = yearCounts[year] ? yearCounts[year] + 1 : 1
     }
-  }, [yearCountsObject]);
+    return yearCounts
+  }, [concerts])
 
-  useEffect(() => {
-    if (Object.values(cityCountsObject).length > 0) {
-      setMostCities(Math.max.apply(null, Object.values(cityCountsObject)));
-    }
-  }, [cityCountsObject]);
+  const mostConcerts = useMemo(() => {
+    const values = Object.values(yearCountsObject)
+    return values.length > 0 ? Math.max(...values) : 0
+  }, [yearCountsObject])
+
+  const mostCities = useMemo(() => {
+    const values = Object.values(cityCountsObject)
+    return values.length > 0 ? Math.max(...values) : 0
+  }, [cityCountsObject])
+
+  const yearCountEntries = Object.entries(yearCountsObject)
+  const cityCountEntries = Object.entries(cityCountsObject)
 
   return (
     <div className="card statistics-widget">
@@ -151,7 +125,7 @@ const StatisticsWidget: React.FC<StatisticsWidgetProps> = ({ concerts = [], band
         category="city"
       />
     </div>
-  );
-};
+  )
+}
 
-export default StatisticsWidget;
+export default StatisticsWidget

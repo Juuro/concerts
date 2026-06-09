@@ -1,0 +1,58 @@
+@use "../../src/styles/variables.scss";
+
+.revocation {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+
+  h1 {
+    font-family: variables.$font-family-heading;
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-family: variables.$font-family-heading;
+    font-size: 1.25rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .intro {
+    color: rgba(68, 68, 68, 0.85);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  section {
+    &:first-of-type h2 {
+      margin-top: 0;
+    }
+  }
+
+  p {
+    line-height: 1.6;
+    margin: 0 0 0.5rem;
+  }
+
+  .modelForm {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+
+    p {
+      margin-bottom: 0.75rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  a {
+    color: variables.$color-primary;
+
+    &:hover {
+      color: variables.$color-black;
+    }
+  }
+}

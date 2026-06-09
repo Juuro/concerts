@@ -1,75 +1,78 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+High-signal instructions for coding agents. Keep this file concise and non-obvious.
 
-## Project Overview
+## Hard Rules
 
-A Next.js 15 web application displaying a personal concert attendance collection. Uses Contentful CMS for data, Leaflet for interactive maps, and enriches metadata via Last.fm API and Photon reverse geocoding.
+- Use **Yarn 4 only** (`yarn`, `yarn dlx`, `yarn npm audit`); do not use `npm`, `pnpm`, or `npx` in normal workflows.
+- Use TypeScript with strict typing; prefer server components and explicit `'use client'` boundaries.
+- Styling must use SCSS modules/global SCSS patterns already in the repo; no Tailwind, CSS-in-JS, inline styles, or `!important`.
+- Use `next/image` instead of raw `<img>` where applicable.
+- Keep imports absolute via `@/*`.
 
-## Commands
+## Security / Privacy Guardrails (Non-Negotiable)
 
-```bash
-yarn dev          # Start development server (localhost:3000)
-yarn build        # Production build (runs prefetch scripts then next build)
-yarn lint         # ESLint with next/core-web-vitals
-yarn format       # Prettier formatting
-yarn release      # Semantic versioning with standard-version
-```
+- Any mutating API route must verify session via `auth.api.getSession()`.
+- Update/delete operations on user data must verify ownership (`userId`-scoped access).
+- Validate all external input (Zod preferred). Never trust client payloads.
+- Never expose sensitive server data in client responses.
+- Public profile data is opt-in only (`isPublic`); non-public users must not be exposed.
+- If a change introduces tracking/marketing cookies or non-essential client-side identifiers, flag that a GDPR/DSGVO cookie banner/consent flow may be required.
 
-The build command runs sequentially:
-1. `scripts/prefetch-lastfm.mjs` - Fetches Last.fm band metadata
-2. `scripts/prefetch-geocoding.mjs` - Reverse geocodes concert coordinates
-3. `next build` - Generates static pages
+## CSP Gotcha
 
-## Architecture
+- CSP is defined in `proxy.ts`.
+- Scripts use per-request nonces with strict-dynamic.
+- Styles intentionally use `'unsafe-inline'` **without** nonce due to Next.js/Turbopack style tag behavior.
+- When adding a new client-facing third-party service (scripts, widgets, browser-side API calls, remote images/fonts), update the relevant CSP directives.
+- Server-only integrations do not need CSP allowlist entries.
 
-### Data Flow
+## Multi-Tenancy & Data Model Gotchas
 
-1. **Build time**: Prefetch scripts cache Last.fm and geocoding data to `.next/cache/`
-2. **Runtime**: Server components fetch from Contentful, enriched with cached data
-3. **Static generation**: All pages pre-rendered via `generateStaticParams()`
+- Concerts are shared entities; user attendance is modeled via `UserConcert`.
+- `Concert.userId`/`Concert.cost` are legacy/deprecated; avoid building new logic on deprecated ownership assumptions.
+- Band model is split:
+  - Headliner: shared (`ConcertBand`).
+  - Support acts: per-user (`UserConcert.supportingActIds`).
+- Preserve this split when editing concert/band flows.
 
-### Key Directories
+## Auth & Access Conventions
 
-- `app/` - Next.js 15 App Router pages (band/city/year dynamic routes)
-- `src/components/` - React components with `.module.scss` co-located styles
-- `src/utils/data.ts` - Main data fetching functions (`getAllConcerts`, `getAllBands`, etc.)
-- `src/utils/contentful.ts` - Contentful client initialization
-- `src/types/` - TypeScript type definitions
-- `scripts/` - Build-time prefetch scripts with rate limiting
+- Protected routes should remain dynamically rendered (`force-dynamic`) when they depend on session/user-specific state.
+- Admin routes/actions require `session.user.role === "admin"`.
+- Public profile pages must return not found for users without public visibility.
 
-### Contentful Schema
+## UI/UX & A11y Conventions
 
-- **Concert**: date, city (lat/lon), club, bands[], isFestival, festival
-- **Band**: name, slug, image
-- **Festival**: name, url
+- Use semantic HTML and visible focus states.
+- Decorative icons should be hidden from assistive tech (`aria-hidden="true"`).
+- Interactive controls need accessible names (`aria-label`/`aria-labelledby` when needed).
+- Dialogs should use native `<dialog>` patterns used in this codebase (including keyboard behavior).
+- For keyboard-driven inputs (autocomplete/dropdowns), preserve Arrow/Enter/Escape interactions.
 
-### Feature Flags
+## Caching / Revalidation Gotcha
 
-Environment-controlled in `.env`:
-- `ENABLE_LASTFM` - Toggle Last.fm data enrichment
-- `ENABLE_GEOCODING` - Toggle city name geocoding
+- Statistics views rely on cached data; concert create/update/delete flows must trigger the existing tag revalidation path (`concert-statistics`) to avoid stale UI.
 
-## Code Patterns
+## Feature Flags
 
-- Server components by default; explicit `'use client'` for interactivity
-- All pages use `export const dynamic = "force-static"`
-- TypeScript strict mode enabled
-- SCSS Modules required (no Tailwind or CSS-in-JS)
-- Absolute imports via `@/*` path alias
-- Feature branches: `feat/NAME` or `fix/BUG`
+- Respect and preserve environment feature flags:
+  - `ENABLE_LASTFM`
+  - `ENABLE_GEOCODING`
+  - `ENABLE_MUSICBRAINZ`
+  - `ENABLE_EXTERNAL_BAND_SUGGEST`
+  - `ENABLE_MAP_PAGE`
+  - `ENABLE_CONCERT_AI_SEARCH` (AI "help me remember" backfill: Groq parse + Setlist.fm search; gates the inline panel on `/concerts/new` and the `/api/concerts/ai-search` + `/api/concerts/from-setlist` routes. Off by default. Sends user prose to Groq (US) — privacy-policy/sub-processor update required before production use.)
+- Do not bypass flags in UI or API logic.
 
-## Environment Setup
+## Animations
 
-Copy `.env.example` to `.env.local` with:
-- `CONTENTFUL_SPACE_ID` and `CONTENTFUL_DELIVERY_TOKEN` (required)
-- `LASTFM_API_KEY` and `LASTFM_SECRET` (optional)
-- `PHOTON_BASE_URL` (defaults to photon.komoot.io)
+- Reuse animation tokens from `src/styles/variables.scss`; do not hardcode durations/easings.
+- Keep motion subtle and functional.
+- Ensure `prefers-reduced-motion` behavior remains respected.
 
-## API Rate Limiting
+## Screenshots / Visual Validation Workflow
 
-Prefetch scripts implement:
-- 700ms minimum request interval
-- 60s cooldown after 429 responses
-- 8s request timeout
-- 5-minute build time budget with soft-fail
+- Before `yarn dev`, check if a dev server is already running; do not start duplicates.
+- Use `node screenshot.mjs http://localhost:3000 ...` from project root.
+- Protected-route screenshots require local dev auth (`DEV_USER_EMAIL`, `/api/dev/login` flow).

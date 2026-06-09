@@ -1,32 +1,45 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { cityToSlug, extractCityName } from "../../utils/helpers";
-import type { Concert } from "../../types/concert";
-import "./concertCard.scss";
+"use client"
+
+import React from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { cityToSlug, extractCityName } from "../../utils/helpers"
+import { DATE_LOCALE } from "../../utils/dateLocale"
+import type { TransformedConcert } from "@/lib/concerts/types"
+import "./concertCard.scss"
 
 interface ConcertCardProps {
-  concert: Concert;
+  concert: TransformedConcert
+  showEditButton?: boolean
+  currentUserId?: string
+  animated?: boolean
+  currency?: string
+  hideLocation?: boolean
+  hideCost?: boolean
 }
 
-const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
+const ConcertCard: React.FC<ConcertCardProps> = ({
+  concert,
+  showEditButton = false,
+  currentUserId,
+  animated = false,
+  currency = "EUR",
+  hideLocation = false,
+  hideCost = false,
+}) => {
   const heading = () => {
     if (concert.isFestival) {
-      return concert.festival?.fields.name || '';
+      return concert.festival?.fields.name || ""
     }
-    const mainBand = concert.bands[0];
+    const mainBand = concert.bands[0]
     if (!mainBand) {
-      return 'Unknown band';
+      return "Unknown band"
     }
-    return (
-      <Link href={`/band/${mainBand.slug}`}>
-        {mainBand.name}
-      </Link>
-    );
-  };
+    return <Link href={`/band/${mainBand.slug}`}>{mainBand.name}</Link>
+  }
 
   const bands = () => {
-    const bands = [...concert.bands];
+    const bands = [...concert.bands]
     // TODO: Badges as seperate (tag) component?
     if (concert.isFestival) {
       return bands.map((band) => {
@@ -38,10 +51,10 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           >
             {band.name}
           </Link>
-        );
-      });
+        )
+      })
     } else {
-      bands.shift();
+      bands.shift()
       return bands.map((band) => {
         return (
           <Link
@@ -51,45 +64,41 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           >
             {band.name}
           </Link>
-        );
-      });
+        )
+      })
     }
-  };
+  }
 
   const isInTheFuture = () => {
-    if (concert.date > new Date().toISOString()) {
-      return "future";
+    const concertDate = concert.date.slice(0, 10) // "YYYY-MM-DD"
+    const today = new Date().toISOString().slice(0, 10) // "YYYY-MM-DD"
+
+    if (concertDate >= today) {
+      return "future"
     }
-    return "";
-  };
+    return ""
+  }
 
   const getDate = () => {
-    const date = new Date(concert.date);
-    return date.toLocaleDateString("de-DE", {
+    const date = new Date(concert.date)
+    return date.toLocaleDateString(DATE_LOCALE, {
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-  };
-
-  // Get image URL - prefer Contentful over Last.fm placeholders
-  const getImageUrl = () => {
-    // Last.fm API only returns placeholder images, so use Contentful images
-    return (
-      concert.bands[0]?.image?.file?.url ||
-      concert.bands[0]?.image?.fields?.file?.url
-    );
-  };
+    })
+  }
 
   const getImageSrc = () => {
-    const url = getImageUrl();
-    if (!url) return undefined;
-    if (url.startsWith("//")) return `https:${url}`;
-    return url;
-  };
+    const url = concert.bands[0]?.imageUrl
+    if (!url) return undefined
+    if (url.startsWith("//")) return `https:${url}`
+    return url
+  }
 
   return (
-    <li className={`concert-card card ${isInTheFuture()}`}>
+    <li
+      className={`concert-card card ${isInTheFuture()} ${animated ? "concert-card--animated" : ""}`}
+    >
       <div className="concert-card-image" aria-hidden="true">
         {getImageSrc() ? (
           <Image
@@ -105,23 +114,58 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
       </div>
       <div className="concert-card-body">
         <h3 className="card-title">{heading()}</h3>
-        <span>{getDate()}</span>
+        <div className="concert-card-meta">
+          {!(hideLocation && isInTheFuture()) && <span>{getDate()}</span>}
+          {concert.attendeeCount && concert.attendeeCount > 1 && (
+            <span
+              className="concert-card-attendees"
+              title={
+                isInTheFuture()
+                  ? `${concert.attendeeCount} people going`
+                  : `${concert.attendeeCount} people attended`
+              }
+            >
+              {isInTheFuture()
+                ? `${concert.attendeeCount} going`
+                : `${concert.attendeeCount} attended`}
+            </span>
+          )}
+        </div>
         {bands() && <div className="bands">{bands()}</div>}
       </div>
       <div className="concert-card-location">
         <div>
-          <div className="club">{concert.club}</div>
-          <div className="city">
-            <Link
-              href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
-            >
-              {extractCityName(concert.fields.geocoderAddressFields)}
-            </Link>
-          </div>
+          {!hideLocation && (
+            <>
+              <div className="venue">{concert.venue}</div>
+              <div className="city">
+                <Link
+                  href={`/city/${cityToSlug(extractCityName(concert.fields.geocoderAddressFields))}`}
+                >
+                  {extractCityName(concert.fields.geocoderAddressFields)}
+                </Link>
+              </div>
+            </>
+          )}
+          {!hideCost && concert.cost && (
+            <div className="concert-card-cost">
+              {concert.cost} {currency}
+            </div>
+          )}
         </div>
+        {showEditButton &&
+          (concert.attendance?.userId === currentUserId ||
+            concert.userId === currentUserId) && (
+            <Link
+              href={`/concerts/edit/${concert.id}`}
+              className="concert-card-edit-btn"
+            >
+              Edit
+            </Link>
+          )}
       </div>
     </li>
-  );
-};
+  )
+}
 
-export default ConcertCard;
+export default ConcertCard
